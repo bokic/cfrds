@@ -20,6 +20,10 @@ add_library(cfrds SHARED
     cfrds_http.c   ../include/cfrds_http.h
 )
 
+install(TARGETS cfrds
+    PUBLIC_HEADER
+)
+
 set_target_properties(cfrds PROPERTIES
     PUBLIC_HEADER "../include/cfrds.h;../include/cfrds_buffer.h"
     VERSION "0.5.1"

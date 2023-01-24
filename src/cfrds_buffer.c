@@ -131,7 +131,7 @@ void cfrds_buffer_append_rds_string(cfrds_buffer *buffer, const char *str)
 
 void cfrds_buffer_append_rds_bytes(cfrds_buffer *buffer, const void *data, size_t length)
 {
-    char str_len[16];
+    char str_len[32];
 
     snprintf(str_len, sizeof(str_len), "%zu", length);
 

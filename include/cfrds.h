@@ -19,11 +19,6 @@ enum cfrds_status {
     CFRDS_STATUS_RESPONSE_ERROR,
 };
 
-//typedef struct {
-//    size_t size;
-//    char data[];
-//} cfrds_file_content;
-
 #ifdef __cplusplus
 extern "C"
 {

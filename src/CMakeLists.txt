@@ -21,6 +21,7 @@ add_library(cfrds SHARED
 )
 
 set_target_properties(cfrds PROPERTIES
+    PUBLIC_HEADER "../include/cfrds.h;../include/cfrds_buffer.h"
     VERSION "0.5.1"
     SOVERSION "0.5"
 )

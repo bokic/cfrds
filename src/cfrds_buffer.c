@@ -117,7 +117,7 @@ void cfrds_buffer_append_rds_count(cfrds_buffer *buffer, size_t cnt)
 
 void cfrds_buffer_append_rds_string(cfrds_buffer *buffer, const char *str)
 {
-    char str_len[16];
+    char str_len[32];
     size_t len = 0;
 
     len = strlen(str);

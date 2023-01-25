@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.15)
 
-project(cfrds LANGUAGES C)
+project(libcfrds LANGUAGES C)
 
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 set(CMAKE_C_STANDARD 17)
@@ -14,22 +14,23 @@ include_directories(
     ../include
 )
 
-add_library(cfrds SHARED
+add_library(libcfrds SHARED
     cfrds.c        ../include/cfrds.h
     cfrds_buffer.c ../include/cfrds_buffer.h
     cfrds_http.c   ../include/cfrds_http.h
 )
 
 if(WIN32)
-  target_link_libraries(cfrds wsock32 ws2_32)
+  target_link_libraries(libcfrds wsock32 ws2_32)
 endif()
 
-set_target_properties(cfrds PROPERTIES
+set_target_properties(libcfrds PROPERTIES
     PUBLIC_HEADER "../include/cfrds.h;../include/cfrds_buffer.h"
+    OUTPUT_NAME "cfrds"
     VERSION "0.5.1"
     SOVERSION "0.5"
 )
 
-install(TARGETS cfrds
+install(TARGETS libcfrds
     PUBLIC_HEADER
 )

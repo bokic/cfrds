@@ -15,6 +15,10 @@ add_executable(cfrds_cli
     main.c
 )
 
+set_target_properties(cfrds_cli PROPERTIES
+    OUTPUT_NAME "cfrds"
+)
+
 target_link_libraries(cfrds_cli PRIVATE
-    cfrds
+    libcfrds
 )

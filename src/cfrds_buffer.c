@@ -193,7 +193,7 @@ static bool skip_httpheader(char **data, size_t *size)
 
     body = strstr(*data, "\r\n\r\n");
     if (body == NULL)
-        return NULL;
+        return false;
 
     *data = body + 4;
 
@@ -221,10 +221,10 @@ static bool parse_string(char **data, size_t *size, char **value)
         return false;
 
     if (!parse_number(data, size, &str_size))
-        return NULL;
+        return false;
 
     if (str_size <= 0)
-        return NULL;
+        return false;
 
     *value = malloc(str_size + 1);
     memcpy(*value, *data, str_size);

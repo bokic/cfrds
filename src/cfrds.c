@@ -65,7 +65,7 @@ static char *cfrds_server_encode_password(const char *password)
     return ret;
 }
 
-EXPORT bool cfrds_server_init(cfrds_server **server, const char *host, uint16_t port, const char *username, const char *password)
+bool cfrds_server_init(cfrds_server **server, const char *host, uint16_t port, const char *username, const char *password)
 {
     cfrds_server_int *ret = NULL;
 
@@ -91,7 +91,7 @@ EXPORT bool cfrds_server_init(cfrds_server **server, const char *host, uint16_t 
     return true;
 }
 
-EXPORT void cfrds_server_free(cfrds_server *server)
+void cfrds_server_free(cfrds_server *server)
 {
     cfrds_server_int *server_int = NULL;
 
@@ -124,7 +124,7 @@ void cfrds_server_set_error(cfrds_server *server, const char *error)
     server_int->error = strdup(error);
 }
 
-EXPORT const char *cfrds_server_get_error(cfrds_server *server)
+const char *cfrds_server_get_error(cfrds_server *server)
 {
     cfrds_server_int *server_int = NULL;
 
@@ -136,7 +136,7 @@ EXPORT const char *cfrds_server_get_error(cfrds_server *server)
     return server_int->error;
 }
 
-EXPORT const char *cfrds_server_get_host(cfrds_server *server)
+const char *cfrds_server_get_host(cfrds_server *server)
 {
     cfrds_server_int *server_int = NULL;
 
@@ -148,7 +148,7 @@ EXPORT const char *cfrds_server_get_host(cfrds_server *server)
     return server_int->host;
 }
 
-EXPORT uint16_t cfrds_server_get_port(cfrds_server *server)
+uint16_t cfrds_server_get_port(cfrds_server *server)
 {
     cfrds_server_int *server_int = NULL;
 
@@ -210,7 +210,7 @@ static enum cfrds_status cfrds_internal_command(cfrds_server *server, cfrds_buff
     return CFRDS_STATUS_OK;
 }
 
-EXPORT enum cfrds_status cfrds_browse_dir(cfrds_server *server, void *path, cfrds_buffer_browse_dir **out)
+enum cfrds_status cfrds_browse_dir(cfrds_server *server, void *path, cfrds_buffer_browse_dir **out)
 {
     enum cfrds_status ret;
     cfrds_buffer *response = NULL;
@@ -232,7 +232,7 @@ EXPORT enum cfrds_status cfrds_browse_dir(cfrds_server *server, void *path, cfrd
     return ret;
 }
 
-EXPORT enum cfrds_status cfrds_read_file(cfrds_server *server, void *pathname, cfrds_buffer_file_content **out)
+enum cfrds_status cfrds_read_file(cfrds_server *server, void *pathname, cfrds_buffer_file_content **out)
 {
     enum cfrds_status ret;
     cfrds_buffer *response = NULL;
@@ -254,7 +254,7 @@ EXPORT enum cfrds_status cfrds_read_file(cfrds_server *server, void *pathname, c
     return ret;
 }
 
-EXPORT enum cfrds_status cfrds_write_file(cfrds_server *server, void *pathname, void *data, size_t length)
+enum cfrds_status cfrds_write_file(cfrds_server *server, void *pathname, void *data, size_t length)
 {
     cfrds_server_int *server_int = NULL;
     cfrds_buffer *post = NULL;
@@ -285,7 +285,7 @@ EXPORT enum cfrds_status cfrds_write_file(cfrds_server *server, void *pathname, 
     return CFRDS_STATUS_OK;
 }
 
-EXPORT enum cfrds_status cfrds_rename(cfrds_server *server, char *current_name, char *new_name)
+enum cfrds_status cfrds_rename(cfrds_server *server, char *current_name, char *new_name)
 {
     enum cfrds_status ret;
     cfrds_buffer **buffer = NULL;
@@ -295,7 +295,7 @@ EXPORT enum cfrds_status cfrds_rename(cfrds_server *server, char *current_name, 
     return ret;
 }
 
-EXPORT enum cfrds_status cfrds_remove_file(cfrds_server *server, char *name)
+enum cfrds_status cfrds_remove_file(cfrds_server *server, char *name)
 {
     enum cfrds_status ret;
     cfrds_buffer **buffer = NULL;
@@ -305,7 +305,7 @@ EXPORT enum cfrds_status cfrds_remove_file(cfrds_server *server, char *name)
     return ret;
 }
 
-EXPORT enum cfrds_status cfrds_remove_dir(cfrds_server *server, char *name)
+enum cfrds_status cfrds_remove_dir(cfrds_server *server, char *name)
 {
     enum cfrds_status ret;
     cfrds_buffer **buffer = NULL;
@@ -315,7 +315,7 @@ EXPORT enum cfrds_status cfrds_remove_dir(cfrds_server *server, char *name)
     return ret;
 }
 
-EXPORT enum cfrds_status cfrds_exists(cfrds_server *server, char *pathname)
+enum cfrds_status cfrds_exists(cfrds_server *server, char *pathname)
 {
     enum cfrds_status ret;
     cfrds_buffer **buffer = NULL;
@@ -325,7 +325,7 @@ EXPORT enum cfrds_status cfrds_exists(cfrds_server *server, char *pathname)
     return ret;
 }
 
-EXPORT enum cfrds_status cfrds_create_dir(cfrds_server *server, char *name)
+enum cfrds_status cfrds_create_dir(cfrds_server *server, char *name)
 {
     enum cfrds_status ret;
     cfrds_buffer **buffer = NULL;
@@ -335,7 +335,7 @@ EXPORT enum cfrds_status cfrds_create_dir(cfrds_server *server, char *name)
     return ret;
 }
 
-EXPORT enum cfrds_status cfrds_get_root_dir(cfrds_server *server)
+enum cfrds_status cfrds_get_root_dir(cfrds_server *server)
 {
     enum cfrds_status ret;
     cfrds_buffer **buffer = NULL;

@@ -165,6 +165,7 @@ static enum cfrds_status cfrds_internal_command(cfrds_server *server, cfrds_buff
     cfrds_server_int *server_int = NULL;
     const char *response_data = NULL;
     cfrds_buffer *post = NULL;
+    size_t total_cnt = 0;
     size_t list_cnt = 0;
 
     if (server == NULL)
@@ -181,17 +182,23 @@ static enum cfrds_status cfrds_internal_command(cfrds_server *server, cfrds_buff
         }
     }
 
+    total_cnt = list_cnt;
+
+    if (server_int->username) total_cnt++;
+    if (server_int->password) total_cnt++;
+
     cfrds_server_int_clean(server_int);
 
     cfrds_buffer_create(&post);
-    cfrds_buffer_append_rds_count(post, list_cnt + 1);
+    cfrds_buffer_append_rds_count(post, total_cnt);
 
     for(int c = 0; c < list_cnt; c++)
     {
         cfrds_buffer_append_rds_string(post, list[c]);
     }
 
-    cfrds_buffer_append_rds_string(post, server_int->password);
+    if (server_int->username) cfrds_buffer_append_rds_string(post, server_int->username);
+    if (server_int->password) cfrds_buffer_append_rds_string(post, server_int->password);
 
     *buffer = cfrds_http_post(server, command, post);
 
@@ -254,33 +261,47 @@ enum cfrds_status cfrds_read_file(cfrds_server *server, void *pathname, cfrds_bu
     return ret;
 }
 
-enum cfrds_status cfrds_write_file(cfrds_server *server, void *pathname, void *data, size_t length)
+enum cfrds_status cfrds_write_file(cfrds_server *server, void *pathname, const void *data, size_t length)
 {
     cfrds_server_int *server_int = NULL;
+    const char *response_data = NULL;
+    cfrds_buffer *response = NULL;
     cfrds_buffer *post = NULL;
+    size_t total_cnt = 0;
+    size_t list_cnt = 0;
 
     if (server == NULL)
         return CFRDS_STATUS_SERVER_IS_NULL;
 
     server_int = server;
 
+    total_cnt = 4;
+
+    if (server_int->username) total_cnt++;
+    if (server_int->password) total_cnt++;
+
     cfrds_server_int_clean(server_int);
 
     cfrds_buffer_create(&post);
-    cfrds_buffer_append_rds_count(post, 5);
+    cfrds_buffer_append_rds_count(post, total_cnt);
     cfrds_buffer_append_rds_string(post, pathname);
-    cfrds_buffer_append_rds_string(post, "READ");
-    cfrds_buffer_append_rds_bytes(post, data, length);
+    cfrds_buffer_append_rds_string(post, "WRITE");
     cfrds_buffer_append_rds_string(post, "");
+    cfrds_buffer_append_rds_bytes(post, data, length);
 
-    cfrds_buffer_append_rds_string(post, server_int->password);
+    if (server_int->username) cfrds_buffer_append_rds_string(post, server_int->username);
+    if (server_int->password) cfrds_buffer_append_rds_string(post, server_int->password);
 
-    server_int->buffer = cfrds_http_post(server, "FILEIO", post);
+    response = cfrds_http_post(server, "FILEIO", post);
 
     cfrds_buffer_free(post);
 
-    if (server_int->buffer == NULL)
+    if (response == NULL)
         return CFRDS_STATUS_COMMAND_FAILED;
+
+    response_data = cfrds_buffer_data(response);
+
+    cfrds_buffer_free(response);
 
     return CFRDS_STATUS_OK;
 }

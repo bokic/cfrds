@@ -42,7 +42,7 @@ EXPORT_CFRDS uint16_t cfrds_server_get_port(cfrds_server *server);
 EXPORT_CFRDS enum cfrds_status cfrds_browse_dir(cfrds_server *server, void *path, cfrds_buffer_browse_dir **out);
 
 EXPORT_CFRDS enum cfrds_status cfrds_read_file(cfrds_server *server, void *pathname, cfrds_buffer_file_content **out);
-EXPORT_CFRDS enum cfrds_status cfrds_write_file(cfrds_server *server, void *pathname, void *data, size_t length);
+EXPORT_CFRDS enum cfrds_status cfrds_write_file(cfrds_server *server, void *pathname, const void *data, size_t length);
 EXPORT_CFRDS enum cfrds_status cfrds_rename(cfrds_server *server, char *current_name, char *new_name);
 EXPORT_CFRDS enum cfrds_status cfrds_remove_file(cfrds_server *server, char *name);
 EXPORT_CFRDS enum cfrds_status cfrds_remove_dir(cfrds_server *server, char *name);

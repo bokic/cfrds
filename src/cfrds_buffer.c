@@ -9,6 +9,7 @@
 typedef struct {
     size_t allocated;
     size_t size;
+    size_t offset;
     char *string;
 } cfrds_buffer_int;
 
@@ -39,6 +40,7 @@ bool cfrds_buffer_create(cfrds_buffer **buffer)
 
     ret->allocated = 0;
     ret->size = 0;
+    ret->offset = 0;
     ret->string = NULL;
 
     *buffer = ret;
@@ -187,19 +189,6 @@ void cfrds_buffer_free(cfrds_buffer *buffer)
     free(buffer);
 }
 
-static bool skip_httpheader(char **data, size_t *size)
-{
-    char *body = NULL;
-
-    body = strstr(*data, "\r\n\r\n");
-    if (body == NULL)
-        return false;
-
-    *data = body + 4;
-
-    return true;
-}
-
 static bool parse_number(char **data, size_t *size, int64_t *value)
 {
     char *end = strchr(*data, ':');
@@ -231,6 +220,21 @@ static bool parse_string(char **data, size_t *size, char **value)
     (*value)[str_size] = 0;
 
     *data += str_size;
+
+    return true;
+}
+
+bool cfrds_buffer_skip_httpheader(char **data, size_t *size)
+{
+    char *body = NULL;
+
+    body = strstr(*data, "\r\n\r\n");
+    if (body == NULL)
+        return false;
+
+    *size -= body - *data;
+    *data = body + 4;
+    *size -= 4;
 
     return true;
 }
@@ -271,7 +275,7 @@ cfrds_buffer_browse_dir *cfrds_buffer_to_browse_dir(cfrds_buffer *buffer)
     char *data = buffer_int->string;
     size_t size = buffer_int->size;
 
-    if (!skip_httpheader(&data, &size))
+    if (!cfrds_buffer_skip_httpheader(&data, &size))
         return NULL;
 
     if (!parse_number(&data, &size, &total))
@@ -384,7 +388,7 @@ cfrds_buffer_file_content *cfrds_buffer_to_file_content(cfrds_buffer *buffer)
     char *data = buffer_int->string;
     size_t size = buffer_int->size;
 
-    if (!skip_httpheader(&data, &size))
+    if (!cfrds_buffer_skip_httpheader(&data, &size))
         return NULL;
 
     if (!parse_number(&data, &size, &total))

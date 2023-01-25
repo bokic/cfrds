@@ -8,6 +8,14 @@
 #include <stddef.h>
 
 
+#ifndef EXPORT_CFRDS
+ #if defined(_MSC_VER)
+  #define EXPORT_CFRDS __declspec(dllexport)
+ #else
+  #define EXPORT_CFRDS __attribute__((visibility("default")))
+ #endif
+#endif
+
 #define cfrds_server void
 #define cfrds_result void
 

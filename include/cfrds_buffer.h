@@ -5,6 +5,22 @@
 #include <stddef.h>
 #include <stdint.h>
 
+#ifdef _WIN32
+#include <BaseTsd.h>
+typedef ULONG_PTR SIZE_T;
+typedef LONG_PTR SSIZE_T;
+typedef SIZE_T size_t;
+typedef SSIZE_T ssize_t;
+#endif
+
+
+#ifndef EXPORT_CFRDS
+ #if defined(_MSC_VER)
+  #define EXPORT_CFRDS __declspec(dllexport)
+ #else
+  #define EXPORT_CFRDS __attribute__((visibility("default")))
+ #endif
+#endif
 
 #define cfrds_buffer void
 

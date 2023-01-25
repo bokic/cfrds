@@ -20,6 +20,10 @@ add_library(cfrds SHARED
     cfrds_http.c   ../include/cfrds_http.h
 )
 
+if(WIN32)
+  target_link_libraries(cfrds wsock32 ws2_32)
+endif()
+
 set_target_properties(cfrds PROPERTIES
     PUBLIC_HEADER "../include/cfrds.h;../include/cfrds_buffer.h"
     VERSION "0.5.1"

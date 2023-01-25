@@ -40,6 +40,9 @@ static char *cfrds_server_encode_password(const char *password)
 {
     char *ret = NULL;
 
+    if (password == NULL)
+        return NULL;
+
     static const char * const hex = "0123456789abcdef";
     static const char * const fillup = "4p0L@r1$";
     static const size_t fillup_len = sizeof(fillup) - 1;
@@ -47,8 +50,10 @@ static char *cfrds_server_encode_password(const char *password)
     size_t len = strlen(password);
 
     ret = malloc((len * 2) + 1);
+    if (ret == NULL)
+        return NULL;
 
-    for(size_t c = 0; c < len; c++)
+    for (size_t c = 0; c < len; c++)
     {
         char encoded_ch = password[c] ^ fillup[c % fillup_len];
         ret[(c * 2) + 0] = hex[(encoded_ch & 0xf0) >> 4];

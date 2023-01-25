@@ -216,6 +216,10 @@ static bool parse_number(char **data, size_t *size, int64_t *value)
 static bool parse_string(char **data, size_t *size, char **value)
 {
     int64_t str_size = 0;
+
+    if (value == NULL)
+        return false;
+
     if (!parse_number(data, size, &str_size))
         return NULL;
 

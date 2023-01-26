@@ -15,9 +15,6 @@ typedef struct {
     char *username;
     char *password;
 
-    cfrds_buffer *buffer;
-    uint32_t offsets_len;
-    uint32_t *offsets;
     char *error;
 } cfrds_server_int;
 
@@ -26,14 +23,11 @@ static void cfrds_server_int_clean(cfrds_server_int *server)
     if (server == NULL)
         return;
 
-    cfrds_buffer_free(server->buffer);
-    free(server->offsets);
-    free(server->error);
-
-    server->buffer = NULL;
-    server->offsets_len = 0;
-    server->offsets = NULL;
-    server->error = NULL;
+    if (server->error)
+    {
+        free(server->error);
+        server->error = NULL;
+    }
 }
 
 static char *cfrds_server_encode_password(const char *password)
@@ -81,9 +75,6 @@ bool cfrds_server_init(cfrds_server **server, const char *host, uint16_t port, c
     ret->port = port;
     ret->username = strdup(username);
     ret->password = cfrds_server_encode_password(password);
-
-    ret->buffer = NULL;
-    ret->offsets = 0;
     ret->error = NULL;
 
     *server = ret;

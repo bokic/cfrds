@@ -1,8 +1,6 @@
 #ifndef __CFRDS_H
 #define __CFRDS_H
 
-#include <cfrds_buffer.h>
-
 #include <stdbool.h>
 #include <stdint.h>
 #include <stddef.h>
@@ -27,6 +25,25 @@ enum cfrds_status {
     CFRDS_STATUS_RESPONSE_ERROR,
     CFRDS_STATUS_DIR_ALREADY_EXISTS,
 };
+
+typedef struct {
+    char *data;
+    char *modified;
+    char *permission;
+} cfrds_buffer_file_content;
+
+typedef struct {
+    char kind;
+    char *name;
+    uint8_t permissions;
+    size_t size;
+    uint64_t modified;
+} cfrds_buffer_browse_dir_item;
+
+typedef struct {
+    size_t cnt;
+    cfrds_buffer_browse_dir_item items[];
+} cfrds_buffer_browse_dir;
 
 #ifdef __cplusplus
 extern "C"

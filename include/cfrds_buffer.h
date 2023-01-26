@@ -1,6 +1,8 @@
 #ifndef __CFRDS_BUFFER_H
 #define __CFRDS_BUFFER_H
 
+#include <cfrds.h>
+
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
@@ -23,25 +25,6 @@ typedef SSIZE_T ssize_t;
 #endif
 
 #define cfrds_buffer void
-
-typedef struct {
-    char *data;
-    char *modified;
-    char *permission;
-} cfrds_buffer_file_content;
-
-typedef struct {
-    char kind;
-    char *name;
-    uint8_t permissions;
-    size_t size;
-    uint64_t modified;
-} cfrds_buffer_browse_dir_item;
-
-typedef struct {
-    size_t cnt;
-    cfrds_buffer_browse_dir_item items[];
-} cfrds_buffer_browse_dir;
 
 
 #ifdef __cplusplus

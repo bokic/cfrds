@@ -8,14 +8,6 @@
 #include <stdint.h>
 
 
-#ifdef _WIN32
-#include <BaseTsd.h>
-typedef ULONG_PTR SIZE_T;
-typedef LONG_PTR SSIZE_T;
-typedef SIZE_T size_t;
-typedef SSIZE_T ssize_t;
-#endif
-
 #define cfrds_buffer void
 
 #ifdef __cplusplus
@@ -40,6 +32,9 @@ void cfrds_buffer_append_rds_bytes(cfrds_buffer *buffer, const void *data, size_
 void cfrds_buffer_reserve_above_size(cfrds_buffer *buffer, size_t size);
 void cfrds_buffer_expand(cfrds_buffer *buffer, size_t size);
 void cfrds_buffer_free(cfrds_buffer *buffer);
+
+bool cfrds_buffer_parse_number(char **data, size_t *size, int64_t *value);
+bool cfrds_buffer_parse_string(char **data, size_t *size, char **value);
 
 cfrds_browse_dir_t *cfrds_buffer_to_browse_dir(cfrds_buffer *buffer);
 cfrds_file_content_t *cfrds_buffer_to_file_content(cfrds_buffer *buffer);

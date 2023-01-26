@@ -15,6 +15,7 @@ typedef struct {
     char *username;
     char *password;
 
+    int64_t error_code;
     char *error;
 } cfrds_server_int;
 
@@ -22,6 +23,8 @@ static void cfrds_server_clean(cfrds_server_int *server)
 {
     if (server == NULL)
         return;
+
+    server->error_code = 1;
 
     if (server->error)
     {
@@ -75,6 +78,7 @@ bool cfrds_server_init(cfrds_server **server, const char *host, uint16_t port, c
     ret->port = port;
     ret->username = strdup(username);
     ret->password = cfrds_server_encode_password(password);
+    ret->error_code = 1;
     ret->error = NULL;
 
     *server = ret;
@@ -100,7 +104,7 @@ void cfrds_server_free(cfrds_server *server)
     free(server);
 }
 
-void cfrds_server_set_error(cfrds_server *server, const char *error)
+void cfrds_server_set_error(cfrds_server *server, int64_t error_code, const char *error)
 {
     cfrds_server_int *server_int = NULL;
 
@@ -108,6 +112,8 @@ void cfrds_server_set_error(cfrds_server *server, const char *error)
         return;
 
     server_int = server;
+
+    server_int->error_code = error_code;
 
     if(server_int->error)
         free(server_int->error);
@@ -212,9 +218,18 @@ static enum cfrds_status cfrds_internal_command(cfrds_server *server, cfrds_buff
 
     if (cfrds_buffer_skip_httpheader((char **)&response_data, &response_size))
     {
-        if ((response_size != 4)||(strcmp(response_data, "1:0:") != 0))
+        if (!cfrds_buffer_parse_number((char **)&response_data, &response_size, &server_int->error_code))
         {
-            ret = CFRDS_STATUS_COMMAND_FAILED;
+            server_int->error_code = -1;
+            ret = CFRDS_STATUS_RESPONSE_ERROR;
+            goto exit;
+        }
+
+        if (server_int->error_code < 1)
+        {
+            cfrds_server_set_error(server, server_int->error_code, response_data);
+            ret = CFRDS_STATUS_RESPONSE_ERROR;
+            goto exit;
         }
     }
     else
@@ -222,6 +237,7 @@ static enum cfrds_status cfrds_internal_command(cfrds_server *server, cfrds_buff
         ret = CFRDS_STATUS_HTTP_RESPONSE_NOT_FOUND;
     }
 
+exit:
     if (response)
         *response = int_response;
     else
@@ -338,14 +354,23 @@ enum cfrds_status cfrds_exists(cfrds_server *server, char *pathname, bool *out)
 {
     enum cfrds_status ret;
 
+    cfrds_server_int *server_int = NULL;
+
+    if (server == NULL)
+        return CFRDS_STATUS_SERVER_IS_NULL;
+
     if (out == NULL)
         return CFRDS_STATUS_PARAM_IS_NULL;
 
     ret = cfrds_internal_command(server, NULL, "FILEIO", (char *[]){ pathname, "EXISTENCE", "", "", NULL});
     if (ret == CFRDS_STATUS_OK)
     {
-        // TODO: Implement me(parsing cfrds_exists() response)!
         *out = true;
+    } else {
+        server_int = server;
+
+        // TODO: Implement me(parsing cfrds_exists() response)!
+        server_int = NULL;
     }
 
     return ret;

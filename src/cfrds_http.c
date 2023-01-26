@@ -55,7 +55,7 @@ cfrds_buffer *cfrds_http_post(cfrds_server *server, const char *command, cfrds_b
     // Creating socket file descriptor
     if ((sockfd = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
         cfrds_buffer_free(send_buf);
-        cfrds_server_set_error(server, "socket creation failed...");
+        cfrds_server_set_error(server, -1, "socket creation failed...");
         return NULL;
     }
 
@@ -67,7 +67,7 @@ cfrds_buffer *cfrds_http_post(cfrds_server *server, const char *command, cfrds_b
 
     if (connect(sockfd, (struct sockaddr *)&servaddr, sizeof(servaddr)) != 0) {
         cfrds_buffer_free(send_buf);
-        cfrds_server_set_error(server, "connection with the server failed...");
+        cfrds_server_set_error(server, -1, "connection with the server failed...");
         close(sockfd);
         return NULL;
     }
@@ -76,7 +76,7 @@ cfrds_buffer *cfrds_http_post(cfrds_server *server, const char *command, cfrds_b
     cfrds_buffer_free(send_buf);
     if (sock_written == -1)
     {
-        cfrds_server_set_error(server, strerror(errno));
+        cfrds_server_set_error(server, -1, strerror(errno));
         close(sockfd);
         return NULL;
     }

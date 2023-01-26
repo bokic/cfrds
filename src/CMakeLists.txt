@@ -16,8 +16,8 @@ include_directories(
 
 add_library(libcfrds SHARED
     cfrds.c        ../include/cfrds.h
-    cfrds_buffer.c ../include/cfrds_buffer.h
-    cfrds_http.c   ../include/cfrds_http.h
+    cfrds_buffer.c ../include/internal/cfrds_buffer.h
+    cfrds_http.c   ../include/internal/cfrds_http.h
 )
 
 if(WIN32)
@@ -25,7 +25,7 @@ if(WIN32)
 endif()
 
 set_target_properties(libcfrds PROPERTIES
-    PUBLIC_HEADER "../include/cfrds.h;../include/cfrds_buffer.h"
+    PUBLIC_HEADER "../include/cfrds.h"
     OUTPUT_NAME "cfrds"
     VERSION "0.5.1"
     SOVERSION "0.5"

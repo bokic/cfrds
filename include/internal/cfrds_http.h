@@ -1,7 +1,7 @@
 #ifndef __CFRDS_HTTP_H
 #define __CFRDS_HTTP_H
 
-#include <cfrds_buffer.h>
+#include <internal/cfrds_buffer.h>
 
 #include <stdbool.h>
 #include <stdint.h>

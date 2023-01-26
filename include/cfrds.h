@@ -68,6 +68,9 @@ EXPORT_CFRDS enum cfrds_status cfrds_exists(cfrds_server *server, char *pathname
 EXPORT_CFRDS enum cfrds_status cfrds_create_dir(cfrds_server *server, char *name);
 EXPORT_CFRDS enum cfrds_status cfrds_get_root_dir(cfrds_server *server);
 
+EXPORT_CFRDS void cfrds_buffer_file_content_free(cfrds_file_content_t *value);
+EXPORT_CFRDS void cfrds_buffer_browse_dir_free(cfrds_browse_dir_t *value);
+
 #ifdef __cplusplus
 }
 #endif

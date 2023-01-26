@@ -54,8 +54,6 @@ EXPORT_CFRDS cfrds_browse_dir_t *cfrds_buffer_to_browse_dir(cfrds_buffer *buffer
 EXPORT_CFRDS cfrds_file_content_t *cfrds_buffer_to_file_content(cfrds_buffer *buffer);
 
 EXPORT_CFRDS bool cfrds_buffer_skip_httpheader(char **data, size_t *size);
-EXPORT_CFRDS void cfrds_buffer_file_content_free(cfrds_buffer_file_content *value);
-EXPORT_CFRDS void cfrds_buffer_browse_dir_free(cfrds_buffer_browse_dir *value);
 
 #ifdef __cplusplus
 }

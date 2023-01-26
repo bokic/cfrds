@@ -239,30 +239,6 @@ bool cfrds_buffer_skip_httpheader(char **data, size_t *size)
     return true;
 }
 
-void cfrds_buffer_file_content_free(cfrds_buffer_file_content *value)
-{
-    if (value == NULL)
-        return;
-
-    free(value->data);
-    free(value->modified);
-    free(value->permission);
-    free(value);
-}
-
-void cfrds_buffer_browse_dir_free(cfrds_buffer_browse_dir *value)
-{
-    if (value == NULL)
-        return;
-
-    for(size_t c = 0; c< value->cnt; c++)
-    {
-        free(value->items[c].name);
-    }
-
-    free(value);
-}
-
 cfrds_browse_dir_t *cfrds_buffer_to_browse_dir(cfrds_buffer *buffer)
 {
     cfrds_buffer_int *buffer_int = buffer;

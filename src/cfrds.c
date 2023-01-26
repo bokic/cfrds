@@ -411,3 +411,27 @@ enum cfrds_status cfrds_get_root_dir(cfrds_server *server)
     }
     return ret;
 }
+
+void cfrds_buffer_file_content_free(cfrds_file_content_t *value)
+{
+    if (value == NULL)
+        return;
+
+    free(value->data);
+    free(value->modified);
+    free(value->permission);
+    free(value);
+}
+
+void cfrds_buffer_browse_dir_free(cfrds_browse_dir_t *value)
+{
+    if (value == NULL)
+        return;
+
+    for(size_t c = 0; c< value->cnt; c++)
+    {
+        free(value->items[c].name);
+    }
+
+    free(value);
+}

@@ -1,5 +1,5 @@
-#include <cfrds_buffer.h>
-#include <cfrds_http.h>
+#include <internal/cfrds_buffer.h>
+#include <internal/cfrds_http.h>
 #include <cfrds.h>
 
 #ifdef _WIN32

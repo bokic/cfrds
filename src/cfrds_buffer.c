@@ -1,4 +1,4 @@
-#include <cfrds_buffer.h>
+#include <internal/cfrds_buffer.h>
 
 #include <stdlib.h>
 #include <string.h>

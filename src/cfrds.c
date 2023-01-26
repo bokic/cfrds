@@ -18,7 +18,7 @@ typedef struct {
     char *error;
 } cfrds_server_int;
 
-static void cfrds_server_int_clean(cfrds_server_int *server)
+static void cfrds_server_clean(cfrds_server_int *server)
 {
     if (server == NULL)
         return;
@@ -89,7 +89,7 @@ void cfrds_server_free(cfrds_server *server)
     if (server == NULL)
         return;
 
-    cfrds_server_int_clean(server);
+    cfrds_server_clean(server);
 
     server_int = server;    
 
@@ -178,7 +178,7 @@ static enum cfrds_status cfrds_internal_command(cfrds_server *server, cfrds_buff
     if (server_int->username) total_cnt++;
     if (server_int->password) total_cnt++;
 
-    cfrds_server_int_clean(server_int);
+    cfrds_server_clean(server_int);
 
     cfrds_buffer_create(&post);
     cfrds_buffer_append_rds_count(post, total_cnt);
@@ -271,7 +271,7 @@ enum cfrds_status cfrds_write_file(cfrds_server *server, void *pathname, const v
     if (server_int->username) total_cnt++;
     if (server_int->password) total_cnt++;
 
-    cfrds_server_int_clean(server_int);
+    cfrds_server_clean(server_int);
 
     cfrds_buffer_create(&post);
     cfrds_buffer_append_rds_count(post, total_cnt);

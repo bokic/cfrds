@@ -30,7 +30,7 @@ typedef struct {
     char *data;
     char *modified;
     char *permission;
-} cfrds_buffer_file_content;
+} cfrds_file_content_t;
 
 typedef struct {
     char kind;
@@ -38,12 +38,12 @@ typedef struct {
     uint8_t permissions;
     size_t size;
     uint64_t modified;
-} cfrds_buffer_browse_dir_item;
+} cfrds_browse_dir_item_t;
 
 typedef struct {
     size_t cnt;
-    cfrds_buffer_browse_dir_item items[];
-} cfrds_buffer_browse_dir;
+    cfrds_browse_dir_item_t items[];
+} cfrds_browse_dir_t;
 
 #ifdef __cplusplus
 extern "C"
@@ -57,9 +57,9 @@ EXPORT_CFRDS const char *cfrds_server_get_error(cfrds_server *server);
 EXPORT_CFRDS const char *cfrds_server_get_host(cfrds_server *server);
 EXPORT_CFRDS uint16_t cfrds_server_get_port(cfrds_server *server);
 
-EXPORT_CFRDS enum cfrds_status cfrds_browse_dir(cfrds_server *server, void *path, cfrds_buffer_browse_dir **out);
+EXPORT_CFRDS enum cfrds_status cfrds_browse_dir(cfrds_server *server, void *path, cfrds_browse_dir_t **out);
 
-EXPORT_CFRDS enum cfrds_status cfrds_read_file(cfrds_server *server, void *pathname, cfrds_buffer_file_content **out);
+EXPORT_CFRDS enum cfrds_status cfrds_read_file(cfrds_server *server, void *pathname, cfrds_file_content_t **out);
 EXPORT_CFRDS enum cfrds_status cfrds_write_file(cfrds_server *server, void *pathname, const void *data, size_t length);
 EXPORT_CFRDS enum cfrds_status cfrds_rename(cfrds_server *server, char *current_name, char *new_name);
 EXPORT_CFRDS enum cfrds_status cfrds_remove_file(cfrds_server *server, char *name);

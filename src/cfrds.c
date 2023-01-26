@@ -217,7 +217,7 @@ static enum cfrds_status cfrds_internal_command(cfrds_server *server, cfrds_buff
     return CFRDS_STATUS_OK;
 }
 
-enum cfrds_status cfrds_browse_dir(cfrds_server *server, void *path, cfrds_buffer_browse_dir **out)
+enum cfrds_status cfrds_browse_dir(cfrds_server *server, void *path, cfrds_browse_dir_t **out)
 {
     enum cfrds_status ret;
     cfrds_buffer *response = NULL;
@@ -239,7 +239,7 @@ enum cfrds_status cfrds_browse_dir(cfrds_server *server, void *path, cfrds_buffe
     return ret;
 }
 
-enum cfrds_status cfrds_read_file(cfrds_server *server, void *pathname, cfrds_buffer_file_content **out)
+enum cfrds_status cfrds_read_file(cfrds_server *server, void *pathname, cfrds_file_content_t **out)
 {
     enum cfrds_status ret;
     cfrds_buffer *response = NULL;

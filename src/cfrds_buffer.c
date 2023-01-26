@@ -263,7 +263,7 @@ void cfrds_buffer_browse_dir_free(cfrds_buffer_browse_dir *value)
     free(value);
 }
 
-cfrds_buffer_browse_dir *cfrds_buffer_to_browse_dir(cfrds_buffer *buffer)
+cfrds_browse_dir_t *cfrds_buffer_to_browse_dir(cfrds_buffer *buffer)
 {
     cfrds_buffer_int *buffer_int = buffer;
     int64_t total = 0;
@@ -286,8 +286,8 @@ cfrds_buffer_browse_dir *cfrds_buffer_to_browse_dir(cfrds_buffer *buffer)
 
     cnt = total / 5;
 
-    size_t ret_size = offsetof(cfrds_buffer_browse_dir, items) + (cnt * (offsetof(cfrds_buffer_browse_dir, items[1]) - (offsetof(cfrds_buffer_browse_dir, items[0]))));
-    cfrds_buffer_browse_dir *ret = malloc(ret_size);
+    size_t ret_size = offsetof(cfrds_browse_dir_t, items) + (cnt * (offsetof(cfrds_browse_dir_t, items[1]) - (offsetof(cfrds_browse_dir_t, items[0]))));
+    cfrds_browse_dir_t *ret = malloc(ret_size);
     memset(ret, 0, ret_size);
 
     ret->cnt = cnt;
@@ -371,9 +371,9 @@ cfrds_buffer_browse_dir *cfrds_buffer_to_browse_dir(cfrds_buffer *buffer)
     return ret;
 }
 
-cfrds_buffer_file_content *cfrds_buffer_to_file_content(cfrds_buffer *buffer)
+cfrds_file_content_t *cfrds_buffer_to_file_content(cfrds_buffer *buffer)
 {
-    cfrds_buffer_file_content *ret = NULL;
+    cfrds_file_content_t *ret = NULL;
     cfrds_buffer_int *buffer_int = buffer;
     char *str1 = NULL;
     char *str2 = NULL;
@@ -397,7 +397,7 @@ cfrds_buffer_file_content *cfrds_buffer_to_file_content(cfrds_buffer *buffer)
     if (total != 3)
         return NULL;
 
-    ret = malloc(sizeof(cfrds_buffer_file_content));
+    ret = malloc(sizeof(cfrds_file_content_t));
 
     parse_string(&data, &size, &ret->data);
     parse_string(&data, &size, &ret->modified);

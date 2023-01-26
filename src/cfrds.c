@@ -353,15 +353,17 @@ enum cfrds_status cfrds_exists(cfrds_server *server, char *pathname, bool *out)
     cfrds_buffer *buffer = NULL;
 
     ret = cfrds_internal_command(server, &buffer, "FILEIO", (char *[]){ pathname, "EXISTENCE", "", "", NULL});
-
-    const char *response_data = cfrds_buffer_data(buffer);
-    size_t response_size = cfrds_buffer_data_size(buffer);
-    if (cfrds_buffer_skip_httpheader((char **)&response_data, &response_size))
+    if (ret == CFRDS_STATUS_OK)
     {
-        if ((response_size == 4)&&(strcmp(response_data, "1:0:") == 0))
-            *out = true;
-        else
-            *out = false;
+        const char *response_data = cfrds_buffer_data(buffer);
+        size_t response_size = cfrds_buffer_data_size(buffer);
+        if (cfrds_buffer_skip_httpheader((char **)&response_data, &response_size))
+        {
+            if ((response_size == 4)&&(strcmp(response_data, "1:0:") == 0))
+                *out = true;
+            else
+                *out = false;
+        }
     }
 
     return ret;
@@ -373,6 +375,18 @@ enum cfrds_status cfrds_create_dir(cfrds_server *server, char *name)
     cfrds_buffer *buffer = NULL;
 
     ret = cfrds_internal_command(server, &buffer, "FILEIO", (char *[]){ name, "CREATE", "", "", NULL});
+    if (ret == CFRDS_STATUS_OK)
+    {
+        const char *response_data = cfrds_buffer_data(buffer);
+        size_t response_size = cfrds_buffer_data_size(buffer);
+        if (cfrds_buffer_skip_httpheader((char **)&response_data, &response_size))
+        {
+            if ((response_size != 4)||(strcmp(response_data, "1:0:") != 0))
+            {
+                ret = CFRDS_STATUS_COMMAND_FAILED;
+            }
+        }
+    }
 
     return ret;
 }
@@ -383,6 +397,17 @@ enum cfrds_status cfrds_get_root_dir(cfrds_server *server)
     cfrds_buffer *buffer = NULL;
 
     ret = cfrds_internal_command(server, &buffer, "FILEIO", (char *[]){ "", "CF_DIRECTORY", NULL});
-
+    if (ret == CFRDS_STATUS_OK)
+    {
+        const char *response_data = cfrds_buffer_data(buffer);
+        size_t response_size = cfrds_buffer_data_size(buffer);
+        if (cfrds_buffer_skip_httpheader((char **)&response_data, &response_size))
+        {
+            if ((response_size != 4)||(strcmp(response_data, "1:0:") != 0))
+            {
+                ret = CFRDS_STATUS_COMMAND_FAILED;
+            }
+        }
+    }
     return ret;
 }

@@ -25,6 +25,7 @@ enum cfrds_status {
     CFRDS_STATUS_SERVER_IS_NULL,
     CFRDS_STATUS_COMMAND_FAILED,
     CFRDS_STATUS_RESPONSE_ERROR,
+    CFRDS_STATUS_DIR_ALREADY_EXISTS,
 };
 
 #ifdef __cplusplus
@@ -48,6 +49,7 @@ EXPORT_CFRDS enum cfrds_status cfrds_remove_file(cfrds_server *server, char *nam
 EXPORT_CFRDS enum cfrds_status cfrds_remove_dir(cfrds_server *server, char *name);
 EXPORT_CFRDS enum cfrds_status cfrds_exists(cfrds_server *server, char *pathname, bool *out);
 EXPORT_CFRDS enum cfrds_status cfrds_create_dir(cfrds_server *server, char *name);
+EXPORT_CFRDS enum cfrds_status cfrds_get_root_dir(cfrds_server *server);
 
 #ifdef __cplusplus
 }

@@ -151,7 +151,7 @@ uint16_t cfrds_server_get_port(cfrds_server *server)
     return server_int->port;
 }
 
-static enum cfrds_status cfrds_internal_command(cfrds_server *server, cfrds_buffer **buffer, const char *command, char *list[])
+static enum cfrds_status cfrds_internal_command(cfrds_server *server, cfrds_buffer **response, const char *command, char *list[])
 {
     cfrds_server_int *server_int = NULL;
     const char *response_data = NULL;
@@ -191,14 +191,14 @@ static enum cfrds_status cfrds_internal_command(cfrds_server *server, cfrds_buff
     if (server_int->username) cfrds_buffer_append_rds_string(post, server_int->username);
     if (server_int->password) cfrds_buffer_append_rds_string(post, server_int->password);
 
-    *buffer = cfrds_http_post(server, command, post);
+    *response = cfrds_http_post(server, command, post);
 
     cfrds_buffer_free(post);
 
-    if (*buffer == NULL)
+    if (*response == NULL)
         return CFRDS_STATUS_COMMAND_FAILED;
 
-    response_data = cfrds_buffer_data(*buffer);
+    response_data = cfrds_buffer_data(*response);
 
     static const char *good_response = "HTTP/1.1 200 OK\r\nContent-Type: text/html\r\n";
 

@@ -13,7 +13,7 @@ typedef struct {
     char *string;
 } cfrds_buffer_int;
 
-static void cfrds_buffer_realloc_if_needed(cfrds_buffer *buffer, size_t len)
+void cfrds_buffer_realloc_if_needed(cfrds_buffer *buffer, size_t len)
 {
     cfrds_buffer_int *buffer_int = buffer;
     size_t new_size = 0;
@@ -189,7 +189,7 @@ void cfrds_buffer_free(cfrds_buffer *buffer)
     free(buffer);
 }
 
-static bool parse_number(char **data, size_t *size, int64_t *value)
+bool cfrds_buffer_parse_number(char **data, size_t *size, int64_t *value)
 {
     char *end = strchr(*data, ':');
     if ((end == NULL)||(end - *data > *size))
@@ -202,14 +202,14 @@ static bool parse_number(char **data, size_t *size, int64_t *value)
     return true;
 }
 
-static bool parse_string(char **data, size_t *size, char **value)
+bool cfrds_buffer_parse_string(char **data, size_t *size, char **value)
 {
     int64_t str_size = 0;
 
     if (value == NULL)
         return false;
 
-    if (!parse_number(data, size, &str_size))
+    if (!cfrds_buffer_parse_number(data, size, &str_size))
         return false;
 
     if (str_size <= 0)
@@ -254,7 +254,7 @@ cfrds_browse_dir_t *cfrds_buffer_to_browse_dir(cfrds_buffer *buffer)
     if (!cfrds_buffer_skip_httpheader(&data, &size))
         return NULL;
 
-    if (!parse_number(&data, &size, &total))
+    if (!cfrds_buffer_parse_number(&data, &size, &total))
         return NULL;
 
     if ((total <= 0)||(total % 5))
@@ -281,11 +281,11 @@ cfrds_browse_dir_t *cfrds_buffer_to_browse_dir(cfrds_buffer *buffer)
         ssize_t filesize = -1;
         uint64_t modified = -1;
 
-        parse_string(&data, &size, &str_kind);
-        parse_string(&data, &size, &filename);
-        parse_string(&data, &size, &str_permissions);
-        parse_string(&data, &size, &str_filesize);
-        parse_string(&data, &size, &str_timestamp);
+        cfrds_buffer_parse_string(&data, &size, &str_kind);
+        cfrds_buffer_parse_string(&data, &size, &filename);
+        cfrds_buffer_parse_string(&data, &size, &str_permissions);
+        cfrds_buffer_parse_string(&data, &size, &str_filesize);
+        cfrds_buffer_parse_string(&data, &size, &str_timestamp);
 
         if (str_kind)
         {
@@ -367,7 +367,7 @@ cfrds_file_content_t *cfrds_buffer_to_file_content(cfrds_buffer *buffer)
     if (!cfrds_buffer_skip_httpheader(&data, &size))
         return NULL;
 
-    if (!parse_number(&data, &size, &total))
+    if (!cfrds_buffer_parse_number(&data, &size, &total))
         return NULL;
 
     if (total != 3)
@@ -375,9 +375,9 @@ cfrds_file_content_t *cfrds_buffer_to_file_content(cfrds_buffer *buffer)
 
     ret = malloc(sizeof(cfrds_file_content_t));
 
-    parse_string(&data, &size, &ret->data);
-    parse_string(&data, &size, &ret->modified);
-    parse_string(&data, &size, &ret->permission);
+    cfrds_buffer_parse_string(&data, &size, &ret->data);
+    cfrds_buffer_parse_string(&data, &size, &ret->modified);
+    cfrds_buffer_parse_string(&data, &size, &ret->permission);
 
     return ret;
 }

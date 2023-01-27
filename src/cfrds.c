@@ -66,7 +66,7 @@ bool cfrds_server_init(cfrds_server **server, const char *host, uint16_t port, c
 {
     cfrds_server_int *ret = NULL;
 
-    if (server == NULL)
+    if ((server == NULL)||(host == NULL)||(port == 0)||(username == NULL)||(password == NULL))
         return false;
 
     ret = malloc(sizeof(cfrds_server_int));
@@ -256,7 +256,7 @@ enum cfrds_status cfrds_command_browse_dir(cfrds_server *server, void *path, cfr
     enum cfrds_status ret;
     cfrds_buffer *response = NULL;
 
-    if (out == NULL)
+    if ((server == NULL)||(path == NULL)||(out == NULL))
     {
         return CFRDS_STATUS_PARAM_IS_NULL;
     }
@@ -277,7 +277,7 @@ enum cfrds_status cfrds_command_file_read(cfrds_server *server, void *pathname, 
     enum cfrds_status ret;
     cfrds_buffer *response = NULL;
 
-    if (out == NULL)
+    if ((server == NULL)||(pathname == NULL)||(out == NULL))
     {
         return CFRDS_STATUS_PARAM_IS_NULL;
     }
@@ -305,8 +305,10 @@ enum cfrds_status cfrds_command_file_write(cfrds_server *server, void *pathname,
     size_t total_cnt = 0;
     size_t list_cnt = 0;
 
-    if (server == NULL)
-        return CFRDS_STATUS_SERVER_IS_NULL;
+    if ((server == NULL)||(pathname == NULL)||(data == NULL))
+    {
+        return CFRDS_STATUS_PARAM_IS_NULL;
+    }
 
     server_int = server;
 
@@ -380,16 +382,31 @@ exit:
 
 enum cfrds_status cfrds_command_file_rename(cfrds_server *server, char *current_name, char *new_name)
 {
+    if ((server == NULL)||(current_name == NULL)||(new_name == NULL))
+    {
+        return CFRDS_STATUS_PARAM_IS_NULL;
+    }
+
     return cfrds_internal_command(server, NULL, "FILEIO", (char *[]){ current_name, "RENAME", "", new_name, NULL});
 }
 
 enum cfrds_status cfrds_command_file_remove_file(cfrds_server *server, char *name)
 {
+    if ((server == NULL)||(name == NULL))
+    {
+        return CFRDS_STATUS_PARAM_IS_NULL;
+    }
+
     return cfrds_internal_command(server, NULL, "FILEIO", (char *[]){ name, "REMOVE", "", "F", NULL});
 }
 
 enum cfrds_status cfrds_command_file_remove_dir(cfrds_server *server, char *name)
 {
+    if ((server == NULL)||(name == NULL))
+    {
+        return CFRDS_STATUS_PARAM_IS_NULL;
+    }
+
     return cfrds_internal_command(server, NULL, "FILEIO", (char *[]){ name, "REMOVE", "", "D", NULL});
 }
 
@@ -397,8 +414,10 @@ enum cfrds_status cfrds_command_file_exists(cfrds_server *server, char *pathname
 {
     enum cfrds_status ret;
 
-    if (out == NULL)
+    if ((server == NULL)||(pathname == NULL)||(out == NULL))
+    {
         return CFRDS_STATUS_PARAM_IS_NULL;
+    }
 
     static const char response_file_not_found_start[] = "The system cannot find the path specified: ";
 
@@ -433,6 +452,11 @@ enum cfrds_status cfrds_command_file_exists(cfrds_server *server, char *pathname
 
 enum cfrds_status cfrds_command_file_create_dir(cfrds_server *server, char *name)
 {
+    if ((server == NULL)||(name == NULL))
+    {
+        return CFRDS_STATUS_PARAM_IS_NULL;
+    }
+
     return cfrds_internal_command(server, NULL, "FILEIO", (char *[]){ name, "CREATE", "", "", NULL});
 }
 
@@ -445,8 +469,10 @@ enum cfrds_status cfrds_command_file_get_root_dir(cfrds_server *server, char **o
     cfrds_buffer *response = NULL;
     size_t response_size = 0;
 
-    if (out == NULL)
+    if ((server == NULL)||(out == NULL))
+    {
         return CFRDS_STATUS_PARAM_IS_NULL;
+    }
 
     ret = cfrds_internal_command(server, &response, "FILEIO", (char *[]){ "", "CF_DIRECTORY", NULL});
     if (ret == CFRDS_STATUS_OK)

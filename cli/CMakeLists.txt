@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.5)
 
-project(cfrds_cli VERSION 0.5 LANGUAGES C)
+project(cfrds_cli VERSION 0.6.0 LANGUAGES C)
 
 set(CMAKE_C_STANDARD 17)
 set(CMAKE_C_STANDARD_REQUIRED ON)

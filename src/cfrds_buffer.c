@@ -197,6 +197,7 @@ bool cfrds_buffer_parse_number(char **data, size_t *size, int64_t *value)
 
     *value = atol(*data);
 
+    *size -= end - *data + 1;
     *data = end + 1;
 
     return true;
@@ -219,6 +220,7 @@ bool cfrds_buffer_parse_string(char **data, size_t *size, char **value)
     memcpy(*value, *data, str_size);
     (*value)[str_size] = 0;
 
+    *size -= str_size;
     *data += str_size;
 
     return true;

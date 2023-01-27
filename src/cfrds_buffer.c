@@ -1,3 +1,4 @@
+#include <cfrds.h>
 #include <internal/cfrds_buffer.h>
 
 #include <stdlib.h>

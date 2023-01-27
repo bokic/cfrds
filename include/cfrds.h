@@ -61,7 +61,6 @@ extern "C"
 
 EXPORT_CFRDS bool cfrds_server_init(cfrds_server **server, const char *host, uint16_t port, const char *username, const char *password);
 EXPORT_CFRDS void cfrds_server_free(cfrds_server *server);
-EXPORT_CFRDS void cfrds_server_set_error(cfrds_server *server, int64_t error_code, const char *error);
 EXPORT_CFRDS const char *cfrds_server_get_error(cfrds_server *server);
 EXPORT_CFRDS const char *cfrds_server_get_host(cfrds_server *server);
 EXPORT_CFRDS uint16_t cfrds_server_get_port(cfrds_server *server);

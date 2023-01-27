@@ -1,6 +1,7 @@
+#include <cfrds.h>
+#include <internal/cfrds_int.h>
 #include <internal/cfrds_buffer.h>
 #include <internal/cfrds_http.h>
-#include <cfrds.h>
 
 #ifdef _WIN32
 #include <winsock2.h>

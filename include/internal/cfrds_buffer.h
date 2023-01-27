@@ -1,7 +1,7 @@
 #ifndef __CFRDS_BUFFER_H
 #define __CFRDS_BUFFER_H
 
-#include <cfrds.h>
+#include "../cfrds.h"
 
 #include <stdbool.h>
 #include <stddef.h>

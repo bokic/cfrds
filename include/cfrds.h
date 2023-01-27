@@ -69,11 +69,11 @@ EXPORT_CFRDS uint16_t cfrds_server_get_port(cfrds_server *server);
 EXPORT_CFRDS enum cfrds_status cfrds_command_browse_dir(cfrds_server *server, void *path, cfrds_browse_dir_t **out);
 EXPORT_CFRDS enum cfrds_status cfrds_command_file_read(cfrds_server *server, void *pathname, cfrds_file_content_t **out);
 EXPORT_CFRDS enum cfrds_status cfrds_command_file_write(cfrds_server *server, void *pathname, const void *data, size_t length);
-EXPORT_CFRDS enum cfrds_status cfrds_command_file_rename(cfrds_server *server, char *current_name, char *new_name);
-EXPORT_CFRDS enum cfrds_status cfrds_command_file_remove_file(cfrds_server *server, char *name);
-EXPORT_CFRDS enum cfrds_status cfrds_command_file_remove_dir(cfrds_server *server, char *name);
+EXPORT_CFRDS enum cfrds_status cfrds_command_file_rename(cfrds_server *server, char *current_pathname, char *new_pathname);
+EXPORT_CFRDS enum cfrds_status cfrds_command_file_remove_file(cfrds_server *server, char *pathname);
+EXPORT_CFRDS enum cfrds_status cfrds_command_file_remove_dir(cfrds_server *server, char *path);
 EXPORT_CFRDS enum cfrds_status cfrds_command_file_exists(cfrds_server *server, char *pathname, bool *out);
-EXPORT_CFRDS enum cfrds_status cfrds_command_file_create_dir(cfrds_server *server, char *name);
+EXPORT_CFRDS enum cfrds_status cfrds_command_file_create_dir(cfrds_server *server, char *path);
 EXPORT_CFRDS enum cfrds_status cfrds_command_file_get_root_dir(cfrds_server *server, char **out);
 
 EXPORT_CFRDS void cfrds_buffer_file_content_free(cfrds_file_content_t *value);

@@ -75,7 +75,7 @@ EXPORT_CFRDS enum cfrds_status cfrds_remove_file(cfrds_server *server, char *nam
 EXPORT_CFRDS enum cfrds_status cfrds_remove_dir(cfrds_server *server, char *name);
 EXPORT_CFRDS enum cfrds_status cfrds_exists(cfrds_server *server, char *pathname, bool *out);
 EXPORT_CFRDS enum cfrds_status cfrds_create_dir(cfrds_server *server, char *name);
-EXPORT_CFRDS enum cfrds_status cfrds_get_root_dir(cfrds_server *server);
+EXPORT_CFRDS enum cfrds_status cfrds_get_root_dir(cfrds_server *server, char **out);
 
 EXPORT_CFRDS void cfrds_buffer_file_content_free(cfrds_file_content_t *value);
 EXPORT_CFRDS void cfrds_buffer_browse_dir_free(cfrds_browse_dir_t *value);

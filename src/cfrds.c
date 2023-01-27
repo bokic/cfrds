@@ -95,7 +95,7 @@ void cfrds_server_free(cfrds_server *server)
 
     cfrds_server_clean(server);
 
-    server_int = server;    
+    server_int = server;
 
     free(server_int->host);
     free(server_int->username);
@@ -395,6 +395,9 @@ enum cfrds_status cfrds_exists(cfrds_server *server, char *pathname, bool *out)
 {
     enum cfrds_status ret;
 
+    if (out == NULL)
+        return CFRDS_STATUS_PARAM_IS_NULL;
+
     static const char response_file_not_found_start[] = "The system cannot find the path specified: ";
 
     cfrds_server_int *server_int = NULL;
@@ -431,9 +434,49 @@ enum cfrds_status cfrds_create_dir(cfrds_server *server, char *name)
     return cfrds_internal_command(server, NULL, "FILEIO", (char *[]){ name, "CREATE", "", "", NULL});
 }
 
-enum cfrds_status cfrds_get_root_dir(cfrds_server *server)
+enum cfrds_status cfrds_get_root_dir(cfrds_server *server, char **out)
 {
-    return cfrds_internal_command(server, NULL, "FILEIO", (char *[]){ "", "CF_DIRECTORY", NULL});
+    enum cfrds_status ret;
+
+    cfrds_server_int *server_int = NULL;
+    const char *response_data = NULL;
+    cfrds_buffer *response = NULL;
+    size_t response_size = 0;
+
+    if (out == NULL)
+        return CFRDS_STATUS_PARAM_IS_NULL;
+
+    ret = cfrds_internal_command(server, &response, "FILEIO", (char *[]){ "", "CF_DIRECTORY", NULL});
+    if (ret == CFRDS_STATUS_OK)
+    {
+        response_data = cfrds_buffer_data(response);
+        response_size = cfrds_buffer_data_size(response);
+        cfrds_buffer_append_char(response, '\0');
+
+        server_int = server;
+
+        if (cfrds_buffer_skip_httpheader((char **)&response_data, &response_size))
+        {
+            if (!cfrds_buffer_parse_number((char **)&response_data, &response_size, &server_int->error_code))
+            {
+                server_int->error_code = -1;
+                ret = CFRDS_STATUS_RESPONSE_ERROR;
+                goto exit;
+            }
+
+            if (!cfrds_buffer_parse_string((char **)&response_data, &response_size, out))
+            {
+                server_int->error_code = -1;
+                ret = CFRDS_STATUS_RESPONSE_ERROR;
+                goto exit;
+            }
+        }
+    }
+
+exit:
+    cfrds_buffer_free(response);
+
+    return ret;
 }
 
 void cfrds_buffer_file_content_free(cfrds_file_content_t *value)

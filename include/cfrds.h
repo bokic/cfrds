@@ -23,7 +23,6 @@ typedef SSIZE_T ssize_t;
 #endif
 
 #define cfrds_server void
-#define cfrds_result void
 
 enum cfrds_status {
     CFRDS_STATUS_OK,

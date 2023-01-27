@@ -14,12 +14,14 @@ typedef SSIZE_T ssize_t;
 #endif
 
 
-#ifndef EXPORT_CFRDS
+#ifdef libcfrds_EXPORTS
  #if defined(_MSC_VER)
   #define EXPORT_CFRDS __declspec(dllexport)
  #else
   #define EXPORT_CFRDS __attribute__((visibility("default")))
  #endif
+#else
+ #define EXPORT_CFRDS
 #endif
 
 #define cfrds_server void

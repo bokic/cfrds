@@ -26,6 +26,7 @@ endif()
 
 set_target_properties(libcfrds PROPERTIES
     PUBLIC_HEADER "../include/cfrds.h"
+    C_VISIBILITY_PRESET hidden
     OUTPUT_NAME "cfrds"
     VERSION "0.5.1"
     SOVERSION "0.5"

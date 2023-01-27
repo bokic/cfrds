@@ -203,6 +203,8 @@ static enum cfrds_status cfrds_internal_command(cfrds_server *server, cfrds_buff
 
     int_response = cfrds_http_post(server, command, post);
 
+    /// TODO: Move this block into cfrds_http_post()
+    /// From here
     cfrds_buffer_free(post);
 
     if (int_response == NULL)
@@ -227,6 +229,7 @@ static enum cfrds_status cfrds_internal_command(cfrds_server *server, cfrds_buff
 
         if (server_int->error_code < 1)
         {
+            cfrds_buffer_append_char(int_response, '\0');
             cfrds_server_set_error(server, server_int->error_code, response_data);
             ret = CFRDS_STATUS_RESPONSE_ERROR;
             goto exit;
@@ -242,6 +245,7 @@ exit:
         *response = int_response;
     else
         cfrds_buffer_free(int_response);
+    /// To here!
 
     return ret;
 }
@@ -290,10 +294,13 @@ enum cfrds_status cfrds_read_file(cfrds_server *server, void *pathname, cfrds_fi
 
 enum cfrds_status cfrds_write_file(cfrds_server *server, void *pathname, const void *data, size_t length)
 {
+    enum cfrds_status ret = CFRDS_STATUS_OK;
+
     cfrds_server_int *server_int = NULL;
     const char *response_data = NULL;
     cfrds_buffer *response = NULL;
     cfrds_buffer *post = NULL;
+    size_t response_size = 0;
     size_t total_cnt = 0;
     size_t list_cnt = 0;
 
@@ -323,16 +330,50 @@ enum cfrds_status cfrds_write_file(cfrds_server *server, void *pathname, const v
 
     cfrds_buffer_free(post);
 
+    /// TODO: Move this block into cfrds_http_post()
+    /// From here
+
     if (response == NULL)
         return CFRDS_STATUS_COMMAND_FAILED;
 
     response_data = cfrds_buffer_data(response);
+    response_size = cfrds_buffer_data_size(response);
 
-    // TODO: Implement me(parsing cfrds_write_file() response)!
+    static const char *good_response = "HTTP/1.1 200 OK\r\nContent-Type: text/html\r\n";
+
+    if (strncmp(response_data, good_response, strlen(good_response)) != 0)
+        ret = CFRDS_STATUS_RESPONSE_ERROR;
+
+    if (cfrds_buffer_skip_httpheader((char **)&response_data, &response_size))
+    {
+        if (!cfrds_buffer_parse_number((char **)&response_data, &response_size, &server_int->error_code))
+        {
+            server_int->error_code = -1;
+            ret = CFRDS_STATUS_RESPONSE_ERROR;
+            goto exit;
+        }
+
+        // WARNING: There is something left(`XX` string is left while developing) in the body that is not processed. Assuming is not relevant.
+
+        if (server_int->error_code < 1)
+        {
+            cfrds_buffer_append_char(response, '\0');
+            cfrds_server_set_error(server, server_int->error_code, response_data);
+            ret = CFRDS_STATUS_RESPONSE_ERROR;
+            goto exit;
+        }
+    }
+    else
+    {
+        ret = CFRDS_STATUS_HTTP_RESPONSE_NOT_FOUND;
+    }
+
+exit:
+    /// To here!
 
     cfrds_buffer_free(response);
 
-    return CFRDS_STATUS_OK;
+    return ret;
 }
 
 enum cfrds_status cfrds_rename(cfrds_server *server, char *current_name, char *new_name)
@@ -354,6 +395,8 @@ enum cfrds_status cfrds_exists(cfrds_server *server, char *pathname, bool *out)
 {
     enum cfrds_status ret;
 
+    static const char response_file_not_found_start[] = "The system cannot find the path specified: ";
+
     cfrds_server_int *server_int = NULL;
 
     if (server == NULL)
@@ -368,9 +411,16 @@ enum cfrds_status cfrds_exists(cfrds_server *server, char *pathname, bool *out)
         *out = true;
     } else {
         server_int = server;
+        if ((server_int->error_code == -1)&&(server_int->error)&&(strncmp(server_int->error, response_file_not_found_start, strlen(response_file_not_found_start)) == 0))
+        {
+            server_int->error_code = 1;
+            free(server_int->error);
+            server_int->error = NULL;
 
-        // TODO: Implement me(parsing cfrds_exists() response)!
-        server_int = NULL;
+            *out = false;
+
+            ret = CFRDS_STATUS_OK;
+        }
     }
 
     return ret;

@@ -26,6 +26,7 @@ endif()
 
 set_target_properties(libcfrds PROPERTIES
     PUBLIC_HEADER "../include/cfrds.h"
+    INTERPROCEDURAL_OPTIMIZATION TRUE
     C_VISIBILITY_PRESET hidden
     OUTPUT_NAME "cfrds"
     VERSION "0.6.0"

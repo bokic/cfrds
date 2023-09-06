@@ -414,20 +414,19 @@ enum cfrds_status cfrds_command_file_exists(cfrds_server *server, char *pathname
 {
     enum cfrds_status ret;
 
-    if ((server == NULL)||(pathname == NULL)||(out == NULL))
+    if ((pathname == NULL)||(out == NULL))
     {
         return CFRDS_STATUS_PARAM_IS_NULL;
+    }
+
+    if (server == NULL)
+    {
+        return CFRDS_STATUS_SERVER_IS_NULL;
     }
 
     static const char response_file_not_found_start[] = "The system cannot find the path specified: ";
 
     cfrds_server_int *server_int = NULL;
-
-    if (server == NULL)
-        return CFRDS_STATUS_SERVER_IS_NULL;
-
-    if (out == NULL)
-        return CFRDS_STATUS_PARAM_IS_NULL;
 
     ret = cfrds_internal_command(server, NULL, "FILEIO", (char *[]){ pathname, "EXISTENCE", "", "", NULL});
     if (ret == CFRDS_STATUS_OK)

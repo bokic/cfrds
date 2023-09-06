@@ -82,8 +82,11 @@ void cfrds_buffer_append(cfrds_buffer *buffer, const char *str)
 
     cfrds_buffer_realloc_if_needed(buffer_int, len);
 
-    memcpy(&buffer_int->string[buffer_int->size], str, len);
-    buffer_int->size += len;
+    if (len > 0)
+    {
+        memcpy(&buffer_int->string[buffer_int->size], str, len);
+        buffer_int->size += len;
+    }
 }
 
 void cfrds_buffer_append_bytes(cfrds_buffer *buffer, const void *data, size_t length)
@@ -192,7 +195,12 @@ void cfrds_buffer_free(cfrds_buffer *buffer)
 
 bool cfrds_buffer_parse_number(char **data, size_t *size, int64_t *value)
 {
-    char *end = strchr(*data, ':');
+    char *end = NULL;
+
+    if (data == NULL)
+        return false;
+
+    end = strchr(*data, ':');
     if ((end == NULL)||(end - *data > *size))
         return false;
 

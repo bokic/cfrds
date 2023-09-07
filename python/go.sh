@@ -2,9 +2,6 @@
 
 clear
 
-clang -c -flto -Os -fPIC -I/usr/include/python3.11 -I../include cfrds.py.c ../src/cfrds.c ../src/cfrds_buffer.c ../src/cfrds_http.c
-clang -flto -Os -s cfrds.py.o cfrds.o cfrds_buffer.o cfrds_http.o -lpython3.11 -shared -o cfrds.so
-chmod -x cfrds.so
-rm *.o
+rm -rf *.so
 
-python test.py
+python3 setup.py build_ext --include-dirs=../include --build-lib=. && rm -rf build && python3 test.py

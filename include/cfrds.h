@@ -38,6 +38,7 @@ enum cfrds_status {
 
 typedef struct {
     char *data;
+    int size;
     char *modified;
     char *permission;
 } cfrds_file_content_t;

@@ -193,7 +193,7 @@ void cfrds_buffer_free(cfrds_buffer *buffer)
     free(buffer);
 }
 
-bool cfrds_buffer_parse_number(char **data, size_t *size, int64_t *value)
+bool cfrds_buffer_parse_number(char **data, size_t *remaining, int64_t *out)
 {
     char *end = NULL;
 
@@ -201,41 +201,66 @@ bool cfrds_buffer_parse_number(char **data, size_t *size, int64_t *value)
         return false;
 
     end = strchr(*data, ':');
-    if ((end == NULL)||((unsigned)(end - *data) > *size))
+    if ((end == NULL)||((unsigned)(end - *data) > *remaining))
         return false;
 
-    *value = atol(*data);
+    *out = atol(*data);
 
-    *size -= end - *data + 1;
+    *remaining -= end - *data + 1;
     *data = end + 1;
 
     return true;
 }
 
-bool cfrds_buffer_parse_string(char **data, size_t *size, char **value)
+bool cfrds_buffer_parse_bytearray(char **data, size_t *remaining, char **out, int *out_size)
+{
+    int64_t size = 0;
+
+    if (out == NULL)
+        return false;
+
+    if (!cfrds_buffer_parse_number(data, remaining, &size))
+        return false;
+
+    if (size <= 0)
+        return false;
+
+    *out = malloc(size + 1);
+    memcpy(*out, *data, size);
+    (*out)[size] = 0;
+
+    *remaining -= size;
+    *data += size;
+
+    *out_size = size;
+
+    return true;
+}
+
+bool cfrds_buffer_parse_string(char **data, size_t *remaining, char **out)
 {
     int64_t str_size = 0;
 
-    if (value == NULL)
+    if (out == NULL)
         return false;
 
-    if (!cfrds_buffer_parse_number(data, size, &str_size))
+    if (!cfrds_buffer_parse_number(data, remaining, &str_size))
         return false;
 
     if (str_size <= 0)
         return false;
 
-    *value = malloc(str_size + 1);
-    memcpy(*value, *data, str_size);
-    (*value)[str_size] = 0;
+    *out = malloc(str_size + 1);
+    memcpy(*out, *data, str_size);
+    (*out)[str_size] = 0;
 
-    *size -= str_size;
+    *remaining -= str_size;
     *data += str_size;
 
     return true;
 }
 
-bool cfrds_buffer_skip_httpheader(char **data, size_t *size)
+bool cfrds_buffer_skip_httpheader(char **data, size_t *remaining)
 {
     char *body = NULL;
 
@@ -243,9 +268,9 @@ bool cfrds_buffer_skip_httpheader(char **data, size_t *size)
     if (body == NULL)
         return false;
 
-    *size -= body - *data;
+    *remaining -= body - *data;
     *data = body + 4;
-    *size -= 4;
+    *remaining -= 4;
 
     return true;
 }
@@ -386,7 +411,7 @@ cfrds_file_content_t *cfrds_buffer_to_file_content(cfrds_buffer *buffer)
 
     ret = malloc(sizeof(cfrds_file_content_t));
 
-    cfrds_buffer_parse_string(&data, &size, &ret->data);
+    cfrds_buffer_parse_bytearray(&data, &size, &ret->data, &ret->size);
     cfrds_buffer_parse_string(&data, &size, &ret->modified);
     cfrds_buffer_parse_string(&data, &size, &ret->permission);
 

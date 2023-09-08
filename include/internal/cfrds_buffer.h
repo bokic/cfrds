@@ -33,8 +33,9 @@ void cfrds_buffer_reserve_above_size(cfrds_buffer *buffer, size_t size);
 void cfrds_buffer_expand(cfrds_buffer *buffer, size_t size);
 void cfrds_buffer_free(cfrds_buffer *buffer);
 
-bool cfrds_buffer_parse_number(char **data, size_t *size, int64_t *value);
-bool cfrds_buffer_parse_string(char **data, size_t *size, char **value);
+bool cfrds_buffer_parse_number(char **data, size_t *remaining, int64_t *out);
+bool cfrds_buffer_parse_bytearray(char **data, size_t *remaining, char **out, int *out_size);
+bool cfrds_buffer_parse_string(char **data, size_t *remaining, char **out);
 
 cfrds_browse_dir_t *cfrds_buffer_to_browse_dir(cfrds_buffer *buffer);
 cfrds_file_content_t *cfrds_buffer_to_file_content(cfrds_buffer *buffer);

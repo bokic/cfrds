@@ -141,15 +141,22 @@ static PyObject *
 cfrds_server_file_read(cfrds_server_Object *self, PyObject *args)
 {
     PyObject *ret = NULL;
-    char *path = NULL;
+    char *filepath = NULL;
+    cfrds_file_content_t *file_content = NULL;
 
-    if (!PyArg_ParseTuple(args, "s", &path))
+    if (!PyArg_ParseTuple(args, "s", &filepath))
     {
-        PyErr_SetString(PyExc_RuntimeError, "path not set");
+        PyErr_SetString(PyExc_RuntimeError, "filepath not set");
         goto exit;
     }
 
+    CHECK_FOR_ERORRS(cfrds_command_file_read(self->server, filepath, &file_content));
+
+    ret = PyByteArray_FromStringAndSize(file_content->data, file_content->size);
+
 exit:
+    cfrds_buffer_file_content_free(file_content);
+
     return ret;
 }
 

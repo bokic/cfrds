@@ -4,6 +4,39 @@
 #include <structmember.h>
 #include <stddef.h>
 
+#define CHECK_FOR_ERORRS(function_call)                                                       \
+    {                                                                                         \
+    enum cfrds_status res = function_call;                                                    \
+        if (res != CFRDS_STATUS_OK)                                                           \
+        {                                                                                     \
+            switch(res)                                                                       \
+            {                                                                                 \
+            case CFRDS_STATUS_PARAM_IS_NULL:                                                  \
+                PyErr_SetString(PyExc_RuntimeError, "CFRDS_STATUS_PARAM_IS_NULL");            \
+                break;                                                                        \
+            case CFRDS_STATUS_SERVER_IS_NULL:                                                 \
+                PyErr_SetString(PyExc_RuntimeError, "CFRDS_STATUS_SERVER_IS_NULL");           \
+                break;                                                                        \
+            case CFRDS_STATUS_COMMAND_FAILED:                                                 \
+                PyErr_SetString(PyExc_RuntimeError, "CFRDS_STATUS_COMMAND_FAILED");           \
+                break;                                                                        \
+            case CFRDS_STATUS_RESPONSE_ERROR:                                                 \
+                PyErr_SetString(PyExc_RuntimeError, "CFRDS_STATUS_RESPONSE_ERROR");           \
+                break;                                                                        \
+            case CFRDS_STATUS_HTTP_RESPONSE_NOT_FOUND:                                        \
+                PyErr_SetString(PyExc_RuntimeError, "CFRDS_STATUS_HTTP_RESPONSE_NOT_FOUND");  \
+                break;                                                                        \
+            case CFRDS_STATUS_DIR_ALREADY_EXISTS:                                             \
+                PyErr_SetString(PyExc_RuntimeError, "CFRDS_STATUS_DIR_ALREADY_EXISTS");       \
+                break;                                                                        \
+            default:                                                                          \
+                PyErr_SetString(PyExc_RuntimeError, "Unknown CFRDS error.");                  \
+                break;                                                                        \
+            }                                                                                 \
+                                                                                              \
+            goto exit;                                                                        \
+        }                                                                                     \
+    }
 
 typedef struct {
     PyObject_HEAD
@@ -66,36 +99,7 @@ cfrds_server_browse_dir(cfrds_server_Object *self, PyObject *args)
         goto exit;
     }
 
-    enum cfrds_status res = cfrds_command_browse_dir(server, path, &dir);
-    if (res != CFRDS_STATUS_OK)
-    {
-        switch(res)
-        {
-        case CFRDS_STATUS_PARAM_IS_NULL:
-            PyErr_SetString(PyExc_RuntimeError, "CFRDS_STATUS_PARAM_IS_NULL");
-            break;
-        case CFRDS_STATUS_SERVER_IS_NULL:
-            PyErr_SetString(PyExc_RuntimeError, "CFRDS_STATUS_SERVER_IS_NULL");
-            break;
-        case CFRDS_STATUS_COMMAND_FAILED:
-            PyErr_SetString(PyExc_RuntimeError, "CFRDS_STATUS_COMMAND_FAILED");
-            break;
-        case CFRDS_STATUS_RESPONSE_ERROR:
-            PyErr_SetString(PyExc_RuntimeError, "CFRDS_STATUS_RESPONSE_ERROR");
-            break;
-        case CFRDS_STATUS_HTTP_RESPONSE_NOT_FOUND:
-            PyErr_SetString(PyExc_RuntimeError, "CFRDS_STATUS_HTTP_RESPONSE_NOT_FOUND");
-            break;
-        case CFRDS_STATUS_DIR_ALREADY_EXISTS:
-            PyErr_SetString(PyExc_RuntimeError, "CFRDS_STATUS_DIR_ALREADY_EXISTS");
-            break;
-        default:
-            PyErr_SetString(PyExc_RuntimeError, "Unknown CFRDS error.");
-            break;
-        }
-
-        goto exit;
-    }
+    CHECK_FOR_ERORRS(cfrds_command_browse_dir(server, path, &dir));
 
     if (dir)
     {

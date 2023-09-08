@@ -201,7 +201,7 @@ bool cfrds_buffer_parse_number(char **data, size_t *size, int64_t *value)
         return false;
 
     end = strchr(*data, ':');
-    if ((end == NULL)||(end - *data > *size))
+    if ((end == NULL)||((unsigned)(end - *data) > *size))
         return false;
 
     *value = atol(*data);
@@ -362,12 +362,12 @@ cfrds_file_content_t *cfrds_buffer_to_file_content(cfrds_buffer *buffer)
 {
     cfrds_file_content_t *ret = NULL;
     cfrds_buffer_int *buffer_int = buffer;
-    char *str1 = NULL;
-    char *str2 = NULL;
-    char *str3 = NULL;
+    //char *str1 = NULL;
+    //char *str2 = NULL;
+    //char *str3 = NULL;
 
     int64_t total = 0;
-    int64_t cnt = 0;
+    //int64_t cnt = 0;
 
     if (buffer_int == NULL)
         return NULL;

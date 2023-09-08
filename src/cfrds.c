@@ -193,7 +193,7 @@ static enum cfrds_status cfrds_internal_command(cfrds_server *server, cfrds_buff
     cfrds_buffer_create(&post);
     cfrds_buffer_append_rds_count(post, total_cnt);
 
-    for(int c = 0; c < list_cnt; c++)
+    for(size_t c = 0; c < list_cnt; c++)
     {
         cfrds_buffer_append_rds_string(post, list[c]);
     }
@@ -303,7 +303,7 @@ enum cfrds_status cfrds_command_file_write(cfrds_server *server, void *pathname,
     cfrds_buffer *post = NULL;
     size_t response_size = 0;
     size_t total_cnt = 0;
-    size_t list_cnt = 0;
+    //size_t list_cnt = 0;
 
     if ((server == NULL)||(pathname == NULL)||(data == NULL))
     {

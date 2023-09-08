@@ -40,10 +40,7 @@
 
 typedef struct {
     PyObject_HEAD
-    PyObject *host;
-    int port;
-    PyObject *username;
-    PyObject *password;
+    cfrds_server *server;
 } cfrds_server_Object;
 
 static PyObject *
@@ -51,37 +48,60 @@ cfrds_server_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
 {
     cfrds_server_Object *self = NULL;
     
-    self = (cfrds_server_Object *) type->tp_alloc(type, 0);
-    if (self != NULL) {
-        self->host = PyUnicode_FromString("localhost");
-        if (self->host == NULL) {
-            Py_DECREF(self);
-            return NULL;
-        }
+    cfrds_server *server = NULL;
+    const char *hostname = "127.0.0.1";
+    int port = 8500;
+    const char *username = "admin";
+    const char *password = "";
 
-        self->port = 8500;
-
-        self->username = PyUnicode_FromString("");
-        if (self->username == NULL) {
-            Py_DECREF(self);
-            return NULL;
-        }
-
-        self->password = PyUnicode_FromString("");
-        if (self->password == NULL) {
-            Py_DECREF(self);
-            return NULL;
-        }
+    if (!PyArg_ParseTuple(args, "sHss", &hostname, &port, &username, &password))
+    {
+        PyErr_SetString(PyExc_RuntimeError, "Invalid arguments!");
+        goto error;
     }
 
+    if (!cfrds_server_init(&server, hostname, port, username, password))
+    {
+        PyErr_SetString(PyExc_RuntimeError, "cfrds_server_init function failed!");
+        goto error;
+    }
+    
+    self = (cfrds_server_Object *) type->tp_alloc(type, 0);
+    if (!server)
+    {
+        PyErr_SetString(PyExc_RuntimeError, "Can't create self!");
+        goto error;
+    }
+
+    self->server = server;
+
     return (PyObject *) self;
+
+error:
+    if (server)
+    {
+        cfrds_server_free(server);
+    }
+
+    return NULL;
+}
+
+static int
+cfrds_server_dealloc(cfrds_server_Object *self)
+{
+    if (self->server)
+    {
+        cfrds_server_free(self->server);
+        self->server = NULL;
+    }
+
+    return 0;
 }
 
 static PyObject *
 cfrds_server_browse_dir(cfrds_server_Object *self, PyObject *args)
 {
     cfrds_browse_dir_t *dir = NULL;
-    cfrds_server *server = NULL;
     PyObject *ret = NULL;
     char *path = NULL;
 
@@ -93,13 +113,7 @@ cfrds_server_browse_dir(cfrds_server_Object *self, PyObject *args)
         goto exit;
     }
 
-    if (!cfrds_server_init(&server, PyUnicode_AsUTF8(self->host), self->port, PyUnicode_AsUTF8(self->username), PyUnicode_AsUTF8(self->password)))
-    {
-        PyErr_SetString(PyExc_RuntimeError, "cfrds_server_init function failed!");
-        goto exit;
-    }
-
-    CHECK_FOR_ERORRS(cfrds_command_browse_dir(server, path, &dir));
+    CHECK_FOR_ERORRS(cfrds_command_browse_dir(self->server, path, &dir));
 
     if (dir)
     {
@@ -119,7 +133,6 @@ cfrds_server_browse_dir(cfrds_server_Object *self, PyObject *args)
 
 exit:
     cfrds_buffer_browse_dir_free(dir);
-    cfrds_server_free(server);
 
     return ret;
 }
@@ -140,14 +153,6 @@ exit:
     return ret;
 }
 
-static PyMemberDef cfrds_server_members[] = {
-    {"host",     T_OBJECT_EX, offsetof(cfrds_server_Object, host),     0, "hostname"},
-    {"port",     T_INT,       offsetof(cfrds_server_Object, port),     0, "port"},
-    {"username", T_OBJECT_EX, offsetof(cfrds_server_Object, username), 0, "username"},
-    {"password", T_OBJECT_EX, offsetof(cfrds_server_Object, password), 0, "password"},
-    {NULL}  /* Sentinel */
-};
-
 static PyMethodDef cfrds_server_methods[] = {
     {"browse_dir", (PyCFunction) cfrds_server_browse_dir, METH_VARARGS, "List directory entries"},
     {"file_read",  (PyCFunction) cfrds_server_file_read,  METH_VARARGS, "Read file"},
@@ -163,8 +168,8 @@ static PyTypeObject cfrds_server_Type = {
     .tp_flags = Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE,
     .tp_new = cfrds_server_new,
     //.tp_init = (initproc) Custom_init,
-    //.tp_dealloc = (destructor) Custom_dealloc,
-    .tp_members = cfrds_server_members,
+    .tp_dealloc = (destructor) cfrds_server_dealloc,
+    //.tp_members = cfrds_server_members,
     .tp_methods = cfrds_server_methods,
 };
 

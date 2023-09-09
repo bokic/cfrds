@@ -44,9 +44,11 @@ typedef struct {
 } cfrds_server_Object;
 
 static PyObject *
-cfrds_server_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
+cfrds_server_new(PyTypeObject *type, PyObject *args, PyObject *kwargs)
 {
     cfrds_server_Object *self = NULL;
+
+    static char *kwlist[] = {"hostname", "port", "username", "password", NULL};
     
     cfrds_server *server = NULL;
     const char *hostname = "127.0.0.1";
@@ -54,7 +56,7 @@ cfrds_server_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
     const char *username = "admin";
     const char *password = "";
 
-    if (!PyArg_ParseTuple(args, "sHss", &hostname, &port, &username, &password))
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "sHss", kwlist, &hostname, &port, &username, &password))
     {
         PyErr_SetString(PyExc_RuntimeError, "Invalid arguments!");
         goto error;
@@ -160,9 +162,144 @@ exit:
     return ret;
 }
 
+static PyObject *
+cfrds_server_file_write(cfrds_server_Object *self, PyObject *args)
+{
+    char *filepath = NULL;
+    PyObject *file_content = NULL;
+
+    if (!PyArg_ParseTuple(args, "sY", &filepath, &file_content))
+    {
+        PyErr_SetString(PyExc_RuntimeError, "filepath or content parameter not set!");
+        goto exit;
+    }
+
+    CHECK_FOR_ERORRS(cfrds_command_file_write(self->server, filepath, PyByteArray_AsString(file_content),PyByteArray_Size(file_content)));
+
+exit:
+    return Py_None;
+}
+
+static PyObject *
+cfrds_server_file_rename(cfrds_server_Object *self, PyObject *args)
+{
+    char *filepath_from = NULL;
+    char *filepath_to = NULL;
+
+    if (!PyArg_ParseTuple(args, "ss", &filepath_from, &filepath_to))
+    {
+        PyErr_SetString(PyExc_RuntimeError, "filename from/to parameter(s) not set!");
+        goto exit;
+    }
+
+    CHECK_FOR_ERORRS(cfrds_command_file_rename(self->server, filepath_from, filepath_to));
+
+exit:
+    return Py_None;
+}
+
+static PyObject *
+cfrds_server_file_remove(cfrds_server_Object *self, PyObject *args)
+{
+    char *filepath = NULL;
+
+    if (!PyArg_ParseTuple(args, "s", &filepath))
+    {
+        PyErr_SetString(PyExc_RuntimeError, "filename parameter not set!");
+        goto exit;
+    }
+
+    CHECK_FOR_ERORRS(cfrds_command_file_remove_file(self->server, filepath));
+
+exit:
+    return Py_None;
+}
+
+static PyObject *
+cfrds_server_dir_remove(cfrds_server_Object *self, PyObject *args)
+{
+    char *dirpath = NULL;
+
+    if (!PyArg_ParseTuple(args, "s", &dirpath))
+    {
+        PyErr_SetString(PyExc_RuntimeError, "dirpath parameter not set!");
+        goto exit;
+    }
+
+    CHECK_FOR_ERORRS(cfrds_command_file_remove_dir(self->server, dirpath));
+
+exit:
+    return Py_None;
+}
+
+static PyObject *
+cfrds_server_file_exists(cfrds_server_Object *self, PyObject *args)
+{
+    char *pathname = NULL;
+    bool exists = false;
+
+    if (!PyArg_ParseTuple(args, "s", &pathname))
+    {
+        PyErr_SetString(PyExc_RuntimeError, "pathname parameter not set!");
+        goto exit;
+    }
+
+    CHECK_FOR_ERORRS(cfrds_command_file_exists(self->server, pathname, &exists));
+
+    return PyBool_FromLong(exists);
+
+exit:
+    return Py_None;
+}
+
+static PyObject *
+cfrds_server_dir_create(cfrds_server_Object *self, PyObject *args)
+{
+    char *dirpath = NULL;
+
+    if (!PyArg_ParseTuple(args, "s", &dirpath))
+    {
+        PyErr_SetString(PyExc_RuntimeError, "dirpath parameter not set!");
+        goto exit;
+    }
+
+    CHECK_FOR_ERORRS(cfrds_command_file_create_dir(self->server, dirpath));
+
+exit:
+    return Py_None;
+}
+
+static PyObject *
+cfrds_server_cf_root_dir(cfrds_server_Object *self, PyObject *args)
+{
+    PyObject *ret = NULL;
+    char *dirpath = NULL;
+
+    CHECK_FOR_ERORRS(cfrds_command_file_get_root_dir(self->server, &dirpath));
+
+    if (!dirpath)
+        goto exit;
+
+    ret = PyUnicode_DecodeUTF8(dirpath, strlen(dirpath), NULL);
+
+    free(dirpath);
+
+    return ret;
+
+exit:
+    return Py_None;
+}
+
 static PyMethodDef cfrds_server_methods[] = {
-    {"browse_dir", (PyCFunction) cfrds_server_browse_dir, METH_VARARGS, "List directory entries"},
-    {"file_read",  (PyCFunction) cfrds_server_file_read,  METH_VARARGS, "Read file"},
+    {"browse_dir",  (PyCFunction) cfrds_server_browse_dir,  METH_VARARGS, "List directory entries"},
+    {"file_read",   (PyCFunction) cfrds_server_file_read,   METH_VARARGS, "Read file"},
+    {"file_write",  (PyCFunction) cfrds_server_file_write,  METH_VARARGS, "Write file"},
+    {"file_rename", (PyCFunction) cfrds_server_file_rename, METH_VARARGS, "Rename file"},
+    {"file_remove", (PyCFunction) cfrds_server_file_remove, METH_VARARGS, "Remove file"},
+    {"dir_remove",  (PyCFunction) cfrds_server_dir_remove,  METH_VARARGS, "Remove dir"},
+    {"file_exists", (PyCFunction) cfrds_server_file_exists, METH_VARARGS, "File exists"},
+    {"dir_create",  (PyCFunction) cfrds_server_dir_create,  METH_VARARGS, "Create dir"},
+    {"cf_root_dir", (PyCFunction) cfrds_server_cf_root_dir, METH_VARARGS, "Get ColdFusion root dir"},
     {NULL}  /* Sentinel */
 };
 

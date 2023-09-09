@@ -9,9 +9,9 @@ def main():
           ext_modules=[Extension("cfrds", [
               "cfrds.py.c", 
               "../src/cfrds.c", 
-              "../src/cfrds_buffer.c", 
+              "../src/cfrds_buffer.c",
               "../src/cfrds_http.c"
-            ])]
+            ],  include_dirs=['../include'])]
     )
 
 if __name__ == "__main__":

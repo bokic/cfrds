@@ -3,7 +3,7 @@
 cfrds python module for connecting to ColdFusion RDS service.
 
 TODO:
-[ ] ColdFusion error string passed to python exception.
+- [ ] ColdFusion error string passed to python exception.
 
 Examples:
 ``` Python

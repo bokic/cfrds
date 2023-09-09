@@ -2,8 +2,8 @@ from distutils.core import setup, Extension
 
 def main():
     setup(name="cfrds",
-          version="0.1.0",
-          description="Python interface for the fputs C library function",
+          version="0.6.0",
+          description="Python interface for ColdFusion RDS service.",
           author="Boris Barbulovski",
           author_email="bbarbulovski@gmail.com",
           ext_modules=[Extension("cfrds", [

@@ -54,7 +54,7 @@ char *cfrds_buffer_data(cfrds_buffer *buffer)
     cfrds_buffer_int *ret = NULL;
 
     if (buffer == NULL)
-         return false;
+         return NULL;
 
     ret = buffer;
 

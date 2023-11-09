@@ -379,7 +379,7 @@ cfrds_browse_dir_t *cfrds_buffer_to_browse_dir(cfrds_buffer *buffer)
             str_filesize = NULL;
         }
 
-        if(((file_type != 'D')&&(file_type != 'F'))||(!filename)||(permissions < 0)||(permissions > 0xff)||(filesize < 0)||(modified < 0))
+        if(((file_type != 'D')&&(file_type != 'F'))||(!filename)||(permissions < 0)||(permissions > 0xff)||(filesize < 0))
         {
             free(filename);
 

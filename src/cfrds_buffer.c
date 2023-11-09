@@ -78,6 +78,11 @@ void cfrds_buffer_append(cfrds_buffer *buffer, const char *str)
     cfrds_buffer_int *buffer_int = buffer;
     size_t len = 0;
 
+    if ((!buffer_int)||(!str))
+    {
+         return;
+    }
+
     len = strlen(str);
 
     cfrds_buffer_realloc_if_needed(buffer_int, len);
@@ -92,6 +97,11 @@ void cfrds_buffer_append(cfrds_buffer *buffer, const char *str)
 void cfrds_buffer_append_bytes(cfrds_buffer *buffer, const void *data, size_t length)
 {
     cfrds_buffer_int *buffer_int = buffer;
+
+    if ((!buffer_int)||(!data)||(length == 0))
+    {
+        return;
+    }
 
     cfrds_buffer_realloc_if_needed(buffer_int, length);
 
@@ -125,6 +135,11 @@ void cfrds_buffer_append_rds_string(cfrds_buffer *buffer, const char *str)
 {
     char str_len[32];
     size_t len = 0;
+
+    if ((!buffer)||(!str))
+    {
+        return;
+    }
 
     len = strlen(str);
     snprintf(str_len, sizeof(str_len), "%zu", len);

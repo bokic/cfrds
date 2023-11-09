@@ -32,7 +32,7 @@ cfrds_buffer *cfrds_http_post(cfrds_server *server, const char *command, cfrds_b
 
     port = cfrds_server_get_port(server);
 
-    sprintf(datasize_str, "%zu", cfrds_buffer_data_size(payload));
+    snprintf(datasize_str, sizeof(datasize_str),"%zu", cfrds_buffer_data_size(payload));
 
     cfrds_buffer_create(&send_buf);
     cfrds_buffer_append(send_buf, "POST /CFIDE/main/ide.cfm?CFSRV=IDE&ACTION=");
@@ -41,7 +41,7 @@ cfrds_buffer *cfrds_http_post(cfrds_server *server, const char *command, cfrds_b
     cfrds_buffer_append(send_buf, cfrds_server_get_host(server));
     if(port != 80)
     {
-        sprintf(port_str, "%d", port);
+        snprintf(port_str, sizeof(port_str), "%d", port);
         cfrds_buffer_append(send_buf, ":");
         cfrds_buffer_append(send_buf, port_str);
     }

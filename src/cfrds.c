@@ -303,7 +303,6 @@ enum cfrds_status cfrds_command_file_write(cfrds_server *server, const char *pat
     cfrds_buffer *post = NULL;
     size_t response_size = 0;
     size_t total_cnt = 0;
-    //size_t list_cnt = 0;
 
     if ((server == NULL)||(pathname == NULL)||(data == NULL))
     {

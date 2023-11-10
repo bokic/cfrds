@@ -63,7 +63,7 @@ char *cfrds_buffer_data(cfrds_buffer *buffer)
 
 size_t cfrds_buffer_data_size(cfrds_buffer *buffer)
 {
-    cfrds_buffer_int *ret = NULL;
+    const cfrds_buffer_int *ret = NULL;
 
     if (buffer == NULL)
          return false;
@@ -112,7 +112,7 @@ void cfrds_buffer_append_bytes(cfrds_buffer *buffer, const void *data, size_t le
 void cfrds_buffer_append_buffer(cfrds_buffer *buffer, cfrds_buffer *new)
 {
     cfrds_buffer_int *buffer_int = buffer;
-    cfrds_buffer_int *new_int = new;
+    const cfrds_buffer_int *new_int = new;
     size_t len = new_int->size;
 
     cfrds_buffer_realloc_if_needed(buffer_int, len);
@@ -367,7 +367,7 @@ cfrds_browse_dir_t *cfrds_buffer_to_browse_dir(cfrds_buffer *buffer)
         {
             uint32_t num1 = atol(str_timestamp);
 
-            char *str_num2 = strchr(str_timestamp, ',');
+            const char *str_num2 = strchr(str_timestamp, ',');
             if (str_num2)
             {
                 str_num2++;

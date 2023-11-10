@@ -251,7 +251,7 @@ exit:
     return ret;
 }
 
-enum cfrds_status cfrds_command_browse_dir(cfrds_server *server, void *path, cfrds_browse_dir_t **out)
+enum cfrds_status cfrds_command_browse_dir(cfrds_server *server, const char *path, cfrds_browse_dir_t **out)
 {
     enum cfrds_status ret;
     cfrds_buffer *response = NULL;
@@ -380,7 +380,7 @@ exit:
     return ret;
 }
 
-enum cfrds_status cfrds_command_file_rename(cfrds_server *server, char *current_pathname, char *new_pathname)
+enum cfrds_status cfrds_command_file_rename(cfrds_server *server, const char *current_pathname, const char *new_pathname)
 {
     if ((server == NULL)||(current_pathname == NULL)||(new_pathname == NULL))
     {
@@ -390,7 +390,7 @@ enum cfrds_status cfrds_command_file_rename(cfrds_server *server, char *current_
     return cfrds_internal_command(server, NULL, "FILEIO", (const char *[]){ current_pathname, "RENAME", "", new_pathname, NULL});
 }
 
-enum cfrds_status cfrds_command_file_remove_file(cfrds_server *server, char *pathname)
+enum cfrds_status cfrds_command_file_remove_file(cfrds_server *server, const char *pathname)
 {
     if ((server == NULL)||(pathname == NULL))
     {
@@ -400,7 +400,7 @@ enum cfrds_status cfrds_command_file_remove_file(cfrds_server *server, char *pat
     return cfrds_internal_command(server, NULL, "FILEIO", (const char *[]){ pathname, "REMOVE", "", "F", NULL});
 }
 
-enum cfrds_status cfrds_command_file_remove_dir(cfrds_server *server, char *path)
+enum cfrds_status cfrds_command_file_remove_dir(cfrds_server *server, const char *path)
 {
     if ((server == NULL)||(path == NULL))
     {
@@ -410,7 +410,7 @@ enum cfrds_status cfrds_command_file_remove_dir(cfrds_server *server, char *path
     return cfrds_internal_command(server, NULL, "FILEIO", (const char *[]){ path, "REMOVE", "", "D", NULL});
 }
 
-enum cfrds_status cfrds_command_file_exists(cfrds_server *server, char *pathname, bool *out)
+enum cfrds_status cfrds_command_file_exists(cfrds_server *server, const char *pathname, bool *out)
 {
     enum cfrds_status ret;
 
@@ -449,7 +449,7 @@ enum cfrds_status cfrds_command_file_exists(cfrds_server *server, char *pathname
     return ret;
 }
 
-enum cfrds_status cfrds_command_file_create_dir(cfrds_server *server, char *path)
+enum cfrds_status cfrds_command_file_create_dir(cfrds_server *server, const char *path)
 {
     if ((server == NULL)||(path == NULL))
     {

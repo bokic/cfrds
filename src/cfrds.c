@@ -123,7 +123,7 @@ void cfrds_server_set_error(cfrds_server *server, int64_t error_code, const char
 
 const char *cfrds_server_get_error(cfrds_server *server)
 {
-    cfrds_server_int *server_int = NULL;
+    const cfrds_server_int *server_int = NULL;
 
     if (server == NULL)
         return NULL;
@@ -135,7 +135,7 @@ const char *cfrds_server_get_error(cfrds_server *server)
 
 const char *cfrds_server_get_host(cfrds_server *server)
 {
-    cfrds_server_int *server_int = NULL;
+    const cfrds_server_int *server_int = NULL;
 
     if (server == NULL)
         return NULL;
@@ -147,7 +147,7 @@ const char *cfrds_server_get_host(cfrds_server *server)
 
 uint16_t cfrds_server_get_port(cfrds_server *server)
 {
-    cfrds_server_int *server_int = NULL;
+    const cfrds_server_int *server_int = NULL;
 
     if (server == NULL)
         return 0;

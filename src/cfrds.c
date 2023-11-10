@@ -521,7 +521,7 @@ void cfrds_buffer_browse_dir_free(cfrds_browse_dir_t *value)
     if (value == NULL)
         return;
 
-    for(size_t c = 0; c< value->cnt; c++)
+    for(size_t c = 0; c < value->cnt; c++)
     {
         free(value->items[c].name);
     }

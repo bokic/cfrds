@@ -219,9 +219,9 @@ static enum cfrds_status cfrds_internal_command(cfrds_server *server, cfrds_buff
     if (strncmp(response_data, good_response, strlen(good_response)) != 0)
         ret = CFRDS_STATUS_RESPONSE_ERROR;
 
-    if (cfrds_buffer_skip_httpheader((char **)&response_data, &response_size))
+    if (cfrds_buffer_skip_httpheader(&response_data, &response_size))
     {
-        if (!cfrds_buffer_parse_number((char **)&response_data, &response_size, &server_int->error_code))
+        if (!cfrds_buffer_parse_number(&response_data, &response_size, &server_int->error_code))
         {
             server_int->error_code = -1;
             ret = CFRDS_STATUS_RESPONSE_ERROR;
@@ -348,9 +348,9 @@ enum cfrds_status cfrds_command_file_write(cfrds_server *server, const char *pat
     if (strncmp(response_data, good_response, strlen(good_response)) != 0)
         ret = CFRDS_STATUS_RESPONSE_ERROR;
 
-    if (cfrds_buffer_skip_httpheader((char **)&response_data, &response_size))
+    if (cfrds_buffer_skip_httpheader(&response_data, &response_size))
     {
-        if (!cfrds_buffer_parse_number((char **)&response_data, &response_size, &server_int->error_code))
+        if (!cfrds_buffer_parse_number(&response_data, &response_size, &server_int->error_code))
         {
             server_int->error_code = -1;
             ret = CFRDS_STATUS_RESPONSE_ERROR;
@@ -482,16 +482,16 @@ enum cfrds_status cfrds_command_file_get_root_dir(cfrds_server *server, char **o
 
         server_int = server;
 
-        if (cfrds_buffer_skip_httpheader((char **)&response_data, &response_size))
+        if (cfrds_buffer_skip_httpheader(&response_data, &response_size))
         {
-            if (!cfrds_buffer_parse_number((char **)&response_data, &response_size, &server_int->error_code))
+            if (!cfrds_buffer_parse_number(&response_data, &response_size, &server_int->error_code))
             {
                 server_int->error_code = -1;
                 ret = CFRDS_STATUS_RESPONSE_ERROR;
                 goto exit;
             }
 
-            if (!cfrds_buffer_parse_string((char **)&response_data, &response_size, out))
+            if (!cfrds_buffer_parse_string(&response_data, &response_size, out))
             {
                 server_int->error_code = -1;
                 ret = CFRDS_STATUS_RESPONSE_ERROR;

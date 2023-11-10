@@ -157,13 +157,13 @@ uint16_t cfrds_server_get_port(cfrds_server *server)
     return server_int->port;
 }
 
-static enum cfrds_status cfrds_internal_command(cfrds_server *server, cfrds_buffer **response, const char *command, char *list[])
+static enum cfrds_status cfrds_internal_command(cfrds_server *server, cfrds_buffer **response, const char *command, const char *list[])
 {
     enum cfrds_status ret = CFRDS_STATUS_OK;
 
     cfrds_server_int *server_int = NULL;
     cfrds_buffer **int_response = NULL;
-    const char *response_data = NULL;
+    char *response_data = NULL;
     cfrds_buffer *post = NULL;
     size_t response_size = 0;
     size_t total_cnt = 0;
@@ -261,7 +261,7 @@ enum cfrds_status cfrds_command_browse_dir(cfrds_server *server, void *path, cfr
         return CFRDS_STATUS_PARAM_IS_NULL;
     }
 
-    ret = cfrds_internal_command(server, &response, "BROWSEDIR", (char *[]){ path, "", NULL});
+    ret = cfrds_internal_command(server, &response, "BROWSEDIR", (const char *[]){ path, "", NULL});
     if (ret == CFRDS_STATUS_OK)
     {
         *out = cfrds_buffer_to_browse_dir(response);
@@ -272,7 +272,7 @@ enum cfrds_status cfrds_command_browse_dir(cfrds_server *server, void *path, cfr
     return ret;
 }
 
-enum cfrds_status cfrds_command_file_read(cfrds_server *server, void *pathname, cfrds_file_content_t **out)
+enum cfrds_status cfrds_command_file_read(cfrds_server *server, const char *pathname, cfrds_file_content_t **out)
 {
     enum cfrds_status ret;
     cfrds_buffer *response = NULL;
@@ -282,7 +282,7 @@ enum cfrds_status cfrds_command_file_read(cfrds_server *server, void *pathname, 
         return CFRDS_STATUS_PARAM_IS_NULL;
     }
 
-    ret = cfrds_internal_command(server, &response, "FILEIO", (char *[]){ pathname, "READ", "", NULL});
+    ret = cfrds_internal_command(server, &response, "FILEIO", (const char *[]){ pathname, "READ", "", NULL});
     if (ret == CFRDS_STATUS_OK)
     {
         *out = cfrds_buffer_to_file_content(response);
@@ -293,12 +293,12 @@ enum cfrds_status cfrds_command_file_read(cfrds_server *server, void *pathname, 
     return ret;
 }
 
-enum cfrds_status cfrds_command_file_write(cfrds_server *server, void *pathname, const void *data, size_t length)
+enum cfrds_status cfrds_command_file_write(cfrds_server *server, const char *pathname, const void *data, size_t length)
 {
     enum cfrds_status ret = CFRDS_STATUS_OK;
 
     cfrds_server_int *server_int = NULL;
-    const char *response_data = NULL;
+    char *response_data = NULL;
     cfrds_buffer *response = NULL;
     cfrds_buffer *post = NULL;
     size_t response_size = 0;
@@ -387,7 +387,7 @@ enum cfrds_status cfrds_command_file_rename(cfrds_server *server, char *current_
         return CFRDS_STATUS_PARAM_IS_NULL;
     }
 
-    return cfrds_internal_command(server, NULL, "FILEIO", (char *[]){ current_pathname, "RENAME", "", new_pathname, NULL});
+    return cfrds_internal_command(server, NULL, "FILEIO", (const char *[]){ current_pathname, "RENAME", "", new_pathname, NULL});
 }
 
 enum cfrds_status cfrds_command_file_remove_file(cfrds_server *server, char *pathname)
@@ -397,7 +397,7 @@ enum cfrds_status cfrds_command_file_remove_file(cfrds_server *server, char *pat
         return CFRDS_STATUS_PARAM_IS_NULL;
     }
 
-    return cfrds_internal_command(server, NULL, "FILEIO", (char *[]){ pathname, "REMOVE", "", "F", NULL});
+    return cfrds_internal_command(server, NULL, "FILEIO", (const char *[]){ pathname, "REMOVE", "", "F", NULL});
 }
 
 enum cfrds_status cfrds_command_file_remove_dir(cfrds_server *server, char *path)
@@ -407,7 +407,7 @@ enum cfrds_status cfrds_command_file_remove_dir(cfrds_server *server, char *path
         return CFRDS_STATUS_PARAM_IS_NULL;
     }
 
-    return cfrds_internal_command(server, NULL, "FILEIO", (char *[]){ path, "REMOVE", "", "D", NULL});
+    return cfrds_internal_command(server, NULL, "FILEIO", (const char *[]){ path, "REMOVE", "", "D", NULL});
 }
 
 enum cfrds_status cfrds_command_file_exists(cfrds_server *server, char *pathname, bool *out)
@@ -428,7 +428,7 @@ enum cfrds_status cfrds_command_file_exists(cfrds_server *server, char *pathname
 
     cfrds_server_int *server_int = NULL;
 
-    ret = cfrds_internal_command(server, NULL, "FILEIO", (char *[]){ pathname, "EXISTENCE", "", "", NULL});
+    ret = cfrds_internal_command(server, NULL, "FILEIO", (const char *[]){ pathname, "EXISTENCE", "", "", NULL});
     if (ret == CFRDS_STATUS_OK)
     {
         *out = true;
@@ -456,7 +456,7 @@ enum cfrds_status cfrds_command_file_create_dir(cfrds_server *server, char *path
         return CFRDS_STATUS_PARAM_IS_NULL;
     }
 
-    return cfrds_internal_command(server, NULL, "FILEIO", (char *[]){ path, "CREATE", "", "", NULL});
+    return cfrds_internal_command(server, NULL, "FILEIO", (const char *[]){ path, "CREATE", "", "", NULL});
 }
 
 enum cfrds_status cfrds_command_file_get_root_dir(cfrds_server *server, char **out)
@@ -464,7 +464,7 @@ enum cfrds_status cfrds_command_file_get_root_dir(cfrds_server *server, char **o
     enum cfrds_status ret;
 
     cfrds_server_int *server_int = NULL;
-    const char *response_data = NULL;
+    char *response_data = NULL;
     cfrds_buffer *response = NULL;
     size_t response_size = 0;
 
@@ -473,7 +473,7 @@ enum cfrds_status cfrds_command_file_get_root_dir(cfrds_server *server, char **o
         return CFRDS_STATUS_PARAM_IS_NULL;
     }
 
-    ret = cfrds_internal_command(server, &response, "FILEIO", (char *[]){ "", "CF_DIRECTORY", NULL});
+    ret = cfrds_internal_command(server, &response, "FILEIO", (const char *[]){ "", "CF_DIRECTORY", NULL});
     if (ret == CFRDS_STATUS_OK)
     {
         response_data = cfrds_buffer_data(response);

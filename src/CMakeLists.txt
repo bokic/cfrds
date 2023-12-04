@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.15)
 
-project(libcfrds LANGUAGES C)
+project(libcfrds VERSION 0.6.0 LANGUAGES C)
 
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 set(CMAKE_C_STANDARD 23)

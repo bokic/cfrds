@@ -463,9 +463,7 @@ enum cfrds_status cfrds_command_file_get_root_dir(cfrds_server *server, char **o
     enum cfrds_status ret;
 
     cfrds_server_int *server_int = NULL;
-    char *response_data = NULL;
     cfrds_buffer *response = NULL;
-    size_t response_size = 0;
 
     if ((server == NULL)||(out == NULL))
     {
@@ -475,8 +473,8 @@ enum cfrds_status cfrds_command_file_get_root_dir(cfrds_server *server, char **o
     ret = cfrds_internal_command(server, &response, "FILEIO", (const char *[]){ "", "CF_DIRECTORY", NULL});
     if (ret == CFRDS_STATUS_OK)
     {
-        response_data = cfrds_buffer_data(response);
-        response_size = cfrds_buffer_data_size(response);
+        char *response_data = cfrds_buffer_data(response);
+        size_t response_size = cfrds_buffer_data_size(response);
         cfrds_buffer_append_char(response, '\0');
 
         server_int = server;

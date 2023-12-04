@@ -26,7 +26,6 @@ cfrds_buffer *cfrds_http_post(cfrds_server *server, const char *command, cfrds_b
     cfrds_buffer *send_buf = NULL;
     cfrds_buffer *recv_buf = NULL;
     char datasize_str[16] = {0, };
-    char port_str[8] = {0, };
     ssize_t sock_written = 0;
     uint16_t port = 0;
 
@@ -41,6 +40,8 @@ cfrds_buffer *cfrds_http_post(cfrds_server *server, const char *command, cfrds_b
     cfrds_buffer_append(send_buf, cfrds_server_get_host(server));
     if(port != 80)
     {
+        char port_str[8] = {0, };
+
         snprintf(port_str, sizeof(port_str), "%d", port);
         cfrds_buffer_append(send_buf, ":");
         cfrds_buffer_append(send_buf, port_str);
@@ -82,13 +83,12 @@ cfrds_buffer *cfrds_http_post(cfrds_server *server, const char *command, cfrds_b
         return NULL;
     }
 
-    ssize_t readed = 0;
     cfrds_buffer_create(&recv_buf);
     while(1)
     {
         cfrds_buffer_reserve_above_size(recv_buf, 4096);
 
-        readed = read(sockfd, cfrds_buffer_data(recv_buf) + cfrds_buffer_data_size(recv_buf), 4096);
+        ssize_t readed = read(sockfd, cfrds_buffer_data(recv_buf) + cfrds_buffer_data_size(recv_buf), 4096);
         if (readed == 0)
             break;
 

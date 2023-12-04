@@ -17,11 +17,10 @@ typedef struct {
 void cfrds_buffer_realloc_if_needed(cfrds_buffer *buffer, size_t len)
 {
     cfrds_buffer_int *buffer_int = buffer;
-    size_t new_size = 0;
 
     if (buffer_int->size + len > buffer_int->allocated)
     {
-        new_size = buffer_int->size + len;
+        size_t new_size = buffer_int->size + len;
         new_size = (((new_size + 512) / 1024) + 1) * 1024;
 
         buffer_int->string = realloc(buffer_int->string, new_size);

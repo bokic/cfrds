@@ -24,6 +24,7 @@ void cfrds_buffer_realloc_if_needed(cfrds_buffer *buffer, size_t len)
         new_size = (((new_size + 512) / 1024) + 1) * 1024;
 
         buffer_int->string = realloc(buffer_int->string, new_size);
+        buffer_int->allocated = new_size;
     }
 }
 

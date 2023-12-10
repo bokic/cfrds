@@ -10,14 +10,14 @@ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/bin")
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/bin")
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/bin")
 
-include_directories(BEFORE
-    ../include
-)
-
 add_library(libcfrds SHARED
     cfrds.c        ../include/cfrds.h
     cfrds_buffer.c ../include/internal/cfrds_buffer.h
     cfrds_http.c   ../include/internal/cfrds_http.h
+)
+
+target_include_directories(libcfrds PUBLIC
+    ../include
 )
 
 if(WIN32)

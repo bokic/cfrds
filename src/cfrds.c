@@ -228,7 +228,7 @@ static enum cfrds_status cfrds_internal_command(cfrds_server *server, cfrds_buff
             goto exit;
         }
 
-        if (server_int->error_code < 1)
+        if (server_int->error_code < 0)
         {
             cfrds_buffer_append_char(int_response, '\0');
             cfrds_server_set_error(server, server_int->error_code, response_data);

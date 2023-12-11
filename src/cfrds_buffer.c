@@ -237,7 +237,7 @@ bool cfrds_buffer_parse_bytearray(char **data, size_t *remaining, char **out, in
     if (!cfrds_buffer_parse_number(data, remaining, &size))
         return false;
 
-    if (size <= 0)
+    if (size < 0)
         return false;
 
     *out = malloc(size + 1);

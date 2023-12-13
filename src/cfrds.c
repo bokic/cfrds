@@ -9,16 +9,6 @@
 #include <stdint.h>
 
 
-typedef struct {
-    char *host;
-    uint16_t port;
-    char *username;
-    char *password;
-
-    int64_t error_code;
-    char *error;
-} cfrds_server_int;
-
 static void cfrds_server_clean(cfrds_server_int *server)
 {
     if (server == NULL)
@@ -201,52 +191,8 @@ static enum cfrds_status cfrds_internal_command(cfrds_server *server, cfrds_buff
     if (server_int->username) cfrds_buffer_append_rds_string(post, server_int->username);
     if (server_int->password) cfrds_buffer_append_rds_string(post, server_int->password);
 
-    int_response = cfrds_http_post(server, command, post);
-
-    /// TODO: Move this block into cfrds_http_post()
-    /// From here
+    ret = cfrds_http_post(server, command, post, response);
     cfrds_buffer_free(post);
-
-    if (int_response == NULL)
-        return CFRDS_STATUS_COMMAND_FAILED;
-
-    response_data = cfrds_buffer_data(int_response);
-    response_size = cfrds_buffer_data_size(int_response);
-    cfrds_buffer_append_char(int_response, '\0');
-
-    static const char *good_response = "HTTP/1.1 200 OK\r\nContent-Type: text/html\r\n";
-
-    if (strncmp(response_data, good_response, strlen(good_response)) != 0)
-        ret = CFRDS_STATUS_RESPONSE_ERROR;
-
-    if (cfrds_buffer_skip_httpheader(&response_data, &response_size))
-    {
-        if (!cfrds_buffer_parse_number(&response_data, &response_size, &server_int->error_code))
-        {
-            server_int->error_code = -1;
-            ret = CFRDS_STATUS_RESPONSE_ERROR;
-            goto exit;
-        }
-
-        if (server_int->error_code < 0)
-        {
-            cfrds_buffer_append_char(int_response, '\0');
-            cfrds_server_set_error(server, server_int->error_code, response_data);
-            ret = CFRDS_STATUS_RESPONSE_ERROR;
-            goto exit;
-        }
-    }
-    else
-    {
-        ret = CFRDS_STATUS_HTTP_RESPONSE_NOT_FOUND;
-    }
-
-exit:
-    if (response)
-        *response = int_response;
-    else
-        cfrds_buffer_free(int_response);
-    /// To here!
 
     return ret;
 }
@@ -328,53 +274,8 @@ enum cfrds_status cfrds_command_file_write(cfrds_server *server, const char *pat
     if (server_int->username) cfrds_buffer_append_rds_string(post, server_int->username);
     if (server_int->password) cfrds_buffer_append_rds_string(post, server_int->password);
 
-    response = cfrds_http_post(server, "FILEIO", post);
-
+    ret = cfrds_http_post(server, "FILEIO", post, response);
     cfrds_buffer_free(post);
-
-    /// TODO: Move this block into cfrds_http_post()
-    /// From here
-
-    if (response == NULL)
-        return CFRDS_STATUS_COMMAND_FAILED;
-
-    response_data = cfrds_buffer_data(response);
-    response_size = cfrds_buffer_data_size(response);
-    cfrds_buffer_append_char(response, '\0');
-
-    static const char *good_response = "HTTP/1.1 200 OK\r\nContent-Type: text/html\r\n";
-
-    if (strncmp(response_data, good_response, strlen(good_response)) != 0)
-        ret = CFRDS_STATUS_RESPONSE_ERROR;
-
-    if (cfrds_buffer_skip_httpheader(&response_data, &response_size))
-    {
-        if (!cfrds_buffer_parse_number(&response_data, &response_size, &server_int->error_code))
-        {
-            server_int->error_code = -1;
-            ret = CFRDS_STATUS_RESPONSE_ERROR;
-            goto exit;
-        }
-
-        // WARNING: There is something left(`XX` string is left while developing) in the body that is not processed. Assuming is not relevant.
-
-        if (server_int->error_code < 1)
-        {
-            cfrds_buffer_append_char(response, '\0');
-            cfrds_server_set_error(server, server_int->error_code, response_data);
-            ret = CFRDS_STATUS_RESPONSE_ERROR;
-            goto exit;
-        }
-    }
-    else
-    {
-        ret = CFRDS_STATUS_HTTP_RESPONSE_NOT_FOUND;
-    }
-
-exit:
-    /// To here!
-
-    cfrds_buffer_free(response);
 
     return ret;
 }

@@ -9,6 +9,6 @@
 
 #define cfrds_server void
 
-cfrds_buffer *cfrds_http_post(cfrds_server *server, const char *command, cfrds_buffer *payload);
+enum cfrds_status cfrds_http_post(cfrds_server_int *server, const char *command, cfrds_buffer *payload, cfrds_buffer **response);
 
 #endif //  __CFRDS_HTTP_H

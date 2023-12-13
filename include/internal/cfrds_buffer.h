@@ -10,6 +10,16 @@
 
 #define cfrds_buffer void
 
+typedef struct {
+    char *host;
+    uint16_t port;
+    char *username;
+    char *password;
+
+    int64_t error_code;
+    char *error;
+} cfrds_server_int;
+
 #ifdef __cplusplus
 extern "C"
 {

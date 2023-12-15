@@ -135,6 +135,8 @@ exit:
         close(sockfd);
     if (response)
         *response = int_response;
+    else
+        cfrds_buffer_free(int_response);
     if (send_buf)
         cfrds_buffer_free(send_buf);
 

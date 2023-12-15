@@ -153,9 +153,7 @@ static enum cfrds_status cfrds_internal_command(cfrds_server *server, cfrds_buff
 
     cfrds_server_int *server_int = NULL;
     cfrds_buffer **int_response = NULL;
-    char *response_data = NULL;
     cfrds_buffer *post = NULL;
-    size_t response_size = 0;
     size_t total_cnt = 0;
     size_t list_cnt = 0;
 
@@ -244,10 +242,7 @@ enum cfrds_status cfrds_command_file_write(cfrds_server *server, const char *pat
     enum cfrds_status ret = CFRDS_STATUS_OK;
 
     cfrds_server_int *server_int = NULL;
-    char *response_data = NULL;
-    cfrds_buffer *response = NULL;
     cfrds_buffer *post = NULL;
-    size_t response_size = 0;
     size_t total_cnt = 0;
 
     if ((server == NULL)||(pathname == NULL)||(data == NULL))
@@ -274,7 +269,7 @@ enum cfrds_status cfrds_command_file_write(cfrds_server *server, const char *pat
     if (server_int->username) cfrds_buffer_append_rds_string(post, server_int->username);
     if (server_int->password) cfrds_buffer_append_rds_string(post, server_int->password);
 
-    ret = cfrds_http_post(server, "FILEIO", post, response);
+    ret = cfrds_http_post(server, "FILEIO", post, NULL);
     cfrds_buffer_free(post);
 
     return ret;

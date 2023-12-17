@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.15)
 
-project(libcfrds VERSION 0.6.0 LANGUAGES C)
+project(libcfrds VERSION 0.7.0 LANGUAGES C)
 
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 set(CMAKE_C_STANDARD 23)
@@ -29,8 +29,8 @@ set_target_properties(libcfrds PROPERTIES
     INTERPROCEDURAL_OPTIMIZATION TRUE
     C_VISIBILITY_PRESET hidden
     OUTPUT_NAME "cfrds"
-    VERSION "0.6.0"
-    SOVERSION "0.6"
+    VERSION "0.7.0"
+    SOVERSION "0.7"
 )
 
 install(TARGETS libcfrds

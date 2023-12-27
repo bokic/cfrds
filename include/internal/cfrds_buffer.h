@@ -15,10 +15,29 @@ typedef struct {
     uint16_t port;
     char *username;
     char *password;
-
     int64_t error_code;
     char *error;
 } cfrds_server_int;
+
+typedef struct {
+    char *data;
+    int size;
+    char *modified;
+    char *permission;
+} cfrds_file_content_int;
+
+typedef struct {
+    char kind;
+    char *name;
+    uint8_t permissions;
+    size_t size;
+    uint64_t modified;
+} cfrds_browse_dir_item_int;
+
+typedef struct {
+    size_t cnt;
+    cfrds_browse_dir_item_int items[];
+} cfrds_browse_dir_int;
 
 #ifdef __cplusplus
 extern "C"
@@ -47,8 +66,8 @@ bool cfrds_buffer_parse_number(char **data, size_t *remaining, int64_t *out);
 bool cfrds_buffer_parse_bytearray(char **data, size_t *remaining, char **out, int *out_size);
 bool cfrds_buffer_parse_string(char **data, size_t *remaining, char **out);
 
-cfrds_browse_dir_t *cfrds_buffer_to_browse_dir(cfrds_buffer *buffer);
-cfrds_file_content_t *cfrds_buffer_to_file_content(cfrds_buffer *buffer);
+cfrds_browse_dir_int *cfrds_buffer_to_browse_dir(cfrds_buffer *buffer);
+cfrds_file_content_int *cfrds_buffer_to_file_content(cfrds_buffer *buffer);
 
 bool cfrds_buffer_skip_httpheader(char **data, size_t *size);
 

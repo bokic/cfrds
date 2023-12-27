@@ -1,3 +1,5 @@
+//#define __STDC_WANT_LIB_EXT1__ 1
+#include <string.h>
 #include <cfrds.h>
 #include <internal/cfrds_buffer.h>
 
@@ -290,7 +292,7 @@ bool cfrds_buffer_skip_httpheader(char **data, size_t *remaining)
     return true;
 }
 
-cfrds_browse_dir_t *cfrds_buffer_to_browse_dir(cfrds_buffer *buffer)
+cfrds_browse_dir_int *cfrds_buffer_to_browse_dir(cfrds_buffer *buffer)
 {
     cfrds_buffer_int *buffer_int = buffer;
     int64_t total = 0;
@@ -313,8 +315,8 @@ cfrds_browse_dir_t *cfrds_buffer_to_browse_dir(cfrds_buffer *buffer)
 
     cnt = total / 5;
 
-    size_t ret_size = offsetof(cfrds_browse_dir_t, items) + (cnt * (offsetof(cfrds_browse_dir_t, items[1]) - (offsetof(cfrds_browse_dir_t, items[0]))));
-    cfrds_browse_dir_t *ret = malloc(ret_size);
+    size_t ret_size = offsetof(cfrds_browse_dir_int, items) + (cnt * (offsetof(cfrds_browse_dir_int, items[1]) - (offsetof(cfrds_browse_dir_int, items[0]))));
+    cfrds_browse_dir_int *ret = malloc(ret_size);
     memset(ret, 0, ret_size);
 
     ret->cnt = cnt;
@@ -398,9 +400,9 @@ cfrds_browse_dir_t *cfrds_buffer_to_browse_dir(cfrds_buffer *buffer)
     return ret;
 }
 
-cfrds_file_content_t *cfrds_buffer_to_file_content(cfrds_buffer *buffer)
+cfrds_file_content_int *cfrds_buffer_to_file_content(cfrds_buffer *buffer)
 {
-    cfrds_file_content_t *ret = NULL;
+    cfrds_file_content_int *ret = NULL;
     cfrds_buffer_int *buffer_int = buffer;
     int64_t total = 0;
 
@@ -419,7 +421,7 @@ cfrds_file_content_t *cfrds_buffer_to_file_content(cfrds_buffer *buffer)
     if (total != 3)
         return NULL;
 
-    ret = malloc(sizeof(cfrds_file_content_t));
+    ret = malloc(sizeof(cfrds_file_content_int));
 
     cfrds_buffer_parse_bytearray(&data, &size, &ret->data, &ret->size);
     cfrds_buffer_parse_string(&data, &size, &ret->modified);

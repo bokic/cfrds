@@ -195,7 +195,7 @@ static enum cfrds_status cfrds_internal_command(cfrds_server *server, cfrds_buff
     return ret;
 }
 
-enum cfrds_status cfrds_command_browse_dir(cfrds_server *server, const char *path, cfrds_browse_dir_t **out)
+enum cfrds_status cfrds_command_browse_dir(cfrds_server *server, const char *path, cfrds_browse_dir **out)
 {
     enum cfrds_status ret;
     cfrds_buffer *response = NULL;
@@ -216,7 +216,7 @@ enum cfrds_status cfrds_command_browse_dir(cfrds_server *server, const char *pat
     return ret;
 }
 
-enum cfrds_status cfrds_command_file_read(cfrds_server *server, const char *pathname, cfrds_file_content_t **out)
+enum cfrds_status cfrds_command_file_read(cfrds_server *server, const char *pathname, cfrds_file_content **out)
 {
     enum cfrds_status ret;
     cfrds_buffer *response = NULL;
@@ -399,26 +399,145 @@ exit:
     return ret;
 }
 
-void cfrds_buffer_file_content_free(cfrds_file_content_t *value)
+void cfrds_buffer_file_content_free(cfrds_file_content *value)
 {
     if (value == NULL)
         return;
 
-    free(value->data);
-    free(value->modified);
-    free(value->permission);
-    free(value);
+    cfrds_file_content_int *_value = (cfrds_file_content_int *)value;
+
+    free(_value->data);
+    free(_value->modified);
+    free(_value->permission);
+    free(_value);
 }
 
-void cfrds_buffer_browse_dir_free(cfrds_browse_dir_t *value)
+const char *cfrds_buffer_file_content_get_data(cfrds_file_content *value)
+{
+    if (value == NULL)
+        return NULL;
+
+    cfrds_file_content_int *_value = (cfrds_file_content_int *)value;
+
+    return _value->data;
+}
+
+int cfrds_buffer_file_content_get_size(cfrds_file_content *value)
+{
+    if (value == NULL)
+        return -1;
+
+    cfrds_file_content_int *_value = (cfrds_file_content_int *)value;
+
+    return _value->size;
+}
+
+const char *cfrds_buffer_file_content_get_modified(cfrds_file_content *value)
+{
+    if (value == NULL)
+        return NULL;
+
+    cfrds_file_content_int *_value = (cfrds_file_content_int *)value;
+
+    return _value->modified;
+}
+
+const char *cfrds_buffer_file_content_get_permission(cfrds_file_content *value)
+{
+    if (value == NULL)
+        return NULL;
+
+    cfrds_file_content_int *_value = (cfrds_file_content_int *)value;
+
+    return _value->permission;
+}
+
+void cfrds_buffer_browse_dir_free(cfrds_browse_dir *value)
 {
     if (value == NULL)
         return;
 
-    for(size_t c = 0; c < value->cnt; c++)
+    cfrds_browse_dir_int *_value = (cfrds_browse_dir_int *)value;
+
+    for(size_t c = 0; c < _value->cnt; c++)
     {
-        free(value->items[c].name);
+        free(_value->items[c].name);
     }
 
-    free(value);
+    free(_value);
+}
+
+size_t cfrds_buffer_browse_dir_count(cfrds_browse_dir *value)
+{
+    if (value == NULL)
+        return 0;
+
+    cfrds_browse_dir_int *_value = (cfrds_browse_dir_int *)value;
+
+    return _value->cnt;
+}
+
+char cfrds_buffer_browse_dir_item_get_kind(cfrds_browse_dir *value, size_t ndx)
+{
+    if (value == NULL)
+        return 0;
+
+    cfrds_browse_dir_int *_value = (cfrds_browse_dir_int *)value;
+
+    if (ndx >= _value->cnt)
+        return 0;
+
+    return _value->items[ndx].kind;
+}
+
+const char *cfrds_buffer_browse_dir_item_get_name(cfrds_browse_dir *value, size_t ndx)
+{
+    if (value == NULL)
+        return NULL;
+
+    cfrds_browse_dir_int *_value = (cfrds_browse_dir_int *)value;
+
+    if (ndx >= _value->cnt)
+        return NULL;
+
+    return _value->items[ndx].name;
+}
+
+uint8_t cfrds_buffer_browse_dir_item_get_permissions(cfrds_browse_dir *value, size_t ndx)
+{
+    if (value == NULL)
+        return 0;
+
+    cfrds_browse_dir_int *_value = (cfrds_browse_dir_int *)value;
+
+    if (ndx >= _value->cnt)
+        return 0;
+
+    return _value->items[ndx].permissions;
+}
+
+size_t cfrds_buffer_browse_dir_item_get_size(cfrds_browse_dir *value, size_t ndx)
+{
+    if (value == NULL)
+        return 0;
+
+    cfrds_browse_dir_int *_value = (cfrds_browse_dir_int *)value;
+
+    if (ndx >= _value->cnt)
+        return 0;
+
+    return _value->items[ndx].size;
+}
+
+uint64_t cfrds_buffer_browse_dir_item_get_modified(cfrds_browse_dir *value, size_t ndx)
+{
+    if (value == NULL)
+        return 0;
+
+    cfrds_browse_dir_int *_value = (cfrds_browse_dir_int *)value;
+
+    if (ndx >= _value->cnt)
+        return 0;
+
+    return _value->items[ndx].modified;
 }

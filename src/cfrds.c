@@ -152,7 +152,6 @@ static enum cfrds_status cfrds_internal_command(cfrds_server *server, cfrds_buff
     enum cfrds_status ret = CFRDS_STATUS_OK;
 
     cfrds_server_int *server_int = NULL;
-    cfrds_buffer **int_response = NULL;
     cfrds_buffer *post = NULL;
     size_t total_cnt = 0;
     size_t list_cnt = 0;

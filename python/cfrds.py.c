@@ -103,7 +103,7 @@ cfrds_server_dealloc(cfrds_server_Object *self)
 static PyObject *
 cfrds_server_browse_dir(cfrds_server_Object *self, PyObject *args)
 {
-    cfrds_browse_dir_t *dir = NULL;
+    cfrds_browse_dir *dir = NULL;
     PyObject *ret = NULL;
     char *path = NULL;
 
@@ -119,15 +119,15 @@ cfrds_server_browse_dir(cfrds_server_Object *self, PyObject *args)
 
     if (dir)
     {
-        for(size_t c = 0; c < dir->cnt; c++)
+        for(size_t c = 0; c < cfrds_buffer_browse_dir_count(dir); c++)
         {
             PyObject *item = PyDict_New();
 
-            PyDict_SetItemString(item, "kind", PyUnicode_FromFormat("%c", dir->items[c].kind));
-            PyDict_SetItemString(item, "name", PyUnicode_FromString(dir->items[c].name));
-            PyDict_SetItemString(item, "permissions", PyLong_FromUnsignedLong(dir->items[c].permissions));
-            PyDict_SetItemString(item, "size", PyLong_FromSize_t(dir->items[c].size));
-            PyDict_SetItemString(item, "modified", PyLong_FromUnsignedLongLong(dir->items[c].modified));
+            PyDict_SetItemString(item, "kind", PyUnicode_FromFormat("%c", cfrds_buffer_browse_dir_item_get_kind(dir, c)));
+            PyDict_SetItemString(item, "name", PyUnicode_FromString(cfrds_buffer_browse_dir_item_get_name(dir, c)));
+            PyDict_SetItemString(item, "permissions", PyLong_FromUnsignedLong(cfrds_buffer_browse_dir_item_get_permissions(dir, c)));
+            PyDict_SetItemString(item, "size", PyLong_FromSize_t(cfrds_buffer_browse_dir_item_get_size(dir, c)));
+            PyDict_SetItemString(item, "modified", PyLong_FromUnsignedLongLong(cfrds_buffer_browse_dir_item_get_modified(dir, c)));
 
             PyList_Append(ret, item);
         }
@@ -144,7 +144,7 @@ cfrds_server_file_read(cfrds_server_Object *self, PyObject *args)
 {
     PyObject *ret = NULL;
     char *filepath = NULL;
-    cfrds_file_content_t *file_content = NULL;
+    cfrds_file_content *file_content = NULL;
 
     if (!PyArg_ParseTuple(args, "s", &filepath))
     {
@@ -154,7 +154,7 @@ cfrds_server_file_read(cfrds_server_Object *self, PyObject *args)
 
     CHECK_FOR_ERORRS(cfrds_command_file_read(self->server, filepath, &file_content));
 
-    ret = PyByteArray_FromStringAndSize(file_content->data, file_content->size);
+    ret = PyByteArray_FromStringAndSize(cfrds_buffer_file_content_get_data(file_content), cfrds_buffer_file_content_get_size(file_content));
 
 exit:
     cfrds_buffer_file_content_free(file_content);

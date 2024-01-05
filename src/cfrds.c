@@ -67,6 +67,7 @@ bool cfrds_server_init(cfrds_server **server, const char *host, uint16_t port, c
     ret->host = strdup(host);
     ret->port = port;
     ret->username = strdup(username);
+    ret->orig_password = strdup(password);
     ret->password = cfrds_server_encode_password(password);
     ret->error_code = 1;
     ret->error = NULL;
@@ -89,6 +90,7 @@ void cfrds_server_free(cfrds_server *server)
 
     free(server_int->host);
     free(server_int->username);
+    free(server_int->orig_password);
     free(server_int->password);
 
     free(server);
@@ -145,6 +147,30 @@ uint16_t cfrds_server_get_port(cfrds_server *server)
     server_int = server;
 
     return server_int->port;
+}
+
+const char *cfrds_server_get_username(cfrds_server *server)
+{
+    const cfrds_server_int *server_int = NULL;
+
+    if (server == NULL)
+        return 0;
+
+    server_int = server;
+
+    return server_int->username;
+}
+
+const char *cfrds_server_get_password(cfrds_server *server)
+{
+    const cfrds_server_int *server_int = NULL;
+
+    if (server == NULL)
+        return 0;
+
+    server_int = server;
+
+    return server_int->orig_password;
 }
 
 static enum cfrds_status cfrds_internal_command(cfrds_server *server, cfrds_buffer **response, const char *command, const char *list[])

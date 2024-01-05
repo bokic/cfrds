@@ -52,6 +52,8 @@ EXPORT_CFRDS void cfrds_server_free(cfrds_server *server);
 EXPORT_CFRDS const char *cfrds_server_get_error(cfrds_server *server);
 EXPORT_CFRDS const char *cfrds_server_get_host(cfrds_server *server);
 EXPORT_CFRDS uint16_t cfrds_server_get_port(cfrds_server *server);
+EXPORT_CFRDS const char *cfrds_server_get_username(cfrds_server *server);
+EXPORT_CFRDS const char *cfrds_server_get_password(cfrds_server *server);
 
 EXPORT_CFRDS void cfrds_buffer_file_content_free(cfrds_file_content *value);
 EXPORT_CFRDS const char *cfrds_buffer_file_content_get_data(cfrds_file_content *value);

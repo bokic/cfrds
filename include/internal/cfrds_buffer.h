@@ -14,6 +14,7 @@ typedef struct {
     char *host;
     uint16_t port;
     char *username;
+    char *orig_password;
     char *password;
     int64_t error_code;
     char *error;

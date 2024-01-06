@@ -13,6 +13,7 @@
 #include <stdlib.h>
 #include <fcntl.h>
 #include <stdio.h>
+#include <errno.h>
 
 
 #define ARRAY_SIZE(arr) (sizeof((arr)) / sizeof((arr)[0]))
@@ -159,6 +160,8 @@ int main(int argc, char *argv[])
     char *username = NULL;
     char *password = NULL;
     char *path = NULL;
+    char *cfroot = NULL;
+    int fd = -1;
 
     if (argc < 3) {
         usage();
@@ -172,6 +175,7 @@ int main(int argc, char *argv[])
         const char *uri = argv[3];
         if (init_server_from_uri(uri, &hostname, &port, &username, &password, &path) == false)
         {
+            fprintf(stderr, "init_server_from_uri FAILED!\n");
             ret = EXIT_FAILURE;
             goto exit;
         }
@@ -179,6 +183,7 @@ int main(int argc, char *argv[])
         const char *uri = argv[2];
         if (init_server_from_uri(uri, &hostname, &port, &username, &password, &path) == false)
         {
+            fprintf(stderr, "init_server_from_uri FAILED!\n");
             ret = EXIT_FAILURE;
             goto exit;
         }
@@ -186,6 +191,7 @@ int main(int argc, char *argv[])
 
     if (!cfrds_server_init(&server, hostname, port, username, password))
     {
+        fprintf(stderr, "cfrds_server_init FAILED!\n");
         ret = EXIT_FAILURE;
         goto exit;
     }
@@ -195,6 +201,7 @@ int main(int argc, char *argv[])
         if (res != CFRDS_STATUS_OK)
         {
             fprintf(stderr, "ls/dir FAILED with error: %s\n", cfrds_server_get_error(server));
+            ret = EXIT_FAILURE;
             goto exit;
         }
 
@@ -223,6 +230,7 @@ int main(int argc, char *argv[])
         if (res != CFRDS_STATUS_OK)
         {
             fprintf(stderr, "cat FAILED with error: %s\n", cfrds_server_get_error(server));
+            ret = EXIT_FAILURE;
             goto exit;
         }
 
@@ -232,22 +240,54 @@ int main(int argc, char *argv[])
         if (res != CFRDS_STATUS_OK)
         {
             fprintf(stderr, "get/download FAILED with error: %s\n", cfrds_server_get_error(server));
+            ret = EXIT_FAILURE;
             goto exit;
         }
 
         const char *dest_fname = argv[3];
-        int fd = open(dest_fname, O_WRONLY|O_CREAT|O_TRUNC, S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH);
-        write(fd, cfrds_buffer_file_content_get_data(content), cfrds_buffer_file_content_get_size(content));
-        close(fd);
 
+        fd = open(dest_fname, O_WRONLY|O_CREAT|O_TRUNC, S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH);
+        if (fd == -1)
+        {
+            fprintf(stderr, "open FAILED with error: %s\n", strerror(errno));
+            ret = EXIT_FAILURE;
+            goto exit;
+        }
+
+        int to_write = cfrds_buffer_file_content_get_size(content);
+        ssize_t written = write(fd, cfrds_buffer_file_content_get_data(content), to_write);
+        if (written != to_write)
+        {
+            fprintf(stderr, "write FAILED with error: %s\n", strerror(errno));
+            ret = EXIT_FAILURE;
+            goto exit;
+        }
     } else if ((strcmp(command, "put") == 0)||(strcmp(command, "upload") == 0)) {
         const char *src_fname = argv[2];
         struct stat stat;
 
-        int fd = open(src_fname, O_RDONLY);
-        fstat(fd, &stat);
+        fd = open(src_fname, O_RDONLY);
+        if (fd == -1)
+        {
+            fprintf(stderr, "open FAILED with error: %s\n", strerror(errno));
+            ret = EXIT_FAILURE;
+            goto exit;
+        }
+
+        if (fstat(fd, &stat))
+        {
+            fprintf(stderr, "open FAILED with error: %s\n", strerror(errno));
+            ret = EXIT_FAILURE;
+            goto exit;
+        }
 
         void *buf = mmap(NULL, stat.st_size, PROT_READ, MAP_PRIVATE, fd, 0);
+        if (buf == NULL)
+        {
+            fprintf(stderr, "mmap FAILED with error: %s\n", strerror(errno));
+            ret = EXIT_FAILURE;
+            goto exit;
+        }
 
         res = cfrds_command_file_write(server, path, buf, stat.st_size);
         if (res != CFRDS_STATUS_OK) {
@@ -260,6 +300,7 @@ int main(int argc, char *argv[])
         if (res != CFRDS_STATUS_OK)
         {
             fprintf(stderr, "rm/delete FAILED with error: %s\n", cfrds_server_get_error(server));
+            ret = EXIT_FAILURE;
             goto exit;
         }
     } else if (strcmp(command, "mkdir") == 0) {
@@ -267,6 +308,7 @@ int main(int argc, char *argv[])
         if (res != CFRDS_STATUS_OK)
         {
             fprintf(stderr, "mkdir FAILED with error: %s\n", cfrds_server_get_error(server));
+            ret = EXIT_FAILURE;
             goto exit;
         }
     } else if (strcmp(command, "rmdir") == 0) {
@@ -274,23 +316,24 @@ int main(int argc, char *argv[])
         if (res != CFRDS_STATUS_OK)
         {
             fprintf(stderr, "rmdir FAILED with error: %s\n", cfrds_server_get_error(server));
+            ret = EXIT_FAILURE;
             goto exit;
         }
     } else if (strcmp(command, "cfroot") == 0) {
-        char *cfroot = NULL;
         res = cfrds_command_file_get_root_dir(server, &cfroot);
         if (res != CFRDS_STATUS_OK)
         {
             fprintf(stderr, "cfroot FAILED with error: %s\n", cfrds_server_get_error(server));
+            ret = EXIT_FAILURE;
             goto exit;
         }
 
         puts(cfroot);
-
-        if (cfroot) free(cfroot);
     }
 
 exit:
+    if (fd != -1) close(fd);
+    if (cfroot) free(cfroot);
     if (path) free(path);
     if (password) free(password);
     if (username) free(username);

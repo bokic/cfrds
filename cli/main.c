@@ -23,7 +23,7 @@ static void usage()
 
 }
 
-static bool init_server_from_uri(const char *uri, char **hostname, uint16_t *port, char **username, char **password, char **path)
+static bool init_server_from_uri(const unsigned char *uri, char **hostname, uint16_t *port, char **username, char **password, char **path)
 {
     cfrds_server *ret = NULL;
 
@@ -58,13 +58,13 @@ static bool init_server_from_uri(const char *uri, char **hostname, uint16_t *por
     }
 
     rc = pcre2_match(
-        re,                   /* the compiled pattern */
-        (PCRE2_SPTR8)uri,     /* the subject string */
-        strlen(uri),          /* the length of the subject */
-        0,                    /* start at offset 0 in the subject */
-        0,                    /* default options */
-        match_data,           /* block for storing the result */
-        NULL);                /* use default match context */
+        re,                        /* the compiled pattern */
+        (PCRE2_SPTR8)uri,          /* the subject string */
+        strlen((const char *)uri), /* the length of the subject */
+        0,                         /* start at offset 0 in the subject */
+        0,                         /* default options */
+        match_data,                /* block for storing the result */
+        NULL);                     /* use default match context */
     if (rc < 0)
     {
         fprintf(stderr, "pcre2_match FAILED!\n");
@@ -172,7 +172,7 @@ int main(int argc, char *argv[])
     const char *command = argv[1];
 
     if ((strcmp(command, "put") == 0)||(strcmp(command, "upload") == 0)) {
-        const char *uri = argv[3];
+        const unsigned char *uri = (const unsigned char *)argv[3];
         if (init_server_from_uri(uri, &hostname, &port, &username, &password, &path) == false)
         {
             fprintf(stderr, "init_server_from_uri FAILED!\n");
@@ -180,7 +180,7 @@ int main(int argc, char *argv[])
             goto exit;
         }
     } else {
-        const char *uri = argv[2];
+        const unsigned char *uri = (const unsigned char *)argv[2];
         if (init_server_from_uri(uri, &hostname, &port, &username, &password, &path) == false)
         {
             fprintf(stderr, "init_server_from_uri FAILED!\n");

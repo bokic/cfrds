@@ -26,8 +26,6 @@ static void usage()
 
 static bool init_server_from_uri(const unsigned char *uri, char **hostname, uint16_t *port, char **username, char **password, char **path)
 {
-    cfrds_server *ret = NULL;
-
     char *_hostname = NULL;
     char *_port_str = NULL;
     uint16_t _port = 80;
@@ -60,7 +58,7 @@ static bool init_server_from_uri(const unsigned char *uri, char **hostname, uint
 
     rc = pcre2_match(
         re,                        /* the compiled pattern */
-        (PCRE2_SPTR8)uri,          /* the subject string */
+        uri,                       /* the subject string */
         strlen((const char *)uri), /* the length of the subject */
         0,                         /* start at offset 0 in the subject */
         0,                         /* default options */
@@ -229,7 +227,7 @@ int main(int argc, char *argv[])
 
             printf("%s %12zu %s %s\n", permissions_str, size, modified_str, name);
         }
-    } else if ((strcmp(command, "cat") == 0)) {
+    } else if (strcmp(command, "cat") == 0) {
         res = cfrds_command_file_read(server, path, &content);
         if (res != CFRDS_STATUS_OK)
         {

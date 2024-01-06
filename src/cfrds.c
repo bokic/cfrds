@@ -442,7 +442,7 @@ const char *cfrds_buffer_file_content_get_data(cfrds_file_content *value)
     if (value == NULL)
         return NULL;
 
-    cfrds_file_content_int *_value = (cfrds_file_content_int *)value;
+    const cfrds_file_content_int *_value = (const cfrds_file_content_int *)value;
 
     return _value->data;
 }
@@ -452,7 +452,7 @@ int cfrds_buffer_file_content_get_size(cfrds_file_content *value)
     if (value == NULL)
         return -1;
 
-    cfrds_file_content_int *_value = (cfrds_file_content_int *)value;
+    const cfrds_file_content_int *_value = (const cfrds_file_content_int *)value;
 
     return _value->size;
 }
@@ -462,7 +462,7 @@ const char *cfrds_buffer_file_content_get_modified(cfrds_file_content *value)
     if (value == NULL)
         return NULL;
 
-    cfrds_file_content_int *_value = (cfrds_file_content_int *)value;
+    const cfrds_file_content_int *_value = (const cfrds_file_content_int *)value;
 
     return _value->modified;
 }
@@ -472,7 +472,7 @@ const char *cfrds_buffer_file_content_get_permission(cfrds_file_content *value)
     if (value == NULL)
         return NULL;
 
-    cfrds_file_content_int *_value = (cfrds_file_content_int *)value;
+    const cfrds_file_content_int *_value = (const cfrds_file_content_int *)value;
 
     return _value->permission;
 }
@@ -497,7 +497,7 @@ size_t cfrds_buffer_browse_dir_count(cfrds_browse_dir *value)
     if (value == NULL)
         return 0;
 
-    cfrds_browse_dir_int *_value = (cfrds_browse_dir_int *)value;
+    const cfrds_browse_dir_int *_value = (const cfrds_browse_dir_int *)value;
 
     return _value->cnt;
 }
@@ -507,7 +507,7 @@ char cfrds_buffer_browse_dir_item_get_kind(cfrds_browse_dir *value, size_t ndx)
     if (value == NULL)
         return 0;
 
-    cfrds_browse_dir_int *_value = (cfrds_browse_dir_int *)value;
+    const cfrds_browse_dir_int *_value = (const cfrds_browse_dir_int *)value;
 
     if (ndx >= _value->cnt)
         return 0;
@@ -520,7 +520,7 @@ const char *cfrds_buffer_browse_dir_item_get_name(cfrds_browse_dir *value, size_
     if (value == NULL)
         return NULL;
 
-    cfrds_browse_dir_int *_value = (cfrds_browse_dir_int *)value;
+    const cfrds_browse_dir_int *_value = (const cfrds_browse_dir_int *)value;
 
     if (ndx >= _value->cnt)
         return NULL;
@@ -533,7 +533,7 @@ uint8_t cfrds_buffer_browse_dir_item_get_permissions(cfrds_browse_dir *value, si
     if (value == NULL)
         return 0;
 
-    cfrds_browse_dir_int *_value = (cfrds_browse_dir_int *)value;
+    const cfrds_browse_dir_int *_value = (const cfrds_browse_dir_int *)value;
 
     if (ndx >= _value->cnt)
         return 0;
@@ -546,7 +546,7 @@ size_t cfrds_buffer_browse_dir_item_get_size(cfrds_browse_dir *value, size_t ndx
     if (value == NULL)
         return 0;
 
-    cfrds_browse_dir_int *_value = (cfrds_browse_dir_int *)value;
+    const cfrds_browse_dir_int *_value = (const cfrds_browse_dir_int *)value;
 
     if (ndx >= _value->cnt)
         return 0;
@@ -559,7 +559,7 @@ uint64_t cfrds_buffer_browse_dir_item_get_modified(cfrds_browse_dir *value, size
     if (value == NULL)
         return 0;
 
-    cfrds_browse_dir_int *_value = (cfrds_browse_dir_int *)value;
+    const cfrds_browse_dir_int *_value = (const cfrds_browse_dir_int *)value;
 
     if (ndx >= _value->cnt)
         return 0;

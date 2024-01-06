@@ -82,6 +82,13 @@ enum cfrds_status cfrds_http_post(cfrds_server_int *server, const char *command,
             ret = CFRDS_STATUS_WRITING_TO_SOCKET_FAILED;
             goto exit;
         }
+        else
+        {
+            cfrds_server_set_error(server, -1, strerror(errno));
+            close(sockfd);
+            ret = CFRDS_STATUS_PARTIALLY_WRITE_TO_SOCKET;
+            goto exit;
+        }
     }
 
     cfrds_buffer_create(&int_response);

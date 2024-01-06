@@ -5,16 +5,33 @@ project(cfrds VERSION 0.8.0 LANGUAGES C)
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_C_STANDARD_REQUIRED ON)
 
+find_package(PkgConfig)
+
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/bin")
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/bin")
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/bin")
 
+pkg_search_module(libpcre2-8 REQUIRED libpcre2-8>=10.42)
+
 ###
-add_executable(cfrds
+add_executable(cfrds_cli
     cli/main.c
 )
 
-target_link_libraries(cfrds PRIVATE
+set_target_properties(cfrds_cli
+    PROPERTIES OUTPUT_NAME "cfrds"
+)
+
+target_include_directories(cfrds_cli PRIVATE
+    ${libpcre2-8_INCLUDE_DIRS}
+)
+
+target_link_directories(cfrds_cli PRIVATE
+    ${libpcre2-8_LIBRARY_DIRS}
+)
+
+target_link_libraries(cfrds_cli PRIVATE
+    ${libpcre2-8_LIBRARIES}
     libcfrds
 )
 ###

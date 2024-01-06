@@ -14,6 +14,7 @@
 #include <fcntl.h>
 #include <stdio.h>
 #include <errno.h>
+#include <time.h>
 
 
 #define ARRAY_SIZE(arr) (sizeof((arr)) / sizeof((arr)[0]))
@@ -221,9 +222,12 @@ int main(int argc, char *argv[])
             if (permissions & 0x10) permissions_str[3] = 'A';
             if (permissions & 0x80) permissions_str[4] = 'N';
 
-            // TODO: Add size and modified!
+            const time_t timep = modified / 1000;
+            struct tm *newtime = localtime(&timep);
+            char *modified_str = asctime(newtime);
+            modified_str[strlen(modified_str) - 1] = '\0';
 
-            printf("%s %s\n", permissions_str, name);
+            printf("%s %12zu %s %s\n", permissions_str, size, modified_str, name);
         }
     } else if ((strcmp(command, "cat") == 0)) {
         res = cfrds_command_file_read(server, path, &content);

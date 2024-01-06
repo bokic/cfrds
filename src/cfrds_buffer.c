@@ -393,7 +393,7 @@ cfrds_browse_dir_int *cfrds_buffer_to_browse_dir(cfrds_buffer *buffer)
         ret->items[c].kind = file_type;
         ret->items[c].name = filename;
         ret->items[c].permissions = permissions;
-        ret->items[c].size = size;
+        ret->items[c].size = filesize;
         ret->items[c].modified = modified;
     }
 

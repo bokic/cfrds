@@ -34,6 +34,9 @@ target_link_libraries(cfrds_cli PRIVATE
     ${libpcre2-8_LIBRARIES}
     libcfrds
 )
+
+install(TARGETS cfrds_cli
+)
 ###
 add_library(libcfrds SHARED
     src/cfrds.c        include/cfrds.h

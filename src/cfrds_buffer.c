@@ -375,6 +375,8 @@ cfrds_browse_dir_int *cfrds_buffer_to_browse_dir(cfrds_buffer *buffer)
                 str_num2++;
                 uint32_t num2 = atol(str_num2);
                 modified = num1 + ((uint64_t)num2 << 32);
+                modified /= 10000;
+                modified -= 11644473600000L;
             }
 
             free(str_timestamp);

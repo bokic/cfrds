@@ -123,9 +123,19 @@ cfrds_server_browse_dir(cfrds_server_Object *self, PyObject *args)
         {
             PyObject *item = PyDict_New();
 
-            PyDict_SetItemString(item, "kind", PyUnicode_FromFormat("%c", cfrds_buffer_browse_dir_item_get_kind(dir, c)));
+            char kind = cfrds_buffer_browse_dir_item_get_kind(dir, c);
+            PyDict_SetItemString(item, "kind", PyUnicode_FromFormat("%c", kind));
             PyDict_SetItemString(item, "name", PyUnicode_FromString(cfrds_buffer_browse_dir_item_get_name(dir, c)));
-            PyDict_SetItemString(item, "permissions", PyLong_FromUnsignedLong(cfrds_buffer_browse_dir_item_get_permissions(dir, c)));
+
+            uint8_t permissions = cfrds_buffer_browse_dir_item_get_permissions(dir, c);
+            char permissions_str[] = "-----";
+            if (kind == 'D') permissions_str[0] = 'D';
+            if (permissions & 0x01) permissions_str[1] = 'R';
+            if (permissions & 0x02) permissions_str[2] = 'H';
+            if (permissions & 0x10) permissions_str[3] = 'A';
+            if (permissions & 0x80) permissions_str[4] = 'N';
+            PyDict_SetItemString(item, "permissions", PyUnicode_FromString(permissions_str));
+
             PyDict_SetItemString(item, "size", PyLong_FromSize_t(cfrds_buffer_browse_dir_item_get_size(dir, c)));
             PyDict_SetItemString(item, "modified", PyLong_FromUnsignedLongLong(cfrds_buffer_browse_dir_item_get_modified(dir, c)));
 

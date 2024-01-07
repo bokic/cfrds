@@ -21,7 +21,36 @@
 
 static void usage()
 {
-
+    printf("Usage: cfrds <command> {..} <uri> {..}\n"
+           "commands:\n"
+           "  - 'ls', 'dir' - List a server directorory.\n"
+           "         example: `cfrds ls rds://username:password@host/dir`\n"
+           "            or    `cfrds dir rds://username:password@host/dir`\n"
+           "\n"
+           "  - 'cat' - Print server file content to stdout.\n"
+           "         example: `cfrds cat rds://username:password@host/pathname`\n"
+           "\n"
+           "  - 'get', 'download' - Downloads a file from server.\n"
+           "         example: `cfrds get rds://username:password@host/pathname local_file`\n"
+           "            or    `cfrds download rds://username:password@host/pathname local_file`\n"
+           "\n"
+           "  - 'put', 'upload' - Uploads a file to server.\n"
+           "         example: `cfrds put local_file rds://username:password@host/pathname`\n"
+           "            or    `cfrds upload local_file rds://username:password@host/pathname`\n"
+           "\n"
+           "  - 'rm', 'delete' - Delete a file to server.\n"
+           "         example: `cfrds rm rds://username:password@host/pathname`\n"
+           "            or    `cfrds delete rds://username:password@host/pathname`\n"
+           "\n"
+           "  - 'mkdir' - Create a directory on a server.\n"
+           "         example: `cfrds mkdir rds://username:password@host/pathname`\n"
+           "\n"
+           "  - 'rmdir' - Deletes a directory from a server.\n"
+           "         example: `cfrds rmdir rds://username:password@host/pathname`\n"
+           "\n"
+           "  - 'cfroot' - Return ColdFusion installation directory.\n"
+           "         example: `cfrds cfroot rds://username:password@host`\n"
+           );
 }
 
 static bool init_server_from_uri(const unsigned char *uri, char **hostname, uint16_t *port, char **username, char **password, char **path)

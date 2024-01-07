@@ -55,7 +55,8 @@ enum cfrds_status cfrds_http_post(cfrds_server_int *server, const char *command,
     cfrds_buffer_append_buffer(send_buf, payload);
 
     if ((sockfd = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
-        cfrds_server_set_error(server, -1, "socket creation failed...");
+        server->_errno = errno;
+        cfrds_server_set_error(server, CFRDS_STATUS_SOCKET_CREATION_FAILED, "failed to create socket...");
         ret = CFRDS_STATUS_SOCKET_CREATION_FAILED;
         goto exit;
     }
@@ -67,7 +68,8 @@ enum cfrds_status cfrds_http_post(cfrds_server_int *server, const char *command,
     servaddr.sin_addr.s_addr = inet_addr(cfrds_server_get_host(server));
 
     if (connect(sockfd, (struct sockaddr *)&servaddr, sizeof(servaddr)) != 0) {
-        cfrds_server_set_error(server, -1, "connection with the server failed...");
+        server->_errno = errno;
+        cfrds_server_set_error(server, CFRDS_STATUS_CONNECTION_TO_SERVER_FAILED, "failed to establish connection to the server...");
         close(sockfd);
         ret = CFRDS_STATUS_CONNECTION_TO_SERVER_FAILED;
         goto exit;
@@ -77,14 +79,16 @@ enum cfrds_status cfrds_http_post(cfrds_server_int *server, const char *command,
     if (sock_written != cfrds_buffer_data_size(send_buf)) {
         if (sock_written == -1)
         {
-            cfrds_server_set_error(server, -1, strerror(errno));
+            server->_errno = errno;
+            cfrds_server_set_error(server, CFRDS_STATUS_WRITING_TO_SOCKET_FAILED, "failed to write to socket...");
             close(sockfd);
             ret = CFRDS_STATUS_WRITING_TO_SOCKET_FAILED;
             goto exit;
         }
         else
         {
-            cfrds_server_set_error(server, -1, strerror(errno));
+            server->_errno = errno;
+            cfrds_server_set_error(server, CFRDS_STATUS_PARTIALLY_WRITE_TO_SOCKET, "failed to write to all data socket...");
             close(sockfd);
             ret = CFRDS_STATUS_PARTIALLY_WRITE_TO_SOCKET;
             goto exit;
@@ -98,8 +102,12 @@ enum cfrds_status cfrds_http_post(cfrds_server_int *server, const char *command,
 
         ssize_t readed = read(sockfd, cfrds_buffer_data(int_response) + cfrds_buffer_data_size(int_response), 4096);
         if (readed <= 0) {
-            if (readed == -1)
-                cfrds_server_set_error(server, -1, strdup(strerror(errno)));
+            if (readed == -1) {
+                server->_errno = errno;
+                cfrds_server_set_error(server, CFRDS_STATUS_READING_FROM_SOCKET_FAILED, "failed to read from socket...");
+                ret = CFRDS_STATUS_READING_FROM_SOCKET_FAILED;
+                goto exit;
+            }
             break;
         }
 
@@ -127,7 +135,7 @@ enum cfrds_status cfrds_http_post(cfrds_server_int *server, const char *command,
         if (server->error_code < 0)
         {
             cfrds_buffer_append_char(int_response, '\0');
-            cfrds_server_set_error(server, server->error_code, response_data);
+            cfrds_server_set_error(server, CFRDS_STATUS_RESPONSE_ERROR, "failed to parse response data...");
             ret = CFRDS_STATUS_RESPONSE_ERROR;
             goto exit;
         }

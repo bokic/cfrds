@@ -14,6 +14,7 @@ static void cfrds_server_clean(cfrds_server_int *server)
     if (server == NULL)
         return;
 
+    server->_errno = 0;
     server->error_code = 1;
 
     if (server->error)
@@ -69,6 +70,7 @@ bool cfrds_server_init(cfrds_server **server, const char *host, uint16_t port, c
     ret->username = strdup(username);
     ret->orig_password = strdup(password);
     ret->password = cfrds_server_encode_password(password);
+    ret->_errno = 0;
     ret->error_code = 1;
     ret->error = NULL;
 
@@ -187,6 +189,8 @@ static enum cfrds_status cfrds_internal_command(cfrds_server *server, cfrds_buff
 
     server_int = server;
 
+    server_int->_errno = 0;
+
     for(int c = 0; ; c++)
     {
         if (list[c] == NULL)
@@ -276,6 +280,8 @@ enum cfrds_status cfrds_command_file_write(cfrds_server *server, const char *pat
     }
 
     server_int = server;
+
+    server_int->_errno = 0;
 
     total_cnt = 4;
 

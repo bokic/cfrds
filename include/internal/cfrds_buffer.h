@@ -16,6 +16,7 @@ typedef struct {
     char *username;
     char *orig_password;
     char *password;
+    int _errno;
     int64_t error_code;
     char *error;
 } cfrds_server_int;

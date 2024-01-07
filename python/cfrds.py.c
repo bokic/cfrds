@@ -4,38 +4,56 @@
 #include <structmember.h>
 #include <stddef.h>
 
-#define CHECK_FOR_ERORRS(function_call)                                                       \
-    {                                                                                         \
-    enum cfrds_status res = function_call;                                                    \
-        if (res != CFRDS_STATUS_OK)                                                           \
-        {                                                                                     \
-            switch(res)                                                                       \
-            {                                                                                 \
-            case CFRDS_STATUS_PARAM_IS_NULL:                                                  \
-                PyErr_SetString(PyExc_RuntimeError, "CFRDS_STATUS_PARAM_IS_NULL");            \
-                break;                                                                        \
-            case CFRDS_STATUS_SERVER_IS_NULL:                                                 \
-                PyErr_SetString(PyExc_RuntimeError, "CFRDS_STATUS_SERVER_IS_NULL");           \
-                break;                                                                        \
-            case CFRDS_STATUS_COMMAND_FAILED:                                                 \
-                PyErr_SetString(PyExc_RuntimeError, "CFRDS_STATUS_COMMAND_FAILED");           \
-                break;                                                                        \
-            case CFRDS_STATUS_RESPONSE_ERROR:                                                 \
-                PyErr_SetString(PyExc_RuntimeError, "CFRDS_STATUS_RESPONSE_ERROR");           \
-                break;                                                                        \
-            case CFRDS_STATUS_HTTP_RESPONSE_NOT_FOUND:                                        \
-                PyErr_SetString(PyExc_RuntimeError, "CFRDS_STATUS_HTTP_RESPONSE_NOT_FOUND");  \
-                break;                                                                        \
-            case CFRDS_STATUS_DIR_ALREADY_EXISTS:                                             \
-                PyErr_SetString(PyExc_RuntimeError, "CFRDS_STATUS_DIR_ALREADY_EXISTS");       \
-                break;                                                                        \
-            default:                                                                          \
-                PyErr_SetString(PyExc_RuntimeError, "Unknown CFRDS error.");                  \
-                break;                                                                        \
-            }                                                                                 \
-                                                                                              \
-            goto exit;                                                                        \
-        }                                                                                     \
+#define CHECK_FOR_ERORRS(function_call)                                                          \
+    {                                                                                            \
+    enum cfrds_status res = function_call;                                                       \
+        if (res != CFRDS_STATUS_OK)                                                              \
+        {                                                                                        \
+            switch(res)                                                                          \
+            {                                                                                    \
+            case CFRDS_STATUS_PARAM_IS_NULL:                                                     \
+                PyErr_SetString(PyExc_RuntimeError, "CFRDS_STATUS_PARAM_IS_NULL");               \
+                break;                                                                           \
+            case CFRDS_STATUS_SERVER_IS_NULL:                                                    \
+                PyErr_SetString(PyExc_RuntimeError, "CFRDS_STATUS_SERVER_IS_NULL");              \
+                break;                                                                           \
+            case CFRDS_STATUS_INDEX_OUT_OF_BOUNDS:                                               \
+                PyErr_SetString(PyExc_RuntimeError, "CFRDS_STATUS_INDEX_OUT_OF_BOUNDS");         \
+                break;                                                                           \
+            case CFRDS_STATUS_COMMAND_FAILED:                                                    \
+                PyErr_SetString(PyExc_RuntimeError, "CFRDS_STATUS_COMMAND_FAILED");              \
+                break;                                                                           \
+            case CFRDS_STATUS_RESPONSE_ERROR:                                                    \
+                PyErr_SetString(PyExc_RuntimeError, "CFRDS_STATUS_RESPONSE_ERROR");              \
+                break;                                                                           \
+            case CFRDS_STATUS_HTTP_RESPONSE_NOT_FOUND:                                           \
+                PyErr_SetString(PyExc_RuntimeError, "CFRDS_STATUS_HTTP_RESPONSE_NOT_FOUND");     \
+                break;                                                                           \
+            case CFRDS_STATUS_DIR_ALREADY_EXISTS:                                                \
+                PyErr_SetString(PyExc_RuntimeError, "CFRDS_STATUS_DIR_ALREADY_EXISTS");          \
+                break;                                                                           \
+            case CFRDS_STATUS_SOCKET_CREATION_FAILED:                                            \
+                PyErr_SetString(PyExc_RuntimeError, "CFRDS_STATUS_SOCKET_CREATION_FAILED");      \
+                break;                                                                           \
+            case CFRDS_STATUS_CONNECTION_TO_SERVER_FAILED:                                       \
+                PyErr_SetString(PyExc_RuntimeError, "CFRDS_STATUS_CONNECTION_TO_SERVER_FAILED"); \
+                break;                                                                           \
+            case CFRDS_STATUS_WRITING_TO_SOCKET_FAILED:                                          \
+                PyErr_SetString(PyExc_RuntimeError, "CFRDS_STATUS_WRITING_TO_SOCKET_FAILED");    \
+                break;                                                                           \
+            case CFRDS_STATUS_PARTIALLY_WRITE_TO_SOCKET:                                         \
+                PyErr_SetString(PyExc_RuntimeError, "CFRDS_STATUS_PARTIALLY_WRITE_TO_SOCKET");   \
+                break;                                                                           \
+            case CFRDS_STATUS_READING_FROM_SOCKET_FAILED:                                        \
+                PyErr_SetString(PyExc_RuntimeError, "CFRDS_STATUS_READING_FROM_SOCKET_FAILED");  \
+                break;                                                                           \
+            default:                                                                             \
+                PyErr_SetString(PyExc_RuntimeError, "Unknown CFRDS error.");                     \
+                break;                                                                           \
+            }                                                                                    \
+                                                                                                 \
+            goto exit;                                                                           \
+        }                                                                                        \
     }
 
 typedef struct {

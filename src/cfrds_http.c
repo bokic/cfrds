@@ -121,7 +121,10 @@ enum cfrds_status cfrds_http_post(cfrds_server_int *server, const char *command,
     static const char *good_response = "HTTP/1.1 200 OK\r\nContent-Type: text/html\r\n";
 
     if (strncmp(response_data, good_response, strlen(good_response)) != 0)
+    {
         ret = CFRDS_STATUS_RESPONSE_ERROR;
+        goto exit;
+    }
 
     if (cfrds_buffer_skip_httpheader(&response_data, &response_size))
     {

@@ -298,7 +298,7 @@ exit:
 }
 
 static PyObject *
-cfrds_server_cf_root_dir(cfrds_server_Object *self, PyObject *args)
+cfrds_server_cf_root_dir(cfrds_server_Object *self)
 {
     PyObject *ret = NULL;
     char *dirpath = NULL;

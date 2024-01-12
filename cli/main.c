@@ -69,6 +69,9 @@ static bool init_server_from_uri(const unsigned char *uri, char **hostname, uint
     PCRE2_SIZE *ovector = NULL;
     int rc = 0;
 
+    if ((uri == NULL)||(hostname == NULL)||(port == NULL)||(username == NULL)||(password == NULL)||(path == NULL))
+        return false;
+
     re = pcre2_compile((PCRE2_SPTR8)"^rds:\\/\\/(?<username>.+):(?<password>.+)@(?<hostname>(?:(?:[0-9]{1,3}\\.){3}[0-9]{1,3})|(?:[a-z_\\-\\.])+(?:[a-z_\\-\\.])*)(?::(?<port>[1-9]{1}[0-9]{0,4}))?(?<path>\\/[0-9a-z_\\-\\/\\.]*)?$", PCRE2_ZERO_TERMINATED, 0, &errornumber, &erroroffset, NULL);
     if (re == NULL)
     {
@@ -250,9 +253,9 @@ int main(int argc, char *argv[])
             if (permissions & 0x80) permissions_str[4] = 'N';
 
             const time_t timep = modified / 1000;
-            struct tm *newtime = localtime(&timep);
-            char *modified_str = asctime(newtime);
-            modified_str[strlen(modified_str) - 1] = '\0';
+            const struct tm *newtime = localtime(&timep);
+            char modified_str[64] = {0, };
+            strftime(modified_str, sizeof(modified_str), "%c", newtime);
 
             printf("%s %12zu %s %s\n", permissions_str, size, modified_str, name);
         }

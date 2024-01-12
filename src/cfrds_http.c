@@ -114,9 +114,9 @@ enum cfrds_status cfrds_http_post(cfrds_server_int *server, const char *command,
         cfrds_buffer_expand(int_response, readed);
     }
 
+    cfrds_buffer_append_char(int_response, '\0');
     char *response_data = cfrds_buffer_data(int_response);
     size_t response_size = cfrds_buffer_data_size(int_response);
-    cfrds_buffer_append_char(int_response, '\0');
 
     static const char *good_response = "HTTP/1.1 200 OK\r\nContent-Type: text/html\r\n";
 
@@ -131,13 +131,13 @@ enum cfrds_status cfrds_http_post(cfrds_server_int *server, const char *command,
         if (!cfrds_buffer_parse_number(&response_data, &response_size, &server->error_code))
         {
             server->error_code = -1;
+            cfrds_server_set_error(server, CFRDS_STATUS_RESPONSE_ERROR, "cfrds_buffer_parse_number FAILED...");
             ret = CFRDS_STATUS_RESPONSE_ERROR;
             goto exit;
         }
 
         if (server->error_code < 0)
         {
-            cfrds_buffer_append_char(int_response, '\0');
             cfrds_server_set_error(server, CFRDS_STATUS_RESPONSE_ERROR, "failed to parse response data...");
             ret = CFRDS_STATUS_RESPONSE_ERROR;
             goto exit;

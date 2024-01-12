@@ -67,7 +67,7 @@ cfrds_server_new(PyTypeObject *type, PyObject *args, PyObject *kwargs)
     cfrds_server_Object *self = NULL;
 
     static char *kwlist[] = {"hostname", "port", "username", "password", NULL};
-    
+
     cfrds_server *server = NULL;
     const char *hostname = "127.0.0.1";
     int port = 8500;
@@ -339,9 +339,7 @@ static PyTypeObject cfrds_server_Type = {
     .tp_itemsize = 0,
     .tp_flags = Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE,
     .tp_new = cfrds_server_new,
-    //.tp_init = (initproc) Custom_init,
     .tp_dealloc = (destructor) cfrds_server_dealloc,
-    //.tp_members = cfrds_server_members,
     .tp_methods = cfrds_server_methods,
 };
 

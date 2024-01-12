@@ -138,7 +138,7 @@ enum cfrds_status cfrds_http_post(cfrds_server_int *server, const char *command,
 
         if (server->error_code < 0)
         {
-            cfrds_server_set_error(server, CFRDS_STATUS_RESPONSE_ERROR, "failed to parse response data...");
+            cfrds_server_set_error(server, CFRDS_STATUS_RESPONSE_ERROR, response_data);
             ret = CFRDS_STATUS_RESPONSE_ERROR;
             goto exit;
         }

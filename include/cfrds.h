@@ -58,18 +58,18 @@ EXPORT_CFRDS const char *cfrds_server_get_username(cfrds_server *server);
 EXPORT_CFRDS const char *cfrds_server_get_password(cfrds_server *server);
 
 EXPORT_CFRDS void cfrds_buffer_file_content_free(cfrds_file_content *value);
-EXPORT_CFRDS const char *cfrds_buffer_file_content_get_data(cfrds_file_content *value);
-EXPORT_CFRDS int cfrds_buffer_file_content_get_size(cfrds_file_content *value);
-EXPORT_CFRDS const char *cfrds_buffer_file_content_get_modified(cfrds_file_content *value);
-EXPORT_CFRDS const char *cfrds_buffer_file_content_get_permission(cfrds_file_content *value);
+EXPORT_CFRDS const char *cfrds_buffer_file_content_get_data(const cfrds_file_content *value);
+EXPORT_CFRDS int cfrds_buffer_file_content_get_size(const cfrds_file_content *value);
+EXPORT_CFRDS const char *cfrds_buffer_file_content_get_modified(const cfrds_file_content *value);
+EXPORT_CFRDS const char *cfrds_buffer_file_content_get_permission(const cfrds_file_content *value);
 
 EXPORT_CFRDS void cfrds_buffer_browse_dir_free(cfrds_browse_dir *value);
-EXPORT_CFRDS size_t cfrds_buffer_browse_dir_count(cfrds_browse_dir *value);
-EXPORT_CFRDS char cfrds_buffer_browse_dir_item_get_kind(cfrds_browse_dir *value, size_t ndx);
-EXPORT_CFRDS const char *cfrds_buffer_browse_dir_item_get_name(cfrds_browse_dir *value, size_t ndx);
-EXPORT_CFRDS uint8_t cfrds_buffer_browse_dir_item_get_permissions(cfrds_browse_dir *value, size_t ndx);
-EXPORT_CFRDS size_t cfrds_buffer_browse_dir_item_get_size(cfrds_browse_dir *value, size_t ndx);
-EXPORT_CFRDS uint64_t cfrds_buffer_browse_dir_item_get_modified(cfrds_browse_dir *value, size_t ndx);
+EXPORT_CFRDS size_t cfrds_buffer_browse_dir_count(const cfrds_browse_dir *value);
+EXPORT_CFRDS char cfrds_buffer_browse_dir_item_get_kind(const cfrds_browse_dir *value, size_t ndx);
+EXPORT_CFRDS const char *cfrds_buffer_browse_dir_item_get_name(const cfrds_browse_dir *value, size_t ndx);
+EXPORT_CFRDS uint8_t cfrds_buffer_browse_dir_item_get_permissions(const cfrds_browse_dir *value, size_t ndx);
+EXPORT_CFRDS size_t cfrds_buffer_browse_dir_item_get_size(const cfrds_browse_dir *value, size_t ndx);
+EXPORT_CFRDS uint64_t cfrds_buffer_browse_dir_item_get_modified(const cfrds_browse_dir *value, size_t ndx);
 
 EXPORT_CFRDS enum cfrds_status cfrds_command_browse_dir(cfrds_server *server, const char *path, cfrds_browse_dir **out);
 EXPORT_CFRDS enum cfrds_status cfrds_command_file_read(cfrds_server *server, const char *pathname, cfrds_file_content **out);

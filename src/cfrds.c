@@ -443,7 +443,7 @@ void cfrds_buffer_file_content_free(cfrds_file_content *value)
     free(_value);
 }
 
-const char *cfrds_buffer_file_content_get_data(cfrds_file_content *value)
+const char *cfrds_buffer_file_content_get_data(const cfrds_file_content *value)
 {
     if (value == NULL)
         return NULL;
@@ -453,7 +453,7 @@ const char *cfrds_buffer_file_content_get_data(cfrds_file_content *value)
     return _value->data;
 }
 
-int cfrds_buffer_file_content_get_size(cfrds_file_content *value)
+int cfrds_buffer_file_content_get_size(const cfrds_file_content *value)
 {
     if (value == NULL)
         return -1;
@@ -463,7 +463,7 @@ int cfrds_buffer_file_content_get_size(cfrds_file_content *value)
     return _value->size;
 }
 
-const char *cfrds_buffer_file_content_get_modified(cfrds_file_content *value)
+const char *cfrds_buffer_file_content_get_modified(const cfrds_file_content *value)
 {
     if (value == NULL)
         return NULL;
@@ -473,7 +473,7 @@ const char *cfrds_buffer_file_content_get_modified(cfrds_file_content *value)
     return _value->modified;
 }
 
-const char *cfrds_buffer_file_content_get_permission(cfrds_file_content *value)
+const char *cfrds_buffer_file_content_get_permission(const cfrds_file_content *value)
 {
     if (value == NULL)
         return NULL;
@@ -498,7 +498,7 @@ void cfrds_buffer_browse_dir_free(cfrds_browse_dir *value)
     free(_value);
 }
 
-size_t cfrds_buffer_browse_dir_count(cfrds_browse_dir *value)
+size_t cfrds_buffer_browse_dir_count(const cfrds_browse_dir *value)
 {
     if (value == NULL)
         return 0;
@@ -508,7 +508,7 @@ size_t cfrds_buffer_browse_dir_count(cfrds_browse_dir *value)
     return _value->cnt;
 }
 
-char cfrds_buffer_browse_dir_item_get_kind(cfrds_browse_dir *value, size_t ndx)
+char cfrds_buffer_browse_dir_item_get_kind(const cfrds_browse_dir *value, size_t ndx)
 {
     if (value == NULL)
         return 0;
@@ -521,7 +521,7 @@ char cfrds_buffer_browse_dir_item_get_kind(cfrds_browse_dir *value, size_t ndx)
     return _value->items[ndx].kind;
 }
 
-const char *cfrds_buffer_browse_dir_item_get_name(cfrds_browse_dir *value, size_t ndx)
+const char *cfrds_buffer_browse_dir_item_get_name(const cfrds_browse_dir *value, size_t ndx)
 {
     if (value == NULL)
         return NULL;
@@ -534,7 +534,7 @@ const char *cfrds_buffer_browse_dir_item_get_name(cfrds_browse_dir *value, size_
     return _value->items[ndx].name;
 }
 
-uint8_t cfrds_buffer_browse_dir_item_get_permissions(cfrds_browse_dir *value, size_t ndx)
+uint8_t cfrds_buffer_browse_dir_item_get_permissions(const cfrds_browse_dir *value, size_t ndx)
 {
     if (value == NULL)
         return 0;
@@ -547,7 +547,7 @@ uint8_t cfrds_buffer_browse_dir_item_get_permissions(cfrds_browse_dir *value, si
     return _value->items[ndx].permissions;
 }
 
-size_t cfrds_buffer_browse_dir_item_get_size(cfrds_browse_dir *value, size_t ndx)
+size_t cfrds_buffer_browse_dir_item_get_size(const cfrds_browse_dir *value, size_t ndx)
 {
     if (value == NULL)
         return 0;
@@ -560,7 +560,7 @@ size_t cfrds_buffer_browse_dir_item_get_size(cfrds_browse_dir *value, size_t ndx
     return _value->items[ndx].size;
 }
 
-uint64_t cfrds_buffer_browse_dir_item_get_modified(cfrds_browse_dir *value, size_t ndx)
+uint64_t cfrds_buffer_browse_dir_item_get_modified(const cfrds_browse_dir *value, size_t ndx)
 {
     if (value == NULL)
         return 0;

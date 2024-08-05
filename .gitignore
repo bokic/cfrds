@@ -1,5 +1,6 @@
 .vscode
 /python/*.so
+/build
 /bin
 out
 .vs

@@ -13,7 +13,6 @@
 #include <stdlib.h>
 #include <fcntl.h>
 #include <stdio.h>
-#include <errno.h>
 #include <time.h>
 
 
@@ -283,7 +282,7 @@ int main(int argc, char *argv[])
         fd = open(dest_fname, O_WRONLY|O_CREAT|O_TRUNC, S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH);
         if (fd == -1)
         {
-            fprintf(stderr, "open FAILED with error: %s\n", strerror(errno));
+            fprintf(stderr, "open FAILED with error: %m\n");
             ret = EXIT_FAILURE;
             goto exit;
         }
@@ -292,7 +291,7 @@ int main(int argc, char *argv[])
         ssize_t written = write(fd, cfrds_buffer_file_content_get_data(content), to_write);
         if (written != to_write)
         {
-            fprintf(stderr, "write FAILED with error: %s\n", strerror(errno));
+            fprintf(stderr, "write FAILED with error: %m\n");
             ret = EXIT_FAILURE;
             goto exit;
         }
@@ -303,14 +302,14 @@ int main(int argc, char *argv[])
         fd = open(src_fname, O_RDONLY);
         if (fd == -1)
         {
-            fprintf(stderr, "open FAILED with error: %s\n", strerror(errno));
+            fprintf(stderr, "open FAILED with error: %m\n");
             ret = EXIT_FAILURE;
             goto exit;
         }
 
         if (fstat(fd, &stat))
         {
-            fprintf(stderr, "open FAILED with error: %s\n", strerror(errno));
+            fprintf(stderr, "open FAILED with error: %m\n");
             ret = EXIT_FAILURE;
             goto exit;
         }
@@ -318,7 +317,7 @@ int main(int argc, char *argv[])
         void *buf = mmap(NULL, stat.st_size, PROT_READ, MAP_PRIVATE, fd, 0);
         if (buf == NULL)
         {
-            fprintf(stderr, "mmap FAILED with error: %s\n", strerror(errno));
+            fprintf(stderr, "mmap FAILED with error: %m\n");
             ret = EXIT_FAILURE;
             goto exit;
         }

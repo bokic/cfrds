@@ -5,7 +5,7 @@
 #include "cfrds_buffer.h"
 
 #include <stdbool.h>
-#include <stdint.h>
+
 
 #define cfrds_server void
 

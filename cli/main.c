@@ -267,7 +267,14 @@ int main(int argc, char *argv[])
             goto exit;
         }
 
-        write(1, cfrds_buffer_file_content_get_data(content), cfrds_buffer_file_content_get_size(content));
+        int to_write = cfrds_buffer_file_content_get_size(content);
+        ssize_t written = write(1, cfrds_buffer_file_content_get_data(content), to_write);
+        if (written != to_write)
+        {
+            fprintf(stderr, "write FAILED with error: %m\n");
+            ret = EXIT_FAILURE;
+            goto exit;
+        }
     } else if ((strcmp(command, "get") == 0)||(strcmp(command, "download") == 0)) {
         res = cfrds_command_file_read(server, path, &content);
         if (res != CFRDS_STATUS_OK)

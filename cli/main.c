@@ -71,7 +71,7 @@ static bool init_server_from_uri(const unsigned char *uri, char **hostname, uint
     if ((uri == NULL)||(hostname == NULL)||(port == NULL)||(username == NULL)||(password == NULL)||(path == NULL))
         return false;
 
-    re = pcre2_compile((PCRE2_SPTR8)R"(^rds:\/\/(?<username>.+):(?<password>.+)@(?<hostname>(?:(?:[0-9]{1,3}\.){3}[0-9]{1,3})|(?:[a-z_\-\.])+(?:[a-z_\-\.])*)(?::(?<port>[1-9]{1}[0-9]{0,4}))?(?<path>\/[0-9a-z_\-\/\.]*)?$)", PCRE2_ZERO_TERMINATED, 0, &errornumber, &erroroffset, NULL);
+    re = pcre2_compile((PCRE2_SPTR8)R"(^rds:\/\/(?<username>.+):(?<password>.+)@(?<hostname>(?:(?:[0-9]{1,3}\.){3}[0-9]{1,3})|(?:[a-z_\-\.])+(?:[a-z_\-\.])*)(?::(?<port>[1-9]{1}[0-9]{0,4}))?(?<path>\/[0-9a-z_\-\/\.]*)?$)", PCRE2_ZERO_TERMINATED, PCRE2_CASELESS, &errornumber, &erroroffset, NULL);
     if (re == NULL)
     {
         PCRE2_UCHAR buffer[256];

@@ -51,7 +51,10 @@ target_include_directories(libcfrds PUBLIC
 )
 
 if(WIN32)
-  target_link_libraries(libcfrds wsock32 ws2_32)
+    target_link_libraries(libcfrds PRIVATE
+        wsock32
+        ws2_32
+    )
 endif()
 
 set_target_properties(libcfrds PROPERTIES

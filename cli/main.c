@@ -1,8 +1,4 @@
-#define PCRE2_CODE_UNIT_WIDTH 8
-
 #include <cfrds.h>
-
-#include <pcre2.h>
 
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -13,6 +9,7 @@
 #include <stdlib.h>
 #include <fcntl.h>
 #include <stdio.h>
+#include <regex.h>
 #include <time.h>
 
 
@@ -52,7 +49,7 @@ static void usage()
            );
 }
 
-static bool init_server_from_uri(const unsigned char *uri, char **hostname, uint16_t *port, char **username, char **password, char **path)
+static bool init_server_from_uri(const char *uri, char **hostname, uint16_t *port, char **username, char **password, char **path)
 {
     char *_hostname = NULL;
     char *_port_str = NULL;
@@ -61,99 +58,68 @@ static bool init_server_from_uri(const unsigned char *uri, char **hostname, uint
     char *_password = NULL;
     char *_path = NULL;
 
-    PCRE2_SIZE erroroffset = 0;
     int errornumber = 0;
-    pcre2_code *re = NULL;
-    pcre2_match_data *match_data = NULL;
-    PCRE2_SIZE *ovector = NULL;
     int rc = 0;
 
     if ((uri == NULL)||(hostname == NULL)||(port == NULL)||(username == NULL)||(password == NULL)||(path == NULL))
         return false;
 
-    re = pcre2_compile((PCRE2_SPTR8)R"(^rds:\/\/(?<username>.+):(?<password>.+)@(?<hostname>(?:(?:[0-9]{1,3}\.){3}[0-9]{1,3})|(?:[a-z_\-\.])+(?:[a-z_\-\.])*)(?::(?<port>[1-9]{1}[0-9]{0,4}))?(?<path>\/[0-9a-z_\-\/\.]*)?$)", PCRE2_ZERO_TERMINATED, PCRE2_CASELESS, &errornumber, &erroroffset, NULL);
-    if (re == NULL)
+    regex_t regex;
+
+    // -std=gnu11 GCC >=4.7.1, clang 19.1, MinGW gcc(11.3 - 13.1)
+    //rc = regcomp(&regex, R"(^rds:\/\/(.+):(.+)@(.+):([0-9]{1,5})(.+)$)", REG_EXTENDED | REG_ICASE);
+    rc = regcomp(&regex, "^rds:\\/\\/(.+):(.+)@(.+):([0-9]{1,5})(.+)$", REG_EXTENDED | REG_ICASE);
+    if (rc != REG_NOERROR)
     {
-        PCRE2_UCHAR buffer[256];
-        pcre2_get_error_message(errornumber, buffer, sizeof(buffer));
-        fprintf(stderr, "PCRE2 compilation failed at offset %zu: %s\n", erroroffset, buffer);
+        fprintf(stderr, "regcomp compilation failed\n");
         goto error;
     }
 
-    match_data = pcre2_match_data_create_from_pattern(re, NULL);
-    if (match_data == NULL)
+    size_t     nmatch = 6;
+    regmatch_t pmatch[6] = {0};
+
+    rc = regexec(&regex, uri, nmatch, pmatch, 0);
+
+    regfree(&regex);
+
+    if (rc != REG_NOERROR)
     {
-        fprintf(stderr, "pcre2_match_data_create_from_pattern FAILED!\n");
+        fprintf(stderr, "Illegal url.!\n");
         goto error;
     }
 
-    rc = pcre2_match(
-        re,                        /* the compiled pattern */
-        uri,                       /* the subject string */
-        strlen((const char *)uri), /* the length of the subject */
-        0,                         /* start at offset 0 in the subject */
-        0,                         /* default options */
-        match_data,                /* block for storing the result */
-        NULL);                     /* use default match context */
-    if (rc < 0)
+    if (pmatch[1].rm_eo > pmatch[1].rm_so)
     {
-        fprintf(stderr, "pcre2_match FAILED!\n");
-        goto error;
+        _username = malloc(pmatch[1].rm_eo - pmatch[1].rm_so + 1);
+        _username[pmatch[1].rm_eo - pmatch[1].rm_so] = '\0';
+        memcpy(_username, uri + pmatch[1].rm_so, pmatch[1].rm_eo - pmatch[1].rm_so);
     }
 
-    ovector = pcre2_get_ovector_pointer(match_data);
-    if (ovector == NULL)
+    if (pmatch[2].rm_eo > pmatch[2].rm_so)
     {
-        fprintf(stderr, "pcre2_get_ovector_pointer FAILED!\n");
-        goto error;
+        _password = malloc(pmatch[2].rm_eo - pmatch[2].rm_so + 1);
+        _password[pmatch[2].rm_eo - pmatch[2].rm_so] = '\0';
+        memcpy(_password, uri + pmatch[2].rm_so, pmatch[2].rm_eo - pmatch[2].rm_so);
     }
 
-    int index = 0;
-    PCRE2_SPTR substring_start = NULL;
-    size_t substring_length = 0;
-
-    index = pcre2_substring_number_from_name(re, (PCRE2_SPTR) "hostname");
-    substring_start = uri + ovector[2*index];
-    substring_length = ovector[2*index+1] - ovector[2*index];
-    _hostname = malloc(substring_length + 1);
-    memcpy(_hostname, substring_start, substring_length);
-    _hostname[substring_length] = '\0';
-
-    index = pcre2_substring_number_from_name(re, (PCRE2_SPTR) "port");
-    substring_start = uri + ovector[2*index];
-    substring_length = ovector[2*index+1] - ovector[2*index];
-    if (substring_length > 0)
+    if (pmatch[3].rm_eo > pmatch[3].rm_so)
     {
-        _port_str = malloc(substring_length + 1);
-        memcpy(_port_str, substring_start, substring_length);
-        _port_str[substring_length] = '\0';
-        _port = atoi(_port_str);
-        free(_port_str); _port_str = NULL;
+        _hostname = malloc(pmatch[3].rm_eo - pmatch[3].rm_so + 1);
+        _hostname[pmatch[3].rm_eo - pmatch[3].rm_so] = '\0';
+        memcpy(_hostname, uri + pmatch[3].rm_so, pmatch[3].rm_eo - pmatch[3].rm_so);
     }
 
-    index = pcre2_substring_number_from_name(re, (PCRE2_SPTR) "username");
-    substring_start = uri + ovector[2*index];
-    substring_length = ovector[2*index+1] - ovector[2*index];
-    _username = malloc(substring_length + 1);
-    memcpy(_username, substring_start, substring_length);
-    _username[substring_length] = '\0';
+    if (pmatch[4].rm_eo > pmatch[4].rm_so)
+    {
+        _port = atoi(uri + pmatch[4].rm_so);
+    }
 
-    index = pcre2_substring_number_from_name(re, (PCRE2_SPTR) "password");
-    substring_start = uri + ovector[2*index];
-    substring_length = ovector[2*index+1] - ovector[2*index];
-    _password = malloc(substring_length + 1);
-    memcpy(_password, substring_start, substring_length);
-    _password[substring_length] = '\0';
-
-    index = pcre2_substring_number_from_name(re, (PCRE2_SPTR) "path");
-    substring_start = uri + ovector[2*index];
-    substring_length = ovector[2*index+1] - ovector[2*index];
-    _path = malloc(substring_length + 1);
-    memcpy(_path, substring_start, substring_length);
-    _path[substring_length] = '\0';
-
-    if (match_data) pcre2_match_data_free(match_data);
-    if (re) pcre2_code_free(re);
+    if (pmatch[5].rm_eo > pmatch[5].rm_so)
+    {
+        _path = malloc(pmatch[5].rm_eo - pmatch[5].rm_so + 1);
+        _path[pmatch[5].rm_eo - pmatch[5].rm_so] = '\0';
+        memcpy(_path, uri + pmatch[5].rm_so, pmatch[5].rm_eo - pmatch[5].rm_so);
+    }
 
     *hostname = _hostname;
     *port = _port;
@@ -170,8 +136,7 @@ error:
     free(_password);
     free(_path);
 
-    if (match_data) pcre2_match_data_free(match_data);
-    if (re) pcre2_code_free(re);
+    regfree(&regex);
 
     return false;
 }
@@ -202,7 +167,7 @@ int main(int argc, char *argv[])
     const char *command = argv[1];
 
     if ((strcmp(command, "put") == 0)||(strcmp(command, "upload") == 0)) {
-        const unsigned char *uri = (const unsigned char *)argv[3];
+        const char *uri = argv[3];
         if (init_server_from_uri(uri, &hostname, &port, &username, &password, &path) == false)
         {
             fprintf(stderr, "init_server_from_uri FAILED!\n");
@@ -210,7 +175,7 @@ int main(int argc, char *argv[])
             goto exit;
         }
     } else {
-        const unsigned char *uri = (const unsigned char *)argv[2];
+        const char *uri = argv[2];
         if (init_server_from_uri(uri, &hostname, &port, &username, &password, &path) == false)
         {
             fprintf(stderr, "init_server_from_uri FAILED!\n");

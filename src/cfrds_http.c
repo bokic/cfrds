@@ -16,6 +16,7 @@
 #endif
 
 #include <string.h>
+#include <stdlib.h>
 #include <stddef.h>
 #include <stdio.h>
 #include <errno.h>
@@ -27,14 +28,14 @@ enum cfrds_status cfrds_http_post(cfrds_server_int *server, const char *command,
     enum cfrds_status ret = CFRDS_STATUS_OK;
     cfrds_buffer *int_response = NULL;
     cfrds_buffer *send_buf = NULL;
-    char datasize_str[16] = {0, };
+    char *datasize_str = NULL;
     ssize_t sock_written = 0;
     uint16_t port = 0;
     int sockfd = -1;
 
     port = cfrds_server_get_port(server);
 
-    snprintf(datasize_str, sizeof(datasize_str),"%zu", cfrds_buffer_data_size(payload));
+    asprintf(&datasize_str, "%zu", cfrds_buffer_data_size(payload));
 
     cfrds_buffer_create(&send_buf);
     cfrds_buffer_append(send_buf, "POST /CFIDE/main/ide.cfm?CFSRV=IDE&ACTION=");
@@ -43,11 +44,13 @@ enum cfrds_status cfrds_http_post(cfrds_server_int *server, const char *command,
     cfrds_buffer_append(send_buf, cfrds_server_get_host(server));
     if(port != 80)
     {
-        char port_str[8] = {0, };
+        char *port_str = NULL;
 
-        snprintf(port_str, sizeof(port_str), "%d", port);
+        asprintf(&port_str, "%d", port);
         cfrds_buffer_append(send_buf, ":");
         cfrds_buffer_append(send_buf, port_str);
+
+        free(port_str);
     }
     cfrds_buffer_append(send_buf, "\r\nConnection: close\r\nUser-Agent: Mozilla/3.0 (compatible; Macromedia RDS Client)\r\nAccept: text/html, */*\r\nAccept-Encoding: deflate\r\nContent-type: text/html\r\nContent-length: ");
     cfrds_buffer_append(send_buf, datasize_str);
@@ -149,6 +152,8 @@ enum cfrds_status cfrds_http_post(cfrds_server_int *server, const char *command,
     }
 
 exit:
+    if (datasize_str)
+        free(datasize_str);
     if (sockfd != -1)
         close(sockfd);
     if (response)

@@ -125,17 +125,19 @@ void cfrds_buffer_append_buffer(cfrds_buffer *buffer, cfrds_buffer *new)
 
 void cfrds_buffer_append_rds_count(cfrds_buffer *buffer, size_t cnt)
 {
-    char str_cnt[16];
+    char *str_cnt = NULL;
 
-    snprintf(str_cnt, sizeof(str_cnt), "%zu", cnt);
+    asprintf(&str_cnt, "%zu", cnt);
 
     cfrds_buffer_append(buffer, str_cnt);
     cfrds_buffer_append_char(buffer, ':');
+
+    free(str_cnt);
 }
 
 void cfrds_buffer_append_rds_string(cfrds_buffer *buffer, const char *str)
 {
-    char str_len[32];
+    char *str_len = NULL;
     size_t len = 0;
 
     if ((!buffer)||(!str))
@@ -144,24 +146,28 @@ void cfrds_buffer_append_rds_string(cfrds_buffer *buffer, const char *str)
     }
 
     len = strlen(str);
-    snprintf(str_len, sizeof(str_len), "%zu", len);
+    asprintf(&str_len, "%zu", len);
 
     cfrds_buffer_append(buffer, "STR:");
     cfrds_buffer_append(buffer, str_len);
     cfrds_buffer_append_char(buffer, ':');
     cfrds_buffer_append(buffer, str);
+
+    free(str_len);
 }
 
 void cfrds_buffer_append_rds_bytes(cfrds_buffer *buffer, const void *data, size_t length)
 {
-    char str_len[32];
+    char *str_len = NULL;
 
-    snprintf(str_len, sizeof(str_len), "%zu", length);
+    asprintf(&str_len, "%zu", length);
 
     cfrds_buffer_append(buffer, "STR:");
     cfrds_buffer_append(buffer, str_len);
     cfrds_buffer_append_char(buffer, ':');
     cfrds_buffer_append_bytes(buffer, data, length);
+
+    free(str_len);
 }
 
 void cfrds_buffer_append_char(cfrds_buffer *buffer, const char ch)

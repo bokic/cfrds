@@ -13,7 +13,7 @@ typedef struct {
     size_t allocated;
     size_t size;
     size_t offset;
-    char *string;
+    uint8_t *data;
 } cfrds_buffer_int;
 
 void cfrds_buffer_realloc_if_needed(cfrds_buffer *buffer, size_t len)
@@ -25,7 +25,7 @@ void cfrds_buffer_realloc_if_needed(cfrds_buffer *buffer, size_t len)
         size_t new_size = buffer_int->size + len;
         new_size = (((new_size + 512) / 1024) + 1) * 1024;
 
-        buffer_int->string = realloc(buffer_int->string, new_size);
+        buffer_int->data = realloc(buffer_int->data, new_size);
         buffer_int->allocated = new_size;
     }
 }
@@ -44,7 +44,7 @@ bool cfrds_buffer_create(cfrds_buffer **buffer)
     ret->allocated = 0;
     ret->size = 0;
     ret->offset = 0;
-    ret->string = NULL;
+    ret->data = NULL;
 
     *buffer = ret;
 
@@ -60,7 +60,7 @@ char *cfrds_buffer_data(cfrds_buffer *buffer)
 
     ret = buffer;
 
-    return ret->string;
+    return (char *)ret->data;
 }
 
 size_t cfrds_buffer_data_size(cfrds_buffer *buffer)
@@ -91,7 +91,7 @@ void cfrds_buffer_append(cfrds_buffer *buffer, const char *str)
 
     if (len > 0)
     {
-        memcpy(&buffer_int->string[buffer_int->size], str, len);
+        memcpy(&buffer_int->data[buffer_int->size], str, len);
         buffer_int->size += len;
     }
 }
@@ -107,7 +107,7 @@ void cfrds_buffer_append_bytes(cfrds_buffer *buffer, const void *data, size_t le
 
     cfrds_buffer_realloc_if_needed(buffer_int, length);
 
-    memcpy(&buffer_int->string[buffer_int->size], data, length);
+    memcpy(&buffer_int->data[buffer_int->size], data, length);
     buffer_int->size += length;
 }
 
@@ -119,7 +119,7 @@ void cfrds_buffer_append_buffer(cfrds_buffer *buffer, cfrds_buffer *new)
 
     cfrds_buffer_realloc_if_needed(buffer_int, len);
 
-    memcpy(&buffer_int->string[buffer_int->size], new_int->string, len);
+    memcpy(&buffer_int->data[buffer_int->size], new_int->data, len);
     buffer_int->size += len;
 }
 
@@ -170,7 +170,7 @@ void cfrds_buffer_append_char(cfrds_buffer *buffer, const char ch)
 
     cfrds_buffer_realloc_if_needed(buffer_int, 1);
 
-    buffer_int->string[buffer_int->size] = ch;
+    buffer_int->data[buffer_int->size] = ch;
     buffer_int->size++;
 }
 
@@ -182,7 +182,7 @@ void cfrds_buffer_reserve_above_size(cfrds_buffer *buffer, size_t size)
     {
         size_t new_size = buffer_int->size + size;
 
-        buffer_int->string = realloc(buffer_int->string, new_size);
+        buffer_int->data = realloc(buffer_int->data, new_size);
         buffer_int->allocated = new_size;
     }
 }
@@ -201,10 +201,10 @@ void cfrds_buffer_free(cfrds_buffer *buffer)
 
     cfrds_buffer_int *buffer_int = buffer;
 
-    if (buffer_int->string != NULL)
+    if (buffer_int->data != NULL)
     {
-        free(buffer_int->string);
-        buffer_int->string = NULL;
+        free(buffer_int->data);
+        buffer_int->data = NULL;
     }
 
     free(buffer);
@@ -301,7 +301,7 @@ cfrds_browse_dir_int *cfrds_buffer_to_browse_dir(cfrds_buffer *buffer)
     if (buffer_int == NULL)
         return NULL;
 
-    char *data = buffer_int->string;
+    char *data = (char *)buffer_int->data;
     size_t size = buffer_int->size;
 
     if (!cfrds_buffer_skip_httpheader(&data, &size))
@@ -411,7 +411,7 @@ cfrds_file_content_int *cfrds_buffer_to_file_content(cfrds_buffer *buffer)
     if (buffer_int == NULL)
         return NULL;
 
-    char *data = buffer_int->string;
+    char *data = (char *)buffer_int->data;
     size_t size = buffer_int->size;
 
     if (!cfrds_buffer_skip_httpheader(&data, &size))

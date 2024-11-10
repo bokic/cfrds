@@ -58,7 +58,6 @@ static bool init_server_from_uri(const char *uri, char **hostname, uint16_t *por
     char *_password = NULL;
     char *_path = NULL;
 
-    int errornumber = 0;
     int rc = 0;
 
     if ((uri == NULL)||(hostname == NULL)||(port == NULL)||(username == NULL)||(password == NULL)||(path == NULL))

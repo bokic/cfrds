@@ -440,3 +440,60 @@ cfrds_file_content_int *cfrds_buffer_to_file_content(cfrds_buffer *buffer)
 
     return ret;
 }
+
+cfrds_sql_dnsinfo_int *cfrds_buffer_to_sql_dnsinfo(cfrds_buffer *buffer)
+{
+    cfrds_sql_dnsinfo_int *ret = NULL;
+
+    char *response_data = cfrds_buffer_data(buffer);
+    size_t response_size = cfrds_buffer_data_size(buffer);
+
+    if (cfrds_buffer_skip_httpheader(&response_data, &response_size))
+    {
+        int64_t cnt = 0;
+
+        if (!cfrds_buffer_parse_number(&response_data, &response_size, &cnt))
+        {
+            goto bail;
+        }
+
+        if (cnt > 10000)
+            goto bail;
+
+        ret = malloc(offsetof(cfrds_sql_dnsinfo_int, names) + sizeof(char *) * cnt);
+
+        ret->cnt = cnt;
+
+        for(int c = 0; c < cnt; c++)
+        {
+            char *item = NULL;
+
+            cfrds_buffer_parse_string(&response_data, &response_size, &item);
+
+            if (item)
+            {
+                const char *pos1 = strchr(item, '"');
+                if (pos1)
+                {
+                    const char *pos2 = strchr(pos1 + 1, '"');
+                    if (pos2)
+                    {
+                        size_t len = pos2 - pos1 - 1;
+                        char *tmp = malloc(len + 1);
+                        memcpy(tmp, pos1 + 1, len);
+                        tmp[len] = '\0';
+                        free(item);
+                        item = tmp;
+                    }
+                }
+
+                ret->names[c] = item;
+            }
+        }
+    }
+
+    return ret;
+
+bail:
+    return NULL;
+}

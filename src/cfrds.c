@@ -430,6 +430,131 @@ exit:
     return ret;
 }
 
+EXPORT_CFRDS enum cfrds_status cfrds_command_sql_dnsinfo(cfrds_server *server, cfrds_sql_dnsinfo **dnsinfo)
+{
+    enum cfrds_status ret;
+
+    cfrds_server_int *server_int = NULL;
+    cfrds_buffer *response = NULL;
+
+    if ((server == NULL)||(dnsinfo == NULL))
+    {
+        return CFRDS_STATUS_PARAM_IS_NULL;
+    }
+
+    ret = cfrds_internal_command(server, &response, "DBFUNCS", (const char *[]){ "", "DSNINFO", NULL});
+    if (ret == CFRDS_STATUS_OK)
+    {
+        *dnsinfo = cfrds_buffer_to_sql_dnsinfo(response);
+        if (*dnsinfo == NULL)
+        {
+            server_int = server;
+            server_int->error_code = -1;
+            ret = CFRDS_STATUS_RESPONSE_ERROR;
+        }
+    }
+
+    cfrds_buffer_free(response);
+
+    return ret;
+}
+
+EXPORT_CFRDS enum cfrds_status cfrds_command_sql_tableinfo(cfrds_server *server, const char *connection_name)
+{
+    enum cfrds_status ret;
+
+    cfrds_server_int *server_int = NULL;
+    cfrds_buffer *response = NULL;
+
+    if ((server == NULL)/*||(out == NULL)*/)
+    {
+        return CFRDS_STATUS_PARAM_IS_NULL;
+    }
+
+    ret = cfrds_internal_command(server, &response, "DBFUNCS", (const char *[]){ connection_name, "TABLEINFO", NULL});
+    if (ret == CFRDS_STATUS_OK)
+    {
+        char *response_data = cfrds_buffer_data(response);
+        size_t response_size = cfrds_buffer_data_size(response);
+        cfrds_buffer_append_char(response, '\0');
+
+        server_int = server;
+
+        if (cfrds_buffer_skip_httpheader(&response_data, &response_size))
+        {
+            int64_t cnt = 0;
+            char *name = NULL;
+
+            if (!cfrds_buffer_parse_number(&response_data, &response_size, &cnt))
+            {
+                server_int->error_code = -1;
+                ret = CFRDS_STATUS_RESPONSE_ERROR;
+                goto exit;
+            }
+
+            for(int c = 0; c < cnt; c++)
+            {
+                cfrds_buffer_parse_string(&response_data, &response_size, &name);
+
+                //int tt = 324;
+            }
+        }
+    }
+
+exit:
+    cfrds_buffer_free(response);
+
+    return ret;
+}
+
+EXPORT_CFRDS enum cfrds_status cfrds_command_sql_sqlstmnt(cfrds_server *server, const char *connection_name, const char *sql)
+{
+    enum cfrds_status ret;
+
+    cfrds_server_int *server_int = NULL;
+    cfrds_buffer *response = NULL;
+
+    if ((server == NULL)/*||(out == NULL)*/)
+    {
+        return CFRDS_STATUS_PARAM_IS_NULL;
+    }
+
+    ret = cfrds_internal_command(server, &response, "DBFUNCS", (const char *[]){ connection_name, "SQLSTMNT", sql, NULL});
+    if (ret == CFRDS_STATUS_OK)
+    {
+        char *response_data = cfrds_buffer_data(response);
+        size_t response_size = cfrds_buffer_data_size(response);
+        cfrds_buffer_append_char(response, '\0');
+
+        server_int = server;
+
+        if (cfrds_buffer_skip_httpheader(&response_data, &response_size))
+        {
+            int64_t cnt = 0;
+            char *name = NULL;
+
+            if (!cfrds_buffer_parse_number(&response_data, &response_size, &cnt))
+            {
+                server_int->error_code = -1;
+                ret = CFRDS_STATUS_RESPONSE_ERROR;
+                goto exit;
+            }
+
+            for(int c = 0; c < cnt; c++)
+            {
+                cfrds_buffer_parse_string(&response_data, &response_size, &name);
+
+                //int tt = 324;
+            }
+        }
+    }
+
+exit:
+    cfrds_buffer_free(response);
+
+    return ret;
+}
+
 void cfrds_buffer_file_content_free(cfrds_file_content *value)
 {
     if (value == NULL)
@@ -571,4 +696,42 @@ uint64_t cfrds_buffer_browse_dir_item_get_modified(const cfrds_browse_dir *value
         return 0;
 
     return _value->items[ndx].modified;
+}
+
+void cfrds_buffer_sql_dnsinfo_free(cfrds_sql_dnsinfo *value)
+{
+    if (value == NULL)
+        return;
+
+    cfrds_sql_dnsinfo_int *_value = (cfrds_sql_dnsinfo_int *)value;
+
+    for(size_t c = 0; c < _value->cnt; c++)
+    {
+        free(_value->names[c]);
+    }
+
+    free(_value);
+}
+
+size_t cfrds_buffer_sql_dnsinfo_count(const cfrds_sql_dnsinfo *value)
+{
+    if (value == NULL)
+        return 0;
+
+    const cfrds_sql_dnsinfo_int *_value = (const cfrds_sql_dnsinfo_int *)value;
+
+    return _value->cnt;
+}
+
+const char *cfrds_buffer_sql_dnsinfo_item_get_name(const cfrds_sql_dnsinfo *value, size_t ndx)
+{
+    if (value == NULL)
+        return NULL;
+
+    const cfrds_sql_dnsinfo_int *_value = (const cfrds_sql_dnsinfo_int *)value;
+
+    if (ndx >= _value->cnt)
+        return NULL;
+
+    return _value->names[ndx];
 }

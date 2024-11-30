@@ -318,6 +318,34 @@ exit:
     return Py_None;
 }
 
+static PyObject *
+cfrds_server_sql_dnsinfo(cfrds_server_Object *self)
+{
+    PyObject *ret = NULL;
+    cfrds_sql_dnsinfo *dnsinfo = NULL;
+    size_t cnt = 0;
+
+    CHECK_FOR_ERORRS(cfrds_command_sql_dnsinfo(self->server, &dnsinfo));
+
+    if (!dnsinfo)
+        goto exit;
+
+    cnt = cfrds_buffer_sql_dnsinfo_count(dnsinfo);
+    ret = PyList_New(cnt);
+
+    for(size_t c = 0; c < cnt; c++)
+    {
+        PyList_SetItem(ret, c, PyUnicode_FromString(cfrds_buffer_sql_dnsinfo_item_get_name(dnsinfo, c)));
+    }
+
+    cfrds_buffer_sql_dnsinfo_free(dnsinfo);
+
+    return ret;
+
+exit:
+    return Py_None;
+}
+
 static PyMethodDef cfrds_server_methods[] = {
     {"browse_dir",  (PyCFunction) cfrds_server_browse_dir,  METH_VARARGS, "List directory entries"},
     {"file_read",   (PyCFunction) cfrds_server_file_read,   METH_VARARGS, "Read file"},
@@ -328,6 +356,7 @@ static PyMethodDef cfrds_server_methods[] = {
     {"file_exists", (PyCFunction) cfrds_server_file_exists, METH_VARARGS, "File exists"},
     {"dir_create",  (PyCFunction) cfrds_server_dir_create,  METH_VARARGS, "Create dir"},
     {"cf_root_dir", (PyCFunction) cfrds_server_cf_root_dir, METH_VARARGS, "Get ColdFusion root dir"},
+    {"sql_dnsinfo", (PyCFunction) cfrds_server_sql_dnsinfo, METH_VARARGS, "Get ColdFusion datasources"},
     {NULL}  /* Sentinel */
 };
 

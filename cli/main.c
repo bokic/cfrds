@@ -149,6 +149,7 @@ int main(int argc, char *argv[])
     cfrds_file_content *content = NULL;
     enum cfrds_status res;
 
+    const char *uri = NULL;
     char *hostname = NULL;
     uint16_t port = 80;
     char *username = NULL;
@@ -166,21 +167,21 @@ int main(int argc, char *argv[])
     const char *command = argv[1];
 
     if ((strcmp(command, "put") == 0)||(strcmp(command, "upload") == 0)) {
-        const char *uri = argv[3];
-        if (init_server_from_uri(uri, &hostname, &port, &username, &password, &path) == false)
-        {
-            fprintf(stderr, "init_server_from_uri FAILED!\n");
+        if (argc < 4) {
+            usage();
             ret = EXIT_FAILURE;
             goto exit;
         }
+        uri = argv[3];
     } else {
-        const char *uri = argv[2];
-        if (init_server_from_uri(uri, &hostname, &port, &username, &password, &path) == false)
-        {
-            fprintf(stderr, "init_server_from_uri FAILED!\n");
-            ret = EXIT_FAILURE;
-            goto exit;
-        }
+        uri = argv[2];
+    }
+
+    if (init_server_from_uri(uri, &hostname, &port, &username, &password, &path) == false)
+    {
+        fprintf(stderr, "init_server_from_uri FAILED!\n");
+        ret = EXIT_FAILURE;
+        goto exit;
     }
 
     if (!cfrds_server_init(&server, hostname, port, username, password))

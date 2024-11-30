@@ -60,6 +60,9 @@ char *cfrds_buffer_data(cfrds_buffer *buffer)
 
     ret = buffer;
 
+    cfrds_buffer_realloc_if_needed(ret, ret->size + 1);
+    ret->data[ret->size] = 0;
+
     return (char *)ret->data;
 }
 

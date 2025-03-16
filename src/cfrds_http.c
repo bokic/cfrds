@@ -121,7 +121,7 @@ enum cfrds_status cfrds_http_post(cfrds_server_int *server, const char *command,
     char *response_data = cfrds_buffer_data(int_response);
     size_t response_size = cfrds_buffer_data_size(int_response);
 
-    static const char *good_response = "HTTP/1.1 200 OK\r\nContent-Type: text/html\r\n";
+    static const char *good_response = "HTTP/1.1 200 ";
 
     if (strncmp(response_data, good_response, strlen(good_response)) != 0)
     {

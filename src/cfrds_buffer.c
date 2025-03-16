@@ -6,6 +6,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stddef.h>
+#include <regex.h>
 #include <stdio.h>
 
 
@@ -490,6 +491,95 @@ cfrds_sql_dnsinfo_int *cfrds_buffer_to_sql_dnsinfo(cfrds_buffer *buffer)
                 ret->names[c] = item;
             }
         }
+    }
+
+    return ret;
+
+bail:
+    return NULL;
+}
+
+cfrds_sql_tableinfo_int *cfrds_buffer_to_sql_tableinfo(cfrds_buffer *buffer)
+{
+    cfrds_sql_tableinfo_int *ret = NULL;
+
+    char *response_data = cfrds_buffer_data(buffer);
+    size_t response_size = cfrds_buffer_data_size(buffer);
+
+    if (cfrds_buffer_skip_httpheader(&response_data, &response_size))
+    {
+        int64_t cnt = 0;
+
+        if (!cfrds_buffer_parse_number(&response_data, &response_size, &cnt))
+        {
+            goto bail;
+        }
+
+        if (cnt > 10000)
+            goto bail;
+
+        size_t malloc_size = offsetof(cfrds_sql_tableinfo_int, items) + sizeof(cfrds_sql_tableinfoitem_int) * cnt;
+        ret = malloc(malloc_size);
+        memset(ret, 0, malloc_size);
+
+        ret->cnt = cnt;
+
+        regex_t re;
+        regcomp(&re, R"(^\"(.*)\",\"(.*)\",\"(.*)\",\"(.*)\"$)", REG_EXTENDED);
+        const int no_of_matches = 5;
+        regmatch_t m[no_of_matches];
+
+        for(int c = 0; c < cnt; c++)
+        {
+            char *item = NULL;
+
+            cfrds_buffer_parse_string(&response_data, &response_size, &item);
+
+            if (item)
+            {
+                if (regexec(&re, item, no_of_matches, m, 0) == 0)
+                {
+                    char *tmp = NULL;
+
+                    if (m[1].rm_eo > m[1].rm_so)
+                    {
+                        size_t size = m[1].rm_eo - m[1].rm_so;
+                        tmp = malloc(size + 1);
+                        memcpy(tmp, item + m[1].rm_so, size);
+                        tmp[size] = '\0';
+                        ret->items[c].unknown = tmp;
+                    }
+                    if (m[2].rm_eo > m[2].rm_so)
+                    {
+                        size_t size = m[2].rm_eo - m[2].rm_so;
+                        tmp = malloc(size + 1);
+                        memcpy(tmp, item + m[2].rm_so, size);
+                        tmp[size] = '\0';
+                        ret->items[c].schema = tmp;
+                    }
+                    if (m[3].rm_eo > m[3].rm_so)
+                    {
+                        size_t size = m[3].rm_eo - m[3].rm_so;
+                        tmp = malloc(size + 1);
+                        memcpy(tmp, item + m[3].rm_so, size);
+                        tmp[size] = '\0';
+                        ret->items[c].name = tmp;
+                    }
+                    if (m[4].rm_eo > m[4].rm_so)
+                    {
+                        size_t size = m[4].rm_eo - m[4].rm_so;
+                        tmp = malloc(size + 1);
+                        memcpy(tmp, item + m[4].rm_so, size);
+                        tmp[size] = '\0';
+                        ret->items[c].type = tmp;
+                    }
+                }
+
+                free(item);
+            }
+        }
+
+        regfree (&re);
     }
 
     return ret;

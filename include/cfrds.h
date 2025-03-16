@@ -28,6 +28,7 @@ typedef SSIZE_T ssize_t;
 #define cfrds_file_content void
 #define cfrds_browse_dir void
 #define cfrds_sql_dnsinfo void
+#define cfrds_sql_tableinfo void
 
 enum cfrds_status {
     CFRDS_STATUS_OK,
@@ -76,6 +77,8 @@ EXPORT_CFRDS void cfrds_buffer_sql_dnsinfo_free(cfrds_sql_dnsinfo *value);
 EXPORT_CFRDS size_t cfrds_buffer_sql_dnsinfo_count(const cfrds_sql_dnsinfo *value);
 EXPORT_CFRDS const char *cfrds_buffer_sql_dnsinfo_item_get_name(const cfrds_sql_dnsinfo *value, size_t ndx);
 
+EXPORT_CFRDS void cfrds_buffer_sql_tableinfo_free(cfrds_sql_tableinfo *value);
+
 EXPORT_CFRDS enum cfrds_status cfrds_command_browse_dir(cfrds_server *server, const char *path, cfrds_browse_dir **out);
 EXPORT_CFRDS enum cfrds_status cfrds_command_file_read(cfrds_server *server, const char *pathname, cfrds_file_content **out);
 EXPORT_CFRDS enum cfrds_status cfrds_command_file_write(cfrds_server *server, const char *pathname, const void *data, size_t length);
@@ -87,7 +90,7 @@ EXPORT_CFRDS enum cfrds_status cfrds_command_file_create_dir(cfrds_server *serve
 EXPORT_CFRDS enum cfrds_status cfrds_command_file_get_root_dir(cfrds_server *server, char **out);
 
 EXPORT_CFRDS enum cfrds_status cfrds_command_sql_dnsinfo(cfrds_server *server, cfrds_sql_dnsinfo **dnsinfo);
-EXPORT_CFRDS enum cfrds_status cfrds_command_sql_tableinfo(cfrds_server *server, const char *connection_name);
+EXPORT_CFRDS enum cfrds_status cfrds_command_sql_tableinfo(cfrds_server *server, const char *connection_name, cfrds_sql_tableinfo **tableinfo);
 EXPORT_CFRDS enum cfrds_status cfrds_command_sql_sqlstmnt(cfrds_server *server, const char *connection_name, const char *sql);
 
 #ifdef __cplusplus

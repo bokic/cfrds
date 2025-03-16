@@ -459,14 +459,14 @@ EXPORT_CFRDS enum cfrds_status cfrds_command_sql_dnsinfo(cfrds_server *server, c
     return ret;
 }
 
-EXPORT_CFRDS enum cfrds_status cfrds_command_sql_tableinfo(cfrds_server *server, const char *connection_name)
+EXPORT_CFRDS enum cfrds_status cfrds_command_sql_tableinfo(cfrds_server *server, const char *connection_name, cfrds_sql_tableinfo **tableinfo)
 {
     enum cfrds_status ret;
 
     cfrds_server_int *server_int = NULL;
     cfrds_buffer *response = NULL;
 
-    if ((server == NULL)/*||(out == NULL)*/)
+    if ((server == NULL)||(tableinfo == NULL))
     {
         return CFRDS_STATUS_PARAM_IS_NULL;
     }
@@ -474,30 +474,12 @@ EXPORT_CFRDS enum cfrds_status cfrds_command_sql_tableinfo(cfrds_server *server,
     ret = cfrds_internal_command(server, &response, "DBFUNCS", (const char *[]){ connection_name, "TABLEINFO", NULL});
     if (ret == CFRDS_STATUS_OK)
     {
-        char *response_data = cfrds_buffer_data(response);
-        size_t response_size = cfrds_buffer_data_size(response);
-        cfrds_buffer_append_char(response, '\0');
-
-        server_int = server;
-
-        if (cfrds_buffer_skip_httpheader(&response_data, &response_size))
+        *tableinfo = cfrds_buffer_to_sql_tableinfo(response);
+        if (*tableinfo == NULL)
         {
-            int64_t cnt = 0;
-            char *name = NULL;
-
-            if (!cfrds_buffer_parse_number(&response_data, &response_size, &cnt))
-            {
-                server_int->error_code = -1;
-                ret = CFRDS_STATUS_RESPONSE_ERROR;
-                goto exit;
-            }
-
-            for(int c = 0; c < cnt; c++)
-            {
-                cfrds_buffer_parse_string(&response_data, &response_size, &name);
-
-                //int tt = 324;
-            }
+            server_int = server;
+            server_int->error_code = -1;
+            ret = CFRDS_STATUS_RESPONSE_ERROR;
         }
     }
 
@@ -734,4 +716,22 @@ const char *cfrds_buffer_sql_dnsinfo_item_get_name(const cfrds_sql_dnsinfo *valu
         return NULL;
 
     return _value->names[ndx];
+}
+
+void cfrds_buffer_sql_tableinfo_free(cfrds_sql_tableinfo *value)
+{
+    if (value == NULL)
+        return;
+
+    cfrds_sql_tableinfo_int *_value = (cfrds_sql_tableinfo_int *)value;
+
+    for(size_t c = 0; c < _value->cnt; c++)
+    {
+        if(_value->items[c].unknown) free(_value->items[c].unknown);
+        if(_value->items[c].schema) free(_value->items[c].schema);
+        if(_value->items[c].name) free(_value->items[c].name);
+        if(_value->items[c].type) free(_value->items[c].type);
+    }
+
+    free(_value);
 }

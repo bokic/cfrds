@@ -49,6 +49,12 @@ static void usage()
            "\n"
            "  - 'dsninfo' - Return ColdFusion data sources.\n"
            "         example: `cfrds dsninfo rds://username:password@host`\n"
+           "\n"
+           "  - 'tableinfo' - Return ColdFusion data sources.\n"
+           "         example: `cfrds tableinfo rds://username:password@host/dns`\n"
+           "\n"
+           "  - 'sql' - Return ColdFusion data sources.\n"
+           "         example: `cfrds sql \"SELECT 1\" rds://username:password@host/dns`\n"
            );
 }
 
@@ -355,6 +361,33 @@ int main(int argc, char *argv[])
         }
 
         cfrds_buffer_sql_dnsinfo_free(dnsinfo);
+    } else if (strcmp(command, "tableinfo") == 0) {
+        if ((path != NULL)&&(strlen(path) > 1))
+        {
+            cfrds_sql_tableinfo *tableinfo = NULL;
+            const char *dns = path + 1;
+
+            res = cfrds_command_sql_tableinfo(server, dns, &tableinfo);
+            if (res != CFRDS_STATUS_OK)
+            {
+                fprintf(stderr, "tableinfo FAILED with error: %s\n", cfrds_server_get_error(server));
+                ret = EXIT_FAILURE;
+                goto exit;
+            }
+
+
+
+            cfrds_buffer_sql_tableinfo_free(tableinfo);
+        }
+    } else if (strcmp(command, "columninfo") == 0) {
+    } else if (strcmp(command, "primarykeys") == 0) {
+    } else if (strcmp(command, "foreignkeys") == 0) {
+    } else if (strcmp(command, "importedkeys") == 0) {
+    } else if (strcmp(command, "exportedkeys") == 0) {
+    } else if (strcmp(command, "sql") == 0) {
+    } else if (strcmp(command, "sqlmetadata") == 0) {
+    } else if (strcmp(command, "supportedcommands") == 0) {
+    } else if (strcmp(command, "dbdescription") == 0) {
     }
 
 exit:

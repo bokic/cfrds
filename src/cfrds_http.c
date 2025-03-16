@@ -32,10 +32,16 @@ enum cfrds_status cfrds_http_post(cfrds_server_int *server, const char *command,
     ssize_t sock_written = 0;
     uint16_t port = 0;
     int sockfd = -1;
+    int n = 0;
 
     port = cfrds_server_get_port(server);
 
-    asprintf(&datasize_str, "%zu", cfrds_buffer_data_size(payload));
+    n = asprintf(&datasize_str, "%zu", cfrds_buffer_data_size(payload));
+    if (n < 0)
+    {
+        cfrds_server_set_error(server, CFRDS_STATUS_MEMORY_ERROR, "asprintf() returned -1...");
+        return CFRDS_STATUS_MEMORY_ERROR;
+    }
 
     cfrds_buffer_create(&send_buf);
     cfrds_buffer_append(send_buf, "POST /CFIDE/main/ide.cfm?CFSRV=IDE&ACTION=");
@@ -45,8 +51,15 @@ enum cfrds_status cfrds_http_post(cfrds_server_int *server, const char *command,
     if(port != 80)
     {
         char *port_str = NULL;
+        int n = 0;
 
-        asprintf(&port_str, "%d", port);
+        n = asprintf(&port_str, "%d", port);
+        if (n < 0)
+        {
+            cfrds_server_set_error(server, CFRDS_STATUS_MEMORY_ERROR, "asprintf() returned -1...");
+            ret = CFRDS_STATUS_MEMORY_ERROR;
+            goto exit;
+        }
         cfrds_buffer_append(send_buf, ":");
         cfrds_buffer_append(send_buf, port_str);
 
@@ -79,7 +92,7 @@ enum cfrds_status cfrds_http_post(cfrds_server_int *server, const char *command,
     }
 
     sock_written = write(sockfd, cfrds_buffer_data(send_buf), cfrds_buffer_data_size(send_buf));
-    if (sock_written != cfrds_buffer_data_size(send_buf)) {
+    if ((sock_written < 0)||((unsigned)sock_written != cfrds_buffer_data_size(send_buf))) {
         if (sock_written == -1)
         {
             server->_errno = errno;

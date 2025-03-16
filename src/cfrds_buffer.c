@@ -129,20 +129,24 @@ void cfrds_buffer_append_buffer(cfrds_buffer *buffer, cfrds_buffer *new)
 
 void cfrds_buffer_append_rds_count(cfrds_buffer *buffer, size_t cnt)
 {
-    char *str_cnt = NULL;
+    char *str = NULL;
+    int n = 0;
 
-    asprintf(&str_cnt, "%zu", cnt);
+    n = asprintf(&str, "%zu", cnt);
+    if (n > 0)
+    {
+        cfrds_buffer_append(buffer, str);
+        cfrds_buffer_append_char(buffer, ':');
 
-    cfrds_buffer_append(buffer, str_cnt);
-    cfrds_buffer_append_char(buffer, ':');
-
-    free(str_cnt);
+        free(str);
+    }
 }
 
 void cfrds_buffer_append_rds_string(cfrds_buffer *buffer, const char *str)
 {
     char *str_len = NULL;
     size_t len = 0;
+    int n = 0;
 
     if ((!buffer)||(!str))
     {
@@ -150,28 +154,33 @@ void cfrds_buffer_append_rds_string(cfrds_buffer *buffer, const char *str)
     }
 
     len = strlen(str);
-    asprintf(&str_len, "%zu", len);
+    n = asprintf(&str_len, "%zu", len);
+    if (n > 0)
+    {
+        cfrds_buffer_append(buffer, "STR:");
+        cfrds_buffer_append(buffer, str_len);
+        cfrds_buffer_append_char(buffer, ':');
+        cfrds_buffer_append(buffer, str);
 
-    cfrds_buffer_append(buffer, "STR:");
-    cfrds_buffer_append(buffer, str_len);
-    cfrds_buffer_append_char(buffer, ':');
-    cfrds_buffer_append(buffer, str);
-
-    free(str_len);
+        free(str_len);
+    }
 }
 
 void cfrds_buffer_append_rds_bytes(cfrds_buffer *buffer, const void *data, size_t length)
 {
     char *str_len = NULL;
+    int n = 0;
 
-    asprintf(&str_len, "%zu", length);
+    n = asprintf(&str_len, "%zu", length);
+    if (n > 0)
+    {
+        cfrds_buffer_append(buffer, "STR:");
+        cfrds_buffer_append(buffer, str_len);
+        cfrds_buffer_append_char(buffer, ':');
+        cfrds_buffer_append_bytes(buffer, data, length);
 
-    cfrds_buffer_append(buffer, "STR:");
-    cfrds_buffer_append(buffer, str_len);
-    cfrds_buffer_append_char(buffer, ':');
-    cfrds_buffer_append_bytes(buffer, data, length);
-
-    free(str_len);
+        free(str_len);
+    }
 }
 
 void cfrds_buffer_append_char(cfrds_buffer *buffer, const char ch)

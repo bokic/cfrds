@@ -483,7 +483,6 @@ EXPORT_CFRDS enum cfrds_status cfrds_command_sql_tableinfo(cfrds_server *server,
         }
     }
 
-exit:
     cfrds_buffer_free(response);
 
     return ret;

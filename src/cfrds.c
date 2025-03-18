@@ -430,7 +430,7 @@ exit:
     return ret;
 }
 
-EXPORT_CFRDS enum cfrds_status cfrds_command_sql_dnsinfo(cfrds_server *server, cfrds_sql_dnsinfo **dnsinfo)
+enum cfrds_status cfrds_command_sql_dnsinfo(cfrds_server *server, cfrds_sql_dnsinfo **dnsinfo)
 {
     enum cfrds_status ret;
 
@@ -459,7 +459,7 @@ EXPORT_CFRDS enum cfrds_status cfrds_command_sql_dnsinfo(cfrds_server *server, c
     return ret;
 }
 
-EXPORT_CFRDS enum cfrds_status cfrds_command_sql_tableinfo(cfrds_server *server, const char *connection_name, cfrds_sql_tableinfo **tableinfo)
+enum cfrds_status cfrds_command_sql_tableinfo(cfrds_server *server, const char *connection_name, cfrds_sql_tableinfo **tableinfo)
 {
     enum cfrds_status ret;
 
@@ -488,7 +488,7 @@ EXPORT_CFRDS enum cfrds_status cfrds_command_sql_tableinfo(cfrds_server *server,
     return ret;
 }
 
-EXPORT_CFRDS enum cfrds_status cfrds_command_sql_sqlstmnt(cfrds_server *server, const char *connection_name, const char *sql)
+enum cfrds_status cfrds_command_sql_sqlstmnt(cfrds_server *server, const char *connection_name, const char *sql)
 {
     enum cfrds_status ret;
 

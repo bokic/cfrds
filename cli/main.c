@@ -75,8 +75,7 @@ static bool init_server_from_uri(const char *uri, char **hostname, uint16_t *por
     regex_t regex;
 
     // -std=gnu11 GCC >=4.7.1, clang 19.1, MinGW gcc(11.3 - 13.1)
-    //rc = regcomp(&regex, R"(^rds:\/\/(.+):(.+)@(.+):([0-9]{1,5})(.+)$)", REG_EXTENDED | REG_ICASE);
-    rc = regcomp(&regex, "^rds:\\/\\/(.+):(.+)@(.+):([0-9]{1,5})(.+)$", REG_EXTENDED | REG_ICASE);
+    rc = regcomp(&regex, "^rds:\\/\\/(.+):(.+)@([a-z0-9\\.\\-_]+):?([0-9]{1,5})?\\/?(.*)$", REG_EXTENDED | REG_ICASE);
     if (rc != REG_NOERROR)
     {
         fprintf(stderr, "regcomp compilation failed\n");
@@ -92,7 +91,7 @@ static bool init_server_from_uri(const char *uri, char **hostname, uint16_t *por
 
     if (rc != REG_NOERROR)
     {
-        fprintf(stderr, "Illegal url.!\n");
+        fprintf(stderr, "Invalid URL!\n");
         goto error;
     }
 
@@ -191,6 +190,10 @@ int main(int argc, char *argv[])
         fprintf(stderr, "init_server_from_uri FAILED!\n");
         ret = EXIT_FAILURE;
         goto exit;
+    }
+
+    if (path == NULL) {
+        path = strdup("/");
     }
 
     if (!cfrds_server_init(&server, hostname, port, username, password))

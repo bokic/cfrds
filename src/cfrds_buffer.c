@@ -336,7 +336,7 @@ cfrds_browse_dir_int *cfrds_buffer_to_browse_dir(cfrds_buffer *buffer)
 
     size_t ret_size = offsetof(cfrds_browse_dir_int, items) + (cnt * (offsetof(cfrds_browse_dir_int, items[1]) - (offsetof(cfrds_browse_dir_int, items[0]))));
     cfrds_browse_dir_int *ret = malloc(ret_size);
-    memset(ret, 0, ret_size);
+    bzero(ret, ret_size);
 
     ret->cnt = cnt;
 
@@ -529,7 +529,7 @@ cfrds_sql_tableinfo_int *cfrds_buffer_to_sql_tableinfo(cfrds_buffer *buffer)
 
         size_t malloc_size = offsetof(cfrds_sql_tableinfo_int, items) + sizeof(cfrds_sql_tableinfoitem_int) * cnt;
         ret = malloc(malloc_size);
-        memset(ret, 0, malloc_size);
+        bzero(ret, malloc_size);
 
         ret->cnt = cnt;
 

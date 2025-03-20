@@ -77,7 +77,7 @@ enum cfrds_status cfrds_http_post(cfrds_server_int *server, const char *command,
         goto exit;
     }
 
-    memset(&servaddr, 0, sizeof(servaddr));
+    bzero(&servaddr, sizeof(servaddr));
 
     servaddr.sin_family = AF_INET;
     servaddr.sin_port = htons(port);

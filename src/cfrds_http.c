@@ -135,6 +135,7 @@ enum cfrds_status cfrds_http_post(cfrds_server_int *server, const char *command,
 
     if (strncmp(response_data, good_response, strlen(good_response)) != 0)
     {
+        cfrds_server_set_error(server, CFRDS_STATUS_RESPONSE_ERROR, "Invalid server response...");
         ret = CFRDS_STATUS_RESPONSE_ERROR;
         goto exit;
     }

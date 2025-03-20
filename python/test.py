@@ -1,8 +1,13 @@
 import cfrds
+import os
 
 
-rds = cfrds.server("localhost", 8500, "admin", "")
+host = os.environ['RDS_HOST']
+port = int(os.environ['RDS_PORT'])
+username = os.environ['RDS_USERNAME']
+password = os.environ['RDS_PASSWORD']
 
+rds = cfrds.server(host, port, username, password)
 
-dir = rds.browse_dir("/var/log")
-print(dir)
+print(rds.browse_dir("/var/log"))
+print(rds.sql_dnsinfo())

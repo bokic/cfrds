@@ -86,7 +86,6 @@ enum cfrds_status cfrds_http_post(cfrds_server_int *server, const char *command,
     if (connect(sockfd, (struct sockaddr *)&servaddr, sizeof(servaddr)) != 0) {
         server->_errno = errno;
         cfrds_server_set_error(server, CFRDS_STATUS_CONNECTION_TO_SERVER_FAILED, "failed to establish connection to the server...");
-        close(sockfd);
         ret = CFRDS_STATUS_CONNECTION_TO_SERVER_FAILED;
         goto exit;
     }
@@ -97,7 +96,6 @@ enum cfrds_status cfrds_http_post(cfrds_server_int *server, const char *command,
         {
             server->_errno = errno;
             cfrds_server_set_error(server, CFRDS_STATUS_WRITING_TO_SOCKET_FAILED, "failed to write to socket...");
-            close(sockfd);
             ret = CFRDS_STATUS_WRITING_TO_SOCKET_FAILED;
             goto exit;
         }
@@ -105,7 +103,6 @@ enum cfrds_status cfrds_http_post(cfrds_server_int *server, const char *command,
         {
             server->_errno = errno;
             cfrds_server_set_error(server, CFRDS_STATUS_PARTIALLY_WRITE_TO_SOCKET, "failed to write to all data socket...");
-            close(sockfd);
             ret = CFRDS_STATUS_PARTIALLY_WRITE_TO_SOCKET;
             goto exit;
         }

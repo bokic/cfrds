@@ -1,4 +1,5 @@
 .vscode
+.cache
 /python/*.so
 /build
 /bin

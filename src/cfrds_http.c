@@ -90,7 +90,7 @@ enum cfrds_status cfrds_http_post(cfrds_server_int *server, const char *command,
         goto exit;
     }
 
-    sock_written = write(sockfd, cfrds_buffer_data(send_buf), cfrds_buffer_data_size(send_buf));
+    sock_written = send(sockfd, cfrds_buffer_data(send_buf), cfrds_buffer_data_size(send_buf), 0);
     if ((sock_written < 0)||((unsigned)sock_written != cfrds_buffer_data_size(send_buf))) {
         if (sock_written == -1)
         {
@@ -113,7 +113,7 @@ enum cfrds_status cfrds_http_post(cfrds_server_int *server, const char *command,
     {
         cfrds_buffer_reserve_above_size(int_response, 4096);
 
-        ssize_t readed = read(sockfd, cfrds_buffer_data(int_response) + cfrds_buffer_data_size(int_response), 4096);
+        ssize_t readed = recv(sockfd, cfrds_buffer_data(int_response) + cfrds_buffer_data_size(int_response), 4096, 0);
         if (readed <= 0) {
             if (readed == -1) {
                 server->_errno = errno;

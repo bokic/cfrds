@@ -14,6 +14,7 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/bin")
 ###
 add_executable(cfrds_cli
     cli/main.c
+    cli/os_posix.c cli/os.h
 )
 
 set_target_properties(cfrds_cli
@@ -33,11 +34,21 @@ add_library(libcfrds SHARED
     src/cfrds_http.c   include/internal/cfrds_http.h
 )
 
+if(WIN32)
+set_target_properties(libcfrds
+    PROPERTIES OUTPUT_NAME "cfrds"
+)
+endif()
+
 target_include_directories(libcfrds PUBLIC
     include
 )
 
 if(WIN32)
+    target_link_libraries(cfrds_cli PRIVATE
+        wsock32
+        ws2_32
+    )
     target_link_libraries(libcfrds PRIVATE
         wsock32
         ws2_32

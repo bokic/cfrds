@@ -495,7 +495,7 @@ enum cfrds_status cfrds_command_sql_sqlstmnt(cfrds_server *server, const char *c
     cfrds_server_int *server_int = NULL;
     cfrds_buffer *response = NULL;
 
-    if ((server == NULL)/*||(out == NULL)*/)
+    if (server == NULL)
     {
         return CFRDS_STATUS_PARAM_IS_NULL;
     }
@@ -524,8 +524,6 @@ enum cfrds_status cfrds_command_sql_sqlstmnt(cfrds_server *server, const char *c
             for(int c = 0; c < cnt; c++)
             {
                 cfrds_buffer_parse_string(&response_data, &response_size, &name);
-
-                //int tt = 324;
             }
         }
     }
@@ -733,4 +731,33 @@ void cfrds_buffer_sql_tableinfo_free(cfrds_sql_tableinfo *value)
     }
 
     free(_value);
+}
+
+size_t cfrds_buffer_sql_tableinfo_count(const cfrds_sql_tableinfo *value)
+{
+    if (value == NULL)
+        return 0;
+
+    cfrds_sql_tableinfo_int *_value = (cfrds_sql_tableinfo_int *)value;
+
+    return _value->cnt;
+}
+
+const char *cfrds_buffer_sql_tableinfo_field(const cfrds_sql_tableinfo *value, int row, int field)
+{
+    if (value == NULL)
+        return NULL;
+
+    cfrds_sql_tableinfo_int *_value = (cfrds_sql_tableinfo_int *)value;
+
+    if ((row < 0)||(row >= _value->cnt))
+        return NULL;
+
+    switch(field) {
+    case 0: return _value->items[row].unknown;
+    case 1: return _value->items[row].schema;
+    case 2: return _value->items[row].name;
+    case 3: return _value->items[row].type;
+    default: return NULL;
+    }
 }

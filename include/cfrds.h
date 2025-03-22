@@ -1,5 +1,4 @@
-#ifndef __CFRDS_H
-#define __CFRDS_H
+#pragma once
 
 #include <stdbool.h>
 #include <stdint.h>
@@ -79,6 +78,8 @@ EXPORT_CFRDS size_t cfrds_buffer_sql_dnsinfo_count(const cfrds_sql_dnsinfo *valu
 EXPORT_CFRDS const char *cfrds_buffer_sql_dnsinfo_item_get_name(const cfrds_sql_dnsinfo *value, size_t ndx);
 
 EXPORT_CFRDS void cfrds_buffer_sql_tableinfo_free(cfrds_sql_tableinfo *value);
+EXPORT_CFRDS size_t cfrds_buffer_sql_tableinfo_count(const cfrds_sql_tableinfo *value);
+EXPORT_CFRDS const char *cfrds_buffer_sql_tableinfo_field(const cfrds_sql_tableinfo *value, int row, int field);
 
 EXPORT_CFRDS enum cfrds_status cfrds_command_browse_dir(cfrds_server *server, const char *path, cfrds_browse_dir **out);
 EXPORT_CFRDS enum cfrds_status cfrds_command_file_read(cfrds_server *server, const char *pathname, cfrds_file_content **out);
@@ -97,5 +98,3 @@ EXPORT_CFRDS enum cfrds_status cfrds_command_sql_sqlstmnt(cfrds_server *server, 
 #ifdef __cplusplus
 }
 #endif
-
-#endif //  __CFRDS_H

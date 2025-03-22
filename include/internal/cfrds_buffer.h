@@ -1,7 +1,4 @@
-#ifndef __CFRDS_BUFFER_H
-#define __CFRDS_BUFFER_H
-
-#include "../cfrds.h"
+#pragma once
 
 #include <stdbool.h>
 #include <stddef.h>
@@ -95,5 +92,3 @@ bool cfrds_buffer_skip_httpheader(char **data, size_t *size);
 #ifdef __cplusplus
 }
 #endif
-
-#endif //  __CFRDS_BUFFER_H

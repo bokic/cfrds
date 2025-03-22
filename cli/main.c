@@ -1,15 +1,24 @@
 #include <cfrds.h>
 
-#include <sys/types.h>
-#include <sys/stat.h>
+#include "os.h"
+
+#ifdef _WIN32
+#define WIN32_LEAN_AND_MEAN
+#include <windows.h>
+#include <winsock2.h>
+#include <ws2tcpip.h>
+#else
 #include <sys/mman.h>
 #include <unistd.h>
+#endif
+
+#include <sys/types.h>
+#include <sys/stat.h>
 #include <string.h>
 #include <stddef.h>
 #include <stdlib.h>
 #include <fcntl.h>
 #include <stdio.h>
-#include <regex.h>
 #include <time.h>
 
 
@@ -62,96 +71,115 @@ static bool init_server_from_uri(const char *uri, char **hostname, uint16_t *por
 {
     char *_hostname = NULL;
     char *_port_str = NULL;
-    uint16_t _port = 80;
+    int _port = 80;
     char *_username = NULL;
     char *_password = NULL;
     char *_path = NULL;
 
-    int rc = 0;
+    if (uri == NULL) goto error;
+    if (strstr(uri, "rds://") != uri) goto error;
 
-    if ((uri == NULL)||(hostname == NULL)||(port == NULL)||(username == NULL)||(password == NULL)||(path == NULL))
-        return false;
+    uri += 6;
 
-    regex_t regex;
+    int uri_strlen = strlen(uri);
 
-    // -std=gnu11 GCC >=4.7.1, clang 19.1, MinGW gcc(11.3 - 13.1)
-    rc = regcomp(&regex, "^rds:\\/\\/(.+):(.+)@([a-z0-9\\.\\-_]+):?([0-9]{1,5})?\\/?(.*)$", REG_EXTENDED | REG_ICASE);
-    if (rc != REG_NOERROR)
-    {
-        fprintf(stderr, "regcomp compilation failed\n");
-        goto error;
+    const char *path_start = strchr(uri, '/');
+    if (path_start) {
+        int path_strlen = uri_strlen - (path_start - uri);
+        _path = malloc(path_strlen + 1);
+        if (!_path) goto error;
+        memcpy(_path, path_start, path_strlen);
+        _path[path_strlen] = '\0';
+    } else {
+        _path = strdup("/");
+        path_start = uri + uri_strlen;
     }
 
-    size_t     nmatch = 6;
-    regmatch_t pmatch[6] = {0};
+    const char *login_start = strchr(uri, '@');
+    if (login_start) {
+        const char *pass_start = strchr(uri, ':');
+        if ((pass_start)&&(pass_start < login_start)) {
+            int user_strlen = pass_start - uri;
+            int pass_strlen = login_start - pass_start - 1;
 
-    rc = regexec(&regex, uri, nmatch, pmatch, 0);
-
-    regfree(&regex);
-
-    if (rc != REG_NOERROR)
-    {
-        fprintf(stderr, "Invalid URL!\n");
-        goto error;
+            if (user_strlen) {
+                _username = malloc(user_strlen + 1);
+                if (!_username) goto error;
+                memcpy(_username, uri, user_strlen);
+                _username[user_strlen] = '\0';
+            }
+            if (pass_strlen) {
+                _password = malloc(pass_strlen + 1);
+                if (!_password) goto error;
+                memcpy(_password, pass_start + 1, pass_strlen);
+                _password[pass_strlen] = '\0';
+            }
+        } else {
+            int user_strlen = login_start - uri;
+            _username = malloc(user_strlen + 1);
+            if (!_username) goto error;
+            memcpy(_username, uri, user_strlen);
+            _username[user_strlen] = '\0';
+        }
+        uri = login_start + 1;
     }
 
-    if (pmatch[1].rm_eo > pmatch[1].rm_so)
-    {
-        _username = malloc(pmatch[1].rm_eo - pmatch[1].rm_so + 1);
-        _username[pmatch[1].rm_eo - pmatch[1].rm_so] = '\0';
-        memcpy(_username, uri + pmatch[1].rm_so, pmatch[1].rm_eo - pmatch[1].rm_so);
-    }
+    const char *port_start = strchr(uri, ':');
+    if (port_start) {
+        int host_strlen = port_start - uri;
+        int port_strlen = path_start - port_start - 1;
 
-    if (pmatch[2].rm_eo > pmatch[2].rm_so)
-    {
-        _password = malloc(pmatch[2].rm_eo - pmatch[2].rm_so + 1);
-        _password[pmatch[2].rm_eo - pmatch[2].rm_so] = '\0';
-        memcpy(_password, uri + pmatch[2].rm_so, pmatch[2].rm_eo - pmatch[2].rm_so);
-    }
+        _hostname = malloc(host_strlen + 1);
+        if (!_hostname) goto error;
+        memcpy(_hostname, uri, host_strlen);
+        _hostname[host_strlen] = '\0';
+        _port_str = malloc(port_strlen + 1);
+        if (!_port_str) goto error;
+        memcpy(_port_str, port_start + 1, port_strlen);
+        _port_str[port_strlen] = '\0';
 
-    if (pmatch[3].rm_eo > pmatch[3].rm_so)
-    {
-        _hostname = malloc(pmatch[3].rm_eo - pmatch[3].rm_so + 1);
-        _hostname[pmatch[3].rm_eo - pmatch[3].rm_so] = '\0';
-        memcpy(_hostname, uri + pmatch[3].rm_so, pmatch[3].rm_eo - pmatch[3].rm_so);
-    }
-
-    if (pmatch[4].rm_eo > pmatch[4].rm_so)
-    {
-        _port = atoi(uri + pmatch[4].rm_so);
-    }
-
-    if (pmatch[5].rm_eo > pmatch[5].rm_so)
-    {
-        _path = malloc(pmatch[5].rm_eo - pmatch[5].rm_so + 1);
-        _path[pmatch[5].rm_eo - pmatch[5].rm_so] = '\0';
-        memcpy(_path, uri + pmatch[5].rm_so, pmatch[5].rm_eo - pmatch[5].rm_so);
+        long tmp_port = atol(_port_str);
+        if ((tmp_port < 0x0000)||(tmp_port > 0xffff)) goto error;
+        _port = tmp_port;
+    } else {
+        int host_strlen = path_start - uri;
+        _hostname = malloc(host_strlen);
+        if (!_hostname) goto error;
+        memcpy(_hostname, uri, host_strlen);
+        _path[host_strlen] = '\0';
+        _port = 80;
     }
 
     *hostname = _hostname;
-    *port = _port;
+    *port = (uint16_t)_port;
     *username = _username;
     *password = _password;
     *path = _path;
+    free(_port_str);
 
     return true;
 
 error:
-    free(_hostname);
-    free(_port_str);
-    free(_username);
-    free(_password);
-    free(_path);
-
-    regfree(&regex);
+    if (_hostname) free(_hostname);
+    if (_port_str) free(_port_str);
+    if (_username) free(_username);
+    if (_password) free(_password);
+    if (_path) free(_path);
 
     return false;
 }
 
-
 int main(int argc, char *argv[])
 {
     int ret = EXIT_SUCCESS;
+
+#ifdef _WIN32
+    WSADATA wsaData;
+    int iResult = WSAStartup(MAKEWORD(2, 2), &wsaData);
+    if (iResult != 0) {
+        printf("WSAStartup failed: %d\n", iResult);
+    }
+#endif
     cfrds_server *server = NULL;
     cfrds_browse_dir *dir = NULL;
     cfrds_file_content *content = NULL;
@@ -164,7 +192,7 @@ int main(int argc, char *argv[])
     char *password = NULL;
     char *path = NULL;
     char *cfroot = NULL;
-    int fd = -1;
+    file_hnd_fd fd = 0;
 
     if (argc < 3) {
         usage();
@@ -194,6 +222,14 @@ int main(int argc, char *argv[])
 
     if (path == NULL) {
         path = strdup("/");
+    }
+
+    if (username == NULL) {
+        username = strdup("");
+    }
+
+    if (password == NULL) {
+        password = strdup("");
     }
 
     if (!cfrds_server_init(&server, hostname, port, username, password))
@@ -245,7 +281,7 @@ int main(int argc, char *argv[])
         }
 
         int to_write = cfrds_buffer_file_content_get_size(content);
-        ssize_t written = write(1, cfrds_buffer_file_content_get_data(content), to_write);
+        ssize_t written = os_write_to_terminal(cfrds_buffer_file_content_get_data(content), to_write);
         if (written != to_write)
         {
             fprintf(stderr, "write FAILED with error: %m\n");
@@ -263,8 +299,8 @@ int main(int argc, char *argv[])
 
         const char *dest_fname = argv[3];
 
-        fd = open(dest_fname, O_WRONLY|O_CREAT|O_TRUNC, S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH);
-        if (fd == -1)
+        fd = os_creat_file(dest_fname);
+        if (fd == ERROR_FILE_HND_FD)
         {
             fprintf(stderr, "open FAILED with error: %m\n");
             ret = EXIT_FAILURE;
@@ -272,7 +308,7 @@ int main(int argc, char *argv[])
         }
 
         int to_write = cfrds_buffer_file_content_get_size(content);
-        ssize_t written = write(fd, cfrds_buffer_file_content_get_data(content), to_write);
+        ssize_t written = os_write(fd, cfrds_buffer_file_content_get_data(content), to_write);
         if (written != to_write)
         {
             fprintf(stderr, "write FAILED with error: %m\n");
@@ -281,24 +317,10 @@ int main(int argc, char *argv[])
         }
     } else if ((strcmp(command, "put") == 0)||(strcmp(command, "upload") == 0)) {
         const char *src_fname = argv[2];
-        struct stat stat;
+        size_t src_size = 0;
+        void *buf = NULL;
 
-        fd = open(src_fname, O_RDONLY);
-        if (fd == -1)
-        {
-            fprintf(stderr, "open FAILED with error: %m\n");
-            ret = EXIT_FAILURE;
-            goto exit;
-        }
-
-        if (fstat(fd, &stat))
-        {
-            fprintf(stderr, "open FAILED with error: %m\n");
-            ret = EXIT_FAILURE;
-            goto exit;
-        }
-
-        void *buf = mmap(NULL, stat.st_size, PROT_READ, MAP_PRIVATE, fd, 0);
+        buf = os_map(src_fname, &src_size);
         if (buf == NULL)
         {
             fprintf(stderr, "mmap FAILED with error: %m\n");
@@ -306,12 +328,11 @@ int main(int argc, char *argv[])
             goto exit;
         }
 
-        res = cfrds_command_file_write(server, path, buf, stat.st_size);
+        res = cfrds_command_file_write(server, path, buf, src_size);
         if (res != CFRDS_STATUS_OK) {
             fprintf(stderr, "write FAILED with error: %s\n", cfrds_server_get_error(server));
-        }
-
-        munmap(buf, stat.st_size);
+        }        
+        os_unmap(buf, src_size);
     } else if ((strcmp(command, "rm") == 0)||(strcmp(command, "delete") == 0)) {
         res = cfrds_command_file_remove_file(server, path);
         if (res != CFRDS_STATUS_OK)
@@ -378,9 +399,17 @@ int main(int argc, char *argv[])
                 goto exit;
             }
 
-
+            size_t cnt = cfrds_buffer_sql_tableinfo_count(tableinfo);
+            for(size_t c = 0; c < cnt; c++)
+            {
+                const char *name = cfrds_buffer_sql_tableinfo_field(tableinfo, c, 2);
+                const char *type = cfrds_buffer_sql_tableinfo_field(tableinfo, c, 3);
+                printf("%s, %s\n", name, type);
+            }
 
             cfrds_buffer_sql_tableinfo_free(tableinfo);
+        } else {
+            fprintf(stderr, "No schema name\n");
         }
     } else if (strcmp(command, "columninfo") == 0) {
     } else if (strcmp(command, "primarykeys") == 0) {
@@ -394,7 +423,7 @@ int main(int argc, char *argv[])
     }
 
 exit:
-    if (fd != -1) close(fd);
+    if (fd != ERROR_FILE_HND_FD) os_file_close(fd);
     if (cfroot) free(cfroot);
     if (path) free(path);
     if (password) free(password);
@@ -402,6 +431,10 @@ exit:
     if (hostname) free(hostname);
     if (dir) cfrds_buffer_browse_dir_free(dir);
     if (server) cfrds_server_free(server);
+
+#ifdef _WIN32
+    WSACleanup();
+#endif
 
     return ret;
 }

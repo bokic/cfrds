@@ -1,4 +1,3 @@
-//#define __STDC_WANT_LIB_EXT1__ 1
 #include <string.h>
 #include <cfrds.h>
 #include <internal/cfrds_buffer.h>
@@ -6,7 +5,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stddef.h>
-#include <regex.h>
 #include <stdio.h>
 
 
@@ -330,7 +328,7 @@ cfrds_browse_dir_int *cfrds_buffer_to_browse_dir(cfrds_buffer *buffer)
 
     size_t ret_size = offsetof(cfrds_browse_dir_int, items) + (cnt * (offsetof(cfrds_browse_dir_int, items[1]) - (offsetof(cfrds_browse_dir_int, items[0]))));
     cfrds_browse_dir_int *ret = malloc(ret_size);
-    bzero(ret, ret_size);
+    memset(ret, 0, ret_size);
 
     ret->cnt = cnt;
 
@@ -523,66 +521,101 @@ cfrds_sql_tableinfo_int *cfrds_buffer_to_sql_tableinfo(cfrds_buffer *buffer)
 
         size_t malloc_size = offsetof(cfrds_sql_tableinfo_int, items) + sizeof(cfrds_sql_tableinfoitem_int) * cnt;
         ret = malloc(malloc_size);
-        bzero(ret, malloc_size);
+        memset(ret, 0, malloc_size);
 
-        ret->cnt = cnt;
-
-        regex_t re;
-        regcomp(&re, R"(^\"(.*)\",\"(.*)\",\"(.*)\",\"(.*)\"$)", REG_EXTENDED);
-        const int no_of_matches = 5;
-        regmatch_t m[no_of_matches];
+        ret->cnt = 0;
 
         for(int c = 0; c < cnt; c++)
         {
             char *item = NULL;
 
             cfrds_buffer_parse_string(&response_data, &response_size, &item);
-
             if (item)
             {
-                if (regexec(&re, item, no_of_matches, m, 0) == 0)
-                {
-                    char *tmp = NULL;
+                char *field1 = NULL;
+                char *field2 = NULL;
+                char *field3 = NULL;
+                char *field4 = NULL;
 
-                    if (m[1].rm_eo > m[1].rm_so)
-                    {
-                        size_t size = m[1].rm_eo - m[1].rm_so;
-                        tmp = malloc(size + 1);
-                        memcpy(tmp, item + m[1].rm_so, size);
-                        tmp[size] = '\0';
-                        ret->items[c].unknown = tmp;
-                    }
-                    if (m[2].rm_eo > m[2].rm_so)
-                    {
-                        size_t size = m[2].rm_eo - m[2].rm_so;
-                        tmp = malloc(size + 1);
-                        memcpy(tmp, item + m[2].rm_so, size);
-                        tmp[size] = '\0';
-                        ret->items[c].schema = tmp;
-                    }
-                    if (m[3].rm_eo > m[3].rm_so)
-                    {
-                        size_t size = m[3].rm_eo - m[3].rm_so;
-                        tmp = malloc(size + 1);
-                        memcpy(tmp, item + m[3].rm_so, size);
-                        tmp[size] = '\0';
-                        ret->items[c].name = tmp;
-                    }
-                    if (m[4].rm_eo > m[4].rm_so)
-                    {
-                        size_t size = m[4].rm_eo - m[4].rm_so;
-                        tmp = malloc(size + 1);
-                        memcpy(tmp, item + m[4].rm_so, size);
-                        tmp[size] = '\0';
-                        ret->items[c].type = tmp;
-                    }
+                const char *current_item = item;
+                const char *end_item = NULL;
+
+                if (current_item[0] != '"') goto exit_loop;
+                current_item++;
+                end_item = strchr(current_item, '"');
+                if (!end_item) goto exit_loop;
+                if (end_item > current_item) {
+                    int size = end_item - current_item;
+                    field1 = malloc(size + 1);
+                    if (!field1) goto exit_loop;
+                    memcpy(field1, current_item, size);
+                    field1[size] = '\0';
                 }
+                current_item = end_item + 1;
+
+                if (current_item[0] != ',') goto exit_loop;
+                current_item++;
+
+                if (current_item[0] != '"') goto exit_loop;
+                current_item++;
+                end_item = strchr(current_item, '"');
+                if (!end_item) goto exit_loop;
+                if (end_item > current_item) {
+                    int size = end_item - current_item;
+                    field2 = malloc(size + 1);
+                    if (!field2) goto exit_loop;
+                    memcpy(field2, current_item, size);
+                    field2[size] = '\0';
+                }
+                current_item = end_item + 1;
+
+                if (current_item[0] != ',') goto exit_loop;
+                current_item++;
+
+                if (current_item[0] != '"') goto exit_loop;
+                current_item++;
+                end_item = strchr(current_item, '"');
+                if (!end_item) goto exit_loop;
+                if (end_item > current_item) {
+                    int size = end_item - current_item;
+                    field3 = malloc(size + 1);
+                    if (!field3) goto exit_loop;
+                    memcpy(field3, current_item, size);
+                    field3[size] = '\0';
+                }
+                current_item = end_item + 1;
+
+                if (current_item[0] != ',') goto exit_loop;
+                current_item++;
+
+                if (current_item[0] != '"') goto exit_loop;
+                current_item++;
+                end_item = strchr(current_item, '"');
+                if (!end_item) goto exit_loop;
+                if (end_item > current_item) {
+                    int size = end_item - current_item;
+                    field4 = malloc(size + 1);
+                    if (!field4) goto exit_loop;
+                    memcpy(field4, current_item, size);
+                    field4[size] = '\0';
+                }
+                current_item = end_item + 1;
+
+                ret->items[ret->cnt].unknown = field1; field1 = NULL;
+                ret->items[ret->cnt].schema = field2;  field2 = NULL;
+                ret->items[ret->cnt].name = field3;    field3 = NULL;
+                ret->items[ret->cnt].type = field4;    field4 = NULL;
+                ret->cnt++;
+
+exit_loop:
+                if (field4) free(field4);
+                if (field3) free(field3);
+                if (field2) free(field2);
+                if (field1) free(field1);
 
                 free(item);
             }
         }
-
-        regfree (&re);
     }
 
     return ret;

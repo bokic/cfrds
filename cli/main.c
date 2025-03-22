@@ -420,6 +420,8 @@ int main(int argc, char *argv[])
     } else if (strcmp(command, "sqlmetadata") == 0) {
     } else if (strcmp(command, "supportedcommands") == 0) {
     } else if (strcmp(command, "dbdescription") == 0) {
+    } else {
+        fprintf(stderr, "Unknown command: %s\n", command);
     }
 
 exit:

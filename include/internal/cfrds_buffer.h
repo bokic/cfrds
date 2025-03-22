@@ -41,7 +41,7 @@ typedef struct {
 typedef struct {
     size_t cnt;
     char *names[];
-} cfrds_sql_dnsinfo_int;
+} cfrds_sql_dsninfo_int;
 
 typedef struct {
     char *unknown;
@@ -84,7 +84,7 @@ bool cfrds_buffer_parse_string(char **data, size_t *remaining, char **out);
 
 cfrds_browse_dir_int *cfrds_buffer_to_browse_dir(cfrds_buffer *buffer);
 cfrds_file_content_int *cfrds_buffer_to_file_content(cfrds_buffer *buffer);
-cfrds_sql_dnsinfo_int *cfrds_buffer_to_sql_dnsinfo(cfrds_buffer *buffer);
+cfrds_sql_dsninfo_int *cfrds_buffer_to_sql_dsninfo(cfrds_buffer *buffer);
 cfrds_sql_tableinfo_int *cfrds_buffer_to_sql_tableinfo(cfrds_buffer *buffer);
 
 bool cfrds_buffer_skip_httpheader(char **data, size_t *size);

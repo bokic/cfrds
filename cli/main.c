@@ -368,8 +368,8 @@ int main(int argc, char *argv[])
 
         puts(cfroot);
     } else if (strcmp(command, "dsninfo") == 0) {
-        cfrds_sql_dnsinfo *dnsinfo = NULL;
-        res = cfrds_command_sql_dnsinfo(server, &dnsinfo);
+        cfrds_sql_dsninfo *dsninfo = NULL;
+        res = cfrds_command_sql_dsninfo(server, &dsninfo);
         if (res != CFRDS_STATUS_OK)
         {
             fprintf(stderr, "dsninfo FAILED with error: %s\n", cfrds_server_get_error(server));
@@ -377,14 +377,14 @@ int main(int argc, char *argv[])
             goto exit;
         }
 
-        size_t cnt = cfrds_buffer_sql_dnsinfo_count(dnsinfo);
+        size_t cnt = cfrds_buffer_sql_dsninfo_count(dsninfo);
         for(size_t c = 0; c < cnt; c++)
         {
-            const char *item = cfrds_buffer_sql_dnsinfo_item_get_name(dnsinfo, c);
+            const char *item = cfrds_buffer_sql_dsninfo_item_get_name(dsninfo, c);
             puts(item);
         }
 
-        cfrds_buffer_sql_dnsinfo_free(dnsinfo);
+        cfrds_buffer_sql_dsninfo_free(dsninfo);
     } else if (strcmp(command, "tableinfo") == 0) {
         if ((path != NULL)&&(strlen(path) > 1))
         {

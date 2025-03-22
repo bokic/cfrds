@@ -430,14 +430,14 @@ exit:
     return ret;
 }
 
-enum cfrds_status cfrds_command_sql_dnsinfo(cfrds_server *server, cfrds_sql_dnsinfo **dnsinfo)
+enum cfrds_status cfrds_command_sql_dsninfo(cfrds_server *server, cfrds_sql_dsninfo **dsninfo)
 {
     enum cfrds_status ret;
 
     cfrds_server_int *server_int = NULL;
     cfrds_buffer *response = NULL;
 
-    if ((server == NULL)||(dnsinfo == NULL))
+    if ((server == NULL)||(dsninfo == NULL))
     {
         return CFRDS_STATUS_PARAM_IS_NULL;
     }
@@ -445,8 +445,8 @@ enum cfrds_status cfrds_command_sql_dnsinfo(cfrds_server *server, cfrds_sql_dnsi
     ret = cfrds_internal_command(server, &response, "DBFUNCS", (const char *[]){ "", "DSNINFO", NULL});
     if (ret == CFRDS_STATUS_OK)
     {
-        *dnsinfo = cfrds_buffer_to_sql_dnsinfo(response);
-        if (*dnsinfo == NULL)
+        *dsninfo = cfrds_buffer_to_sql_dsninfo(response);
+        if (*dsninfo == NULL)
         {
             server_int = server;
             server_int->error_code = -1;
@@ -677,12 +677,12 @@ uint64_t cfrds_buffer_browse_dir_item_get_modified(const cfrds_browse_dir *value
     return _value->items[ndx].modified;
 }
 
-void cfrds_buffer_sql_dnsinfo_free(cfrds_sql_dnsinfo *value)
+void cfrds_buffer_sql_dsninfo_free(cfrds_sql_dsninfo *value)
 {
     if (value == NULL)
         return;
 
-    cfrds_sql_dnsinfo_int *_value = (cfrds_sql_dnsinfo_int *)value;
+    cfrds_sql_dsninfo_int *_value = (cfrds_sql_dsninfo_int *)value;
 
     for(size_t c = 0; c < _value->cnt; c++)
     {
@@ -692,22 +692,22 @@ void cfrds_buffer_sql_dnsinfo_free(cfrds_sql_dnsinfo *value)
     free(_value);
 }
 
-size_t cfrds_buffer_sql_dnsinfo_count(const cfrds_sql_dnsinfo *value)
+size_t cfrds_buffer_sql_dsninfo_count(const cfrds_sql_dsninfo *value)
 {
     if (value == NULL)
         return 0;
 
-    const cfrds_sql_dnsinfo_int *_value = (const cfrds_sql_dnsinfo_int *)value;
+    const cfrds_sql_dsninfo_int *_value = (const cfrds_sql_dsninfo_int *)value;
 
     return _value->cnt;
 }
 
-const char *cfrds_buffer_sql_dnsinfo_item_get_name(const cfrds_sql_dnsinfo *value, size_t ndx)
+const char *cfrds_buffer_sql_dsninfo_item_get_name(const cfrds_sql_dsninfo *value, size_t ndx)
 {
     if (value == NULL)
         return NULL;
 
-    const cfrds_sql_dnsinfo_int *_value = (const cfrds_sql_dnsinfo_int *)value;
+    const cfrds_sql_dsninfo_int *_value = (const cfrds_sql_dsninfo_int *)value;
 
     if (ndx >= _value->cnt)
         return NULL;

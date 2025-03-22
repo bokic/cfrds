@@ -443,9 +443,9 @@ cfrds_file_content_int *cfrds_buffer_to_file_content(cfrds_buffer *buffer)
     return ret;
 }
 
-cfrds_sql_dnsinfo_int *cfrds_buffer_to_sql_dnsinfo(cfrds_buffer *buffer)
+cfrds_sql_dsninfo_int *cfrds_buffer_to_sql_dsninfo(cfrds_buffer *buffer)
 {
-    cfrds_sql_dnsinfo_int *ret = NULL;
+    cfrds_sql_dsninfo_int *ret = NULL;
 
     char *response_data = cfrds_buffer_data(buffer);
     size_t response_size = cfrds_buffer_data_size(buffer);
@@ -462,7 +462,7 @@ cfrds_sql_dnsinfo_int *cfrds_buffer_to_sql_dnsinfo(cfrds_buffer *buffer)
         if (cnt > 10000)
             goto bail;
 
-        ret = malloc(offsetof(cfrds_sql_dnsinfo_int, names) + sizeof(char *) * cnt);
+        ret = malloc(offsetof(cfrds_sql_dsninfo_int, names) + sizeof(char *) * cnt);
 
         ret->cnt = cnt;
 

@@ -4,7 +4,7 @@
 
 #ifdef _WIN32
 #define WIN32_LEAN_AND_MEAN
-#include <windows.h>
+#include <Windows.h>
 #define file_hnd_fd HANDLE
 #define FILE_HND_FD_NULL NULL
 #define ERROR_FILE_HND_FD NULL

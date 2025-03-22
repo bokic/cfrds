@@ -412,13 +412,21 @@ int main(int argc, char *argv[])
             fprintf(stderr, "No schema name\n");
         }
     } else if (strcmp(command, "columninfo") == 0) {
+        fprintf(stderr, "Unimplemented command: %s\n", command);
     } else if (strcmp(command, "primarykeys") == 0) {
+        fprintf(stderr, "Unimplemented command: %s\n", command);
     } else if (strcmp(command, "foreignkeys") == 0) {
+        fprintf(stderr, "Unimplemented command: %s\n", command);
     } else if (strcmp(command, "importedkeys") == 0) {
+        fprintf(stderr, "Unimplemented command: %s\n", command);
     } else if (strcmp(command, "exportedkeys") == 0) {
+        fprintf(stderr, "Unimplemented command: %s\n", command);
     } else if (strcmp(command, "sql") == 0) {
+        fprintf(stderr, "Unimplemented command: %s\n", command);
     } else if (strcmp(command, "sqlmetadata") == 0) {
+        fprintf(stderr, "Unimplemented command: %s\n", command);
     } else if (strcmp(command, "supportedcommands") == 0) {
+        fprintf(stderr, "Unimplemented command: %s\n", command);
     } else if (strcmp(command, "dbdescription") == 0) {
     } else {
         fprintf(stderr, "Unknown command: %s\n", command);

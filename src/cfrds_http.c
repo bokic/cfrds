@@ -21,6 +21,9 @@
 #include <stdio.h>
 #include <errno.h>
 
+#if _WIN32
+#define close closesocket
+#endif
 
 enum cfrds_status cfrds_http_post(cfrds_server_int *server, const char *command, cfrds_buffer *payload, cfrds_buffer **response)
 {

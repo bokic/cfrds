@@ -12,10 +12,17 @@ set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/bin")
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/bin")
 
 ###
-add_executable(cfrds_cli
-    cli/main.c
-    cli/os_posix.c cli/os.h
-)
+if(WIN32)
+    add_executable(cfrds_cli
+        cli/main.c
+        cli/os_win.c cli/os.h
+    )
+else()
+    add_executable(cfrds_cli
+        cli/main.c
+        cli/os_posix.c cli/os.h
+    )
+endif()
 
 set_target_properties(cfrds_cli
     PROPERTIES OUTPUT_NAME "cfrds"

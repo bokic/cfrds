@@ -60,24 +60,26 @@ static void usage()
            "         example: `cfrds dsninfo rds://username:password@host`\n"
            "\n"
            "  - 'tableinfo' - Return ColdFusion data sources.\n"
-           "         example: `cfrds tableinfo rds://username:password@host/dns`\n"
+           "         example: `cfrds tableinfo rds://username:password@host/dsn`\n"
            "\n"
            "  - 'sql' - Return ColdFusion data sources.\n"
-           "         example: `cfrds sql \"SELECT 1\" rds://username:password@host/dns`\n"
+           "         example: `cfrds sql \"SELECT 1\" rds://username:password@host/dsn`\n"
            );
 }
 
 static bool init_server_from_uri(const char *uri, char **hostname, uint16_t *port, char **username, char **password, char **path)
 {
-    char *_hostname = NULL;
-    char *_port_str = NULL;
+    cfrds_str_defer(_hostname);
+    cfrds_str_defer(_port_str);
     int _port = 80;
-    char *_username = NULL;
-    char *_password = NULL;
-    char *_path = NULL;
+    cfrds_str_defer(_username);
+    cfrds_str_defer(_password);
+    cfrds_str_defer(_path);
 
-    if (uri == NULL) goto error;
-    if (strstr(uri, "rds://") != uri) goto error;
+    if (uri == nullptr)
+        return false;
+    if (strstr(uri, "rds://") != uri)
+        return false;
 
     uri += 6;
 
@@ -87,7 +89,8 @@ static bool init_server_from_uri(const char *uri, char **hostname, uint16_t *por
     if (path_start) {
         int path_strlen = uri_strlen - (path_start - uri);
         _path = malloc(path_strlen + 1);
-        if (!_path) goto error;
+        if (!_path)
+            return false;
         memcpy(_path, path_start, path_strlen);
         _path[path_strlen] = '\0';
     } else {
@@ -104,20 +107,23 @@ static bool init_server_from_uri(const char *uri, char **hostname, uint16_t *por
 
             if (user_strlen) {
                 _username = malloc(user_strlen + 1);
-                if (!_username) goto error;
+                if (!_username)
+                    return false;
                 memcpy(_username, uri, user_strlen);
                 _username[user_strlen] = '\0';
             }
             if (pass_strlen) {
                 _password = malloc(pass_strlen + 1);
-                if (!_password) goto error;
+                if (!_password)
+                    return false;
                 memcpy(_password, pass_start + 1, pass_strlen);
                 _password[pass_strlen] = '\0';
             }
         } else {
             int user_strlen = login_start - uri;
             _username = malloc(user_strlen + 1);
-            if (!_username) goto error;
+            if (!_username)
+                return false;
             memcpy(_username, uri, user_strlen);
             _username[user_strlen] = '\0';
         }
@@ -130,43 +136,37 @@ static bool init_server_from_uri(const char *uri, char **hostname, uint16_t *por
         int port_strlen = path_start - port_start - 1;
 
         _hostname = malloc(host_strlen + 1);
-        if (!_hostname) goto error;
+        if (!_hostname)
+            return false;
         memcpy(_hostname, uri, host_strlen);
         _hostname[host_strlen] = '\0';
         _port_str = malloc(port_strlen + 1);
-        if (!_port_str) goto error;
+        if (!_port_str)
+            return false;
         memcpy(_port_str, port_start + 1, port_strlen);
         _port_str[port_strlen] = '\0';
 
         long tmp_port = atol(_port_str);
-        if ((tmp_port < 0x0000)||(tmp_port > 0xffff)) goto error;
+        if ((tmp_port < 0x0000)||(tmp_port > 0xffff))
+            return false;
         _port = tmp_port;
     } else {
         int host_strlen = path_start - uri;
         _hostname = malloc(host_strlen);
-        if (!_hostname) goto error;
+        if (!_hostname)
+            return false;
         memcpy(_hostname, uri, host_strlen);
         _path[host_strlen] = '\0';
         _port = 80;
     }
 
-    *hostname = _hostname;
+    *hostname = _hostname; _hostname = nullptr;
     *port = (uint16_t)_port;
-    *username = _username;
-    *password = _password;
-    *path = _path;
-    free(_port_str);
+    *username = _username; _username = nullptr;
+    *password = _password; _password = nullptr;
+    *path = _path;         _path = nullptr;
 
     return true;
-
-error:
-    if (_hostname) free(_hostname);
-    if (_port_str) free(_port_str);
-    if (_username) free(_username);
-    if (_password) free(_password);
-    if (_path) free(_path);
-
-    return false;
 }
 
 int main(int argc, char *argv[])
@@ -180,24 +180,21 @@ int main(int argc, char *argv[])
         printf("WSAStartup failed: %d\n", iResult);
     }
 #endif
-    cfrds_server *server = NULL;
-    cfrds_browse_dir *dir = NULL;
-    cfrds_file_content *content = NULL;
+    cfrds_server_defer(server);
+    cfrds_file_content *content = nullptr;
     enum cfrds_status res;
 
-    const char *uri = NULL;
-    char *hostname = NULL;
+    const char *uri = nullptr;
+    cfrds_str_defer(hostname);
     uint16_t port = 80;
-    char *username = NULL;
-    char *password = NULL;
-    char *path = NULL;
-    char *cfroot = NULL;
-    file_hnd_fd fd = 0;
+    cfrds_str_defer(username);
+    cfrds_str_defer(password);
+    cfrds_str_defer(path);
+    cfrds_str_defer(cfroot);
 
     if (argc < 3) {
         usage();
-        ret = EXIT_FAILURE;
-        goto exit;
+        return EXIT_FAILURE;
     }
 
     const char *command = argv[1];
@@ -205,8 +202,7 @@ int main(int argc, char *argv[])
     if ((strcmp(command, "put") == 0)||(strcmp(command, "upload") == 0)) {
         if (argc < 4) {
             usage();
-            ret = EXIT_FAILURE;
-            goto exit;
+            return EXIT_FAILURE;
         }
         uri = argv[3];
     } else {
@@ -216,36 +212,34 @@ int main(int argc, char *argv[])
     if (init_server_from_uri(uri, &hostname, &port, &username, &password, &path) == false)
     {
         fprintf(stderr, "init_server_from_uri FAILED!\n");
-        ret = EXIT_FAILURE;
-        goto exit;
+        return EXIT_FAILURE;
     }
 
-    if (path == NULL) {
+    if (path == nullptr) {
         path = strdup("/");
     }
 
-    if (username == NULL) {
+    if (username == nullptr) {
         username = strdup("");
     }
 
-    if (password == NULL) {
+    if (password == nullptr) {
         password = strdup("");
     }
 
     if (!cfrds_server_init(&server, hostname, port, username, password))
     {
         fprintf(stderr, "cfrds_server_init FAILED!\n");
-        ret = EXIT_FAILURE;
-        goto exit;
+        return EXIT_FAILURE;
     }
 
     if ((strcmp(command, "ls") == 0)||(strcmp(command, "dir") == 0)) {
+        cfrds_browse_dir_defer(dir);
         res = cfrds_command_browse_dir(server, path, &dir);
         if (res != CFRDS_STATUS_OK)
         {
             fprintf(stderr, "ls/dir FAILED with error: %s\n", cfrds_server_get_error(server));
-            ret = EXIT_FAILURE;
-            goto exit;
+            return EXIT_FAILURE;
         }
 
         size_t cnt = cfrds_buffer_browse_dir_count(dir);
@@ -276,8 +270,7 @@ int main(int argc, char *argv[])
         if (res != CFRDS_STATUS_OK)
         {
             fprintf(stderr, "cat FAILED with error: %s\n", cfrds_server_get_error(server));
-            ret = EXIT_FAILURE;
-            goto exit;
+            return EXIT_FAILURE;
         }
 
         int to_write = cfrds_buffer_file_content_get_size(content);
@@ -285,26 +278,25 @@ int main(int argc, char *argv[])
         if (written != to_write)
         {
             fprintf(stderr, "write FAILED with error: %m\n");
-            ret = EXIT_FAILURE;
-            goto exit;
+            return EXIT_FAILURE;
         }
     } else if ((strcmp(command, "get") == 0)||(strcmp(command, "download") == 0)) {
         res = cfrds_command_file_read(server, path, &content);
         if (res != CFRDS_STATUS_OK)
         {
             fprintf(stderr, "get/download FAILED with error: %s\n", cfrds_server_get_error(server));
-            ret = EXIT_FAILURE;
-            goto exit;
+            return EXIT_FAILURE;
         }
 
         const char *dest_fname = argv[3];
+
+        file_hnd_fd_defer(fd);
 
         fd = os_creat_file(dest_fname);
         if (fd == ERROR_FILE_HND_FD)
         {
             fprintf(stderr, "open FAILED with error: %m\n");
-            ret = EXIT_FAILURE;
-            goto exit;
+            return EXIT_FAILURE;
         }
 
         int to_write = cfrds_buffer_file_content_get_size(content);
@@ -312,69 +304,62 @@ int main(int argc, char *argv[])
         if (written != to_write)
         {
             fprintf(stderr, "write FAILED with error: %m\n");
-            ret = EXIT_FAILURE;
-            goto exit;
+            return EXIT_FAILURE;
         }
     } else if ((strcmp(command, "put") == 0)||(strcmp(command, "upload") == 0)) {
         const char *src_fname = argv[2];
         size_t src_size = 0;
-        void *buf = NULL;
+        void *buf = nullptr;
 
         buf = os_map(src_fname, &src_size);
-        if (buf == NULL)
+        if (buf == nullptr)
         {
             fprintf(stderr, "mmap FAILED with error: %m\n");
-            ret = EXIT_FAILURE;
-            goto exit;
+            return EXIT_FAILURE;
         }
 
         res = cfrds_command_file_write(server, path, buf, src_size);
         if (res != CFRDS_STATUS_OK) {
             fprintf(stderr, "write FAILED with error: %s\n", cfrds_server_get_error(server));
-        }        
+        }
         os_unmap(buf, src_size);
     } else if ((strcmp(command, "rm") == 0)||(strcmp(command, "delete") == 0)) {
         res = cfrds_command_file_remove_file(server, path);
         if (res != CFRDS_STATUS_OK)
         {
             fprintf(stderr, "rm/delete FAILED with error: %s\n", cfrds_server_get_error(server));
-            ret = EXIT_FAILURE;
-            goto exit;
+            return EXIT_FAILURE;
         }
     } else if (strcmp(command, "mkdir") == 0) {
         res = cfrds_command_file_create_dir(server, path);
         if (res != CFRDS_STATUS_OK)
         {
             fprintf(stderr, "mkdir FAILED with error: %s\n", cfrds_server_get_error(server));
-            ret = EXIT_FAILURE;
-            goto exit;
+            return EXIT_FAILURE;
         }
     } else if (strcmp(command, "rmdir") == 0) {
         res = cfrds_command_file_remove_dir(server, path);
         if (res != CFRDS_STATUS_OK)
         {
             fprintf(stderr, "rmdir FAILED with error: %s\n", cfrds_server_get_error(server));
-            ret = EXIT_FAILURE;
-            goto exit;
+            return EXIT_FAILURE;
         }
     } else if (strcmp(command, "cfroot") == 0) {
         res = cfrds_command_file_get_root_dir(server, &cfroot);
         if (res != CFRDS_STATUS_OK)
         {
             fprintf(stderr, "cfroot FAILED with error: %s\n", cfrds_server_get_error(server));
-            ret = EXIT_FAILURE;
-            goto exit;
+            return EXIT_FAILURE;
         }
 
         puts(cfroot);
     } else if (strcmp(command, "dsninfo") == 0) {
-        cfrds_sql_dsninfo *dsninfo = NULL;
+        cfrds_sql_dsninfo *dsninfo = nullptr;
         res = cfrds_command_sql_dsninfo(server, &dsninfo);
         if (res != CFRDS_STATUS_OK)
         {
             fprintf(stderr, "dsninfo FAILED with error: %s\n", cfrds_server_get_error(server));
-            ret = EXIT_FAILURE;
-            goto exit;
+            return EXIT_FAILURE;
         }
 
         size_t cnt = cfrds_buffer_sql_dsninfo_count(dsninfo);
@@ -386,24 +371,23 @@ int main(int argc, char *argv[])
 
         cfrds_buffer_sql_dsninfo_free(dsninfo);
     } else if (strcmp(command, "tableinfo") == 0) {
-        if ((path != NULL)&&(strlen(path) > 1))
+        if ((path != nullptr)&&(strlen(path) > 1))
         {
-            cfrds_sql_tableinfo *tableinfo = NULL;
-            const char *dns = path + 1;
+            cfrds_sql_tableinfo *tableinfo = nullptr;
+            const char *dsn = path + 1;
 
-            res = cfrds_command_sql_tableinfo(server, dns, &tableinfo);
+            res = cfrds_command_sql_tableinfo(server, dsn, &tableinfo);
             if (res != CFRDS_STATUS_OK)
             {
                 fprintf(stderr, "tableinfo FAILED with error: %s\n", cfrds_server_get_error(server));
-                ret = EXIT_FAILURE;
-                goto exit;
+                return EXIT_FAILURE;
             }
 
             size_t cnt = cfrds_buffer_sql_tableinfo_count(tableinfo);
             for(size_t c = 0; c < cnt; c++)
             {
-                const char *name = cfrds_buffer_sql_tableinfo_field(tableinfo, c, 2);
-                const char *type = cfrds_buffer_sql_tableinfo_field(tableinfo, c, 3);
+                const char *name = cfrds_buffer_sql_tableinfo_get_name(tableinfo, c);
+                const char *type = cfrds_buffer_sql_tableinfo_get_type(tableinfo, c);
                 printf("%s, %s\n", name, type);
             }
 
@@ -412,9 +396,109 @@ int main(int argc, char *argv[])
             fprintf(stderr, "No schema name\n");
         }
     } else if (strcmp(command, "columninfo") == 0) {
-        fprintf(stderr, "Unimplemented command: %s\n", command);
+        if ((path != nullptr)&&(strlen(path) > 1))
+        {
+            char *schema = path + 1;
+            char *table = strchr(schema, '/');
+            if(table) {
+                cfrds_sql_columninfo *columninfo = nullptr;
+                int tmp_size = 0;
+                char *tmp = nullptr;
+
+                tmp_size = table - schema;
+                tmp = malloc(tmp_size + 1);
+                if (tmp == nullptr)
+                {
+                    fprintf(stderr, "malloc FAILED!\n");
+                    return EXIT_FAILURE;
+                }
+
+                memcpy(tmp, schema, tmp_size);
+                tmp[tmp_size] = '\0';
+                schema = tmp;
+
+                table = strdup(table + 1);
+                if (table == nullptr)
+                {
+                    fprintf(stderr, "strdup FAILED!\n");
+                    return EXIT_FAILURE;
+                }
+
+                res = cfrds_command_sql_columninfo(server, schema, table, &columninfo);
+
+                free(table); table = nullptr;
+                free(schema); schema = nullptr;
+
+                if (res != CFRDS_STATUS_OK)
+                {
+                    fprintf(stderr, "columninfo FAILED with error: %s\n", cfrds_server_get_error(server));
+                    return EXIT_FAILURE;
+                }
+
+                size_t cnt = cfrds_buffer_sql_columninfo_count(columninfo);
+                for(size_t c = 0; c < cnt; c++)
+                {
+                    const char *name = cfrds_buffer_sql_columninfo_get_name(columninfo, c);
+                    const char *type = cfrds_buffer_sql_columninfo_get_typeStr(columninfo, c);
+                    printf("%s, %s\n", name, type);
+                }
+
+                cfrds_buffer_sql_columninfo_free(columninfo);
+            } else {
+                fprintf(stderr, "No table name\n");
+            }
+        } else {
+            fprintf(stderr, "No schema name\n");
+        }
     } else if (strcmp(command, "primarykeys") == 0) {
-        fprintf(stderr, "Unimplemented command: %s\n", command);
+        if ((path != nullptr)&&(strlen(path) > 1))
+        {
+            char *schema = path + 1;
+            char *table = strchr(schema, '/');
+            if(table) {
+                cfrds_sql_primarykeys *primarykeys = nullptr;
+                int tmp_size = 0;
+                char *tmp = nullptr;
+
+                tmp_size = table - schema;
+                tmp = malloc(tmp_size + 1);
+                if (tmp == nullptr)
+                    return EXIT_FAILURE;
+
+                memcpy(tmp, schema, tmp_size);
+                tmp[tmp_size] = '\0';
+                schema = tmp;
+
+                table = strdup(table + 1);
+                if (table == nullptr)
+                    return EXIT_FAILURE;
+
+                res = cfrds_command_sql_primarykeys(server, schema, table, &primarykeys);
+
+                //free(table); table = nullptr;
+                //free(schema); schema = nullptr;
+
+                if (res != CFRDS_STATUS_OK)
+                {
+                    fprintf(stderr, "primarykeys FAILED with error: %s\n", cfrds_server_get_error(server));
+                    return EXIT_FAILURE;
+                }
+
+                /*size_t cnt = cfrds_buffer_sql_columninfo_count(columninfo);
+                for(size_t c = 0; c < cnt; c++)
+                {
+                    const char *name = cfrds_buffer_sql_columninfo_get_name(columninfo, c);
+                    const char *type = cfrds_buffer_sql_columninfo_get_type(columninfo, c);
+                    printf("%s, %s\n", name, type);
+                }*/
+
+                cfrds_buffer_sql_primarykeys_free(primarykeys);
+            } else {
+                fprintf(stderr, "No table name\n");
+            }
+        } else {
+            fprintf(stderr, "No schema name\n");
+        }
     } else if (strcmp(command, "foreignkeys") == 0) {
         fprintf(stderr, "Unimplemented command: %s\n", command);
     } else if (strcmp(command, "importedkeys") == 0) {
@@ -426,25 +510,15 @@ int main(int argc, char *argv[])
     } else if (strcmp(command, "sqlmetadata") == 0) {
         fprintf(stderr, "Unimplemented command: %s\n", command);
     } else if (strcmp(command, "supportedcommands") == 0) {
+
+        //cfrds_sql_supportedcommands *supportedcommands = nullptr;
+        //res = cfrds_command_sql_getsupportedcommands(server, &supportedcommands);
+
         fprintf(stderr, "Unimplemented command: %s\n", command);
     } else if (strcmp(command, "dbdescription") == 0) {
     } else {
         fprintf(stderr, "Unknown command: %s\n", command);
     }
 
-exit:
-    if (fd != ERROR_FILE_HND_FD) os_file_close(fd);
-    if (cfroot) free(cfroot);
-    if (path) free(path);
-    if (password) free(password);
-    if (username) free(username);
-    if (hostname) free(hostname);
-    if (dir) cfrds_buffer_browse_dir_free(dir);
-    if (server) cfrds_server_free(server);
-
-#ifdef _WIN32
-    WSACleanup();
-#endif
-
-    return ret;
+    return EXIT_SUCCESS;
 }

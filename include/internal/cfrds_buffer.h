@@ -1,11 +1,14 @@
 #pragma once
 
+#include <stdlib.h>
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
 
+#include <cfrds.h>
 
-#define cfrds_buffer void
+
+typedef void cfrds_buffer;
 
 typedef struct {
     char *host;
@@ -55,6 +58,47 @@ typedef struct {
     cfrds_sql_tableinfoitem_int items[];
 } cfrds_sql_tableinfo_int;
 
+typedef struct {
+    char *schema;
+    char *owner;
+    char *table;
+    char *name;
+    int type;
+    char *typeStr;
+    int percision;
+    int length;
+    int scale;
+    int radix;
+    int nullable;
+} cfrds_sql_columninfoitem_int;
+
+typedef struct {
+    size_t cnt;
+    cfrds_sql_columninfoitem_int items[];
+} cfrds_sql_columninfo_int;
+
+typedef struct {
+    char *tableCatalog;
+    char *tableOwner;
+    char *tableName;
+    char *colName;
+    int keySequence;
+} cfrds_sql_primarykeysitem_int;
+
+typedef struct {
+    size_t cnt;
+    cfrds_sql_primarykeysitem_int items[];
+} cfrds_sql_primarykeys_int;
+
+typedef struct {
+    char *command;
+} cfrds_sql_supportedcommandsitem_int;
+
+typedef struct {
+    size_t cnt;
+    cfrds_sql_supportedcommandsitem_int items[];
+} cfrds_sql_supportedcommands_int;
+
 #ifdef __cplusplus
 extern "C"
 {
@@ -81,11 +125,15 @@ void cfrds_buffer_free(cfrds_buffer *buffer);
 bool cfrds_buffer_parse_number(char **data, size_t *remaining, int64_t *out);
 bool cfrds_buffer_parse_bytearray(char **data, size_t *remaining, char **out, int *out_size);
 bool cfrds_buffer_parse_string(char **data, size_t *remaining, char **out);
+bool cfrds_buffer_parse_string_list_item(char **data, size_t *remaining, char **out);
 
 cfrds_browse_dir_int *cfrds_buffer_to_browse_dir(cfrds_buffer *buffer);
 cfrds_file_content_int *cfrds_buffer_to_file_content(cfrds_buffer *buffer);
 cfrds_sql_dsninfo_int *cfrds_buffer_to_sql_dsninfo(cfrds_buffer *buffer);
 cfrds_sql_tableinfo_int *cfrds_buffer_to_sql_tableinfo(cfrds_buffer *buffer);
+cfrds_sql_columninfo_int *cfrds_buffer_to_sql_columninfo(cfrds_buffer *buffer);
+cfrds_sql_primarykeys_int *cfrds_buffer_to_sql_primarykeys(cfrds_buffer *buffer);
+cfrds_sql_supportedcommands_int *cfrds_buffer_to_sql_supportedcommands(cfrds_buffer *buffer);
 
 bool cfrds_buffer_skip_httpheader(char **data, size_t *size);
 

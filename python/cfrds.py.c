@@ -11,11 +11,11 @@
         {                                                                                        \
             switch(res)                                                                          \
             {                                                                                    \
-            case CFRDS_STATUS_PARAM_IS_NULL:                                                     \
-                PyErr_SetString(PyExc_RuntimeError, "CFRDS_STATUS_PARAM_IS_NULL");               \
+            case CFRDS_STATUS_PARAM_IS_nullptr:                                                  \
+                PyErr_SetString(PyExc_RuntimeError, "CFRDS_STATUS_PARAM_IS_nullptr");            \
                 break;                                                                           \
-            case CFRDS_STATUS_SERVER_IS_NULL:                                                    \
-                PyErr_SetString(PyExc_RuntimeError, "CFRDS_STATUS_SERVER_IS_NULL");              \
+            case CFRDS_STATUS_SERVER_IS_nullptr:                                                 \
+                PyErr_SetString(PyExc_RuntimeError, "CFRDS_STATUS_SERVER_IS_nullptr");           \
                 break;                                                                           \
             case CFRDS_STATUS_INDEX_OUT_OF_BOUNDS:                                               \
                 PyErr_SetString(PyExc_RuntimeError, "CFRDS_STATUS_INDEX_OUT_OF_BOUNDS");         \
@@ -64,11 +64,11 @@ typedef struct {
 static PyObject *
 cfrds_server_new(PyTypeObject *type, PyObject *args, PyObject *kwargs)
 {
-    cfrds_server_Object *self = NULL;
+    cfrds_server_Object *self = nullptr;
 
-    static char *kwlist[] = {"hostname", "port", "username", "password", NULL};
+    static char *kwlist[] = {"hostname", "port", "username", "password", nullptr};
 
-    cfrds_server *server = NULL;
+    cfrds_server *server = nullptr;
     const char *hostname = "127.0.0.1";
     int port = 8500;
     const char *username = "admin";
@@ -85,7 +85,7 @@ cfrds_server_new(PyTypeObject *type, PyObject *args, PyObject *kwargs)
         PyErr_SetString(PyExc_RuntimeError, "cfrds_server_init function failed!");
         goto error;
     }
-    
+
     self = (cfrds_server_Object *) type->tp_alloc(type, 0);
     if (!server)
     {
@@ -103,7 +103,7 @@ error:
         cfrds_server_free(server);
     }
 
-    return NULL;
+    return nullptr;
 }
 
 static int
@@ -112,7 +112,7 @@ cfrds_server_dealloc(cfrds_server_Object *self)
     if (self->server)
     {
         cfrds_server_free(self->server);
-        self->server = NULL;
+        self->server = nullptr;
     }
 
     return 0;
@@ -121,9 +121,9 @@ cfrds_server_dealloc(cfrds_server_Object *self)
 static PyObject *
 cfrds_server_browse_dir(cfrds_server_Object *self, PyObject *args)
 {
-    cfrds_browse_dir *dir = NULL;
-    PyObject *ret = NULL;
-    char *path = NULL;
+    cfrds_browse_dir *dir = nullptr;
+    PyObject *ret = nullptr;
+    char *path = nullptr;
 
     ret = PyList_New(0);
 
@@ -170,9 +170,9 @@ exit:
 static PyObject *
 cfrds_server_file_read(cfrds_server_Object *self, PyObject *args)
 {
-    PyObject *ret = NULL;
-    char *filepath = NULL;
-    cfrds_file_content *file_content = NULL;
+    PyObject *ret = nullptr;
+    char *filepath = nullptr;
+    cfrds_file_content *file_content = nullptr;
 
     if (!PyArg_ParseTuple(args, "s", &filepath))
     {
@@ -193,8 +193,8 @@ exit:
 static PyObject *
 cfrds_server_file_write(cfrds_server_Object *self, PyObject *args)
 {
-    char *filepath = NULL;
-    PyObject *file_content = NULL;
+    char *filepath = nullptr;
+    PyObject *file_content = nullptr;
 
     if (!PyArg_ParseTuple(args, "sY", &filepath, &file_content))
     {
@@ -211,8 +211,8 @@ exit:
 static PyObject *
 cfrds_server_file_rename(cfrds_server_Object *self, PyObject *args)
 {
-    char *filepath_from = NULL;
-    char *filepath_to = NULL;
+    char *filepath_from = nullptr;
+    char *filepath_to = nullptr;
 
     if (!PyArg_ParseTuple(args, "ss", &filepath_from, &filepath_to))
     {
@@ -229,7 +229,7 @@ exit:
 static PyObject *
 cfrds_server_file_remove(cfrds_server_Object *self, PyObject *args)
 {
-    char *filepath = NULL;
+    char *filepath = nullptr;
 
     if (!PyArg_ParseTuple(args, "s", &filepath))
     {
@@ -246,7 +246,7 @@ exit:
 static PyObject *
 cfrds_server_dir_remove(cfrds_server_Object *self, PyObject *args)
 {
-    char *dirpath = NULL;
+    char *dirpath = nullptr;
 
     if (!PyArg_ParseTuple(args, "s", &dirpath))
     {
@@ -263,7 +263,7 @@ exit:
 static PyObject *
 cfrds_server_file_exists(cfrds_server_Object *self, PyObject *args)
 {
-    char *pathname = NULL;
+    char *pathname = nullptr;
     bool exists = false;
 
     if (!PyArg_ParseTuple(args, "s", &pathname))
@@ -283,7 +283,7 @@ exit:
 static PyObject *
 cfrds_server_dir_create(cfrds_server_Object *self, PyObject *args)
 {
-    char *dirpath = NULL;
+    char *dirpath = nullptr;
 
     if (!PyArg_ParseTuple(args, "s", &dirpath))
     {
@@ -300,15 +300,15 @@ exit:
 static PyObject *
 cfrds_server_cf_root_dir(cfrds_server_Object *self)
 {
-    PyObject *ret = NULL;
-    char *dirpath = NULL;
+    PyObject *ret = nullptr;
+    char *dirpath = nullptr;
 
     CHECK_FOR_ERORRS(cfrds_command_file_get_root_dir(self->server, &dirpath));
 
     if (!dirpath)
         goto exit;
 
-    ret = PyUnicode_DecodeUTF8(dirpath, strlen(dirpath), NULL);
+    ret = PyUnicode_DecodeUTF8(dirpath, strlen(dirpath), nullptr);
 
     free(dirpath);
 
@@ -319,30 +319,129 @@ exit:
 }
 
 static PyObject *
-cfrds_server_sql_dnsinfo(cfrds_server_Object *self)
+cfrds_server_sql_dsninfo(cfrds_server_Object *self)
 {
-    PyObject *ret = NULL;
-    cfrds_sql_dnsinfo *dnsinfo = NULL;
+    PyObject *ret = nullptr;
+    cfrds_sql_dsninfo *dsninfo = nullptr;
     size_t cnt = 0;
 
-    CHECK_FOR_ERORRS(cfrds_command_sql_dnsinfo(self->server, &dnsinfo));
+    CHECK_FOR_ERORRS(cfrds_command_sql_dsninfo(self->server, &dsninfo));
 
-    if (!dnsinfo)
+    if (!dsninfo)
         goto exit;
 
-    cnt = cfrds_buffer_sql_dnsinfo_count(dnsinfo);
+    cnt = cfrds_buffer_sql_dsninfo_count(dsninfo);
     ret = PyList_New(cnt);
 
     for(size_t c = 0; c < cnt; c++)
     {
-        PyList_SetItem(ret, c, PyUnicode_FromString(cfrds_buffer_sql_dnsinfo_item_get_name(dnsinfo, c)));
+        PyList_SetItem(ret, c, PyUnicode_FromString(cfrds_buffer_sql_dsninfo_item_get_name(dsninfo, c)));
     }
 
-    cfrds_buffer_sql_dnsinfo_free(dnsinfo);
+    cfrds_buffer_sql_dsninfo_free(dsninfo);
 
     return ret;
 
 exit:
+    return Py_None;
+}
+
+static PyObject *
+cfrds_server_sql_tableinfo(cfrds_server_Object *self, PyObject *args)
+{
+    PyObject *ret = nullptr;
+
+    cfrds_sql_tableinfo *tableinfo = nullptr;
+    size_t cnt = 0;
+
+    char *tablename = nullptr;
+
+    if (!PyArg_ParseTuple(args, "s", &tablename))
+    {
+        PyErr_SetString(PyExc_RuntimeError, "tablename parameter not set!");
+        goto exit;
+    }
+
+    CHECK_FOR_ERORRS(cfrds_command_sql_tableinfo(self->server, tablename, &tableinfo));
+
+    cnt = cfrds_buffer_sql_tableinfo_count(tableinfo);
+    ret = PyList_New(cnt);
+
+    for(size_t c = 0; c < cnt; c++)
+    {
+        PyObject *item = PyDict_New();
+        const char *tmp_name = nullptr;
+
+        tmp_name = cfrds_buffer_sql_tableinfo_get_unknown(tableinfo, c); if (tmp_name) PyDict_SetItemString(item, "unknown", PyUnicode_FromString(tmp_name)); else PyDict_SetItemString(item, "unknown", Py_None);
+        tmp_name = cfrds_buffer_sql_tableinfo_get_schema(tableinfo, c); if (tmp_name) PyDict_SetItemString(item, "schema", PyUnicode_FromString(tmp_name)); else PyDict_SetItemString(item, "schema", Py_None);
+        tmp_name = cfrds_buffer_sql_tableinfo_get_name(tableinfo, c); if (tmp_name) PyDict_SetItemString(item, "name", PyUnicode_FromString(tmp_name)); else PyDict_SetItemString(item, "name", Py_None);
+        tmp_name = cfrds_buffer_sql_tableinfo_get_type(tableinfo, c); if (tmp_name) PyDict_SetItemString(item, "type", PyUnicode_FromString(tmp_name)); else PyDict_SetItemString(item, "type", Py_None);
+
+        PyList_SetItem(ret, c, item);
+    }
+
+    cfrds_buffer_sql_tableinfo_free(tableinfo);
+
+    return ret;
+
+exit:
+    return Py_None;
+}
+
+static PyObject *
+cfrds_server_sql_columninfo(cfrds_server_Object *self, PyObject *args)
+{
+    PyObject *ret = nullptr;
+
+    cfrds_sql_columninfo *columninfo = nullptr;
+    size_t cnt = 0;
+
+    char *tablename = nullptr;
+    char *columnname = nullptr;
+
+    if (!PyArg_ParseTuple(args, "ss", &tablename, &columnname))
+    {
+        PyErr_SetString(PyExc_RuntimeError, "tablename and/or columnname parameter(s) not set!");
+        goto exit;
+    }
+
+    CHECK_FOR_ERORRS(cfrds_command_sql_columninfo(self->server, tablename, columnname, &columninfo));
+
+    cnt = cfrds_buffer_sql_columninfo_count(columninfo);
+    ret = PyList_New(cnt);
+
+    for(size_t c = 0; c < cnt; c++)
+    {
+        PyObject *item = PyDict_New();
+        const char *tmp_name = nullptr;
+
+        tmp_name = cfrds_buffer_sql_columninfo_get_unknown(columninfo, c); if (tmp_name) PyDict_SetItemString(item, "unknown", PyUnicode_FromString(tmp_name)); else PyDict_SetItemString(item, "unknown", Py_None);
+        tmp_name = cfrds_buffer_sql_columninfo_get_schema(columninfo, c); if (tmp_name) PyDict_SetItemString(item, "schema", PyUnicode_FromString(tmp_name)); else PyDict_SetItemString(item, "schema", Py_None);
+        tmp_name = cfrds_buffer_sql_columninfo_get_name(columninfo, c); if (tmp_name) PyDict_SetItemString(item, "name", PyUnicode_FromString(tmp_name)); else PyDict_SetItemString(item, "name", Py_None);
+        tmp_name = cfrds_buffer_sql_columninfo_get_type(columninfo, c); if (tmp_name) PyDict_SetItemString(item, "type", PyUnicode_FromString(tmp_name)); else PyDict_SetItemString(item, "type", Py_None);
+        PyDict_SetItemString(item, "size", PyLong_FromLong(cfrds_buffer_sql_columninfo_get_size(columninfo, c)));
+        PyDict_SetItemString(item, "decimal", PyLong_FromLong(cfrds_buffer_sql_columninfo_get_decimal(columninfo, c)));
+
+        PyList_SetItem(ret, c, item);
+    }
+
+    cfrds_buffer_sql_columninfo_free(columninfo);
+
+    return ret;
+
+exit:
+    return Py_None;
+}
+
+static PyObject *
+cfrds_server_sql_sqlstmnt(cfrds_server_Object *self, PyObject *args)
+{
+    return Py_None;
+}
+
+static PyObject *
+cfrds_server_sql_getsupportedcommands(cfrds_server_Object *self, PyObject *args)
+{
     return Py_None;
 }
 
@@ -356,12 +455,16 @@ static PyMethodDef cfrds_server_methods[] = {
     {"file_exists", (PyCFunction) cfrds_server_file_exists, METH_VARARGS, "File exists"},
     {"dir_create",  (PyCFunction) cfrds_server_dir_create,  METH_VARARGS, "Create dir"},
     {"cf_root_dir", (PyCFunction) cfrds_server_cf_root_dir, METH_VARARGS, "Get ColdFusion root dir"},
-    {"sql_dnsinfo", (PyCFunction) cfrds_server_sql_dnsinfo, METH_VARARGS, "Get ColdFusion datasources"},
-    {NULL}  /* Sentinel */
+    {"sql_dsninfo", (PyCFunction) cfrds_server_sql_dsninfo, METH_VARARGS, "Get ColdFusion datasources"},
+    {"sql_tableinfo", (PyCFunction) cfrds_server_sql_tableinfo, METH_VARARGS, "Get ColdFusion datasource tables"},
+    {"sql_columninfo", (PyCFunction) cfrds_server_sql_columninfo, METH_VARARGS, "Get ColdFusion datasource table columns"},
+    {"sql_sqlstmnt", (PyCFunction) cfrds_server_sql_sqlstmnt, METH_VARARGS, "Execute ColdFusion datasource SQL"},
+    {"sql_getsupportedcommands", (PyCFunction) cfrds_server_sql_getsupportedcommands, METH_VARARGS, "Get ColdFusion datasource supported commands"},
+    {nullptr}  /* Sentinel */
 };
 
 static PyTypeObject cfrds_server_Type = {
-    PyVarObject_HEAD_INIT(NULL, 0)
+    PyVarObject_HEAD_INIT(nullptr, 0)
     .tp_name = "cfrds.server",
     .tp_doc = PyDoc_STR("server objects"),
     .tp_basicsize = sizeof(cfrds_server_Object),
@@ -376,26 +479,26 @@ static PyTypeObject cfrds_server_Type = {
 static PyModuleDef cfrds_module = {
     PyModuleDef_HEAD_INIT,
     "cfrds",
-    "Module for accessing files via cfrds",
+    "Python module for cfrds library",
     -1,
 };
 
 // The module init function
 PyMODINIT_FUNC PyInit_cfrds(void) {
-    PyObject *m = NULL;
+    PyObject *m = nullptr;
 
     if (PyType_Ready(&cfrds_server_Type) < 0)
-        return NULL;
+        return nullptr;
 
     m = PyModule_Create(&cfrds_module);
-    if (m == NULL)
-        return NULL;
+    if (m == nullptr)
+        return nullptr;
 
     Py_INCREF(&cfrds_server_Type);
     if (PyModule_AddObject(m, "server", (PyObject *) &cfrds_server_Type) < 0) {
         Py_DECREF(&cfrds_server_Type);
         Py_DECREF(m);
-        return NULL;
+        return nullptr;
     }
 
     return m;

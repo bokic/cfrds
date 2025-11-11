@@ -25,17 +25,24 @@
 #define close closesocket
 #endif
 
+
 enum cfrds_status cfrds_http_post(cfrds_server_int *server, const char *command, cfrds_buffer *payload, cfrds_buffer **response)
 {
     struct sockaddr_in servaddr;
-    enum cfrds_status ret = CFRDS_STATUS_OK;
-    cfrds_buffer *int_response = NULL;
-    cfrds_buffer *send_buf = NULL;
+
+    cfrds_buffer_defer(int_response);
+    cfrds_buffer_defer(send_buf);
     char datasize_str[16] = {0, };
     ssize_t sock_written = 0;
     uint16_t port = 0;
-    int sockfd = -1;
+    cfrds_fd_defer(sockfd);
+
     int n = 0;
+
+    if (response == nullptr)
+    {
+        return CFRDS_STATUS_PARAM_IS_nullptr;
+    }
 
     port = cfrds_server_get_port(server);
 
@@ -59,8 +66,7 @@ enum cfrds_status cfrds_http_post(cfrds_server_int *server, const char *command,
         if (n < 0)
         {
             cfrds_server_set_error(server, CFRDS_STATUS_MEMORY_ERROR, "snprintf() returned < 0...");
-            ret = CFRDS_STATUS_MEMORY_ERROR;
-            goto exit;
+            return CFRDS_STATUS_MEMORY_ERROR;
         }
         cfrds_buffer_append(send_buf, ":");
         cfrds_buffer_append(send_buf, port_str);
@@ -73,8 +79,7 @@ enum cfrds_status cfrds_http_post(cfrds_server_int *server, const char *command,
     if ((sockfd = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
         server->_errno = errno;
         cfrds_server_set_error(server, CFRDS_STATUS_SOCKET_CREATION_FAILED, "failed to create socket...");
-        ret = CFRDS_STATUS_SOCKET_CREATION_FAILED;
-        goto exit;
+        return CFRDS_STATUS_SOCKET_CREATION_FAILED;
     }
 
     memset(&servaddr, 0, sizeof(servaddr));
@@ -86,8 +91,7 @@ enum cfrds_status cfrds_http_post(cfrds_server_int *server, const char *command,
     if (connect(sockfd, (struct sockaddr *)&servaddr, sizeof(servaddr)) != 0) {
         server->_errno = errno;
         cfrds_server_set_error(server, CFRDS_STATUS_CONNECTION_TO_SERVER_FAILED, "failed to establish connection to the server...");
-        ret = CFRDS_STATUS_CONNECTION_TO_SERVER_FAILED;
-        goto exit;
+        return CFRDS_STATUS_CONNECTION_TO_SERVER_FAILED;
     }
 
     sock_written = send(sockfd, cfrds_buffer_data(send_buf), cfrds_buffer_data_size(send_buf), 0);
@@ -96,15 +100,13 @@ enum cfrds_status cfrds_http_post(cfrds_server_int *server, const char *command,
         {
             server->_errno = errno;
             cfrds_server_set_error(server, CFRDS_STATUS_WRITING_TO_SOCKET_FAILED, "failed to write to socket...");
-            ret = CFRDS_STATUS_WRITING_TO_SOCKET_FAILED;
-            goto exit;
+            return CFRDS_STATUS_WRITING_TO_SOCKET_FAILED;
         }
         else
         {
             server->_errno = errno;
             cfrds_server_set_error(server, CFRDS_STATUS_PARTIALLY_WRITE_TO_SOCKET, "failed to write to all data socket...");
-            ret = CFRDS_STATUS_PARTIALLY_WRITE_TO_SOCKET;
-            goto exit;
+            return CFRDS_STATUS_PARTIALLY_WRITE_TO_SOCKET;
         }
     }
 
@@ -118,8 +120,7 @@ enum cfrds_status cfrds_http_post(cfrds_server_int *server, const char *command,
             if (readed == -1) {
                 server->_errno = errno;
                 cfrds_server_set_error(server, CFRDS_STATUS_READING_FROM_SOCKET_FAILED, "failed to read from socket...");
-                ret = CFRDS_STATUS_READING_FROM_SOCKET_FAILED;
-                goto exit;
+                return CFRDS_STATUS_READING_FROM_SOCKET_FAILED;
             }
             break;
         }
@@ -136,41 +137,27 @@ enum cfrds_status cfrds_http_post(cfrds_server_int *server, const char *command,
     if (strncmp(response_data, good_response, strlen(good_response)) != 0)
     {
         cfrds_server_set_error(server, CFRDS_STATUS_RESPONSE_ERROR, "Invalid server response...");
-        ret = CFRDS_STATUS_RESPONSE_ERROR;
-        goto exit;
+        return CFRDS_STATUS_RESPONSE_ERROR;
     }
 
-    if (cfrds_buffer_skip_httpheader(&response_data, &response_size))
+    if (cfrds_buffer_skip_httpheader(&response_data, &response_size) == false)
+        return CFRDS_STATUS_HTTP_RESPONSE_NOT_FOUND;
+
+    if (!cfrds_buffer_parse_number(&response_data, &response_size, &server->error_code))
     {
-        if (!cfrds_buffer_parse_number(&response_data, &response_size, &server->error_code))
-        {
-            server->error_code = -1;
-            cfrds_server_set_error(server, CFRDS_STATUS_RESPONSE_ERROR, "cfrds_buffer_parse_number FAILED...");
-            ret = CFRDS_STATUS_RESPONSE_ERROR;
-            goto exit;
-        }
-
-        if (server->error_code < 0)
-        {
-            cfrds_server_set_error(server, CFRDS_STATUS_RESPONSE_ERROR, response_data);
-            ret = CFRDS_STATUS_RESPONSE_ERROR;
-            goto exit;
-        }
+        server->error_code = -1;
+        cfrds_server_set_error(server, CFRDS_STATUS_RESPONSE_ERROR, "cfrds_buffer_parse_number FAILED...");
+        return CFRDS_STATUS_RESPONSE_ERROR;
     }
-    else
+
+    if (server->error_code < 0)
     {
-        ret = CFRDS_STATUS_HTTP_RESPONSE_NOT_FOUND;
+        cfrds_server_set_error(server, CFRDS_STATUS_RESPONSE_ERROR, response_data);
+        return CFRDS_STATUS_RESPONSE_ERROR;
     }
 
-exit:
-    if (sockfd > 0)
-        close(sockfd);
-    if (response)
-        *response = int_response;
-    else
-        cfrds_buffer_free(int_response);
-    if (send_buf)
-        cfrds_buffer_free(send_buf);
+    *response = int_response;
+    int_response = nullptr;
 
-    return ret;
+    return CFRDS_STATUS_OK;
 }

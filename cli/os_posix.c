@@ -1,5 +1,9 @@
 #include "os.h"
 
+#ifdef _WIN32
+#error Not a Windows target
+#endif
+
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <sys/mman.h>
@@ -24,19 +28,16 @@ ssize_t os_write(file_hnd_fd hnd_fd, const void *buffer, size_t len)
 
 void* os_map(const char *pathname, size_t* size)
 {
-    void* ret = NULL;
+    void* ret = nullptr;
     struct stat stat;
-    int fd = 0;
+    file_hnd_fd_defer(fd);
 
     fd = open(pathname, O_RDONLY);
-    if (fd == -1) goto exit;
+    if (fd == -1) return nullptr;
 
-    if (fstat(fd, &stat)) goto exit;
+    if (fstat(fd, &stat)) return nullptr;
 
-    ret = mmap(NULL, stat.st_size, PROT_READ, MAP_PRIVATE, fd, 0);
-
-exit:
-    if(fd > 0) close(fd);
+    ret = mmap(nullptr, stat.st_size, PROT_READ, MAP_PRIVATE, fd, 0);
 
     return ret;
 }
@@ -49,4 +50,12 @@ void os_unmap(void* addr, size_t size)
 ssize_t os_write_to_terminal(const void *buffer, size_t len)
 {
     return write(STDOUT_FILENO, buffer, len);
+}
+
+void file_hnd_fd_cleanup(void *fd) {
+    int *fd_int = (int *) fd;
+    if (fd_int) {
+        close(*fd_int);
+        *fd_int = 0;
+    }
 }

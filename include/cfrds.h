@@ -23,17 +23,21 @@ typedef SSIZE_T ssize_t;
  #define EXPORT_CFRDS
 #endif
 
-#define cfrds_server void
-#define cfrds_file_content void
-#define cfrds_browse_dir void
-#define cfrds_sql_dsninfo void
-#define cfrds_sql_tableinfo void
+typedef void cfrds_server;
+typedef void cfrds_buffer;
+typedef void cfrds_file_content;
+typedef void cfrds_browse_dir;
+typedef void cfrds_sql_dsninfo;
+typedef void cfrds_sql_tableinfo;
+typedef void cfrds_sql_columninfo;
+typedef void cfrds_sql_primarykeys;
+typedef void cfrds_sql_supportedcommands;
 
 enum cfrds_status {
     CFRDS_STATUS_OK,
     CFRDS_STATUS_MEMORY_ERROR,
-    CFRDS_STATUS_PARAM_IS_NULL,
-    CFRDS_STATUS_SERVER_IS_NULL,
+    CFRDS_STATUS_PARAM_IS_nullptr,
+    CFRDS_STATUS_SERVER_IS_nullptr,
     CFRDS_STATUS_INDEX_OUT_OF_BOUNDS,
     CFRDS_STATUS_COMMAND_FAILED,
     CFRDS_STATUS_RESPONSE_ERROR,
@@ -46,10 +50,23 @@ enum cfrds_status {
     CFRDS_STATUS_READING_FROM_SOCKET_FAILED,
 };
 
+
+#define cfrds_server_defer(var) cfrds_browse_dir* var __attribute__((cleanup(cfrds_server_cleanup))) = nullptr
+#define cfrds_fd_defer(var) int var __attribute__((cleanup(cfrds_fd_cleanup))) = -1
+#define cfrds_str_defer(var) char* var __attribute__((cleanup(cfrds_str_cleanup))) = nullptr
+#define cfrds_buffer_defer(var) cfrds_buffer* var __attribute__((cleanup(cfrds_buffer_cleanup))) = nullptr
+#define cfrds_browse_dir_defer(var) cfrds_browse_dir* var __attribute__((cleanup(cfrds_browse_dir_cleanup))) = nullptr
+
 #ifdef __cplusplus
 extern "C"
 {
 #endif
+
+EXPORT_CFRDS void cfrds_str_cleanup(char **str);
+EXPORT_CFRDS void cfrds_fd_cleanup(int *fd);
+EXPORT_CFRDS void cfrds_buffer_cleanup(cfrds_buffer **buf);
+EXPORT_CFRDS void cfrds_browse_dir_cleanup(cfrds_browse_dir **buf);
+EXPORT_CFRDS void cfrds_server_cleanup(cfrds_server *server);
 
 EXPORT_CFRDS bool cfrds_server_init(cfrds_server **server, const char *host, uint16_t port, const char *username, const char *password);
 EXPORT_CFRDS void cfrds_server_free(cfrds_server *server);
@@ -79,7 +96,26 @@ EXPORT_CFRDS const char *cfrds_buffer_sql_dsninfo_item_get_name(const cfrds_sql_
 
 EXPORT_CFRDS void cfrds_buffer_sql_tableinfo_free(cfrds_sql_tableinfo *value);
 EXPORT_CFRDS size_t cfrds_buffer_sql_tableinfo_count(const cfrds_sql_tableinfo *value);
-EXPORT_CFRDS const char *cfrds_buffer_sql_tableinfo_field(const cfrds_sql_tableinfo *value, int row, int field);
+EXPORT_CFRDS const char *cfrds_buffer_sql_tableinfo_get_unknown(const cfrds_sql_tableinfo *value, size_t column);
+EXPORT_CFRDS const char *cfrds_buffer_sql_tableinfo_get_schema(const cfrds_sql_tableinfo *value, size_t column);
+EXPORT_CFRDS const char *cfrds_buffer_sql_tableinfo_get_name(const cfrds_sql_tableinfo *value, size_t column);
+EXPORT_CFRDS const char *cfrds_buffer_sql_tableinfo_get_type(const cfrds_sql_tableinfo *value, size_t column);
+
+EXPORT_CFRDS void cfrds_buffer_sql_columninfo_free(cfrds_sql_columninfo *value);
+EXPORT_CFRDS size_t cfrds_buffer_sql_columninfo_count(const cfrds_sql_columninfo *value);
+EXPORT_CFRDS const char *cfrds_buffer_sql_columninfo_get_schema(const cfrds_sql_columninfo *value, size_t column);
+EXPORT_CFRDS const char *cfrds_buffer_sql_columninfo_get_owner(const cfrds_sql_columninfo *value, size_t column);
+EXPORT_CFRDS const char *cfrds_buffer_sql_columninfo_get_table(const cfrds_sql_columninfo *value, size_t column);
+EXPORT_CFRDS const char *cfrds_buffer_sql_columninfo_get_name(const cfrds_sql_columninfo *value, size_t column);
+EXPORT_CFRDS int cfrds_buffer_sql_columninfo_get_type(const cfrds_sql_columninfo *value, size_t column);
+EXPORT_CFRDS const char *cfrds_buffer_sql_columninfo_get_typeStr(const cfrds_sql_columninfo *value, size_t column);
+EXPORT_CFRDS int cfrds_buffer_sql_columninfo_get_percision(const cfrds_sql_columninfo *value, size_t column);
+EXPORT_CFRDS int cfrds_buffer_sql_columninfo_get_length(const cfrds_sql_columninfo *value, size_t column);
+EXPORT_CFRDS int cfrds_buffer_sql_columninfo_get_scale(const cfrds_sql_columninfo *value, size_t column);
+EXPORT_CFRDS int cfrds_buffer_sql_columninfo_get_radix(const cfrds_sql_columninfo *value, size_t column);
+EXPORT_CFRDS int cfrds_buffer_sql_columninfo_get_nullable(const cfrds_sql_columninfo *value, size_t column);
+
+EXPORT_CFRDS void cfrds_buffer_sql_primarykeys_free(cfrds_sql_primarykeys *value);
 
 EXPORT_CFRDS enum cfrds_status cfrds_command_browse_dir(cfrds_server *server, const char *path, cfrds_browse_dir **out);
 EXPORT_CFRDS enum cfrds_status cfrds_command_file_read(cfrds_server *server, const char *pathname, cfrds_file_content **out);
@@ -93,7 +129,23 @@ EXPORT_CFRDS enum cfrds_status cfrds_command_file_get_root_dir(cfrds_server *ser
 
 EXPORT_CFRDS enum cfrds_status cfrds_command_sql_dsninfo(cfrds_server *server, cfrds_sql_dsninfo **dsninfo);
 EXPORT_CFRDS enum cfrds_status cfrds_command_sql_tableinfo(cfrds_server *server, const char *connection_name, cfrds_sql_tableinfo **tableinfo);
+EXPORT_CFRDS enum cfrds_status cfrds_command_sql_columninfo(cfrds_server *server, const char *connection_name, const char *table_name, cfrds_sql_columninfo **columninfo);
+
+// TODO: Unimplemented!
+EXPORT_CFRDS enum cfrds_status cfrds_command_sql_primarykeys(cfrds_server *server, const char *connection_name, const char *table_name, cfrds_sql_primarykeys **primarykeys);
+EXPORT_CFRDS enum cfrds_status cfrds_command_sql_foreignkeys(cfrds_server *server, const char *connection_name, const char *table_name);
+EXPORT_CFRDS enum cfrds_status cfrds_command_sql_importedkeys(cfrds_server *server, const char *connection_name, const char *table_name);
+EXPORT_CFRDS enum cfrds_status cfrds_command_sql_exportedkeys(cfrds_server *server, const char *connection_name, const char *table_name);
+
 EXPORT_CFRDS enum cfrds_status cfrds_command_sql_sqlstmnt(cfrds_server *server, const char *connection_name, const char *sql);
+
+// TODO: Unimplemented!
+EXPORT_CFRDS enum cfrds_status cfrds_command_sql_sqlmetadata(cfrds_server *server, const char *connection_name, const char *sql);
+
+EXPORT_CFRDS enum cfrds_status cfrds_command_sql_getsupportedcommands(cfrds_server *server, cfrds_sql_supportedcommands **supportedcommands);
+
+// TODO: Unimplemented!
+EXPORT_CFRDS enum cfrds_status cfrds_command_sql_dbdescription(cfrds_server *server, const char *connection_name, const char *sql);
 
 #ifdef __cplusplus
 }

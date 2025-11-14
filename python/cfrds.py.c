@@ -413,14 +413,18 @@ cfrds_server_sql_columninfo(cfrds_server_Object *self, PyObject *args)
     for(size_t c = 0; c < cnt; c++)
     {
         PyObject *item = PyDict_New();
-        const char *tmp_name = nullptr;
 
-        tmp_name = cfrds_buffer_sql_columninfo_get_unknown(columninfo, c); if (tmp_name) PyDict_SetItemString(item, "unknown", PyUnicode_FromString(tmp_name)); else PyDict_SetItemString(item, "unknown", Py_None);
-        tmp_name = cfrds_buffer_sql_columninfo_get_schema(columninfo, c); if (tmp_name) PyDict_SetItemString(item, "schema", PyUnicode_FromString(tmp_name)); else PyDict_SetItemString(item, "schema", Py_None);
-        tmp_name = cfrds_buffer_sql_columninfo_get_name(columninfo, c); if (tmp_name) PyDict_SetItemString(item, "name", PyUnicode_FromString(tmp_name)); else PyDict_SetItemString(item, "name", Py_None);
-        tmp_name = cfrds_buffer_sql_columninfo_get_type(columninfo, c); if (tmp_name) PyDict_SetItemString(item, "type", PyUnicode_FromString(tmp_name)); else PyDict_SetItemString(item, "type", Py_None);
-        PyDict_SetItemString(item, "size", PyLong_FromLong(cfrds_buffer_sql_columninfo_get_size(columninfo, c)));
-        PyDict_SetItemString(item, "decimal", PyLong_FromLong(cfrds_buffer_sql_columninfo_get_decimal(columninfo, c)));
+        PyDict_SetItemString(item, "schema", PyUnicode_FromString(cfrds_buffer_sql_columninfo_get_schema(columninfo, c)));
+        PyDict_SetItemString(item, "owner", PyUnicode_FromString(cfrds_buffer_sql_columninfo_get_owner(columninfo, c)));
+        PyDict_SetItemString(item, "table", PyUnicode_FromString(cfrds_buffer_sql_columninfo_get_table(columninfo, c)));
+        PyDict_SetItemString(item, "name", PyUnicode_FromString(cfrds_buffer_sql_columninfo_get_name(columninfo, c)));
+        PyDict_SetItemString(item, "type", PyLong_FromLong(cfrds_buffer_sql_columninfo_get_type(columninfo, c)));
+        PyDict_SetItemString(item, "typeStr", PyUnicode_FromString(cfrds_buffer_sql_columninfo_get_typeStr(columninfo, c)));
+        PyDict_SetItemString(item, "precision", PyLong_FromLong(cfrds_buffer_sql_columninfo_get_precision(columninfo, c)));
+        PyDict_SetItemString(item, "length", PyLong_FromLong(cfrds_buffer_sql_columninfo_get_length(columninfo, c)));
+        PyDict_SetItemString(item, "scale", PyLong_FromLong(cfrds_buffer_sql_columninfo_get_scale(columninfo, c)));
+        PyDict_SetItemString(item, "radix", PyLong_FromLong(cfrds_buffer_sql_columninfo_get_radix(columninfo, c)));
+        PyDict_SetItemString(item, "nullable", PyLong_FromLong(cfrds_buffer_sql_columninfo_get_nullable(columninfo, c)));
 
         PyList_SetItem(ret, c, item);
     }
@@ -434,15 +438,361 @@ exit:
 }
 
 static PyObject *
+cfrds_server_sql_primarykeys(cfrds_server_Object *self, PyObject *args)
+{
+    PyObject *ret = nullptr;
+
+    cfrds_sql_primarykeys *primarykeys = nullptr;
+    size_t cnt = 0;
+
+    const char *tablename = nullptr;
+    const char *columnname = nullptr;
+
+    if (!PyArg_ParseTuple(args, "ss", &tablename, &columnname))
+    {
+        PyErr_SetString(PyExc_RuntimeError, "tablename and/or columnname parameter(s) not set!");
+        goto exit;
+    }
+
+    CHECK_FOR_ERORRS(cfrds_command_sql_primarykeys(self->server, tablename, columnname, &primarykeys));
+
+    cnt = cfrds_buffer_sql_primarykeys_count(primarykeys);
+    ret = PyList_New(cnt);
+    if (ret == NULL)
+    {
+        PyErr_SetString(PyExc_RuntimeError, "Failed to create list");
+        goto exit;
+    }
+
+    for(size_t c = 0; c < cnt; c++)
+    {
+        PyObject *item = PyDict_New();
+
+        PyDict_SetItemString(item, "catalog", PyUnicode_FromString(cfrds_buffer_sql_primarykeys_get_catalog(primarykeys, c)));
+        PyDict_SetItemString(item, "owner", PyUnicode_FromString(cfrds_buffer_sql_primarykeys_get_owner(primarykeys, c)));
+        PyDict_SetItemString(item, "table", PyUnicode_FromString(cfrds_buffer_sql_primarykeys_get_table(primarykeys, c)));
+        PyDict_SetItemString(item, "column", PyUnicode_FromString(cfrds_buffer_sql_primarykeys_get_column(primarykeys, c)));
+        PyDict_SetItemString(item, "key_sequence", PyLong_FromLong(cfrds_buffer_sql_primarykeys_get_key_sequence(primarykeys, c)));
+
+        PyList_SetItem(ret, c, item);
+    }
+
+    cfrds_buffer_sql_primarykeys_free(primarykeys);
+
+exit:
+    return ret;
+}
+
+static PyObject *
+cfrds_server_sql_foreignkeys(cfrds_server_Object *self, PyObject *args)
+{
+    PyObject *ret = nullptr;
+
+    cfrds_sql_foreignkeys *foreignkeys = nullptr;
+    size_t cnt = 0;
+
+    const char *tablename = nullptr;
+    const char *columnname = nullptr;
+
+    if (!PyArg_ParseTuple(args, "ss", &tablename, &columnname))
+    {
+        PyErr_SetString(PyExc_RuntimeError, "tablename and/or columnname parameter(s) not set!");
+        goto exit;
+    }
+
+    CHECK_FOR_ERORRS(cfrds_command_sql_foreignkeys(self->server, tablename, columnname, &foreignkeys));
+
+    cnt = cfrds_buffer_sql_foreignkeys_count(foreignkeys);
+    ret = PyList_New(cnt);
+    if (ret == NULL)
+    {
+        PyErr_SetString(PyExc_RuntimeError, "Failed to create list");
+        goto exit;
+    }
+
+    for(size_t c = 0; c < cnt; c++)
+    {
+        PyObject *item = PyDict_New();
+
+        PyDict_SetItemString(item, "pkcatalog", PyUnicode_FromString(cfrds_buffer_sql_foreignkeys_get_pkcatalog(foreignkeys, c)));
+        PyDict_SetItemString(item, "pkowner", PyUnicode_FromString(cfrds_buffer_sql_foreignkeys_get_pkowner(foreignkeys, c)));
+        PyDict_SetItemString(item, "pktable", PyUnicode_FromString(cfrds_buffer_sql_foreignkeys_get_pktable(foreignkeys, c)));
+        PyDict_SetItemString(item, "pkcolumn", PyUnicode_FromString(cfrds_buffer_sql_foreignkeys_get_pkcolumn(foreignkeys, c)));
+        PyDict_SetItemString(item, "fkcatalog", PyUnicode_FromString(cfrds_buffer_sql_foreignkeys_get_fkcatalog(foreignkeys, c)));
+        PyDict_SetItemString(item, "fkowner", PyUnicode_FromString(cfrds_buffer_sql_foreignkeys_get_fkowner(foreignkeys, c)));
+        PyDict_SetItemString(item, "fktable", PyUnicode_FromString(cfrds_buffer_sql_foreignkeys_get_fktable(foreignkeys, c)));
+        PyDict_SetItemString(item, "fkcolumn", PyUnicode_FromString(cfrds_buffer_sql_foreignkeys_get_fkcolumn(foreignkeys, c)));
+        PyDict_SetItemString(item, "key_sequence", PyLong_FromLong(cfrds_buffer_sql_foreignkeys_get_key_sequence(foreignkeys, c)));
+        PyDict_SetItemString(item, "updaterule", PyLong_FromLong(cfrds_buffer_sql_foreignkeys_get_updaterule(foreignkeys, c)));
+        PyDict_SetItemString(item, "deleterule", PyLong_FromLong(cfrds_buffer_sql_foreignkeys_get_deleterule(foreignkeys, c)));
+
+        PyList_SetItem(ret, c, item);
+    }
+
+    cfrds_buffer_sql_foreignkeys_free(foreignkeys);
+
+exit:
+    return ret;
+}
+
+static PyObject *
+cfrds_server_sql_importedkeys(cfrds_server_Object *self, PyObject *args)
+{
+    PyObject *ret = nullptr;
+
+    cfrds_sql_importedkeys *importedkeys = nullptr;
+    size_t cnt = 0;
+
+    const char *tablename = nullptr;
+    const char *columnname = nullptr;
+
+    if (!PyArg_ParseTuple(args, "ss", &tablename, &columnname))
+    {
+        PyErr_SetString(PyExc_RuntimeError, "tablename and/or columnname parameter(s) not set!");
+        goto exit;
+    }
+
+    CHECK_FOR_ERORRS(cfrds_command_sql_importedkeys(self->server, tablename, columnname, &importedkeys));
+
+    cnt = cfrds_buffer_sql_importedkeys_count(importedkeys);
+    ret = PyList_New(cnt);
+    if (ret == NULL)
+    {
+        PyErr_SetString(PyExc_RuntimeError, "Failed to create list");
+        goto exit;
+    }
+
+    for(size_t c = 0; c < cnt; c++)
+    {
+        PyObject *item = PyDict_New();
+
+        PyDict_SetItemString(item, "pkcatalog", PyUnicode_FromString(cfrds_buffer_sql_importedkeys_get_pkcatalog(importedkeys, c)));
+        PyDict_SetItemString(item, "pkowner", PyUnicode_FromString(cfrds_buffer_sql_importedkeys_get_pkowner(importedkeys, c)));
+        PyDict_SetItemString(item, "pktable", PyUnicode_FromString(cfrds_buffer_sql_importedkeys_get_pktable(importedkeys, c)));
+        PyDict_SetItemString(item, "pkcolumn", PyUnicode_FromString(cfrds_buffer_sql_importedkeys_get_pkcolumn(importedkeys, c)));
+        PyDict_SetItemString(item, "fkcatalog", PyUnicode_FromString(cfrds_buffer_sql_importedkeys_get_fkcatalog(importedkeys, c)));
+        PyDict_SetItemString(item, "fkowner", PyUnicode_FromString(cfrds_buffer_sql_importedkeys_get_fkowner(importedkeys, c)));
+        PyDict_SetItemString(item, "fktable", PyUnicode_FromString(cfrds_buffer_sql_importedkeys_get_fktable(importedkeys, c)));
+        PyDict_SetItemString(item, "fkcolumn", PyUnicode_FromString(cfrds_buffer_sql_importedkeys_get_fkcolumn(importedkeys, c)));
+        PyDict_SetItemString(item, "key_sequence", PyLong_FromLong(cfrds_buffer_sql_importedkeys_get_key_sequence(importedkeys, c)));
+        PyDict_SetItemString(item, "updaterule", PyLong_FromLong(cfrds_buffer_sql_importedkeys_get_updaterule(importedkeys, c)));
+        PyDict_SetItemString(item, "deleterule", PyLong_FromLong(cfrds_buffer_sql_importedkeys_get_deleterule(importedkeys, c)));
+
+        PyList_SetItem(ret, c, item);
+    }
+
+    cfrds_buffer_sql_importedkeys_free(importedkeys);
+
+exit:
+    return ret;
+}
+
+static PyObject *
+cfrds_server_sql_exportedkeys(cfrds_server_Object *self, PyObject *args)
+{
+    PyObject *ret = nullptr;
+
+    cfrds_sql_exportedkeys *exportedkeys = nullptr;
+    size_t cnt = 0;
+
+    const char *tablename = nullptr;
+    const char *columnname = nullptr;
+
+    if (!PyArg_ParseTuple(args, "ss", &tablename, &columnname))
+    {
+        PyErr_SetString(PyExc_RuntimeError, "tablename and/or columnname parameter(s) not set!");
+        goto exit;
+    }
+
+    CHECK_FOR_ERORRS(cfrds_command_sql_exportedkeys(self->server, tablename, columnname, &exportedkeys));
+
+    cnt = cfrds_buffer_sql_exportedkeys_count(exportedkeys);
+    ret = PyList_New(cnt);
+    if (ret == NULL)
+    {
+        PyErr_SetString(PyExc_RuntimeError, "Failed to create list");
+        goto exit;
+    }
+
+    for(size_t c = 0; c < cnt; c++)
+    {
+        PyObject *item = PyDict_New();
+
+        PyDict_SetItemString(item, "pkcatalog", PyUnicode_FromString(cfrds_buffer_sql_exportedkeys_get_pkcatalog(exportedkeys, c)));
+        PyDict_SetItemString(item, "pkowner", PyUnicode_FromString(cfrds_buffer_sql_exportedkeys_get_pkowner(exportedkeys, c)));
+        PyDict_SetItemString(item, "pktable", PyUnicode_FromString(cfrds_buffer_sql_exportedkeys_get_pktable(exportedkeys, c)));
+        PyDict_SetItemString(item, "pkcolumn", PyUnicode_FromString(cfrds_buffer_sql_exportedkeys_get_pkcolumn(exportedkeys, c)));
+        PyDict_SetItemString(item, "fkcatalog", PyUnicode_FromString(cfrds_buffer_sql_exportedkeys_get_fkcatalog(exportedkeys, c)));
+        PyDict_SetItemString(item, "fkowner", PyUnicode_FromString(cfrds_buffer_sql_exportedkeys_get_fkowner(exportedkeys, c)));
+        PyDict_SetItemString(item, "fktable", PyUnicode_FromString(cfrds_buffer_sql_exportedkeys_get_fktable(exportedkeys, c)));
+        PyDict_SetItemString(item, "fkcolumn", PyUnicode_FromString(cfrds_buffer_sql_exportedkeys_get_fkcolumn(exportedkeys, c)));
+        PyDict_SetItemString(item, "key_sequence", PyLong_FromLong(cfrds_buffer_sql_exportedkeys_get_key_sequence(exportedkeys, c)));
+        PyDict_SetItemString(item, "updaterule", PyLong_FromLong(cfrds_buffer_sql_exportedkeys_get_updaterule(exportedkeys, c)));
+        PyDict_SetItemString(item, "deleterule", PyLong_FromLong(cfrds_buffer_sql_exportedkeys_get_deleterule(exportedkeys, c)));
+
+        PyList_SetItem(ret, c, item);
+    }
+
+    cfrds_buffer_sql_exportedkeys_free(exportedkeys);
+
+exit:
+    return ret;
+}
+
+static PyObject *
 cfrds_server_sql_sqlstmnt(cfrds_server_Object *self, PyObject *args)
 {
-    return Py_None;
+    PyObject *ret = Py_None;
+
+    cfrds_sql_resultset *resultset = nullptr;
+
+    const char *tablename = nullptr;
+    const char *sql = nullptr;
+
+    if (!PyArg_ParseTuple(args, "ss", &tablename, &sql))
+    {
+        PyErr_SetString(PyExc_RuntimeError, "tablename and/or sql parameter(s) not set!");
+        goto exit;
+    }
+
+    CHECK_FOR_ERORRS(cfrds_command_sql_sqlstmnt(self->server, tablename, sql, &resultset));
+
+    ret = PyDict_New();
+    if (ret == NULL)
+    {
+        PyErr_SetString(PyExc_RuntimeError, "Failed to create list");
+        goto exit;
+    }
+
+    size_t cols = cfrds_buffer_sql_resultset_columns(resultset);
+    size_t rows = cfrds_buffer_sql_resultset_rows(resultset);
+
+    PyDict_SetItemString(ret, "columns", PyLong_FromLong(cols));
+    PyDict_SetItemString(ret, "rows", PyLong_FromLong(rows));
+
+    PyObject *names = PyList_New(cols);
+    for(size_t c = 0; c < cols; c++)
+    {
+        PyObject *name = PyUnicode_FromString(cfrds_buffer_sql_resultset_column_name(resultset, c));
+        PyList_SetItem(names, c, name);
+    }
+    PyDict_SetItemString(ret, "names", names);
+
+    PyObject *data = PyList_New(rows);
+    for(size_t r = 0; r < rows; r++)
+    {
+        PyObject *row = PyList_New(cols);
+        for(size_t c = 0; c < cols; c++)
+        {
+            PyObject *value = PyUnicode_FromString(cfrds_buffer_sql_resultset_value(resultset, r, c));
+            PyList_SetItem(row, c, value);
+        }
+        PyList_SetItem(data, r, row);
+    }
+    PyDict_SetItemString(ret, "data", data);
+
+    cfrds_buffer_sql_resultset_free(resultset);
+
+exit:
+    return ret;
+}
+
+static PyObject *
+cfrds_server_sql_metadata(cfrds_server_Object *self, PyObject *args)
+{
+    PyObject *ret = Py_None;
+
+    cfrds_sql_metadata *metadata = nullptr;
+
+    const char *tablename = nullptr;
+    const char *sql = nullptr;
+    size_t cols = 0;
+
+    if (!PyArg_ParseTuple(args, "ss", &tablename, &sql))
+    {
+        PyErr_SetString(PyExc_RuntimeError, "tablename and/or sql parameter(s) not set!");
+        goto exit;
+    }
+
+    CHECK_FOR_ERORRS(cfrds_command_sql_sqlmetadata(self->server, tablename, sql, &metadata));
+
+    cols = cfrds_buffer_sql_metadata_count(metadata);
+
+    ret = PyList_New(cols);
+    if (ret == NULL)
+    {
+        PyErr_SetString(PyExc_RuntimeError, "Failed to create list");
+        goto exit;
+    }
+
+    for(size_t c = 0; c < cols; c++)
+    {
+        PyObject *item = PyDict_New();
+
+        PyDict_SetItemString(item, "name", PyUnicode_FromString(cfrds_buffer_sql_metadata_get_name(metadata, c)));
+        PyDict_SetItemString(item, "type", PyUnicode_FromString(cfrds_buffer_sql_metadata_get_type(metadata, c)));
+        PyDict_SetItemString(item, "jtype", PyUnicode_FromString(cfrds_buffer_sql_metadata_get_jtype(metadata, c)));
+
+        PyList_SetItem(ret, c, item);
+    }
+
+    cfrds_buffer_sql_metadata_free(metadata);
+
+exit:
+    return ret;
 }
 
 static PyObject *
 cfrds_server_sql_getsupportedcommands(cfrds_server_Object *self, PyObject *args)
 {
-    return Py_None;
+    PyObject *ret = Py_None;
+
+    cfrds_sql_supportedcommands *supportedcommands = nullptr;
+
+    size_t cols = 0;
+
+    CHECK_FOR_ERORRS(cfrds_command_sql_getsupportedcommands(self->server, &supportedcommands));
+
+    cols = cfrds_buffer_sql_supportedcommands_count(supportedcommands);
+
+    ret = PyList_New(cols);
+    if (ret == NULL)
+    {
+        PyErr_SetString(PyExc_RuntimeError, "Failed to create list");
+        goto exit;
+    }
+
+    for(size_t c = 0; c < cols; c++)
+    {
+        PyObject *value = PyUnicode_FromString(cfrds_buffer_sql_supportedcommands_get(supportedcommands, c));
+        PyList_SetItem(ret, c, value);
+    }
+
+exit:
+    return ret;
+}
+
+static PyObject *
+cfrds_server_sql_dbdescription(cfrds_server_Object *self, PyObject *args)
+{
+    PyObject *ret = Py_None;
+
+    cfrds_str_defer(dbdescription);
+
+    const char *tablename = nullptr;
+
+    if (!PyArg_ParseTuple(args, "s", &tablename))
+    {
+        PyErr_SetString(PyExc_RuntimeError, "tablename parameter not set!");
+        goto exit;
+    }
+
+    CHECK_FOR_ERORRS(cfrds_command_sql_dbdescription(self->server, tablename, &dbdescription));
+
+    ret = PyUnicode_FromString(dbdescription);
+
+    exit:
+        return ret;
 }
 
 static PyMethodDef cfrds_server_methods[] = {
@@ -458,8 +808,14 @@ static PyMethodDef cfrds_server_methods[] = {
     {"sql_dsninfo", (PyCFunction) cfrds_server_sql_dsninfo, METH_VARARGS, "Get ColdFusion datasources"},
     {"sql_tableinfo", (PyCFunction) cfrds_server_sql_tableinfo, METH_VARARGS, "Get ColdFusion datasource tables"},
     {"sql_columninfo", (PyCFunction) cfrds_server_sql_columninfo, METH_VARARGS, "Get ColdFusion datasource table columns"},
+    {"sql_primarykeys", (PyCFunction) cfrds_server_sql_primarykeys, METH_VARARGS, "Get ColdFusion datasource table primary keys"},
+    {"sql_foreignkeys", (PyCFunction) cfrds_server_sql_foreignkeys, METH_VARARGS, "Get ColdFusion datasource table foreign keys"},
+    {"sql_importedkeys", (PyCFunction) cfrds_server_sql_importedkeys, METH_VARARGS, "Get ColdFusion datasource table imported keys"},
+    {"sql_exportedkeys", (PyCFunction) cfrds_server_sql_exportedkeys, METH_VARARGS, "Get ColdFusion datasource table exported keys"},
     {"sql_sqlstmnt", (PyCFunction) cfrds_server_sql_sqlstmnt, METH_VARARGS, "Execute ColdFusion datasource SQL"},
+    {"sql_metadata", (PyCFunction) cfrds_server_sql_metadata, METH_VARARGS, "Get ColdFusion datasource metadata"},
     {"sql_getsupportedcommands", (PyCFunction) cfrds_server_sql_getsupportedcommands, METH_VARARGS, "Get ColdFusion datasource supported commands"},
+    {"sql_dbdescription", (PyCFunction) cfrds_server_sql_dbdescription, METH_VARARGS, "Get ColdFusion datasource database description"},
     {nullptr}  /* Sentinel */
 };
 

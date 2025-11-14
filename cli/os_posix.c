@@ -33,9 +33,11 @@ void* os_map(const char *pathname, size_t* size)
     file_hnd_fd_defer(fd);
 
     fd = open(pathname, O_RDONLY);
-    if (fd == -1) return nullptr;
+    if (fd == -1)
+        return nullptr;
 
-    if (fstat(fd, &stat)) return nullptr;
+    if (fstat(fd, &stat))
+        return nullptr;
 
     ret = mmap(nullptr, stat.st_size, PROT_READ, MAP_PRIVATE, fd, 0);
 

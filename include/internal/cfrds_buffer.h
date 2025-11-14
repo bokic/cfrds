@@ -91,12 +91,82 @@ typedef struct {
 } cfrds_sql_primarykeys_int;
 
 typedef struct {
-    char *command;
-} cfrds_sql_supportedcommandsitem_int;
+    char *pkTableCatalog;
+    char *pkTableOwner;
+    char *pkTableName;
+    char *pkColName;
+    char *fkTableCatalog;
+    char *fkTableOwner;
+    char *fkTableName;
+    char *fkColName;
+    int keySequence;
+    int updateRule;
+    int deleteRule;
+} cfrds_sql_foreignkeysitem_int;
 
 typedef struct {
     size_t cnt;
-    cfrds_sql_supportedcommandsitem_int items[];
+    cfrds_sql_foreignkeysitem_int items[];
+} cfrds_sql_foreignkeys_int;
+
+typedef struct {
+    char *pkTableCatalog;
+    char *pkTableOwner;
+    char *pkTableName;
+    char *pkColName;
+    char *fkTableCatalog;
+    char *fkTableOwner;
+    char *fkTableName;
+    char *fkColName;
+    int keySequence;
+    int updateRule;
+    int deleteRule;
+} cfrds_sql_importedkeysitem_int;
+
+typedef struct {
+    size_t cnt;
+    cfrds_sql_importedkeysitem_int items[];
+} cfrds_sql_importedkeys_int;
+
+typedef struct {
+    char *pkTableCatalog;
+    char *pkTableOwner;
+    char *pkTableName;
+    char *pkColName;
+    char *fkTableCatalog;
+    char *fkTableOwner;
+    char *fkTableName;
+    char *fkColName;
+    int keySequence;
+    int updateRule;
+    int deleteRule;
+} cfrds_sql_exportedkeysitem_int;
+
+typedef struct {
+    size_t cnt;
+    cfrds_sql_exportedkeysitem_int items[];
+} cfrds_sql_exportedkeys_int;
+
+typedef struct {
+    size_t columns;
+    size_t rows;
+    char *values[];
+} cfrds_sql_resultset_int;
+
+typedef struct {
+    char *name;
+    char *type;
+    char *jtype;
+} cfrds_sql_metadataitem_int;
+
+typedef struct {
+    size_t cnt;
+    cfrds_sql_metadataitem_int items[];
+} cfrds_sql_metadata_int;
+
+typedef struct {
+    size_t cnt;
+    char *commands[];
 } cfrds_sql_supportedcommands_int;
 
 #ifdef __cplusplus
@@ -133,7 +203,13 @@ cfrds_sql_dsninfo_int *cfrds_buffer_to_sql_dsninfo(cfrds_buffer *buffer);
 cfrds_sql_tableinfo_int *cfrds_buffer_to_sql_tableinfo(cfrds_buffer *buffer);
 cfrds_sql_columninfo_int *cfrds_buffer_to_sql_columninfo(cfrds_buffer *buffer);
 cfrds_sql_primarykeys_int *cfrds_buffer_to_sql_primarykeys(cfrds_buffer *buffer);
+cfrds_sql_foreignkeys_int *cfrds_buffer_to_sql_foreignkeys(cfrds_buffer *buffer);
+cfrds_sql_importedkeys_int *cfrds_buffer_to_sql_importedkeys(cfrds_buffer *buffer);
+cfrds_sql_exportedkeys_int *cfrds_buffer_to_sql_exportedkeys(cfrds_buffer *buffer);
+cfrds_sql_resultset_int *cfrds_buffer_to_sql_sqlstmnt(cfrds_buffer *buffer);
+cfrds_sql_metadata_int *cfrds_buffer_to_sql_metadata(cfrds_buffer *buffer);
 cfrds_sql_supportedcommands_int *cfrds_buffer_to_sql_supportedcommands(cfrds_buffer *buffer);
+char *cfrds_buffer_to_sql_dbdescription(cfrds_buffer *buffer);
 
 bool cfrds_buffer_skip_httpheader(char **data, size_t *size);
 

@@ -43,6 +43,10 @@ static void usage()
            "         example: `cfrds put local_file rds://username:password@host/pathname`\n"
            "            or    `cfrds upload local_file rds://username:password@host/pathname`\n"
            "\n"
+           "  - 'mv', 'move' - Moves/renames file or folder.\n"
+           "         example: `cfrds mv rds://username:password@host/pathname {new_name}`\n"
+           "            or    `cfrds upload rds://username:password@host/pathname {new_name}`\n"
+           "\n"
            "  - 'rm', 'delete' - Delete a file to server.\n"
            "         example: `cfrds rm rds://username:password@host/pathname`\n"
            "            or    `cfrds delete rds://username:password@host/pathname`\n"
@@ -59,11 +63,32 @@ static void usage()
            "  - 'dsninfo' - Return ColdFusion data sources.\n"
            "         example: `cfrds dsninfo rds://username:password@host`\n"
            "\n"
-           "  - 'tableinfo' - Return ColdFusion data sources.\n"
+           "  - 'tableinfo' - Return ColdFusion datasource tables info.\n"
            "         example: `cfrds tableinfo rds://username:password@host/dsn`\n"
            "\n"
-           "  - 'sql' - Return ColdFusion data sources.\n"
-           "         example: `cfrds sql \"SELECT 1\" rds://username:password@host/dsn`\n"
+           "  - 'columninfo' - Return ColdFusion datasource table columns info.\n"
+           "         example: `cfrds columninfo rds://username:password@host/dsn/table`\n"
+           "\n"
+           "  - 'primarykeys' - Return ColdFusion datasource table primary keys info.\n"
+           "         example: `cfrds primarykeys rds://username:password@host/dsn/table`\n"
+           "\n"
+           "  - 'foreignkeys' - Return ColdFusion datasource table foreign keys info.\n"
+           "         example: `cfrds foreignkeys rds://username:password@host/dsn/table`\n"
+           "\n"
+           "  - 'importedkeys' - Return ColdFusion datasource table imported keys info.\n"
+           "         example: `cfrds importedkeys rds://username:password@host/dsn/table`\n"
+           "\n"
+           "  - 'exportedkeys' - Return ColdFusion datasource table exported keys info.\n"
+           "         example: `cfrds exportedkeys rds://username:password@host/dsn/table`\n"
+           "\n"
+           "  - 'sql' - Executes SQL statement on ColdFusion data sources.\n"
+           "         example: `cfrds sql rds://username:password@host/dsn` \"SELECT 1\"\n"
+           "\n"
+           "  - 'sqlmetadata' - Return SQL statement metadata on ColdFusion data sources.\n"
+           "         example: `cfrds sqlmetadata rds://username:password@host/dsn` \"SELECT 1\"\n"
+           "\n"
+           "  - 'dbdescription' - Return ColdFusion data sources database info.\n"
+           "         example: `cfrds dbdescription rds://username:password@host/dsn`\n"
            );
 }
 
@@ -354,7 +379,7 @@ int main(int argc, char *argv[])
 
         puts(cfroot);
     } else if (strcmp(command, "dsninfo") == 0) {
-        cfrds_sql_dsninfo *dsninfo = nullptr;
+        cfrds_sql_dsninfo_defer(dsninfo);
         res = cfrds_command_sql_dsninfo(server, &dsninfo);
         if (res != CFRDS_STATUS_OK)
         {
@@ -368,12 +393,10 @@ int main(int argc, char *argv[])
             const char *item = cfrds_buffer_sql_dsninfo_item_get_name(dsninfo, c);
             puts(item);
         }
-
-        cfrds_buffer_sql_dsninfo_free(dsninfo);
     } else if (strcmp(command, "tableinfo") == 0) {
         if ((path != nullptr)&&(strlen(path) > 1))
         {
-            cfrds_sql_tableinfo *tableinfo = nullptr;
+            cfrds_sql_tableinfo_defer(tableinfo);
             const char *dsn = path + 1;
 
             res = cfrds_command_sql_tableinfo(server, dsn, &tableinfo);
@@ -390,8 +413,6 @@ int main(int argc, char *argv[])
                 const char *type = cfrds_buffer_sql_tableinfo_get_type(tableinfo, c);
                 printf("%s, %s\n", name, type);
             }
-
-            cfrds_buffer_sql_tableinfo_free(tableinfo);
         } else {
             fprintf(stderr, "No schema name\n");
         }
@@ -401,9 +422,9 @@ int main(int argc, char *argv[])
             char *schema = path + 1;
             char *table = strchr(schema, '/');
             if(table) {
-                cfrds_sql_columninfo *columninfo = nullptr;
+                cfrds_sql_columninfo_defer(columninfo);
                 int tmp_size = 0;
-                char *tmp = nullptr;
+                cfrds_str_defer(tmp);
 
                 tmp_size = table - schema;
                 tmp = malloc(tmp_size + 1);
@@ -425,10 +446,6 @@ int main(int argc, char *argv[])
                 }
 
                 res = cfrds_command_sql_columninfo(server, schema, table, &columninfo);
-
-                free(table); table = nullptr;
-                free(schema); schema = nullptr;
-
                 if (res != CFRDS_STATUS_OK)
                 {
                     fprintf(stderr, "columninfo FAILED with error: %s\n", cfrds_server_get_error(server));
@@ -442,8 +459,6 @@ int main(int argc, char *argv[])
                     const char *type = cfrds_buffer_sql_columninfo_get_typeStr(columninfo, c);
                     printf("%s, %s\n", name, type);
                 }
-
-                cfrds_buffer_sql_columninfo_free(columninfo);
             } else {
                 fprintf(stderr, "No table name\n");
             }
@@ -456,9 +471,10 @@ int main(int argc, char *argv[])
             char *schema = path + 1;
             char *table = strchr(schema, '/');
             if(table) {
-                cfrds_sql_primarykeys *primarykeys = nullptr;
+                cfrds_sql_primarykeys_defer(primarykeys);
+                cfrds_str_defer(tablename);
                 int tmp_size = 0;
-                char *tmp = nullptr;
+                cfrds_str_defer(tmp);
 
                 tmp_size = table - schema;
                 tmp = malloc(tmp_size + 1);
@@ -469,30 +485,28 @@ int main(int argc, char *argv[])
                 tmp[tmp_size] = '\0';
                 schema = tmp;
 
-                table = strdup(table + 1);
-                if (table == nullptr)
+                tablename = strdup(table + 1);
+                if (tablename == nullptr)
                     return EXIT_FAILURE;
 
-                res = cfrds_command_sql_primarykeys(server, schema, table, &primarykeys);
-
-                //free(table); table = nullptr;
-                //free(schema); schema = nullptr;
-
+                res = cfrds_command_sql_primarykeys(server, schema, tablename, &primarykeys);
                 if (res != CFRDS_STATUS_OK)
                 {
                     fprintf(stderr, "primarykeys FAILED with error: %s\n", cfrds_server_get_error(server));
                     return EXIT_FAILURE;
                 }
 
-                /*size_t cnt = cfrds_buffer_sql_columninfo_count(columninfo);
+                size_t cnt = cfrds_buffer_sql_primarykeys_count(primarykeys);
                 for(size_t c = 0; c < cnt; c++)
                 {
-                    const char *name = cfrds_buffer_sql_columninfo_get_name(columninfo, c);
-                    const char *type = cfrds_buffer_sql_columninfo_get_type(columninfo, c);
-                    printf("%s, %s\n", name, type);
-                }*/
+                    const char *col_name = cfrds_buffer_sql_primarykeys_get_catalog(primarykeys, c);
+                    const char *col_owner = cfrds_buffer_sql_primarykeys_get_owner(primarykeys, c);
+                    const char *col_table = cfrds_buffer_sql_primarykeys_get_table(primarykeys, c);
+                    const char *col_column = cfrds_buffer_sql_primarykeys_get_column(primarykeys, c);
+                    int col_key_sequence = cfrds_buffer_sql_primarykeys_get_key_sequence(primarykeys, c);
 
-                cfrds_buffer_sql_primarykeys_free(primarykeys);
+                    printf("name: '%s', owner: '%s', table: '%s', column: '%s', key_sequence: %d\n", col_name, col_owner, col_table, col_column, col_key_sequence);
+                }
             } else {
                 fprintf(stderr, "No table name\n");
             }
@@ -500,24 +514,278 @@ int main(int argc, char *argv[])
             fprintf(stderr, "No schema name\n");
         }
     } else if (strcmp(command, "foreignkeys") == 0) {
-        fprintf(stderr, "Unimplemented command: %s\n", command);
+        if ((path != nullptr)&&(strlen(path) > 1))
+        {
+            char *schema = path + 1;
+            char *table = strchr(schema, '/');
+            if(table) {
+                cfrds_sql_foreignkeys_defer(foreignkeys);
+                cfrds_str_defer(tablename);
+                int tmp_size = 0;
+                cfrds_str_defer(tmp);
+
+                tmp_size = table - schema;
+                tmp = malloc(tmp_size + 1);
+                if (tmp == nullptr)
+                    return EXIT_FAILURE;
+
+                memcpy(tmp, schema, tmp_size);
+                tmp[tmp_size] = '\0';
+                schema = tmp;
+
+                tablename = strdup(table + 1);
+                if (tablename == nullptr)
+                    return EXIT_FAILURE;
+
+                res = cfrds_command_sql_foreignkeys(server, schema, tablename, &foreignkeys);
+                if (res != CFRDS_STATUS_OK)
+                {
+                    fprintf(stderr, "foreignkeys FAILED with error: %s\n", cfrds_server_get_error(server));
+                    return EXIT_FAILURE;
+                }
+
+                size_t cnt = cfrds_buffer_sql_foreignkeys_count(foreignkeys);
+                for(size_t c = 0; c < cnt; c++)
+                {
+                    const char *pk_catalog = cfrds_buffer_sql_foreignkeys_get_pkcatalog(foreignkeys, c);
+                    const char *pk_owner = cfrds_buffer_sql_foreignkeys_get_pkowner(foreignkeys, c);
+                    const char *pk_table = cfrds_buffer_sql_foreignkeys_get_pktable(foreignkeys, c);
+                    const char *pk_column = cfrds_buffer_sql_foreignkeys_get_pkcolumn(foreignkeys, c);
+                    const char *fk_catalog = cfrds_buffer_sql_foreignkeys_get_fkcatalog(foreignkeys, c);
+                    const char *fk_owner = cfrds_buffer_sql_foreignkeys_get_fkowner(foreignkeys, c);
+                    const char *fk_table = cfrds_buffer_sql_foreignkeys_get_fktable(foreignkeys, c);
+                    const char *fk_column = cfrds_buffer_sql_foreignkeys_get_fkcolumn(foreignkeys, c);
+                    int key_sequence = cfrds_buffer_sql_foreignkeys_get_key_sequence(foreignkeys, c);
+                    int updaterule = cfrds_buffer_sql_foreignkeys_get_updaterule(foreignkeys, c);
+                    int deleterule = cfrds_buffer_sql_foreignkeys_get_deleterule(foreignkeys, c);
+
+                    printf("pk_catalog: '%s', pk_owner: '%s', pk_table: '%s', pk_column: '%s', fk_catalog: '%s', fk_owner: '%s', fk_table: '%s', fk_column: '%s', key_sequence: %d, updaterule: %d, deleterule: %d\n",
+                        pk_catalog,
+                        pk_owner,
+                        pk_table,
+                        pk_column,
+                        fk_catalog,
+                        fk_owner,
+                        fk_table,
+                        fk_column,
+                        key_sequence,
+                        updaterule,
+                        deleterule);
+                }
+            } else {
+                fprintf(stderr, "No table name\n");
+            }
+        } else {
+            fprintf(stderr, "No schema name\n");
+        }
     } else if (strcmp(command, "importedkeys") == 0) {
-        fprintf(stderr, "Unimplemented command: %s\n", command);
+        if ((path != nullptr)&&(strlen(path) > 1))
+        {
+            char *schema = path + 1;
+            char *table = strchr(schema, '/');
+            if(table) {
+                cfrds_sql_importedkeys_defer(importedkeys);
+                cfrds_str_defer(tablename);
+                int tmp_size = 0;
+                cfrds_str_defer(tmp);
+
+                tmp_size = table - schema;
+                tmp = malloc(tmp_size + 1);
+                if (tmp == nullptr)
+                    return EXIT_FAILURE;
+
+                memcpy(tmp, schema, tmp_size);
+                tmp[tmp_size] = '\0';
+                schema = tmp;
+
+                tablename = strdup(table + 1);
+                if (tablename == nullptr)
+                    return EXIT_FAILURE;
+
+                res = cfrds_command_sql_importedkeys(server, schema, tablename, &importedkeys);
+                if (res != CFRDS_STATUS_OK)
+                {
+                    fprintf(stderr, "importedkeys FAILED with error: %s\n", cfrds_server_get_error(server));
+                    return EXIT_FAILURE;
+                }
+
+                size_t cnt = cfrds_buffer_sql_importedkeys_count(importedkeys);
+                for(size_t c = 0; c < cnt; c++)
+                {
+                    const char *pk_catalog = cfrds_buffer_sql_importedkeys_get_pkcatalog(importedkeys, c);
+                    const char *pk_owner = cfrds_buffer_sql_importedkeys_get_pkowner(importedkeys, c);
+                    const char *pk_table = cfrds_buffer_sql_importedkeys_get_pktable(importedkeys, c);
+                    const char *pk_column = cfrds_buffer_sql_importedkeys_get_pkcolumn(importedkeys, c);
+                    const char *fk_catalog = cfrds_buffer_sql_importedkeys_get_fkcatalog(importedkeys, c);
+                    const char *fk_owner = cfrds_buffer_sql_importedkeys_get_fkowner(importedkeys, c);
+                    const char *fk_table = cfrds_buffer_sql_importedkeys_get_fktable(importedkeys, c);
+                    const char *fk_column = cfrds_buffer_sql_importedkeys_get_fkcolumn(importedkeys, c);
+                    int key_sequence = cfrds_buffer_sql_importedkeys_get_key_sequence(importedkeys, c);
+                    int updaterule = cfrds_buffer_sql_importedkeys_get_updaterule(importedkeys, c);
+                    int deleterule = cfrds_buffer_sql_importedkeys_get_deleterule(importedkeys, c);
+
+                    printf("pk_catalog: '%s', pk_owner: '%s', pk_table: '%s', pk_column: '%s', fk_catalog: '%s', fk_owner: '%s', fk_table: '%s', fk_column: '%s', key_sequence: %d, updaterule: %d, deleterule: %d\n",
+                        pk_catalog,
+                        pk_owner,
+                        pk_table,
+                        pk_column,
+                        fk_catalog,
+                        fk_owner,
+                        fk_table,
+                        fk_column,
+                        key_sequence,
+                        updaterule,
+                        deleterule);
+                }
+            } else {
+                fprintf(stderr, "No table name\n");
+            }
+        } else {
+            fprintf(stderr, "No schema name\n");
+        }
     } else if (strcmp(command, "exportedkeys") == 0) {
-        fprintf(stderr, "Unimplemented command: %s\n", command);
+        if ((path != nullptr)&&(strlen(path) > 1))
+        {
+            char *schema = path + 1;
+            char *table = strchr(schema, '/');
+            if(table) {
+                cfrds_sql_exportedkeys_defer(exportedkeys);
+                cfrds_str_defer(tablename);
+                int tmp_size = 0;
+                cfrds_str_defer(tmp);
+
+                tmp_size = table - schema;
+                tmp = malloc(tmp_size + 1);
+                if (tmp == nullptr)
+                    return EXIT_FAILURE;
+
+                memcpy(tmp, schema, tmp_size);
+                tmp[tmp_size] = '\0';
+                schema = tmp;
+
+                tablename = strdup(table + 1);
+                if (tablename == nullptr)
+                    return EXIT_FAILURE;
+
+                res = cfrds_command_sql_exportedkeys(server, schema, tablename, &exportedkeys);
+                if (res != CFRDS_STATUS_OK)
+                {
+                    fprintf(stderr, "exportedkeys FAILED with error: %s\n", cfrds_server_get_error(server));
+                    return EXIT_FAILURE;
+                }
+
+                size_t cnt = cfrds_buffer_sql_exportedkeys_count(exportedkeys);
+                for(size_t c = 0; c < cnt; c++)
+                {
+                    const char *pk_catalog = cfrds_buffer_sql_exportedkeys_get_pkcatalog(exportedkeys, c);
+                    const char *pk_owner = cfrds_buffer_sql_exportedkeys_get_pkowner(exportedkeys, c);
+                    const char *pk_table = cfrds_buffer_sql_exportedkeys_get_pktable(exportedkeys, c);
+                    const char *pk_column = cfrds_buffer_sql_exportedkeys_get_pkcolumn(exportedkeys, c);
+                    const char *fk_catalog = cfrds_buffer_sql_exportedkeys_get_fkcatalog(exportedkeys, c);
+                    const char *fk_owner = cfrds_buffer_sql_exportedkeys_get_fkowner(exportedkeys, c);
+                    const char *fk_table = cfrds_buffer_sql_exportedkeys_get_fktable(exportedkeys, c);
+                    const char *fk_column = cfrds_buffer_sql_exportedkeys_get_fkcolumn(exportedkeys, c);
+                    int key_sequence = cfrds_buffer_sql_exportedkeys_get_key_sequence(exportedkeys, c);
+                    int updaterule = cfrds_buffer_sql_exportedkeys_get_updaterule(exportedkeys, c);
+                    int deleterule = cfrds_buffer_sql_exportedkeys_get_deleterule(exportedkeys, c);
+
+                    printf("pk_catalog: '%s', pk_owner: '%s', pk_table: '%s', pk_column: '%s', fk_catalog: '%s', fk_owner: '%s', fk_table: '%s', fk_column: '%s', key_sequence: %d, updaterule: %d, deleterule: %d\n",
+                        pk_catalog,
+                        pk_owner,
+                        pk_table,
+                        pk_column,
+                        fk_catalog,
+                        fk_owner,
+                        fk_table,
+                        fk_column,
+                        key_sequence,
+                        updaterule,
+                        deleterule);
+                }
+            } else {
+                fprintf(stderr, "No table name\n");
+            }
+        } else {
+            fprintf(stderr, "No schema name\n");
+        }
     } else if (strcmp(command, "sql") == 0) {
-        fprintf(stderr, "Unimplemented command: %s\n", command);
+        if ((path != nullptr)&&(strlen(path) > 1))
+        {
+            cfrds_sql_resultset_defer(resultset);
+            char *schema = path + 1;
+
+            const char *sql = argv[2];
+
+            res = cfrds_command_sql_sqlstmnt(server, schema, sql, &resultset);
+            if (res != CFRDS_STATUS_OK)
+            {
+                fprintf(stderr, "exportedkeys FAILED with error: %s\n", cfrds_server_get_error(server));
+                return EXIT_FAILURE;
+            }
+
+            // TODO: Implement printing of SQL resultset
+        }
     } else if (strcmp(command, "sqlmetadata") == 0) {
-        fprintf(stderr, "Unimplemented command: %s\n", command);
+        if ((path != nullptr)&&(strlen(path) > 1))
+        {
+            cfrds_sql_metadata_defer(metadata);
+            char *schema = path + 1;
+
+            const char *sql = argv[2];
+
+            res = cfrds_command_sql_sqlmetadata(server, schema, sql, &metadata);
+            if (res != CFRDS_STATUS_OK)
+            {
+                fprintf(stderr, "exportedkeys FAILED with error: %s\n", cfrds_server_get_error(server));
+                return EXIT_FAILURE;
+            }
+
+            size_t cnt = cfrds_buffer_sql_metadata_count(metadata);
+            for(size_t c = 0; c < cnt; c++)
+            {
+                const char *name  = cfrds_buffer_sql_metadata_get_name(metadata, c);
+                const char *type  = cfrds_buffer_sql_metadata_get_type(metadata, c);
+                const char *jtype = cfrds_buffer_sql_metadata_get_jtype(metadata, c);
+
+                printf("name: '%s', type: '%s', jtype: '%s'\n", name, type, jtype);
+            }
+        }
     } else if (strcmp(command, "supportedcommands") == 0) {
+        if ((path != nullptr)&&(strlen(path) > 1))
+        {
+            cfrds_sql_supportedcommands_defer(supportedcommands);
+            char *schema = path + 1;
 
-        //cfrds_sql_supportedcommands *supportedcommands = nullptr;
-        //res = cfrds_command_sql_getsupportedcommands(server, &supportedcommands);
+            res = cfrds_command_sql_getsupportedcommands(server, &supportedcommands);
+            if (res != CFRDS_STATUS_OK)
+            {
+                fprintf(stderr, "exportedkeys FAILED with error: %s\n", cfrds_server_get_error(server));
+                return EXIT_FAILURE;
+            }
 
-        fprintf(stderr, "Unimplemented command: %s\n", command);
+            size_t cnt = cfrds_buffer_sql_supportedcommands_count(supportedcommands);
+            for(size_t c = 0; c < cnt; c++)
+            {
+                const char *command = cfrds_buffer_sql_supportedcommands_get(supportedcommands, c);
+                printf("%s\n", command);
+            }
+        }
     } else if (strcmp(command, "dbdescription") == 0) {
+        if ((path != nullptr)&&(strlen(path) > 1))
+        {
+            cfrds_str_defer(dbdescription);
+            char *schema = path + 1;
+
+            res = cfrds_command_sql_dbdescription(server, schema, &dbdescription);
+            if (res != CFRDS_STATUS_OK)
+            {
+                fprintf(stderr, "dbdescription FAILED with error: %s\n", cfrds_server_get_error(server));
+                return EXIT_FAILURE;
+            }
+
+            printf("%s\n", dbdescription);
+        }
     } else {
-        fprintf(stderr, "Unknown command: %s\n", command);
     }
 
     return EXIT_SUCCESS;

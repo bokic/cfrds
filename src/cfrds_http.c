@@ -156,8 +156,7 @@ enum cfrds_status cfrds_http_post(cfrds_server_int *server, const char *command,
         return CFRDS_STATUS_RESPONSE_ERROR;
     }
 
-    *response = int_response;
-    int_response = nullptr;
+    *response = int_response; int_response = nullptr;
 
     return CFRDS_STATUS_OK;
 }

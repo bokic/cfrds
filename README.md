@@ -1,4 +1,4 @@
-# cfrds - ColdFusion RDS protocol library and CLI
+# cfrds - ColdFusion RDS protocol library with python bindings and CLI interface.
 
 ## Project description
 cfrds is a library and cli executable designed to communicate to ColdFusion server via Adobe RDS protocol. More info regarding the protocol at https://helpx.adobe.com/coldfusion/coldfusion-builder-extension-for-visual-studio-code/rds-support.html.
@@ -13,19 +13,36 @@ Some of the features RDS protocol supports:
 * other...
 
 ## Implemented Features
-* Remote file/dir access.
+* Remote ColdFusion server file/dir access.
+* Remote ColdFusion server Database access.
 
 ## TODO
-* Remote Database access.
-* Remote ColdFusion debugger.
-* Remote ColdFusion adminapi settings.
-* Remote ColdFusion graph(chart).
-* Remote ColdFusion webapp security analyzer service.
+* Remote ColdFusion server debugger.
+* Remote ColdFusion server adminapi settings.
+* Remote ColdFusion server graph(chart).
+* Remote ColdFusion server webapp security analyzer service.
+* Code cleanup.
 
-## Some CLI examples
+## CLI examples
 * List directory - `cfrds ls <rds://{username}:{password}@{host}:{port}/{pathname}>`
+* Print file content - `cfrds cat <rds://{username}:{password}@{host}:{port}/{pathname}>`
 * File download - `cfrds download <rds://{username}:{password}@{host}:{port}/{pathname}> <destination_file>`
 * File upload - `cfrds upload <source_file> <rds://{username}:{password}@{host}:{port}/{pathname}>`
+* File rename - `cfrds mv <source_file> <rds://{username}:{password}@{host}:{port}/{pathname}> <destination_file>`
+* File delete - `cfrds rm <source_file> <rds://{username}:{password}@{host}:{port}/{pathname}>`
+* Create directory - `cfrds mkdir <rds://{username}:{password}@{host}:{port}/{pathname}>`
+* Delete directory - `cfrds rmdir <rds://{username}:{password}@{host}:{port}/{pathname}>`
+* Get ColdFusion installation directory - `cfrds cfroot <rds://{username}:{password}@{host}:{port}>`
+* Get ColdFusion datasources info - `cfrds dsninfo <rds://{username}:{password}@{host}:{port}>`
+* Get ColdFusion datasource tables info - `cfrds tableinfo <rds://{username}:{password}@{host}:{port}/{dns}>`
+* Get ColdFusion datasource table columns info - `cfrds columninfo <rds://{username}:{password}@{host}:{port}/{dns}/{table}>`
+* Get ColdFusion datasource table primary keys info - `cfrds primarykeys <rds://{username}:{password}@{host}:{port}/{dns}/{table}>`
+* Get ColdFusion datasource table foreign keys info - `cfrds primarykeys <rds://{username}:{password}@{host}:{port}/{dns}/{table}>`
+* Get ColdFusion datasource table imported keys info - `cfrds primarykeys <rds://{username}:{password}@{host}:{port}/{dns}/{table}>`
+* Get ColdFusion datasource table exported keys info - `cfrds primarykeys <rds://{username}:{password}@{host}:{port}/{dns}/{table}>`
+* Execute ColdFusion datasource SQL - `cfrds sql <rds://{username}:{password}@{host}:{port}/{dns}> <SQL>`
+* Get ColdFusion datasource SQL metadata - `cfrds sqlmetadata <rds://{username}:{password}@{host}:{port}/{dns}> <SQL>`
+* Get ColdFusion datasource database server info - `cfrds dbdescription <rds://{username}:{password}@{host}:{port}/{dns}>`
 
 ## Build
 > cd \<root of the project\>

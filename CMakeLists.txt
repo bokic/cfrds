@@ -74,3 +74,5 @@ set_target_properties(libcfrds PROPERTIES
 install(TARGETS libcfrds
     PUBLIC_HEADER
 )
+
+subdirs(python)

@@ -2,13 +2,13 @@ from distutils.core import setup, Extension
 
 def main():
     setup(name="cfrds",
-          version="0.8.0",
+          version="0.9.5",
           description="Python interface for ColdFusion RDS service.",
           author="Boris Barbulovski",
           author_email="bbarbulovski@gmail.com",
           ext_modules=[Extension("cfrds", [
-              "cfrds.py.c", 
-              "../src/cfrds.c", 
+              "cfrds.py.c",
+              "../src/cfrds.c",
               "../src/cfrds_buffer.c",
               "../src/cfrds_http.c"
             ],  include_dirs=['../include'])]

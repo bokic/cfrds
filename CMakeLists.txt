@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.15)
 
-project(cfrds VERSION 0.9.4 LANGUAGES C)
+project(cfrds VERSION 0.9.5 LANGUAGES C)
 
 set(CMAKE_C_STANDARD 23)
 set(CMAKE_C_STANDARD_REQUIRED ON)
@@ -67,7 +67,7 @@ set_target_properties(libcfrds PROPERTIES
     INTERPROCEDURAL_OPTIMIZATION TRUE
     C_VISIBILITY_PRESET hidden
     OUTPUT_NAME "cfrds"
-    VERSION "0.9.4"
+    VERSION "0.9.5"
     SOVERSION "0.9"
 )
 

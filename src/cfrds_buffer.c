@@ -6,7 +6,13 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stddef.h>
+
+#ifdef _WIN32
+#include <windows.h>
+#else
 #include <unistd.h>
+#endif
+
 #include <stdio.h>
 
 
@@ -28,7 +34,12 @@ void cfrds_str_cleanup(char **str) {
 
 void cfrds_fd_cleanup(int *fd) {
     if (fd) {
+#ifdef _WIN32
+        closesocket((SOCKET)*fd);
+#else
         close(*fd);
+#endif
+
         *fd = 0;
     }
 }

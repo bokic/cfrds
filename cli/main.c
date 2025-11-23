@@ -315,7 +315,7 @@ int main(int argc, char *argv[])
 
         const char *dest_fname = argv[3];
 
-        file_hnd_fd_defer(fd);
+        os_file_defer(fd);
 
         fd = os_creat_file(dest_fname);
         if (fd == ERROR_FILE_HND_FD)

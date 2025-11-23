@@ -30,7 +30,7 @@ void* os_map(const char *pathname, size_t* size)
 {
     void* ret = nullptr;
     struct stat stat;
-    file_hnd_fd_defer(fd);
+    os_file_defer(fd);
 
     fd = open(pathname, O_RDONLY);
     if (fd == -1)
@@ -54,7 +54,7 @@ ssize_t os_write_to_terminal(const void *buffer, size_t len)
     return write(STDOUT_FILENO, buffer, len);
 }
 
-void file_hnd_fd_cleanup(void *fd) {
+void os_file_cleanup(void *fd) {
     int *fd_int = (int *) fd;
     if (fd_int) {
         close(*fd_int);

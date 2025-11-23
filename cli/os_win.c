@@ -1,6 +1,5 @@
 #include "os.h"
 
-#define WIN32_LEAN_AND_MEAN
 #include <Windows.h>
 #include <Winbase.h>
 #include <Fileapi.h>
@@ -57,4 +56,12 @@ ssize_t os_write_to_terminal(const void *buffer, size_t len)
     }
 
     return written;
+}
+
+void os_file_cleanup(void *fd) {
+    HANDLE *hnd = (HANDLE *) fd;
+    if (hnd) {
+        CloseHandle(*hnd);
+        *hnd = 0;
+    }
 }

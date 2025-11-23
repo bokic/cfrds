@@ -10,9 +10,6 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
-#endif
-
-#ifndef _MSC_VER
 #include <unistd.h>
 #endif
 
@@ -22,6 +19,13 @@
 #include <stdio.h>
 #include <errno.h>
 
+#ifdef _WIN32
+void cfrds_sock_cleanup(SOCKET* sock);
+#define cfrds_sock_defer(var) SOCKET var __attribute__((cleanup(cfrds_sock_cleanup))) = INVALID_SOCKET
+#else
+void cfrds_sock_cleanup(int* sock);
+#define cfrds_sock_defer(var) int var __attribute__((cleanup(cfrds_sock_cleanup))) = 0
+#endif
 
 enum cfrds_status cfrds_http_post(cfrds_server_int *server, const char *command, cfrds_buffer *payload, cfrds_buffer **response)
 {
@@ -32,7 +36,7 @@ enum cfrds_status cfrds_http_post(cfrds_server_int *server, const char *command,
     char datasize_str[16] = {0, };
     ssize_t sock_written = 0;
     uint16_t port = 0;
-    cfrds_fd_defer(sockfd);
+    cfrds_sock_defer(sockfd);
 
     int n = 0;
 
@@ -157,3 +161,33 @@ enum cfrds_status cfrds_http_post(cfrds_server_int *server, const char *command,
 
     return CFRDS_STATUS_OK;
 }
+
+#ifdef _WIN32
+void cfrds_sock_cleanup(SOCKET* sock)
+{
+    if (sock)
+    {
+        if (*sock != INVALID_SOCKET)
+        {
+            closesocket(*sock);
+            *sock = INVALID_SOCKET;
+        }
+
+        sock = nullptr;
+    }
+}
+#else
+void cfrds_sock_cleanup(int* sock)
+{
+    if (*sock)
+    {
+        if (*sock > 0)
+        {
+            close(*sock);
+            *sock = 0;
+        }
+
+        sock = nullptr;
+    }
+}
+#endif

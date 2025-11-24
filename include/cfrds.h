@@ -103,6 +103,12 @@ EXPORT_CFRDS size_t cfrds_buffer_browse_dir_item_get_size(const cfrds_browse_dir
 EXPORT_CFRDS uint64_t cfrds_buffer_browse_dir_item_get_modified(const cfrds_browse_dir *value, size_t ndx);
 
 EXPORT_CFRDS enum cfrds_status cfrds_command_file_read(cfrds_server *server, const char *pathname, cfrds_file_content **out);
+EXPORT_CFRDS void cfrds_buffer_file_content_free(cfrds_file_content *value);
+EXPORT_CFRDS const char *cfrds_buffer_file_content_get_data(const cfrds_file_content *value);
+EXPORT_CFRDS int cfrds_buffer_file_content_get_size(const cfrds_file_content *value);
+EXPORT_CFRDS const char *cfrds_buffer_file_content_get_modified(const cfrds_file_content *value);
+EXPORT_CFRDS const char *cfrds_buffer_file_content_get_permission(const cfrds_file_content *value);
+
 EXPORT_CFRDS enum cfrds_status cfrds_command_file_write(cfrds_server *server, const char *pathname, const void *data, size_t length);
 EXPORT_CFRDS enum cfrds_status cfrds_command_file_rename(cfrds_server *server, const char *current_pathname, const char *new_pathname);
 EXPORT_CFRDS enum cfrds_status cfrds_command_file_remove_file(cfrds_server *server, const char *pathname);
@@ -221,12 +227,6 @@ EXPORT_CFRDS void cfrds_buffer_sql_supportedcommands_free(cfrds_sql_supportedcom
 EXPORT_CFRDS void cfrds_sql_supportedcommands_cleanup(cfrds_sql_supportedcommands **buf);
 EXPORT_CFRDS size_t cfrds_buffer_sql_supportedcommands_count(const cfrds_sql_supportedcommands *value);
 EXPORT_CFRDS const char *cfrds_buffer_sql_supportedcommands_get(const cfrds_sql_supportedcommands *value, size_t ndx);
-
-EXPORT_CFRDS void cfrds_buffer_file_content_free(cfrds_file_content *value);
-EXPORT_CFRDS const char *cfrds_buffer_file_content_get_data(const cfrds_file_content *value);
-EXPORT_CFRDS int cfrds_buffer_file_content_get_size(const cfrds_file_content *value);
-EXPORT_CFRDS const char *cfrds_buffer_file_content_get_modified(const cfrds_file_content *value);
-EXPORT_CFRDS const char *cfrds_buffer_file_content_get_permission(const cfrds_file_content *value);
 
 EXPORT_CFRDS enum cfrds_status cfrds_command_sql_dbdescription(cfrds_server *server, const char *connection_name, char **description);
 

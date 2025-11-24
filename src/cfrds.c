@@ -314,7 +314,7 @@ enum cfrds_status cfrds_command_file_write(cfrds_server *server, const char *pat
     cfrds_buffer_defer(post);
     size_t total_cnt = 0;
 
-    if ((server == nullptr)||(pathname == nullptr)||(data == nullptr))
+    if ((server == nullptr)||(pathname == nullptr)||((data == nullptr)&&(length > 0)))
     {
         return CFRDS_STATUS_PARAM_IS_nullptr;
     }

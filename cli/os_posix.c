@@ -43,6 +43,8 @@ void* os_map(const char *pathname, size_t* size)
     if ((ssize_t)ret == -1)
         return nullptr;
 
+    *size = stat.st_size;
+
     return ret;
 }
 

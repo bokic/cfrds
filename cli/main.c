@@ -337,7 +337,7 @@ int main(int argc, char *argv[])
         void *buf = nullptr;
 
         buf = os_map(src_fname, &src_size);
-        if (buf == nullptr)
+        if ((buf == nullptr)&&(src_size > 0))
         {
             fprintf(stderr, "mmap FAILED with error: %m\n");
             return EXIT_FAILURE;

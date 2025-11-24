@@ -1,5 +1,7 @@
 .vscode
 .cache
+/python/*.egg-info
+/python/build
 /python/*.so
 /build
 /bin

@@ -1978,3 +1978,56 @@ const char *cfrds_buffer_sql_supportedcommands_get(const cfrds_sql_supportedcomm
 
     return _value->commands[ndx];
 }
+
+enum cfrds_status cfrds_command_debugger_start(cfrds_server *server, char **session_id)
+{
+    enum cfrds_status ret;
+
+    cfrds_server_int *server_int = nullptr;
+    cfrds_buffer_defer(response);
+
+    if (server == nullptr)
+    {
+        return CFRDS_STATUS_SERVER_IS_nullptr;
+    }
+
+    ret = cfrds_internal_command(server, &response, "DBGREQUEST", (const char *[]){ "DBG_START", "<wddxPacket version='1.0'><header/><data><array length='1'><struct type='java.util.HashMap'><var name='REMOTE_SESSION'><boolean value='true'/></var></struct></array></data></wddxPacket>", nullptr});
+    if (ret == CFRDS_STATUS_OK)
+    {
+        *session_id = cfrds_buffer_to_debugger_start(response);
+        if (*session_id == nullptr)
+        {
+            server_int = server;
+            server_int->error_code = -1;
+            return CFRDS_STATUS_RESPONSE_ERROR;
+        }
+    }
+
+    return ret;
+}
+
+enum cfrds_status cfrds_command_debugger_stop(cfrds_server *server, const char *session_id)
+{
+    enum cfrds_status ret;
+
+    cfrds_server_int *server_int = nullptr;
+    cfrds_buffer_defer(response);
+
+    if (server == nullptr)
+    {
+        return CFRDS_STATUS_SERVER_IS_nullptr;
+    }
+
+    ret = cfrds_internal_command(server, &response, "DBGREQUEST", (const char *[]){ "DBG_STOP", session_id, nullptr});
+    if (ret == CFRDS_STATUS_OK)
+    {
+        if (cfrds_buffer_to_debugger_stop(response) == false)
+        {
+            server_int = server;
+            server_int->error_code = -1;
+            return CFRDS_STATUS_RESPONSE_ERROR;
+        }
+    }
+
+    return ret;
+}

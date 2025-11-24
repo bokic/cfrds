@@ -21,3 +21,8 @@ rds = cfrds.server(host, port, username, password)
 # print(rds.sql_metadata("datasource", "SELECT 1 as id, 2 as id2 LIMIT 1"))
 # print(rds.sql_getsupportedcommands())
 # print(rds.sql_dbdescription("datasource"))
+
+debugger_session_id = rds.debugger_start()
+print("Debugger session ID:", debugger_session_id)
+rds.debugger_stop(debugger_session_id)
+print("Debugger session stopped")

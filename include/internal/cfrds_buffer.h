@@ -211,6 +211,9 @@ cfrds_sql_metadata_int *cfrds_buffer_to_sql_metadata(cfrds_buffer *buffer);
 cfrds_sql_supportedcommands_int *cfrds_buffer_to_sql_supportedcommands(cfrds_buffer *buffer);
 char *cfrds_buffer_to_sql_dbdescription(cfrds_buffer *buffer);
 
+char *cfrds_buffer_to_debugger_start(cfrds_buffer *buffer);
+bool cfrds_buffer_to_debugger_stop(cfrds_buffer *buffer);
+
 bool cfrds_buffer_skip_httpheader(char **data, size_t *size);
 
 #ifdef __cplusplus

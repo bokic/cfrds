@@ -1464,3 +1464,57 @@ char *cfrds_buffer_to_sql_dbdescription(cfrds_buffer *buffer)
 
     return ret;
 }
+
+char *cfrds_buffer_to_debugger_start(cfrds_buffer *buffer)
+{
+    char *ret = nullptr;
+
+    cfrds_buffer_int *buffer_int = buffer;
+    int64_t rows = 0;
+
+    if (buffer_int == nullptr)
+        return nullptr;
+
+    char *data = (char *)buffer_int->data;
+    size_t size = buffer_int->size;
+
+    if (!cfrds_buffer_skip_httpheader(&data, &size))
+        return nullptr;
+
+    cfrds_buffer_parse_number(&data, &size, &rows);
+    if (rows != 2)
+        return nullptr;
+
+    cfrds_buffer_parse_string(&data, &size, &ret);
+
+    return ret;
+}
+
+bool cfrds_buffer_to_debugger_stop(cfrds_buffer *buffer)
+{
+    cfrds_str_defer(ret);
+
+    cfrds_buffer_int *buffer_int = buffer;
+    int64_t rows = 0;
+
+    if (buffer_int == nullptr)
+        return false;
+
+    char *data = (char *)buffer_int->data;
+    size_t size = buffer_int->size;
+
+    if (!cfrds_buffer_skip_httpheader(&data, &size))
+        return false;
+
+    cfrds_buffer_parse_number(&data, &size, &rows);
+    if (rows != 1)
+        return false;
+
+    cfrds_buffer_parse_string(&data, &size, &ret);
+
+    // TODO: Parse XML!
+    if (strstr(ret, "RDS_OK") != nullptr)
+        return true;
+
+    return false;
+}

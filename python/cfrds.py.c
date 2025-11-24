@@ -791,8 +791,40 @@ cfrds_server_sql_dbdescription(cfrds_server_Object *self, PyObject *args)
 
     ret = PyUnicode_FromString(dbdescription);
 
-    exit:
-        return ret;
+exit:
+    return ret;
+}
+
+static PyObject *
+cfrds_server_debugger_start(cfrds_server_Object *self, PyObject *args)
+{
+    PyObject *ret = Py_None;
+
+    cfrds_str_defer(session_name);
+
+    CHECK_FOR_ERORRS(cfrds_command_debugger_start(self->server, &session_name));
+
+    ret = PyUnicode_FromString(session_name);
+
+exit:
+    return ret;
+}
+
+static PyObject *
+cfrds_server_debugger_stop(cfrds_server_Object *self, PyObject *args)
+{
+    char *session_name = nullptr;
+
+    if (!PyArg_ParseTuple(args, "s", &session_name))
+    {
+        PyErr_SetString(PyExc_RuntimeError, "session_name parameter not set!");
+        goto exit;
+    }
+
+    CHECK_FOR_ERORRS(cfrds_command_debugger_stop(self->server, session_name));
+
+exit:
+    return Py_None;
 }
 
 static PyMethodDef cfrds_server_methods[] = {
@@ -816,6 +848,8 @@ static PyMethodDef cfrds_server_methods[] = {
     {"sql_metadata", (PyCFunction) cfrds_server_sql_metadata, METH_VARARGS, "Get ColdFusion datasource metadata"},
     {"sql_getsupportedcommands", (PyCFunction) cfrds_server_sql_getsupportedcommands, METH_VARARGS, "Get ColdFusion datasource supported commands"},
     {"sql_dbdescription", (PyCFunction) cfrds_server_sql_dbdescription, METH_VARARGS, "Get ColdFusion datasource database description"},
+    {"debugger_start", (PyCFunction) cfrds_server_debugger_start, METH_VARARGS, "Start ColdFusion debugger session"},
+    {"debugger_stop", (PyCFunction) cfrds_server_debugger_stop, METH_VARARGS, "Stop ColdFusion debugger session"},
     {nullptr}  /* Sentinel */
 };
 

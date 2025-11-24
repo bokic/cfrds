@@ -89,6 +89,12 @@ static void usage()
            "\n"
            "  - 'dbdescription' - Return ColdFusion data sources database info.\n"
            "         example: `cfrds dbdescription rds://username:password@host/dsn`\n"
+           "\n"
+           "  - 'dbg_start' - Start ColdFusion debugger session.\n"
+           "         example: `cfrds dbg_start rds://username:password@host`\n"
+           "\n"
+           "  - 'dbg_stop' - Stops ColdFusion debugger session.\n"
+           "         example: `cfrds dbg_start rds://username:password@host/dbg_session`\n"
            );
 }
 
@@ -784,6 +790,27 @@ int main(int argc, char *argv[])
             }
 
             printf("%s\n", dbdescription);
+        }
+    } else if (strcmp(command, "dbg_start") == 0) {
+        cfrds_str_defer(dbg_session);
+
+        res = cfrds_command_debugger_start(server, &dbg_session);
+        if (res != CFRDS_STATUS_OK)
+        {
+            fprintf(stderr, "dbg_start FAILED with error: %s\n", cfrds_server_get_error(server));
+            return EXIT_FAILURE;
+        }
+
+        printf("Debugger session: %s\n", dbg_session);
+    } else if (strcmp(command, "dbg_stop") == 0) {
+        if ((path != nullptr)&&(strlen(path) > 1))
+        {
+            res = cfrds_command_debugger_stop(server, path);
+            if (res != CFRDS_STATUS_OK)
+            {
+                fprintf(stderr, "dbg_stop FAILED with error: %s\n", cfrds_server_get_error(server));
+                return EXIT_FAILURE;
+            }
         }
     } else {
     }

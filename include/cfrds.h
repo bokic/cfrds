@@ -230,6 +230,9 @@ EXPORT_CFRDS const char *cfrds_buffer_sql_supportedcommands_get(const cfrds_sql_
 
 EXPORT_CFRDS enum cfrds_status cfrds_command_sql_dbdescription(cfrds_server *server, const char *connection_name, char **description);
 
+EXPORT_CFRDS enum cfrds_status cfrds_command_debugger_start(cfrds_server *server, char **session_id);
+EXPORT_CFRDS enum cfrds_status cfrds_command_debugger_stop(cfrds_server *server, const char *session_id);
+
 #ifdef __cplusplus
 }
 #endif

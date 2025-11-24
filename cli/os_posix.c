@@ -40,6 +40,8 @@ void* os_map(const char *pathname, size_t* size)
         return nullptr;
 
     ret = mmap(nullptr, stat.st_size, PROT_READ, MAP_PRIVATE, fd, 0);
+    if ((ssize_t)ret == -1)
+        return nullptr;
 
     return ret;
 }

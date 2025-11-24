@@ -345,7 +345,7 @@ int main(int argc, char *argv[])
 
         res = cfrds_command_file_write(server, path, buf, src_size);
         if (res != CFRDS_STATUS_OK) {
-            fprintf(stderr, "write FAILED with error: %s\n", cfrds_server_get_error(server));
+            fprintf(stderr, "upload FAILED with error: %s\n", cfrds_server_get_error(server));
         }
         os_unmap(buf, src_size);
     } else if ((strcmp(command, "rm") == 0)||(strcmp(command, "delete") == 0)) {

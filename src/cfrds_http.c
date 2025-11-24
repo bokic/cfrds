@@ -40,11 +40,6 @@ enum cfrds_status cfrds_http_post(cfrds_server_int *server, const char *command,
 
     int n = 0;
 
-    if (response == nullptr)
-    {
-        return CFRDS_STATUS_PARAM_IS_nullptr;
-    }
-
     port = cfrds_server_get_port(server);
 
     n = snprintf(datasize_str, sizeof(datasize_str), "%zu", cfrds_buffer_data_size(payload));
@@ -157,7 +152,10 @@ enum cfrds_status cfrds_http_post(cfrds_server_int *server, const char *command,
         return CFRDS_STATUS_RESPONSE_ERROR;
     }
 
-    *response = int_response; int_response = nullptr;
+    if (response)
+    {
+        *response = int_response; int_response = nullptr;
+    }
 
     return CFRDS_STATUS_OK;
 }

@@ -20,6 +20,7 @@
 
 
 #define xmlDoc_defer(var) xmlDoc* var __attribute__((cleanup(xmlDoc_cleanup))) = nullptr
+#define xmlChar_defer(var) xmlChar* var __attribute__((cleanup(xmlChar_cleanup))) = nullptr
 
 typedef struct {
     size_t allocated;
@@ -139,12 +140,28 @@ void cfrds_sql_supportedcommands_cleanup(cfrds_sql_supportedcommands **buf) {
     }
 }
 
-void xmlDoc_cleanup(xmlDoc **doc)
+void cfrds_debugger_event_cleanup(cfrds_debugger_event **buf) {
+    if (*buf) {
+        cfrds_buffer_debugger_event_free(*buf);
+        *buf = nullptr;
+    }
+}
+
+void xmlDoc_cleanup(xmlDoc **value)
 {
-    if (doc)
+    if (value)
     {
-        xmlFreeDoc(*doc);
-        doc = nullptr;
+        xmlFreeDoc(*value);
+        value = nullptr;
+    }
+}
+
+void xmlChar_cleanup(xmlChar **value)
+{
+    if (value)
+    {
+        xmlFree(*value);
+        value = nullptr;
     }
 }
 
@@ -1701,6 +1718,131 @@ cfrds_debugger_event *cfrds_buffer_to_debugger_event(cfrds_buffer *buffer)
         doc = xmlParseMemory(xml, strlen(xml));
 
         xmlNodePtr rootEl = xmlDocGetRootElement(doc);
+        if (rootEl == nullptr) return nullptr;
+        if (rootEl->type != XML_ELEMENT_NODE) return nullptr;
+        if (strcmp((const char *)rootEl->name, "wddxPacket") != 0) return nullptr;
+
+        xmlNodePtr headerEl = rootEl->children;
+        if (headerEl == nullptr) return nullptr;
+        if (headerEl->type != XML_ELEMENT_NODE) return nullptr;
+        if (strcmp((const char *)headerEl->name, "header") != 0) return nullptr;
+
+        xmlNodePtr dataEl = headerEl->next;
+        if (dataEl == nullptr) return nullptr;
+        if (dataEl->type != XML_ELEMENT_NODE) return nullptr;
+        if (strcmp((const char *)dataEl->name, "data") != 0) return nullptr;
+
+        xmlNodePtr arrayEl = dataEl->children;
+        if (arrayEl == nullptr) return nullptr;
+        if (arrayEl->type != XML_ELEMENT_NODE) return nullptr;
+        if (strcmp((const char *)arrayEl->name, "array") != 0) return nullptr;
+
+        const unsigned char *array_length = xmlGetProp(arrayEl, (const unsigned char *)"length");
+        if (strcmp((const char *)array_length, "1") != 0)
+        {
+            fprintf(stderr, "array_length != 1: %s.", array_length);
+            return nullptr;
+        }
+
+        xmlNodePtr structEl = arrayEl->children;
+        if (structEl == nullptr) return nullptr;
+        if (structEl->type != XML_ELEMENT_NODE) return nullptr;
+        if (strcmp((const char *)structEl->name, "struct") != 0) return nullptr;
+
+        const char *event_type = cfrds_xml_get_struct_var_string(structEl, "EVENT");
+        if (event_type == nullptr) return nullptr;
+
+        if (strcmp(event_type, "CF_BREAKPOINT_SET") == 0)
+        {
+            cfrds_debugger_event_breakpoint_set_int *ret = malloc(sizeof(cfrds_debugger_event_breakpoint_set_int));
+            if (ret)
+            {
+                const char *pathname = cfrds_xml_get_struct_var_string(structEl, "CFML_PATH");
+                const char *req_line = cfrds_xml_get_struct_var_string(structEl, "REQ_LINE_NUM");
+                const char *act_line = cfrds_xml_get_struct_var_string(structEl, "ACTUAL_LINE_NUM");
+
+                memset(ret, 0, sizeof(cfrds_debugger_event_breakpoint_set_int));
+
+                ret->event.type = CFRDS_DEBUGGER_EVENT_TYPE_BREAKPOINT_SET;
+                ret->pathname = strdup(pathname);
+                if (req_line) ret->req_line = atoi(req_line);
+                if (act_line) ret->act_line = atoi(act_line);
+            }
+
+            return ret;
+        }
+        else if (strcmp(event_type, "BREAKPOINT") == 0)
+        {
+            cfrds_debugger_event_breakpoint_int *ret = malloc(sizeof(cfrds_debugger_event_breakpoint_int));
+            if (ret)
+            {
+                const char *source = cfrds_xml_get_struct_var_string(structEl, "SOURCE");
+                const char *line = cfrds_xml_get_struct_var_string(structEl, "LINE");
+                const char *thread = cfrds_xml_get_struct_var_string(structEl, "THREAD");
+
+                memset(ret, 0, sizeof(cfrds_debugger_event_breakpoint_int));
+
+                ret->event.type = CFRDS_DEBUGGER_EVENT_TYPE_BREAKPOINT;
+                ret->source = strdup(source);
+                if (line) ret->line = atoi(line);
+                ret->thread_name = strdup(thread);
+            }
+
+            return ret;
+        }
+        else
+        {
+            fprintf(stderr, "Unknown debugger event_type: %s.", event_type);
+        }
+    }
+
+    return nullptr;
+}
+
+const char *cfrds_xml_get_struct_var_string(xmlNodePtr xml_node, const char *var_name)
+{
+    if (xml_node == nullptr)
+        return nullptr;
+
+    xmlNodePtr child = xml_node->children;
+    while(child != nullptr)
+    {
+        if (child->type == XML_ELEMENT_NODE)
+        {
+            if (strcmp((const char *)child->name, "var") == 0)
+            {
+                xmlChar_defer(xmlChar);
+                const unsigned char *name_attr = xmlGetProp(child, (const unsigned char *)"name");
+                if (name_attr != nullptr)
+                {
+                    if (strcmp((const char *)name_attr, var_name) == 0)
+                    {
+                        xmlNodePtr var_value_node = child->children;
+                        while(var_value_node != nullptr)
+                        {
+                            if (var_value_node->type == XML_ELEMENT_NODE)
+                            {
+                                if (strcmp((const char *)var_value_node->name, "string") == 0)
+                                {
+                                    xmlNodePtr content = var_value_node->children;
+                                    if (content != nullptr)
+                                    {
+                                        if (content->type == XML_TEXT_NODE)
+                                        {
+                                            return (const char *)content->content;
+                                        }
+                                    }
+                                }
+                            }
+
+                            var_value_node = var_value_node->next;
+                        }
+                    }
+                }
+            }
+
+            child = child->next;
+        }
     }
 
     return nullptr;

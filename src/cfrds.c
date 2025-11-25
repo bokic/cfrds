@@ -2353,3 +2353,69 @@ enum cfrds_status cfrds_command_debugger_continue(cfrds_server *server, const ch
 
     return ret;
 }
+
+void cfrds_buffer_debugger_event_free(cfrds_debugger_event *event)
+{
+    if (event == nullptr)
+        return;
+
+    enum cfrds_debugger_type type = cfrds_buffer_debugger_event_get_type(event);
+    switch(type)
+    {
+    case CFRDS_DEBUGGER_EVENT_TYPE_BREAKPOINT_SET:
+        {
+            cfrds_debugger_event_breakpoint_set_int *event_int = (cfrds_debugger_event_breakpoint_set_int *)event;
+            if (event_int->pathname) {free(event_int->pathname); event_int->pathname = nullptr; }
+        }
+        break;
+    case CFRDS_DEBUGGER_EVENT_TYPE_BREAKPOINT:
+        {
+            cfrds_debugger_event_breakpoint_int *event_int = (cfrds_debugger_event_breakpoint_int *)event;
+            if (event_int->source) {free(event_int->source); event_int->source = nullptr; }
+            if (event_int->thread_name) {free(event_int->thread_name); event_int->thread_name = nullptr; }
+        }
+        break;
+    default:
+        fprintf(stderr, "Unknown debugger event type %u.\n", type);
+        break;
+    }
+
+    free(event);
+}
+
+enum cfrds_debugger_type cfrds_buffer_debugger_event_get_type(cfrds_debugger_event *event)
+{
+    if (event == nullptr)
+    {
+        return CFRDS_DEBUGGER_EVENT_UNKNOWN;
+    }
+
+    const cfrds_debugger_event_int *event_int = (cfrds_debugger_event_int *)event;
+
+    return event_int->type;
+}
+
+enum cfrds_status cfrds_command_debugger_watch_expression(cfrds_server *server, const char *session_id, const char *thread_name, const char *variable)
+{
+
+}
+
+enum cfrds_status cfrds_command_debugger_set_variable(cfrds_server *server, const char *session_id, const char *thread_name, const char *variable, const char *value)
+{
+
+}
+
+enum cfrds_status cfrds_command_debugger_watch_variable(cfrds_server *server, const char *session_id, const char *thread_name, const char *variable)
+{
+
+}
+
+enum cfrds_status cfrds_command_debugger_get_output(cfrds_server *server, const char *session_id, const char *thread_name)
+{
+
+}
+
+enum cfrds_status cfrds_command_debugger_set_scope_filter(cfrds_server *server, const char *session_id, const char *filter)
+{
+
+}

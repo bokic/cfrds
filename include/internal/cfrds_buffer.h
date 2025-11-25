@@ -1,5 +1,7 @@
 #pragma once
 
+#include <libxml/parser.h>
+
 #include <stdlib.h>
 #include <stdbool.h>
 #include <stddef.h>
@@ -169,6 +171,24 @@ typedef struct {
     char *commands[];
 } cfrds_sql_supportedcommands_int;
 
+typedef struct {
+    int type;
+} cfrds_debugger_event_int;
+
+typedef struct {
+    cfrds_debugger_event_int event;
+    char *source;
+    int line;
+    char *thread_name;
+} cfrds_debugger_event_breakpoint_int;
+
+typedef struct {
+    cfrds_debugger_event_int event;
+    char *pathname;
+    int req_line;
+    int act_line;
+} cfrds_debugger_event_breakpoint_set_int;
+
 #ifdef __cplusplus
 extern "C"
 {
@@ -216,6 +236,8 @@ char *cfrds_buffer_to_debugger_start(cfrds_buffer *buffer);
 bool cfrds_buffer_to_debugger_stop(cfrds_buffer *buffer);
 int cfrds_buffer_to_debugger_info(cfrds_buffer *buffer);
 cfrds_debugger_event *cfrds_buffer_to_debugger_event(cfrds_buffer *buffer);
+
+const char *cfrds_xml_get_struct_var_string(xmlNodePtr xml_node, const char *var_name);
 
 bool cfrds_buffer_skip_httpheader(char **data, size_t *size);
 

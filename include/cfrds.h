@@ -56,6 +56,12 @@ enum cfrds_status {
     CFRDS_STATUS_READING_FROM_SOCKET_FAILED,
 };
 
+enum cfrds_debugger_type {
+    CFRDS_DEBUGGER_EVENT_TYPE_BREAKPOINT_SET,
+    CFRDS_DEBUGGER_EVENT_TYPE_BREAKPOINT,
+    CFRDS_DEBUGGER_EVENT_UNKNOWN,
+};
+
 #define cfrds_server_defer(var) cfrds_server* var __attribute__((cleanup(cfrds_server_cleanup))) = nullptr
 #define cfrds_buffer_defer(var) cfrds_buffer* var __attribute__((cleanup(cfrds_buffer_cleanup))) = nullptr
 #define cfrds_file_content_defer(var) cfrds_file_content* var __attribute__((cleanup(cfrds_file_content_cleanup))) = nullptr
@@ -70,7 +76,8 @@ enum cfrds_status {
 #define cfrds_sql_resultset_defer(var) cfrds_sql_resultset* var __attribute__((cleanup(cfrds_sql_resultset_cleanup))) = nullptr
 #define cfrds_sql_metadata_defer(var) cfrds_sql_resultset* var __attribute__((cleanup(cfrds_sql_metadata_cleanup))) = nullptr
 #define cfrds_sql_supportedcommands_defer(var) cfrds_sql_supportedcommands* var __attribute__((cleanup(cfrds_sql_supportedcommands_cleanup))) = nullptr
-#define cfrds_sql_dbdescription_defer(var) cfrds_sql_dbdescription* var __attribute__((cleanup(cfrds_sql_dbdescription_cleanup))) = nullptr
+#define cfrds_debugger_event_defer(var) cfrds_debugger_event* var __attribute__((cleanup(cfrds_debugger_event_cleanup))) = nullptr
+
 #define cfrds_str_defer(var) char* var __attribute__((cleanup(cfrds_str_cleanup))) = nullptr
 #define cfrds_fd_defer(var) int var __attribute__((cleanup(cfrds_fd_cleanup))) = -1
 
@@ -243,6 +250,16 @@ EXPORT_CFRDS enum cfrds_status cfrds_command_debugger_step_in(cfrds_server *serv
 EXPORT_CFRDS enum cfrds_status cfrds_command_debugger_step_over(cfrds_server *server, const char *session_id, const char *thread_name);
 EXPORT_CFRDS enum cfrds_status cfrds_command_debugger_step_out(cfrds_server *server, const char *session_id, const char *thread_name);
 EXPORT_CFRDS enum cfrds_status cfrds_command_debugger_continue(cfrds_server *server, const char *session_id, const char *thread_name);
+
+EXPORT_CFRDS void cfrds_buffer_debugger_event_free(cfrds_debugger_event *event);
+EXPORT_CFRDS void cfrds_debugger_event_cleanup(cfrds_debugger_event **buf);
+EXPORT_CFRDS enum cfrds_debugger_type cfrds_buffer_debugger_event_get_type(cfrds_debugger_event *event);
+
+EXPORT_CFRDS enum cfrds_status cfrds_command_debugger_watch_expression(cfrds_server *server, const char *session_id, const char *thread_name, const char *expression);
+EXPORT_CFRDS enum cfrds_status cfrds_command_debugger_set_variable(cfrds_server *server, const char *session_id, const char *thread_name, const char *variable, const char *value);
+EXPORT_CFRDS enum cfrds_status cfrds_command_debugger_watch_variable(cfrds_server *server, const char *session_id, const char *thread_name, const char *variable);
+EXPORT_CFRDS enum cfrds_status cfrds_command_debugger_get_output(cfrds_server *server, const char *session_id, const char *thread_name);
+EXPORT_CFRDS enum cfrds_status cfrds_command_debugger_set_scope_filter(cfrds_server *server, const char *session_id, const char *filter);
 
 #ifdef __cplusplus
 }

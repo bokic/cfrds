@@ -11,7 +11,9 @@ def main():
               "../src/cfrds.c",
               "../src/cfrds_buffer.c",
               "../src/cfrds_http.c"
-            ],  include_dirs=['../include'])]
+            ],
+            include_dirs=['../include', '/usr/include/libxml2'],
+            libraries=['xml2'])]
     )
 
 if __name__ == "__main__":

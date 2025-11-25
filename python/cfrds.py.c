@@ -827,6 +827,24 @@ exit:
     return Py_None;
 }
 
+static PyObject *
+cfrds_server_debugger_get_server_info(cfrds_server_Object *self, PyObject *args)
+{           
+    cfrds_str_defer(session_name);         
+    enum cfrds_status res = CFRDS_STATUS_OK;
+    uint16_t port = 0;
+
+    CHECK_FOR_ERORRS(cfrds_command_debugger_start(self->server, &session_name));
+    res = cfrds_command_debugger_get_server_info(self->server,  session_name, &port);
+    CHECK_FOR_ERORRS(cfrds_command_debugger_stop(self->server, session_name));
+
+    if (res == CFRDS_STATUS_OK)
+        return PyLong_FromUnsignedLong(port);
+
+exit:
+    return Py_None;
+}
+
 static PyMethodDef cfrds_server_methods[] = {
     {"browse_dir",  (PyCFunction) cfrds_server_browse_dir,  METH_VARARGS, "List directory entries"},
     {"file_read",   (PyCFunction) cfrds_server_file_read,   METH_VARARGS, "Read file"},
@@ -850,6 +868,7 @@ static PyMethodDef cfrds_server_methods[] = {
     {"sql_dbdescription", (PyCFunction) cfrds_server_sql_dbdescription, METH_VARARGS, "Get ColdFusion datasource database description"},
     {"debugger_start", (PyCFunction) cfrds_server_debugger_start, METH_VARARGS, "Start ColdFusion debugger session"},
     {"debugger_stop", (PyCFunction) cfrds_server_debugger_stop, METH_VARARGS, "Stop ColdFusion debugger session"},
+    {"debugger_get_server_info", (PyCFunction) cfrds_server_debugger_get_server_info, METH_VARARGS, "Get ColdFusion debugger get server info"},
     {nullptr}  /* Sentinel */
 };
 

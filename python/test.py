@@ -22,7 +22,9 @@ rds = cfrds.server(host, port, username, password)
 # print(rds.sql_getsupportedcommands())
 # print(rds.sql_dbdescription("datasource"))
 
-debugger_session_id = rds.debugger_start()
-print("Debugger session ID:", debugger_session_id)
-rds.debugger_stop(debugger_session_id)
-print("Debugger session stopped")
+#debugger_session_id = rds.debugger_start()
+#print("Debugger session ID:", debugger_session_id)
+#rds.debugger_stop(debugger_session_id)
+#print("Debugger session stopped")
+
+print(rds.debugger_get_server_info())

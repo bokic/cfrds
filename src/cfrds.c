@@ -2031,3 +2031,32 @@ enum cfrds_status cfrds_command_debugger_stop(cfrds_server *server, const char *
 
     return ret;
 }
+
+enum cfrds_status cfrds_command_debugger_get_server_info(cfrds_server *server, const char *session_id, uint16_t *port)
+{
+    enum cfrds_status ret;
+
+    cfrds_server_int *server_int = nullptr;
+    cfrds_buffer_defer(response);
+
+    if (server == nullptr)
+    {
+        return CFRDS_STATUS_SERVER_IS_nullptr;
+    }
+
+    ret = cfrds_internal_command(server, &response, "DBGREQUEST", (const char *[]){ "DBG_GET_DEBUG_SERVER_INFO", session_id, nullptr});
+    if (ret == CFRDS_STATUS_OK)
+    {
+        int val = cfrds_buffer_to_debugger_info(response);
+        if (val == -1)
+        {
+            server_int = server;
+            server_int->error_code = -1;
+            return CFRDS_STATUS_RESPONSE_ERROR;
+        }
+
+        *port = val;
+    }
+
+    return ret;
+}

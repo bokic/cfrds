@@ -3,6 +3,9 @@
 #include <cfrds.h>
 #include <internal/cfrds_buffer.h>
 
+#include <libxml/parser.h>
+#include <libxml/tree.h>
+
 #include <stdlib.h>
 #include <string.h>
 #include <stddef.h>
@@ -16,13 +19,14 @@
 #include <stdio.h>
 
 
+#define xmlDoc_defer(var) xmlDoc* var __attribute__((cleanup(xmlDoc_cleanup))) = nullptr
+
 typedef struct {
     size_t allocated;
     size_t size;
     size_t offset;
     uint8_t *data;
 } cfrds_buffer_int;
-
 
 
 void cfrds_str_cleanup(char **str) {
@@ -132,6 +136,15 @@ void cfrds_sql_supportedcommands_cleanup(cfrds_sql_supportedcommands **buf) {
     if (*buf) {
         cfrds_buffer_sql_supportedcommands_free(*buf);
         *buf = nullptr;
+    }
+}
+
+void xmlDoc_cleanup(xmlDoc **doc)
+{
+    if (doc)
+    {
+        xmlFreeDoc(*doc);
+        doc = nullptr;
     }
 }
 
@@ -1512,9 +1525,142 @@ bool cfrds_buffer_to_debugger_stop(cfrds_buffer *buffer)
 
     cfrds_buffer_parse_string(&data, &size, &ret);
 
-    // TODO: Parse XML!
-    if (strstr(ret, "RDS_OK") != nullptr)
-        return true;
+    if (ret)
+    {
+        xmlDoc_defer(doc);
+        doc = xmlParseMemory(ret, strlen(ret));
+
+        xmlNodePtr rootEl = xmlDocGetRootElement(doc);
+        if (rootEl == nullptr) return false;
+        if (rootEl->type != XML_ELEMENT_NODE) return false;
+        if (strcmp((const char *)rootEl->name, "wddxPacket") != 0) return false;
+
+        xmlNodePtr headerEl = rootEl->children;
+        if (headerEl == nullptr) return false;
+        if (headerEl->type != XML_ELEMENT_NODE) return false;
+        if (strcmp((const char *)headerEl->name, "header") != 0) return false;
+
+        xmlNodePtr dataEl = headerEl->next;
+        if (dataEl == nullptr) return false;
+        if (dataEl->type != XML_ELEMENT_NODE) return false;
+        if (strcmp((const char *)dataEl->name, "data") != 0) return false;
+
+        xmlNodePtr arrayEl = dataEl->children;
+        if (arrayEl == nullptr) return false;
+        if (arrayEl->type != XML_ELEMENT_NODE) return false;
+        if (strcmp((const char *)arrayEl->name, "array") != 0) return false;
+
+        xmlNodePtr structEl = arrayEl->children;
+        if (structEl == nullptr) return false;
+        if (structEl->type != XML_ELEMENT_NODE) return false;
+        if (strcmp((const char *)structEl->name, "struct") != 0) return false;
+
+        xmlNodePtr varEl = structEl->children;
+        if (varEl == nullptr) return false;
+        if (varEl->type != XML_ELEMENT_NODE) return false;
+        if (strcmp((const char *)varEl->name, "var") != 0) return false;
+
+        xmlNodePtr stringEl = varEl->children;
+        if (stringEl == nullptr) return false;
+        if (stringEl->type != XML_ELEMENT_NODE) return false;
+        if (strcmp((const char *)stringEl->name, "string") != 0) return false;
+
+        xmlNodePtr content = stringEl->children;
+        if (content == nullptr) return false;
+        if (content->type != XML_TEXT_NODE) return false;
+        if (strstr((const char *)content->content, "RDS_OK") != nullptr)
+            return true;
+    }
 
     return false;
+}
+
+
+int cfrds_buffer_to_debugger_info(cfrds_buffer *buffer)
+{
+    cfrds_str_defer(ret);
+
+    cfrds_buffer_int *buffer_int = buffer;
+    int64_t rows = 0;
+
+    if (buffer_int == nullptr)
+        return -1;
+
+    char *data = (char *)buffer_int->data;
+    size_t size = buffer_int->size;
+
+    if (!cfrds_buffer_skip_httpheader(&data, &size))
+        return -1;
+
+    cfrds_buffer_parse_number(&data, &size, &rows);
+    if (rows != 1)
+        return -1;
+
+    cfrds_buffer_parse_string(&data, &size, &ret);
+
+    if (ret)
+    {
+
+        xmlDoc_defer(doc);
+        doc = xmlParseMemory(ret, strlen(ret));
+
+        xmlNodePtr rootEl = xmlDocGetRootElement(doc);
+        if (rootEl == nullptr) return -1;
+        if (rootEl->type != XML_ELEMENT_NODE) return -1;
+        if (strcmp((const char *)rootEl->name, "wddxPacket") != 0) return -1;
+
+        xmlNodePtr headerEl = rootEl->children;
+        if (headerEl == nullptr) return -1;
+        if (headerEl->type != XML_ELEMENT_NODE) return -1;
+        if (strcmp((const char *)headerEl->name, "header") != 0) return -1;
+
+        xmlNodePtr dataEl = headerEl->next;
+        if (dataEl == nullptr) return -1;
+        if (dataEl->type != XML_ELEMENT_NODE) return -1;
+        if (strcmp((const char *)dataEl->name, "data") != 0) return -1;
+
+        xmlNodePtr arrayEl = dataEl->children;
+        if (arrayEl == nullptr) return -1;
+        if (arrayEl->type != XML_ELEMENT_NODE) return -1;
+        if (strcmp((const char *)arrayEl->name, "array") != 0) return -1;
+
+        xmlNodePtr structEl = arrayEl->children;
+        if (structEl == nullptr) return -1;
+        if (structEl->type != XML_ELEMENT_NODE) return -1;
+        if (strcmp((const char *)structEl->name, "struct") != 0) return -1;
+
+        xmlNodePtr varStatusEl = structEl->children;
+        if (varStatusEl == nullptr) return -1;
+        if (varStatusEl->type != XML_ELEMENT_NODE) return -1;
+        if (strcmp((const char *)varStatusEl->name, "var") != 0) return -1;
+        // TODO: Check for variable name
+
+        xmlNodePtr varStatusTypeEl = varStatusEl->children;
+        if (varStatusTypeEl == nullptr) return -1;
+        if (varStatusTypeEl->type != XML_ELEMENT_NODE) return -1;
+        if (strcmp((const char *)varStatusTypeEl->name, "string") != 0) return -1;
+
+        xmlNodePtr varStatusValueEl = varStatusTypeEl->children;
+        if (varStatusValueEl == nullptr) return -1;
+        if (varStatusValueEl->type != XML_TEXT_NODE) return -1;
+        if (strstr((const char *)varStatusValueEl->content, "RDS_OK") == nullptr) return -1;
+
+        xmlNodePtr varDebugServerPortEl = varStatusEl->next;
+        if (varDebugServerPortEl == nullptr) return -1;
+        if (varDebugServerPortEl->type != XML_ELEMENT_NODE) return -1;
+        if (strcmp((const char *)varDebugServerPortEl->name, "var") != 0) return -1;
+        // TODO: Check for variable name
+
+        xmlNodePtr varDebugServerPortTypeEl = varDebugServerPortEl->children;
+        if (varDebugServerPortTypeEl == nullptr) return -1;
+        if (varDebugServerPortTypeEl->type != XML_ELEMENT_NODE) return -1;
+        if (strcmp((const char *)varDebugServerPortTypeEl->name, "number") != 0) return -1;
+
+        xmlNodePtr varDebugServerPortValueEl = varDebugServerPortTypeEl->children;
+        if (varDebugServerPortValueEl == nullptr) return -1;
+        if (varDebugServerPortValueEl->type != XML_TEXT_NODE) return -1;
+        return atof((char *)varDebugServerPortValueEl->content);
+    }
+
+    return -1;
 }

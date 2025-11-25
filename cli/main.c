@@ -95,6 +95,9 @@ static void usage()
            "\n"
            "  - 'dbg_stop' - Stops ColdFusion debugger session.\n"
            "         example: `cfrds dbg_start rds://username:password@host/dbg_session`\n"
+           "\n"
+           "  - 'dbg_info' - Get ColdFusion debugger server info.\n"
+           "         example: `cfrds dbg_info rds://username:password@host`\n"
            );
 }
 
@@ -812,8 +815,34 @@ int main(int argc, char *argv[])
                 return EXIT_FAILURE;
             }
         }
+    } else if (strcmp(command, "dbg_info") == 0) {
+        uint16_t port;
+        cfrds_str_defer(dbg_session);
+
+        res = cfrds_command_debugger_start(server, &dbg_session);
+        if (res != CFRDS_STATUS_OK)
+        {
+            fprintf(stderr, "dbg_start FAILED with error: %s\n", cfrds_server_get_error(server));
+            return EXIT_FAILURE;
+        }
+
+        res = cfrds_command_debugger_get_server_info(server, dbg_session, &port);
+        if (res != CFRDS_STATUS_OK)
+        {
+            fprintf(stderr, "cfrds_command_debugger_get_server_info FAILED with error: %s\n", cfrds_server_get_error(server));
+            ret = EXIT_FAILURE;
+        }
+
+        printf("Debugging port: %d\n", port);
+
+        res = cfrds_command_debugger_stop(server, path);
+        if (res != CFRDS_STATUS_OK)
+        {
+            fprintf(stderr, "dbg_stop FAILED with error: %s\n", cfrds_server_get_error(server));
+            return EXIT_FAILURE;
+        }
     } else {
     }
 
-    return EXIT_SUCCESS;
+    return ret;
 }

@@ -213,6 +213,7 @@ char *cfrds_buffer_to_sql_dbdescription(cfrds_buffer *buffer);
 
 char *cfrds_buffer_to_debugger_start(cfrds_buffer *buffer);
 bool cfrds_buffer_to_debugger_stop(cfrds_buffer *buffer);
+int cfrds_buffer_to_debugger_info(cfrds_buffer *buffer);
 
 bool cfrds_buffer_skip_httpheader(char **data, size_t *size);
 

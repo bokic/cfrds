@@ -51,11 +51,13 @@ target_include_directories(libcfrds PUBLIC
     include
 )
 
+target_include_directories(libcfrds PRIVATE
+    /usr/include/libxml2
+)
+
+target_link_libraries(libcfrds PRIVATE xml2)
+
 if(WIN32)
-    target_link_libraries(cfrds_cli PRIVATE
-        wsock32
-        ws2_32
-    )
     target_link_libraries(libcfrds PRIVATE
         wsock32
         ws2_32

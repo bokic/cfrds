@@ -15,9 +15,9 @@ Some of the features RDS protocol supports:
 ## Implemented Features
 * Remote ColdFusion server file/dir access.
 * Remote ColdFusion server Database access.
+* Remote ColdFusion server debugger.
 
 ## TODO
-* Remote ColdFusion server debugger.
 * Remote ColdFusion server adminapi settings.
 * Remote ColdFusion server graph(chart).
 * Remote ColdFusion server webapp security analyzer service.

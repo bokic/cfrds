@@ -78,7 +78,7 @@ enum cfrds_status cfrds_http_post(cfrds_server_int *server, const char *command,
         return CFRDS_STATUS_SOCKET_CREATION_FAILED;
     }
 
-    memset(&servaddr, 0, sizeof(servaddr));
+    explicit_bzero(&servaddr, sizeof(servaddr));
 
     servaddr.sin_family = AF_INET;
     servaddr.sin_port = htons(port);
@@ -124,8 +124,7 @@ enum cfrds_status cfrds_http_post(cfrds_server_int *server, const char *command,
         cfrds_buffer_expand(int_response, readed);
     }
 
-    cfrds_buffer_append_char(int_response, '\0');
-    char *response_data = cfrds_buffer_data(int_response);
+    const char *response_data = cfrds_buffer_data(int_response);
     size_t response_size = cfrds_buffer_data_size(int_response);
 
     static const char *good_response = "HTTP/1.1 200 ";
@@ -170,8 +169,6 @@ void cfrds_sock_cleanup(SOCKET* sock)
             closesocket(*sock);
             *sock = INVALID_SOCKET;
         }
-
-        sock = nullptr;
     }
 }
 #else
@@ -184,8 +181,6 @@ void cfrds_sock_cleanup(int* sock)
             close(*sock);
             *sock = 0;
         }
-
-        sock = nullptr;
     }
 }
 #endif

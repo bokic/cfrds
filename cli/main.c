@@ -431,8 +431,8 @@ int main(int argc, char *argv[])
     } else if (strcmp(command, "columninfo") == 0) {
         if ((path != nullptr)&&(strlen(path) > 1))
         {
-            char *schema = path + 1;
-            char *table = strchr(schema, '/');
+            const char *schema = path + 1;
+            const char *table = strchr(schema, '/');
             if(table) {
                 cfrds_sql_columninfo_defer(columninfo);
                 int tmp_size = 0;
@@ -480,8 +480,8 @@ int main(int argc, char *argv[])
     } else if (strcmp(command, "primarykeys") == 0) {
         if ((path != nullptr)&&(strlen(path) > 1))
         {
-            char *schema = path + 1;
-            char *table = strchr(schema, '/');
+            const char *schema = path + 1;
+            const char *table = strchr(schema, '/');
             if(table) {
                 cfrds_sql_primarykeys_defer(primarykeys);
                 cfrds_str_defer(tablename);
@@ -528,8 +528,8 @@ int main(int argc, char *argv[])
     } else if (strcmp(command, "foreignkeys") == 0) {
         if ((path != nullptr)&&(strlen(path) > 1))
         {
-            char *schema = path + 1;
-            char *table = strchr(schema, '/');
+            const char *schema = path + 1;
+            const char *table = strchr(schema, '/');
             if(table) {
                 cfrds_sql_foreignkeys_defer(foreignkeys);
                 cfrds_str_defer(tablename);
@@ -593,8 +593,8 @@ int main(int argc, char *argv[])
     } else if (strcmp(command, "importedkeys") == 0) {
         if ((path != nullptr)&&(strlen(path) > 1))
         {
-            char *schema = path + 1;
-            char *table = strchr(schema, '/');
+            const char *schema = path + 1;
+            const char *table = strchr(schema, '/');
             if(table) {
                 cfrds_sql_importedkeys_defer(importedkeys);
                 cfrds_str_defer(tablename);
@@ -658,8 +658,8 @@ int main(int argc, char *argv[])
     } else if (strcmp(command, "exportedkeys") == 0) {
         if ((path != nullptr)&&(strlen(path) > 1))
         {
-            char *schema = path + 1;
-            char *table = strchr(schema, '/');
+            const char *schema = path + 1;
+            const char *table = strchr(schema, '/');
             if(table) {
                 cfrds_sql_exportedkeys_defer(exportedkeys);
                 cfrds_str_defer(tablename);
@@ -724,7 +724,7 @@ int main(int argc, char *argv[])
         if ((path != nullptr)&&(strlen(path) > 1))
         {
             cfrds_sql_resultset_defer(resultset);
-            char *schema = path + 1;
+            const char *schema = path + 1;
 
             const char *sql = argv[2];
 
@@ -741,7 +741,7 @@ int main(int argc, char *argv[])
         if ((path != nullptr)&&(strlen(path) > 1))
         {
             cfrds_sql_metadata_defer(metadata);
-            char *schema = path + 1;
+            const char *schema = path + 1;
 
             const char *sql = argv[2];
 
@@ -766,7 +766,6 @@ int main(int argc, char *argv[])
         if ((path != nullptr)&&(strlen(path) > 1))
         {
             cfrds_sql_supportedcommands_defer(supportedcommands);
-            char *schema = path + 1;
 
             res = cfrds_command_sql_getsupportedcommands(server, &supportedcommands);
             if (res != CFRDS_STATUS_OK)
@@ -778,15 +777,15 @@ int main(int argc, char *argv[])
             size_t cnt = cfrds_buffer_sql_supportedcommands_count(supportedcommands);
             for(size_t c = 0; c < cnt; c++)
             {
-                const char *command = cfrds_buffer_sql_supportedcommands_get(supportedcommands, c);
-                printf("%s\n", command);
+                const char *supportedcommand = cfrds_buffer_sql_supportedcommands_get(supportedcommands, c);
+                printf("%s\n", supportedcommand);
             }
         }
     } else if (strcmp(command, "dbdescription") == 0) {
         if ((path != nullptr)&&(strlen(path) > 1))
         {
             cfrds_str_defer(dbdescription);
-            char *schema = path + 1;
+            const char *schema = path + 1;
 
             res = cfrds_command_sql_dbdescription(server, schema, &dbdescription);
             if (res != CFRDS_STATUS_OK)

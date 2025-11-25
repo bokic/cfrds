@@ -213,10 +213,10 @@ void cfrds_buffer_reserve_above_size(cfrds_buffer *buffer, size_t size);
 void cfrds_buffer_expand(cfrds_buffer *buffer, size_t size);
 void cfrds_buffer_free(cfrds_buffer *buffer);
 
-bool cfrds_buffer_parse_number(char **data, size_t *remaining, int64_t *out);
-bool cfrds_buffer_parse_bytearray(char **data, size_t *remaining, char **out, int *out_size);
-bool cfrds_buffer_parse_string(char **data, size_t *remaining, char **out);
-bool cfrds_buffer_parse_string_list_item(char **data, size_t *remaining, char **out);
+bool cfrds_buffer_parse_number(const char **data, size_t *remaining, int64_t *out);
+bool cfrds_buffer_parse_bytearray(const char **data, size_t *remaining, char **out, int *out_size);
+bool cfrds_buffer_parse_string(const char **data, size_t *remaining, char **out);
+bool cfrds_buffer_parse_string_list_item(const char **data, size_t *remaining, char **out);
 
 cfrds_browse_dir_int *cfrds_buffer_to_browse_dir(cfrds_buffer *buffer);
 cfrds_file_content_int *cfrds_buffer_to_file_content(cfrds_buffer *buffer);
@@ -239,7 +239,7 @@ cfrds_debugger_event *cfrds_buffer_to_debugger_event(cfrds_buffer *buffer);
 
 const char *cfrds_xml_get_struct_var_string(xmlNodePtr xml_node, const char *var_name);
 
-bool cfrds_buffer_skip_httpheader(char **data, size_t *size);
+bool cfrds_buffer_skip_httpheader(const char **data, size_t *size);
 
 #ifdef __cplusplus
 }

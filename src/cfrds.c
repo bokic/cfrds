@@ -159,7 +159,7 @@ void cfrds_server_set_error(cfrds_server *server, int64_t error_code, const char
     server_int->error = strdup(error);
 }
 
-const char *cfrds_server_get_error(cfrds_server *server)
+const char *cfrds_server_get_error(const cfrds_server *server)
 {
     const cfrds_server_int *server_int = nullptr;
 
@@ -171,7 +171,7 @@ const char *cfrds_server_get_error(cfrds_server *server)
     return server_int->error;
 }
 
-const char *cfrds_server_get_host(cfrds_server *server)
+const char *cfrds_server_get_host(const cfrds_server *server)
 {
     const cfrds_server_int *server_int = nullptr;
 
@@ -183,7 +183,7 @@ const char *cfrds_server_get_host(cfrds_server *server)
     return server_int->host;
 }
 
-uint16_t cfrds_server_get_port(cfrds_server *server)
+uint16_t cfrds_server_get_port(const cfrds_server *server)
 {
     const cfrds_server_int *server_int = nullptr;
 
@@ -195,7 +195,7 @@ uint16_t cfrds_server_get_port(cfrds_server *server)
     return server_int->port;
 }
 
-const char *cfrds_server_get_username(cfrds_server *server)
+const char *cfrds_server_get_username(const cfrds_server *server)
 {
     const cfrds_server_int *server_int = nullptr;
 
@@ -207,7 +207,7 @@ const char *cfrds_server_get_username(cfrds_server *server)
     return server_int->username;
 }
 
-const char *cfrds_server_get_password(cfrds_server *server)
+const char *cfrds_server_get_password(const cfrds_server *server)
 {
     const cfrds_server_int *server_int = nullptr;
 
@@ -439,9 +439,8 @@ enum cfrds_status cfrds_command_file_get_root_dir(cfrds_server *server, char **o
     ret = cfrds_internal_command(server, &response, "FILEIO", (const char *[]){ "", "CF_DIRECTORY", nullptr});
     if (ret == CFRDS_STATUS_OK)
     {
-        char *response_data = cfrds_buffer_data(response);
+        const char *response_data = cfrds_buffer_data(response);
         size_t response_size = cfrds_buffer_data_size(response);
-        cfrds_buffer_append_char(response, '\0');
 
         server_int = server;
 
@@ -1894,32 +1893,32 @@ const char *cfrds_buffer_sql_metadata_get_jtype(const cfrds_sql_metadata *value,
     return _value->items[ndx].jtype;
 }
 
-size_t cfrds_buffer_sql_resultset_columns(cfrds_sql_resultset *value)
+size_t cfrds_buffer_sql_resultset_columns(const cfrds_sql_resultset *value)
 {
     if (value == nullptr)
         return -1;
 
-    const cfrds_sql_resultset_int *_value = (cfrds_sql_resultset_int *)value;
+    const cfrds_sql_resultset_int *_value = (const cfrds_sql_resultset_int *)value;
 
     return _value->columns;
 }
 
-size_t cfrds_buffer_sql_resultset_rows(cfrds_sql_resultset *value)
+size_t cfrds_buffer_sql_resultset_rows(const cfrds_sql_resultset *value)
 {
     if (value == nullptr)
         return -1;
 
-    const cfrds_sql_resultset_int *_value = (cfrds_sql_resultset_int *)value;
+    const cfrds_sql_resultset_int *_value = (const cfrds_sql_resultset_int *)value;
 
     return _value->rows;
 }
 
-const char *cfrds_buffer_sql_resultset_column_name(cfrds_sql_resultset *value, size_t column)
+const char *cfrds_buffer_sql_resultset_column_name(const cfrds_sql_resultset *value, size_t column)
 {
     if (value == nullptr)
         return nullptr;
 
-    const cfrds_sql_resultset_int *_value = (cfrds_sql_resultset_int *)value;
+    const cfrds_sql_resultset_int *_value = (const cfrds_sql_resultset_int *)value;
 
     if (column >= _value->columns)
         return nullptr;
@@ -1927,12 +1926,12 @@ const char *cfrds_buffer_sql_resultset_column_name(cfrds_sql_resultset *value, s
     return _value->values[column];
 }
 
-const char *cfrds_buffer_sql_resultset_value(cfrds_sql_resultset *value, size_t row, size_t column)
+const char *cfrds_buffer_sql_resultset_value(const cfrds_sql_resultset *value, size_t row, size_t column)
 {
     if (value == nullptr)
         return nullptr;
 
-    const cfrds_sql_resultset_int *_value = (cfrds_sql_resultset_int *)value;
+    const cfrds_sql_resultset_int *_value = (const cfrds_sql_resultset_int *)value;
 
     if ((row >= _value->rows)||(column >= _value->columns))
         return nullptr;

@@ -152,7 +152,7 @@ void xmlDoc_cleanup(xmlDoc **value)
     if (value)
     {
         xmlFreeDoc(*value);
-        value = nullptr;
+        *value = nullptr;
     }
 }
 
@@ -161,7 +161,7 @@ void xmlChar_cleanup(xmlChar **value)
     if (value)
     {
         xmlFree(*value);
-        value = nullptr;
+        *value = nullptr;
     }
 }
 
@@ -380,7 +380,7 @@ void cfrds_buffer_free(cfrds_buffer *buffer)
     free(buffer);
 }
 
-bool cfrds_buffer_parse_number(char **data, size_t *remaining, int64_t *out)
+bool cfrds_buffer_parse_number(const char **data, size_t *remaining, int64_t *out)
 {
     char *end = nullptr;
 
@@ -399,7 +399,7 @@ bool cfrds_buffer_parse_number(char **data, size_t *remaining, int64_t *out)
     return true;
 }
 
-bool cfrds_buffer_parse_bytearray(char **data, size_t *remaining, char **out, int *out_size)
+bool cfrds_buffer_parse_bytearray(const char **data, size_t *remaining, char **out, int *out_size)
 {
     int64_t size = 0;
 
@@ -427,7 +427,7 @@ bool cfrds_buffer_parse_bytearray(char **data, size_t *remaining, char **out, in
     return true;
 }
 
-bool cfrds_buffer_parse_string(char **data, size_t *remaining, char **out)
+bool cfrds_buffer_parse_string(const char **data, size_t *remaining, char **out)
 {
     int64_t size = 0;
 
@@ -453,7 +453,7 @@ bool cfrds_buffer_parse_string(char **data, size_t *remaining, char **out)
     return true;
 }
 
-bool cfrds_buffer_parse_string_list_item(char **data, size_t *remaining, char **out)
+bool cfrds_buffer_parse_string_list_item(const char **data, size_t *remaining, char **out)
 {
     bool with_quotes = false;
     const char *endstr = nullptr;
@@ -507,9 +507,9 @@ bool cfrds_buffer_parse_string_list_item(char **data, size_t *remaining, char **
     return true;
 }
 
-bool cfrds_buffer_skip_httpheader(char **data, size_t *remaining)
+bool cfrds_buffer_skip_httpheader(const char **data, size_t *remaining)
 {
-    char *body = nullptr;
+    const char *body = nullptr;
 
     body = strstr(*data, "\r\n\r\n");
     if (body == nullptr)
@@ -535,7 +535,7 @@ cfrds_browse_dir_int *cfrds_buffer_to_browse_dir(cfrds_buffer *buffer)
     if (buffer_int == nullptr)
         return nullptr;
 
-    char *data = (char *)buffer_int->data;
+    const char *data = (const char *)buffer_int->data;
     size_t size = buffer_int->size;
 
     if (!cfrds_buffer_skip_httpheader(&data, &size))
@@ -555,7 +555,7 @@ cfrds_browse_dir_int *cfrds_buffer_to_browse_dir(cfrds_buffer *buffer)
     if (tmp == nullptr)
         return nullptr;
 
-    memset(tmp, 0, malloc_size);
+    explicit_bzero(tmp, malloc_size);
 
     ((cfrds_browse_dir_int *)tmp)->cnt = cnt;
 
@@ -631,7 +631,7 @@ cfrds_file_content_int *cfrds_buffer_to_file_content(cfrds_buffer *buffer)
     if (buffer_int == nullptr)
         return nullptr;
 
-    char *data = (char *)buffer_int->data;
+    const char *data = (const char *)buffer_int->data;
     size_t size = buffer_int->size;
 
     if (!cfrds_buffer_skip_httpheader(&data, &size))
@@ -658,7 +658,7 @@ cfrds_sql_dsninfo_int *cfrds_buffer_to_sql_dsninfo(cfrds_buffer *buffer)
 {
     cfrds_sql_dsninfo_int *ret = nullptr;
 
-    char *response_data = cfrds_buffer_data(buffer);
+    const char *response_data = cfrds_buffer_data(buffer);
     size_t response_size = cfrds_buffer_data_size(buffer);
 
     if (cfrds_buffer_skip_httpheader(&response_data, &response_size))
@@ -718,7 +718,7 @@ cfrds_sql_tableinfo_int *cfrds_buffer_to_sql_tableinfo(cfrds_buffer *buffer)
 {
     cfrds_sql_tableinfo_int *ret = nullptr;
 
-    char *response_data = cfrds_buffer_data(buffer);
+    const char *response_data = cfrds_buffer_data(buffer);
     size_t response_size = cfrds_buffer_data_size(buffer);
 
     if (cfrds_buffer_skip_httpheader(&response_data, &response_size))
@@ -739,7 +739,7 @@ cfrds_sql_tableinfo_int *cfrds_buffer_to_sql_tableinfo(cfrds_buffer *buffer)
         if (ret == nullptr)
             return nullptr;
 
-        memset(ret, 0, malloc_size);
+        explicit_bzero(ret, malloc_size);
 
         ret->cnt = 0;
 
@@ -846,7 +846,6 @@ cfrds_sql_tableinfo_int *cfrds_buffer_to_sql_tableinfo(cfrds_buffer *buffer)
                     memcpy(field4, current_item, size);
                     field4[size] = '\0';
                 }
-                current_item = end_item + 1;
 
                 ret->items[ret->cnt].unknown = field1; field1 = nullptr;
                 ret->items[ret->cnt].schema  = field2; field2 = nullptr;
@@ -871,7 +870,7 @@ cfrds_sql_columninfo_int *cfrds_buffer_to_sql_columninfo(cfrds_buffer *buffer)
     if (buffer_int == nullptr)
         return nullptr;
 
-    char *data = (char *)buffer_int->data;
+    const char *data = (const char *)buffer_int->data;
     size_t size = buffer_int->size;
 
     if (!cfrds_buffer_skip_httpheader(&data, &size))
@@ -887,7 +886,7 @@ cfrds_sql_columninfo_int *cfrds_buffer_to_sql_columninfo(cfrds_buffer *buffer)
     if (ret == nullptr)
         return nullptr;
 
-    memset(ret, 0, offsetof(cfrds_sql_columninfo_int, items) + sizeof(cfrds_sql_columninfoitem_int) * columns);
+    explicit_bzero(ret, offsetof(cfrds_sql_columninfo_int, items) + sizeof(cfrds_sql_columninfoitem_int) * columns);
     ret->cnt = columns;
 
     for(int64_t column = 0; column < columns; column++)
@@ -897,7 +896,7 @@ cfrds_sql_columninfo_int *cfrds_buffer_to_sql_columninfo(cfrds_buffer *buffer)
         if (!cfrds_buffer_parse_string(&data, &size, &row_buf))
             return nullptr;
 
-        char *column_buf = row_buf;
+        const char *column_buf = row_buf;
 
         size_t list_remaining = strlen(column_buf);
 
@@ -966,7 +965,7 @@ cfrds_sql_primarykeys_int *cfrds_buffer_to_sql_primarykeys(cfrds_buffer *buffer)
     if (buffer_int == nullptr)
         return nullptr;
 
-    char *data = (char *)buffer_int->data;
+    const char *data = (const char *)buffer_int->data;
     size_t size = buffer_int->size;
 
     if (!cfrds_buffer_skip_httpheader(&data, &size))
@@ -989,7 +988,7 @@ cfrds_sql_primarykeys_int *cfrds_buffer_to_sql_primarykeys(cfrds_buffer *buffer)
         if (item == nullptr)
             return nullptr;
 
-        char *column_buf = item;
+        const char *column_buf = item;
 
         size_t list_remaining = strlen(column_buf);
 
@@ -1029,7 +1028,7 @@ cfrds_sql_foreignkeys_int *cfrds_buffer_to_sql_foreignkeys(cfrds_buffer *buffer)
     if (buffer_int == nullptr)
         return nullptr;
 
-    char *data = (char *)buffer_int->data;
+    const char *data = (const char *)buffer_int->data;
     size_t size = buffer_int->size;
 
     if (!cfrds_buffer_skip_httpheader(&data, &size))
@@ -1052,7 +1051,7 @@ cfrds_sql_foreignkeys_int *cfrds_buffer_to_sql_foreignkeys(cfrds_buffer *buffer)
         if (item == nullptr)
             return nullptr;
 
-        char *column_buf = item;
+        const char *column_buf = item;
 
         size_t list_remaining = strlen(column_buf);
 
@@ -1110,7 +1109,7 @@ cfrds_sql_importedkeys_int *cfrds_buffer_to_sql_importedkeys(cfrds_buffer *buffe
     if (buffer_int == nullptr)
         return nullptr;
 
-    char *data = (char *)buffer_int->data;
+    const char *data = (const char *)buffer_int->data;
     size_t size = buffer_int->size;
 
     if (!cfrds_buffer_skip_httpheader(&data, &size))
@@ -1136,7 +1135,7 @@ cfrds_sql_importedkeys_int *cfrds_buffer_to_sql_importedkeys(cfrds_buffer *buffe
         if (item == nullptr)
             return nullptr;
 
-        char *column_buf = item;
+        const char *column_buf = item;
 
         size_t list_remaining = strlen(column_buf);
 
@@ -1194,7 +1193,7 @@ cfrds_sql_exportedkeys_int *cfrds_buffer_to_sql_exportedkeys(cfrds_buffer *buffe
     if (buffer_int == nullptr)
         return nullptr;
 
-    char *data = (char *)buffer_int->data;
+    const char *data = (const char *)buffer_int->data;
     size_t size = buffer_int->size;
 
     if (!cfrds_buffer_skip_httpheader(&data, &size))
@@ -1217,7 +1216,7 @@ cfrds_sql_exportedkeys_int *cfrds_buffer_to_sql_exportedkeys(cfrds_buffer *buffe
         if (item == nullptr)
             return nullptr;
 
-        char *column_buf = item;
+        const char *column_buf = item;
 
         size_t list_remaining = strlen(column_buf);
 
@@ -1278,9 +1277,8 @@ cfrds_sql_resultset_int *cfrds_buffer_to_sql_sqlstmnt(cfrds_buffer *buffer)
     if (buffer_int == nullptr)
         return nullptr;
 
-    char *response_data = cfrds_buffer_data(buffer);
+    const char *response_data = cfrds_buffer_data(buffer);
     size_t response_size = cfrds_buffer_data_size(buffer);
-    cfrds_buffer_append_char(buffer, '\0');
 
     if (!cfrds_buffer_skip_httpheader(&response_data, &response_size))
         return nullptr;
@@ -1291,15 +1289,17 @@ cfrds_sql_resultset_int *cfrds_buffer_to_sql_sqlstmnt(cfrds_buffer *buffer)
     if (cnt < 1)
         return nullptr;
 
-    char *response_start_data = response_data;
+    const char *response_start_data = response_data;
     size_t response_start_size = response_size;
 
     rows = cnt - 1;
     {
         cfrds_str_defer(col_row);
         cfrds_buffer_parse_string(&response_data, &response_size, &col_row);
+        if (col_row == nullptr)
+            return nullptr;
 
-        char *row_walker = col_row;
+        const char *row_walker = col_row;
         size_t row_size = strlen(row_walker);
         while(row_size)
         {
@@ -1309,7 +1309,7 @@ cfrds_sql_resultset_int *cfrds_buffer_to_sql_sqlstmnt(cfrds_buffer *buffer)
         }
     }
 
-    if ((cols < 1)||(rows < 0))
+    if (cols < 1)
         return nullptr;
 
     cnt = cols * (rows + 1);
@@ -1319,7 +1319,7 @@ cfrds_sql_resultset_int *cfrds_buffer_to_sql_sqlstmnt(cfrds_buffer *buffer)
     if (tmp == nullptr)
         return nullptr;
 
-    memset(tmp, 0, buf_size);
+    explicit_bzero(tmp, buf_size);
 
     ((cfrds_sql_resultset_int *)tmp)->columns = cols;
     ((cfrds_sql_resultset_int *)tmp)->rows = rows;
@@ -1331,7 +1331,7 @@ cfrds_sql_resultset_int *cfrds_buffer_to_sql_sqlstmnt(cfrds_buffer *buffer)
     {
         cfrds_str_defer(row);
         cfrds_buffer_parse_string(&response_data, &response_size, &row);
-        char *row_walker = row;
+        const char *row_walker = row;
         size_t row_size = strlen(row_walker);
 
         for(int64_t c = 0; c < cols; c++)
@@ -1362,9 +1362,8 @@ cfrds_sql_metadata_int *cfrds_buffer_to_sql_metadata(cfrds_buffer *buffer)
     if (buffer_int == nullptr)
         return nullptr;
 
-    char *response_data = cfrds_buffer_data(buffer);
+    const char *response_data = cfrds_buffer_data(buffer);
     size_t response_size = cfrds_buffer_data_size(buffer);
-    cfrds_buffer_append_char(buffer, '\0');
 
     if (!cfrds_buffer_skip_httpheader(&response_data, &response_size))
         return nullptr;
@@ -1377,7 +1376,7 @@ cfrds_sql_metadata_int *cfrds_buffer_to_sql_metadata(cfrds_buffer *buffer)
     if (tmp == nullptr)
         return nullptr;
 
-    memset(tmp, 0, buf_size);
+    explicit_bzero(tmp, buf_size);
 
     ((cfrds_sql_metadata_int *)tmp)->cnt = cnt;
 
@@ -1387,8 +1386,10 @@ cfrds_sql_metadata_int *cfrds_buffer_to_sql_metadata(cfrds_buffer *buffer)
         cfrds_str_defer(row);
 
         cfrds_buffer_parse_string(&response_data, &response_size, &row);
+        if (row == nullptr)
+            return nullptr;
 
-        char *row_walker = row;
+        const char *row_walker = row;
         size_t row_size = strlen(row_walker);
 
         cfrds_buffer_parse_string_list_item(&row_walker, &row_size, &field);
@@ -1422,7 +1423,7 @@ cfrds_sql_supportedcommands_int *cfrds_buffer_to_sql_supportedcommands(cfrds_buf
     if (buffer_int == nullptr)
         return nullptr;
 
-    char *data = (char *)buffer_int->data;
+    const char *data = (const char *)buffer_int->data;
     size_t size = buffer_int->size;
 
     if (!cfrds_buffer_skip_httpheader(&data, &size))
@@ -1441,7 +1442,7 @@ cfrds_sql_supportedcommands_int *cfrds_buffer_to_sql_supportedcommands(cfrds_buf
         return nullptr;
 
     {
-        char *start_data = data;
+        const char *start_data = data;
         size_t start_size = size - 1;
         while(start_size)
         {
@@ -1456,7 +1457,7 @@ cfrds_sql_supportedcommands_int *cfrds_buffer_to_sql_supportedcommands(cfrds_buf
     if (tmp == nullptr)
         return nullptr;
 
-    memset(tmp, 0, buf_size);
+    explicit_bzero(tmp, buf_size);
 
     ((cfrds_sql_supportedcommands_int *)tmp)->cnt = cnt;
 
@@ -1483,7 +1484,7 @@ char *cfrds_buffer_to_sql_dbdescription(cfrds_buffer *buffer)
     int64_t rows = 0;
     cfrds_str_defer(row);
 
-    char *data = (char *)buffer_int->data;
+    const char *data = (const char *)buffer_int->data;
     size_t size = buffer_int->size;
 
     if (!cfrds_buffer_skip_httpheader(&data, &size))
@@ -1495,8 +1496,10 @@ char *cfrds_buffer_to_sql_dbdescription(cfrds_buffer *buffer)
         return nullptr;
 
     cfrds_buffer_parse_string(&data, &size, &row);
+    if (row == nullptr)
+        return nullptr;
 
-    data = (char *)row;
+    data = (const char *)row;
     size = strlen(data);
 
     cfrds_buffer_parse_string_list_item(&data, &size, &ret);
@@ -1514,7 +1517,7 @@ char *cfrds_buffer_to_debugger_start(cfrds_buffer *buffer)
     if (buffer_int == nullptr)
         return nullptr;
 
-    char *data = (char *)buffer_int->data;
+    const char *data = (const char *)buffer_int->data;
     size_t size = buffer_int->size;
 
     if (!cfrds_buffer_skip_httpheader(&data, &size))
@@ -1539,7 +1542,7 @@ bool cfrds_buffer_to_debugger_stop(cfrds_buffer *buffer)
     if (buffer_int == nullptr)
         return false;
 
-    char *data = (char *)buffer_int->data;
+    const char *data = (const char *)buffer_int->data;
     size_t size = buffer_int->size;
 
     if (!cfrds_buffer_skip_httpheader(&data, &size))
@@ -1612,7 +1615,7 @@ int cfrds_buffer_to_debugger_info(cfrds_buffer *buffer)
     if (buffer_int == nullptr)
         return -1;
 
-    char *data = (char *)buffer_int->data;
+    const char *data = (const char *)buffer_int->data;
     size_t size = buffer_int->size;
 
     if (!cfrds_buffer_skip_httpheader(&data, &size))
@@ -1684,7 +1687,7 @@ int cfrds_buffer_to_debugger_info(cfrds_buffer *buffer)
         xmlNodePtr varDebugServerPortValueEl = varDebugServerPortTypeEl->children;
         if (varDebugServerPortValueEl == nullptr) return -1;
         if (varDebugServerPortValueEl->type != XML_TEXT_NODE) return -1;
-        return atof((char *)varDebugServerPortValueEl->content);
+        return atof((const char *)varDebugServerPortValueEl->content);
     }
 
     return -1;
@@ -1700,7 +1703,7 @@ cfrds_debugger_event *cfrds_buffer_to_debugger_event(cfrds_buffer *buffer)
     if (buffer_int == nullptr)
         return nullptr;
 
-    char *data = (char *)buffer_int->data;
+    const char *data = (const char *)buffer_int->data;
     size_t size = buffer_int->size;
 
     if (!cfrds_buffer_skip_httpheader(&data, &size))
@@ -1760,7 +1763,7 @@ cfrds_debugger_event *cfrds_buffer_to_debugger_event(cfrds_buffer *buffer)
                 const char *req_line = cfrds_xml_get_struct_var_string(structEl, "REQ_LINE_NUM");
                 const char *act_line = cfrds_xml_get_struct_var_string(structEl, "ACTUAL_LINE_NUM");
 
-                memset(ret, 0, sizeof(cfrds_debugger_event_breakpoint_set_int));
+                explicit_bzero(ret, sizeof(cfrds_debugger_event_breakpoint_set_int));
 
                 ret->event.type = CFRDS_DEBUGGER_EVENT_TYPE_BREAKPOINT_SET;
                 ret->pathname = strdup(pathname);
@@ -1779,7 +1782,7 @@ cfrds_debugger_event *cfrds_buffer_to_debugger_event(cfrds_buffer *buffer)
                 const char *line = cfrds_xml_get_struct_var_string(structEl, "LINE");
                 const char *thread = cfrds_xml_get_struct_var_string(structEl, "THREAD");
 
-                memset(ret, 0, sizeof(cfrds_debugger_event_breakpoint_int));
+                explicit_bzero(ret, sizeof(cfrds_debugger_event_breakpoint_int));
 
                 ret->event.type = CFRDS_DEBUGGER_EVENT_TYPE_BREAKPOINT;
                 ret->source = strdup(source);
@@ -1810,7 +1813,6 @@ const char *cfrds_xml_get_struct_var_string(xmlNodePtr xml_node, const char *var
         {
             if (strcmp((const char *)child->name, "var") == 0)
             {
-                xmlChar_defer(xmlChar);
                 const unsigned char *name_attr = xmlGetProp(child, (const unsigned char *)"name");
                 if (name_attr != nullptr)
                 {

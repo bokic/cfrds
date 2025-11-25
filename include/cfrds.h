@@ -94,11 +94,11 @@ EXPORT_CFRDS bool cfrds_server_init(cfrds_server **server, const char *host, uin
 EXPORT_CFRDS void cfrds_server_free(cfrds_server *server);
 EXPORT_CFRDS void cfrds_server_cleanup(cfrds_server **server);
 EXPORT_CFRDS void cfrds_server_clear_error(cfrds_server *server);
-EXPORT_CFRDS const char *cfrds_server_get_error(cfrds_server *server);
-EXPORT_CFRDS const char *cfrds_server_get_host(cfrds_server *server);
-EXPORT_CFRDS uint16_t cfrds_server_get_port(cfrds_server *server);
-EXPORT_CFRDS const char *cfrds_server_get_username(cfrds_server *server);
-EXPORT_CFRDS const char *cfrds_server_get_password(cfrds_server *server);
+EXPORT_CFRDS const char *cfrds_server_get_error(const cfrds_server *server);
+EXPORT_CFRDS const char *cfrds_server_get_host(const cfrds_server *server);
+EXPORT_CFRDS uint16_t cfrds_server_get_port(const cfrds_server *server);
+EXPORT_CFRDS const char *cfrds_server_get_username(const cfrds_server *server);
+EXPORT_CFRDS const char *cfrds_server_get_password(const cfrds_server *server);
 
 EXPORT_CFRDS enum cfrds_status cfrds_command_browse_dir(cfrds_server *server, const char *path, cfrds_browse_dir **out);
 EXPORT_CFRDS void cfrds_buffer_browse_dir_free(cfrds_browse_dir *value);
@@ -217,10 +217,10 @@ EXPORT_CFRDS int cfrds_buffer_sql_exportedkeys_get_deleterule(const cfrds_sql_ex
 EXPORT_CFRDS enum cfrds_status cfrds_command_sql_sqlstmnt(cfrds_server *server, const char *connection_name, const char *sql, cfrds_sql_resultset **resultset);
 EXPORT_CFRDS void cfrds_buffer_sql_resultset_free(cfrds_sql_resultset *value);
 EXPORT_CFRDS void cfrds_sql_resultset_cleanup(cfrds_sql_resultset **buf);
-EXPORT_CFRDS size_t cfrds_buffer_sql_resultset_columns(cfrds_sql_resultset *value);
-EXPORT_CFRDS size_t cfrds_buffer_sql_resultset_rows(cfrds_sql_resultset *value);
-EXPORT_CFRDS const char *cfrds_buffer_sql_resultset_column_name(cfrds_sql_resultset *value, size_t column);
-EXPORT_CFRDS const char *cfrds_buffer_sql_resultset_value(cfrds_sql_resultset *value, size_t row, size_t column);
+EXPORT_CFRDS size_t cfrds_buffer_sql_resultset_columns(const cfrds_sql_resultset *value);
+EXPORT_CFRDS size_t cfrds_buffer_sql_resultset_rows(const cfrds_sql_resultset *value);
+EXPORT_CFRDS const char *cfrds_buffer_sql_resultset_column_name(const cfrds_sql_resultset *value, size_t column);
+EXPORT_CFRDS const char *cfrds_buffer_sql_resultset_value(const cfrds_sql_resultset *value, size_t row, size_t column);
 
 EXPORT_CFRDS enum cfrds_status cfrds_command_sql_sqlmetadata(cfrds_server *server, const char *connection_name, const char *sql, cfrds_sql_metadata **metadata);
 EXPORT_CFRDS void cfrds_buffer_sql_metadata_free(cfrds_sql_metadata *value);

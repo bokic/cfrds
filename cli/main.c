@@ -98,6 +98,9 @@ static void usage()
            "\n"
            "  - 'dbg_info' - Get ColdFusion debugger server info.\n"
            "         example: `cfrds dbg_info rds://username:password@host`\n"
+           "\n"
+           "  - 'dbg_brk_on_exception' - Set ColdFusion debugger server to stop on exception.\n"
+           "         example: `cfrds dbg_brk_on_exception rds://username:password@host/dbg_session` {true/false}\n"
            );
 }
 
@@ -233,7 +236,7 @@ int main(int argc, char *argv[])
 
     const char *command = argv[1];
 
-    if ((strcmp(command, "put") == 0)||(strcmp(command, "upload") == 0)) {
+    if ((strcmp(command, "put") == 0)||(strcmp(command, "upload") == 0)||(strcmp(command, "dbg_brk_on_exception") == 0)) {
         if (argc < 4) {
             usage();
             return EXIT_FAILURE;
@@ -804,7 +807,7 @@ int main(int argc, char *argv[])
             return EXIT_FAILURE;
         }
 
-        printf("Debugger session: %s\n", dbg_session);
+        printf("%s\n", dbg_session);
     } else if (strcmp(command, "dbg_stop") == 0) {
         if ((path != nullptr)&&(strlen(path) > 1))
         {
@@ -816,7 +819,7 @@ int main(int argc, char *argv[])
             }
         }
     } else if (strcmp(command, "dbg_info") == 0) {
-        uint16_t port;
+        uint16_t debuggerPort;
         cfrds_str_defer(dbg_session);
 
         res = cfrds_command_debugger_start(server, &dbg_session);
@@ -826,20 +829,43 @@ int main(int argc, char *argv[])
             return EXIT_FAILURE;
         }
 
-        res = cfrds_command_debugger_get_server_info(server, dbg_session, &port);
+        res = cfrds_command_debugger_get_server_info(server, dbg_session, &debuggerPort);
         if (res != CFRDS_STATUS_OK)
         {
             fprintf(stderr, "cfrds_command_debugger_get_server_info FAILED with error: %s\n", cfrds_server_get_error(server));
             ret = EXIT_FAILURE;
         }
 
-        printf("Debugging port: %d\n", port);
+        printf("%d\n", debuggerPort);
 
         res = cfrds_command_debugger_stop(server, path);
         if (res != CFRDS_STATUS_OK)
         {
             fprintf(stderr, "dbg_stop FAILED with error: %s\n", cfrds_server_get_error(server));
             return EXIT_FAILURE;
+        }
+    } else if (strcmp(command, "dbg_brk_on_exception") == 0) {
+        if ((path != nullptr)&&(strlen(path) > 1))
+        {
+            const char *strValue = argv[4];
+            bool value;
+
+            if (strcmp(strValue, "true") == 0)
+                value = true;
+            else if (strcmp(strValue, "false") == 0)
+                value = false;
+            else
+            {
+                fprintf(stderr, "Invalid value(%s) dbg_brk_on_exception command. Valid are 'true' or 'false'.\n", strValue);
+                return EXIT_FAILURE;
+            }
+
+            res = cfrds_command_debugger_breakpoint_on_exception(server, path, value);
+            if (res != CFRDS_STATUS_OK)
+            {
+                fprintf(stderr, "dbg_brk_on_exception FAILED with error: %s\n", cfrds_server_get_error(server));
+                return EXIT_FAILURE;
+            }
         }
     } else {
     }

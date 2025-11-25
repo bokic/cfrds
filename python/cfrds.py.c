@@ -845,6 +845,24 @@ exit:
     return Py_None;
 }
 
+static PyObject *
+cfrds_server_debugger_breakpoint_on_exception(cfrds_server_Object *self, PyObject *args)
+{
+    char *session_name = nullptr; 
+    bool value;
+
+    if (!PyArg_ParseTuple(args, "sp", &session_name, &value))
+    {
+        PyErr_SetString(PyExc_RuntimeError, "session_name or value parameter not set!");
+        goto exit;
+    }
+
+    CHECK_FOR_ERORRS(cfrds_command_debugger_breakpoint_on_exception(self->server, session_name, value));
+
+exit:
+    return Py_None;
+}
+
 static PyMethodDef cfrds_server_methods[] = {
     {"browse_dir",  (PyCFunction) cfrds_server_browse_dir,  METH_VARARGS, "List directory entries"},
     {"file_read",   (PyCFunction) cfrds_server_file_read,   METH_VARARGS, "Read file"},
@@ -869,6 +887,7 @@ static PyMethodDef cfrds_server_methods[] = {
     {"debugger_start", (PyCFunction) cfrds_server_debugger_start, METH_VARARGS, "Start ColdFusion debugger session"},
     {"debugger_stop", (PyCFunction) cfrds_server_debugger_stop, METH_VARARGS, "Stop ColdFusion debugger session"},
     {"debugger_get_server_info", (PyCFunction) cfrds_server_debugger_get_server_info, METH_VARARGS, "Get ColdFusion debugger get server info"},
+    {"debugger_breakpoint_on_exception", (PyCFunction) cfrds_server_debugger_breakpoint_on_exception, METH_VARARGS, "ColdFusion debugger breakpoint on exception"},
     {nullptr}  /* Sentinel */
 };
 

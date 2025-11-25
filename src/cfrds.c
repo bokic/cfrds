@@ -2060,3 +2060,39 @@ enum cfrds_status cfrds_command_debugger_get_server_info(cfrds_server *server, c
 
     return ret;
 }
+
+enum cfrds_status cfrds_command_debugger_breakpoint_on_exception(cfrds_server *server, const char *session_id, bool value)
+{
+    enum cfrds_status ret;
+
+    cfrds_server_int *server_int = nullptr;
+    cfrds_buffer_defer(response);
+    cfrds_buffer_defer(request);
+
+    if (server == nullptr)
+    {
+        return CFRDS_STATUS_SERVER_IS_nullptr;
+    }
+
+    cfrds_buffer_create(&request);
+    cfrds_buffer_append(request,"<wddxPacket version='1.0'><header/><data><array length='1'><struct type='java.util.HashMap'><var name='BREAK_ON_EXCEPTION'><boolean value='");
+    if(value)
+        cfrds_buffer_append(request,"true");
+    else
+        cfrds_buffer_append(request,"false");
+    cfrds_buffer_append(request,"'/></var><var name='COMMAND'><string>SESSION_BREAK_ON_EXCEPTION</string></var></struct></array></data></wddxPacket>");
+
+    ret = cfrds_internal_command(server, &response, "DBGREQUEST", (const char *[]){ "DBG_GET_DEBUG_SERVER_INFO", session_id, cfrds_buffer_data(request), nullptr});
+    if (ret == CFRDS_STATUS_OK)
+    {
+        int val = cfrds_buffer_to_debugger_info(response);
+        if (val == -1)
+        {
+            server_int = server;
+            server_int->error_code = -1;
+            return CFRDS_STATUS_RESPONSE_ERROR;
+        }
+    }
+
+    return ret;
+}

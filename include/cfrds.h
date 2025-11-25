@@ -233,6 +233,7 @@ EXPORT_CFRDS enum cfrds_status cfrds_command_sql_dbdescription(cfrds_server *ser
 EXPORT_CFRDS enum cfrds_status cfrds_command_debugger_start(cfrds_server *server, char **session_id);
 EXPORT_CFRDS enum cfrds_status cfrds_command_debugger_stop(cfrds_server *server, const char *session_id);
 EXPORT_CFRDS enum cfrds_status cfrds_command_debugger_get_server_info(cfrds_server *server, const char *session_id, uint16_t *port);
+EXPORT_CFRDS enum cfrds_status cfrds_command_debugger_breakpoint_on_exception(cfrds_server *server, const char *session_id, bool value);
 
 #ifdef __cplusplus
 }

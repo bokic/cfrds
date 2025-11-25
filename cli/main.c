@@ -838,7 +838,7 @@ int main(int argc, char *argv[])
 
         printf("%d\n", debuggerPort);
 
-        res = cfrds_command_debugger_stop(server, path);
+        res = cfrds_command_debugger_stop(server, dbg_session);
         if (res != CFRDS_STATUS_OK)
         {
             fprintf(stderr, "dbg_stop FAILED with error: %s\n", cfrds_server_get_error(server));

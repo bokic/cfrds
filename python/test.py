@@ -22,11 +22,30 @@ rds = cfrds.server(host, port, username, password)
 # print(rds.sql_getsupportedcommands())
 # print(rds.sql_dbdescription("datasource"))
 
+print("Starting Debugger...")
 debugger_session_id = rds.debugger_start()
 print("Debugger session ID:", debugger_session_id)
 
 #print(rds.debugger_get_server_info())
-print(rds.debugger_breakpoint_on_exception(debugger_session_id, True))
+#print(rds.debugger_breakpoint_on_exception(debugger_session_id, True))
+#print(rds.debbuger_breakpoint(debugger_session_id, "/app/index.cfm", 2, True))
+#print(rds.debbuger_breakpoint(debugger_session_id, "/app/index.cfm", 2, False))
+#print(rds.debugger_clear_all_breakpoints(debugger_session_id))
 
+#print(rds.debbuger_breakpoint(debugger_session_id, "/app/index.cfm", 2, True))
+#print(rds.debugger_get_debug_events(debugger_session_id))
+#print(rds.debugger_clear_all_breakpoints(debugger_session_id))
+
+#print(rds.debbuger_breakpoint(debugger_session_id, "/app/index.cfm", 2, True))
+#print(rds.debugger_all_fetch_flags_enabled(debugger_session_id, True, True, True, True, True))
+#print(rds.debugger_clear_all_breakpoints(debugger_session_id))
+
+print(rds.debbuger_breakpoint(debugger_session_id, "/app/index.cfm", 2, True))
+print(rds.debugger_get_debug_events(debugger_session_id))
+print(rds.debugger_get_debug_events(debugger_session_id))
+print(rds.debugger_clear_all_breakpoints(debugger_session_id))
+#print(rds.debugger_continue(debugger_session_id))
+
+print("Stopping Debugger...")
 rds.debugger_stop(debugger_session_id)
 print("Debugger session stopped")

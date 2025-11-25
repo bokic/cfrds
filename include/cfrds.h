@@ -37,6 +37,7 @@ typedef void cfrds_sql_exportedkeys;
 typedef void cfrds_sql_resultset;
 typedef void cfrds_sql_metadata;
 typedef void cfrds_sql_supportedcommands;
+typedef void cfrds_debugger_event;
 
 enum cfrds_status {
     CFRDS_STATUS_OK,
@@ -234,6 +235,14 @@ EXPORT_CFRDS enum cfrds_status cfrds_command_debugger_start(cfrds_server *server
 EXPORT_CFRDS enum cfrds_status cfrds_command_debugger_stop(cfrds_server *server, const char *session_id);
 EXPORT_CFRDS enum cfrds_status cfrds_command_debugger_get_server_info(cfrds_server *server, const char *session_id, uint16_t *port);
 EXPORT_CFRDS enum cfrds_status cfrds_command_debugger_breakpoint_on_exception(cfrds_server *server, const char *session_id, bool value);
+EXPORT_CFRDS enum cfrds_status cfrds_command_debugger_breakpoint(cfrds_server *server, const char *session_id, const char *filepath, int line, bool enable);
+EXPORT_CFRDS enum cfrds_status cfrds_command_debugger_clear_all_breakpoints(cfrds_server *server, const char *session_id);
+EXPORT_CFRDS enum cfrds_status cfrds_command_debugger_get_debug_events(cfrds_server *server, const char *session_id, cfrds_debugger_event **event);
+EXPORT_CFRDS enum cfrds_status cfrds_command_debugger_all_fetch_flags_enabled(cfrds_server *server, const char *session_id, bool threads, bool watch, bool scopes, bool cf_trace, bool java_trace, cfrds_debugger_event **event);
+EXPORT_CFRDS enum cfrds_status cfrds_command_debugger_step_in(cfrds_server *server, const char *session_id, const char *thread_name);
+EXPORT_CFRDS enum cfrds_status cfrds_command_debugger_step_over(cfrds_server *server, const char *session_id, const char *thread_name);
+EXPORT_CFRDS enum cfrds_status cfrds_command_debugger_step_out(cfrds_server *server, const char *session_id, const char *thread_name);
+EXPORT_CFRDS enum cfrds_status cfrds_command_debugger_continue(cfrds_server *server, const char *session_id, const char *thread_name);
 
 #ifdef __cplusplus
 }

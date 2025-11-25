@@ -180,6 +180,7 @@ char *cfrds_buffer_data(cfrds_buffer *buffer);
 size_t cfrds_buffer_data_size(cfrds_buffer *buffer);
 
 void cfrds_buffer_append(cfrds_buffer *buffer, const char *str);
+void cfrds_buffer_append_int(cfrds_buffer *buffer, int number);
 void cfrds_buffer_append_bytes(cfrds_buffer *buffer, const void *data, size_t length);
 void cfrds_buffer_append_buffer(cfrds_buffer *buffer, cfrds_buffer *new);
 void cfrds_buffer_append_char(cfrds_buffer *buffer, const char ch);
@@ -214,6 +215,7 @@ char *cfrds_buffer_to_sql_dbdescription(cfrds_buffer *buffer);
 char *cfrds_buffer_to_debugger_start(cfrds_buffer *buffer);
 bool cfrds_buffer_to_debugger_stop(cfrds_buffer *buffer);
 int cfrds_buffer_to_debugger_info(cfrds_buffer *buffer);
+cfrds_debugger_event *cfrds_buffer_to_debugger_event(cfrds_buffer *buffer);
 
 bool cfrds_buffer_skip_httpheader(char **data, size_t *size);
 

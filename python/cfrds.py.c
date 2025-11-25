@@ -849,17 +849,131 @@ static PyObject *
 cfrds_server_debugger_breakpoint_on_exception(cfrds_server_Object *self, PyObject *args)
 {
     char *session_name = nullptr; 
-    bool value;
+    int enable;
 
-    if (!PyArg_ParseTuple(args, "sp", &session_name, &value))
+    if (!PyArg_ParseTuple(args, "sp", &session_name, &enable))
     {
-        PyErr_SetString(PyExc_RuntimeError, "session_name or value parameter not set!");
+        PyErr_SetString(PyExc_RuntimeError, "session_name or enable parameter not set!");
         goto exit;
     }
 
-    CHECK_FOR_ERORRS(cfrds_command_debugger_breakpoint_on_exception(self->server, session_name, value));
+    CHECK_FOR_ERORRS(cfrds_command_debugger_breakpoint_on_exception(self->server, session_name, enable));
 
 exit:
+    return Py_None;
+}
+
+static PyObject *
+cfrds_server_debugger_breakpoint(cfrds_server_Object *self, PyObject *args)
+{
+    char *session_name = nullptr; 
+    char *filepath = nullptr; 
+    int line;
+    int enable;
+
+    if (!PyArg_ParseTuple(args, "ssip", &session_name, &filepath, &line, &enable))
+    {
+        PyErr_SetString(PyExc_RuntimeError, "session_name, filepath, line or enable parameter not set!");
+        goto exit;
+    }
+
+    CHECK_FOR_ERORRS(cfrds_command_debugger_breakpoint(self->server, session_name, filepath, line, enable));
+
+exit:
+    return Py_None;
+}
+
+static PyObject *
+cfrds_server_debugger_clear_all_breakpoints(cfrds_server_Object *self, PyObject *args)
+{
+    char *session_name = nullptr; 
+
+    if (!PyArg_ParseTuple(args, "s", &session_name))
+    {
+        PyErr_SetString(PyExc_RuntimeError, "session_name parameter not set!");
+        goto exit;
+    }
+
+    CHECK_FOR_ERORRS(cfrds_command_debugger_clear_all_breakpoints(self->server, session_name));
+
+exit:
+    return Py_None;
+}
+
+static PyObject *
+cfrds_server_debugger_get_debug_events(cfrds_server_Object *self, PyObject *args)
+{
+    cfrds_debugger_event *event = nullptr;
+    char *session_name = nullptr; 
+
+    if (!PyArg_ParseTuple(args, "s", &session_name))
+    {
+        PyErr_SetString(PyExc_RuntimeError, "session_name parameter not set!");
+        goto exit;
+    }
+
+    CHECK_FOR_ERORRS(cfrds_command_debugger_get_debug_events(self->server, session_name, &event));
+
+    // TODO: implement parse response
+
+exit:
+    return Py_None;
+}
+
+static PyObject *
+cfrds_server_debugger_all_fetch_flags_enabled(cfrds_server_Object *self, PyObject *args)
+{
+    cfrds_debugger_event *event = nullptr;
+    char *session_name = nullptr; 
+    int threads;
+    int watch;
+    int scopes;
+    int cf_trace;
+    int java_trace;
+
+    if (!PyArg_ParseTuple(args, "sppppp", &session_name, &threads, &watch, &scopes, &cf_trace, &java_trace))
+    {
+        PyErr_SetString(PyExc_RuntimeError, "session_name, threads, watch, scopes, cf_trace or java_trace parameter not set!");
+        goto exit;
+    }
+
+    CHECK_FOR_ERORRS(cfrds_command_debugger_all_fetch_flags_enabled(self->server, session_name, threads, watch, scopes, cf_trace, java_trace, &event));
+
+    // TODO: implement parse response
+
+exit:
+    return Py_None;
+}
+
+static PyObject *
+cfrds_server_debugger_step_in(cfrds_server_Object *self, PyObject *args)
+{
+    // TODO: implement
+
+    return Py_None;
+}
+
+static PyObject *
+cfrds_server_debugger_step_over(cfrds_server_Object *self, PyObject *args)
+{
+    // TODO: implement
+
+    return Py_None;
+}
+
+static PyObject *
+cfrds_server_debugger_step_out(cfrds_server_Object *self, PyObject *args)
+{
+    // TODO: implement
+
+    return Py_None;
+}
+
+static PyObject *
+cfrds_server_debugger_continue(cfrds_server_Object *self, PyObject *args)
+{
+    // TODO: implement
+
     return Py_None;
 }
 
@@ -887,7 +1001,15 @@ static PyMethodDef cfrds_server_methods[] = {
     {"debugger_start", (PyCFunction) cfrds_server_debugger_start, METH_VARARGS, "Start ColdFusion debugger session"},
     {"debugger_stop", (PyCFunction) cfrds_server_debugger_stop, METH_VARARGS, "Stop ColdFusion debugger session"},
     {"debugger_get_server_info", (PyCFunction) cfrds_server_debugger_get_server_info, METH_VARARGS, "Get ColdFusion debugger get server info"},
-    {"debugger_breakpoint_on_exception", (PyCFunction) cfrds_server_debugger_breakpoint_on_exception, METH_VARARGS, "ColdFusion debugger breakpoint on exception"},
+    {"debugger_breakpoint_on_exception", (PyCFunction) cfrds_server_debugger_breakpoint_on_exception, METH_VARARGS, "ColdFusion debugger breakpoint on exception(set/clear)"},
+    {"debbuger_breakpoint", (PyCFunction) cfrds_server_debugger_breakpoint, METH_VARARGS, "ColdFusion debugger breakpoint(set/clear)"},
+    {"debugger_clear_all_breakpoints", (PyCFunction) cfrds_server_debugger_clear_all_breakpoints, METH_VARARGS, "ColdFusion debugger clear all breakpoints"},
+    {"debugger_get_debug_events", (PyCFunction) cfrds_server_debugger_get_debug_events, METH_VARARGS, "ColdFusion debugger get debug events"},
+    {"debugger_all_fetch_flags_enabled", (PyCFunction) cfrds_server_debugger_all_fetch_flags_enabled, METH_VARARGS, "ColdFusion debugger wait for flaged events"},
+    {"debugger_step_in", (PyCFunction) cfrds_server_debugger_step_in, METH_VARARGS, "ColdFusion debugger step in"},
+    {"debugger_step_over", (PyCFunction) cfrds_server_debugger_step_over, METH_VARARGS, "ColdFusion debugger step over"},
+    {"debugger_step_out", (PyCFunction) cfrds_server_debugger_step_out, METH_VARARGS, "ColdFusion debugger step out"},
+    {"debugger_continue", (PyCFunction) cfrds_server_debugger_continue, METH_VARARGS, "ColdFusion debugger continue"},
     {nullptr}  /* Sentinel */
 };
 

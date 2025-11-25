@@ -2018,6 +2018,11 @@ enum cfrds_status cfrds_command_debugger_stop(cfrds_server *server, const char *
         return CFRDS_STATUS_SERVER_IS_nullptr;
     }
 
+    if (session_id == nullptr)
+    {
+        return CFRDS_STATUS_PARAM_IS_nullptr;
+    }
+
     ret = cfrds_internal_command(server, &response, "DBGREQUEST", (const char *[]){ "DBG_STOP", session_id, nullptr});
     if (ret == CFRDS_STATUS_OK)
     {
@@ -2042,6 +2047,11 @@ enum cfrds_status cfrds_command_debugger_get_server_info(cfrds_server *server, c
     if (server == nullptr)
     {
         return CFRDS_STATUS_SERVER_IS_nullptr;
+    }
+
+    if ((session_id == nullptr)||(port == nullptr))
+    {
+        return CFRDS_STATUS_PARAM_IS_nullptr;
     }
 
     ret = cfrds_internal_command(server, &response, "DBGREQUEST", (const char *[]){ "DBG_GET_DEBUG_SERVER_INFO", session_id, nullptr});
@@ -2074,6 +2084,11 @@ enum cfrds_status cfrds_command_debugger_breakpoint_on_exception(cfrds_server *s
         return CFRDS_STATUS_SERVER_IS_nullptr;
     }
 
+    if (session_id == nullptr)
+    {
+        return CFRDS_STATUS_PARAM_IS_nullptr;
+    }
+
     cfrds_buffer_create(&request);
     cfrds_buffer_append(request,"<wddxPacket version='1.0'><header/><data><array length='1'><struct type='java.util.HashMap'><var name='BREAK_ON_EXCEPTION'><boolean value='");
     if(value)
@@ -2093,6 +2108,248 @@ enum cfrds_status cfrds_command_debugger_breakpoint_on_exception(cfrds_server *s
             return CFRDS_STATUS_RESPONSE_ERROR;
         }
     }
+
+    return ret;
+}
+
+enum cfrds_status cfrds_command_debugger_breakpoint(cfrds_server *server, const char *session_id, const char *filepath, int line, bool enable)
+{
+    enum cfrds_status ret;
+
+    cfrds_buffer_defer(response);
+    cfrds_buffer_defer(request);
+
+    if (server == nullptr)
+    {
+        return CFRDS_STATUS_SERVER_IS_nullptr;
+    }
+
+    if ((session_id == nullptr)||(filepath == nullptr))
+    {
+        return CFRDS_STATUS_PARAM_IS_nullptr;
+    }
+
+    cfrds_buffer_create(&request);
+    cfrds_buffer_append(request,"<wddxPacket version='1.0'><header/><data><array length='1'><struct><var name='Y'><number>");
+    cfrds_buffer_append_int(request, line);
+    cfrds_buffer_append(request,"</number></var><var name='COMMAND'><string>");
+    if (enable)
+        cfrds_buffer_append(request,"SET_BREAKPOINT");
+    else
+        cfrds_buffer_append(request,"UNSET_BREAKPOINT");
+    cfrds_buffer_append(request,"</string></var><var name='FILE'><string>");
+    cfrds_buffer_append(request, filepath);
+    cfrds_buffer_append(request,"</string></var><var name='SEQ'><number>1.0</number></var></struct></array></data></wddxPacket>");
+
+    ret = cfrds_internal_command(server, &response, "DBGREQUEST", (const char *[]){ "DBG_REQUEST", session_id, cfrds_buffer_data(request), nullptr});
+
+    return ret;
+}
+
+EXPORT_CFRDS enum cfrds_status cfrds_command_debugger_clear_all_breakpoints(cfrds_server *server, const char *session_id)
+{
+    enum cfrds_status ret;
+
+    cfrds_buffer_defer(response);
+
+    if (server == nullptr)
+    {
+        return CFRDS_STATUS_SERVER_IS_nullptr;
+    }
+
+    if (session_id == nullptr)
+    {
+        return CFRDS_STATUS_PARAM_IS_nullptr;
+    }
+
+    ret = cfrds_internal_command(server, &response, "DBGREQUEST", (const char *[]){ "DBG_REQUEST", session_id, "<wddxPacket version='1.0'><header/><data><array length='1'><struct><var name='COMMAND'><string>UNSET_ALL_BREAKPOINTS</string></var></struct></array></data></wddxPacket>", nullptr});
+
+    return ret;
+}
+
+enum cfrds_status cfrds_command_debugger_get_debug_events(cfrds_server *server, const char *session_id, cfrds_debugger_event **event)
+{
+    enum cfrds_status ret;
+
+    cfrds_buffer_defer(response);
+
+    if (server == nullptr)
+    {
+        return CFRDS_STATUS_SERVER_IS_nullptr;
+    }
+
+    if ((session_id == nullptr)||(event == nullptr))
+    {
+        return CFRDS_STATUS_PARAM_IS_nullptr;
+    }
+
+    ret = cfrds_internal_command(server, &response, "DBGREQUEST", (const char *[]){ "DBG_EVENTS", session_id, nullptr});
+    if (ret == CFRDS_STATUS_OK)
+    {
+        *event = cfrds_buffer_to_debugger_event(response);
+    }
+
+    return ret;
+}
+
+enum cfrds_status cfrds_command_debugger_all_fetch_flags_enabled(cfrds_server *server, const char *session_id, bool threads, bool watch, bool scopes, bool cf_trace, bool java_trace, cfrds_debugger_event **event)
+{
+    enum cfrds_status ret;
+
+    cfrds_buffer_defer(response);
+    cfrds_buffer_defer(request);
+
+    if (server == nullptr)
+    {
+        return CFRDS_STATUS_SERVER_IS_nullptr;
+    }
+
+    if (session_id == nullptr)
+    {
+        return CFRDS_STATUS_PARAM_IS_nullptr;
+    }
+
+    cfrds_buffer_create(&request);
+    cfrds_buffer_append(request,"<wddxPacket version='1.0'><header/><data><struct type='java.util.HashMap'><var name='THREADS'><boolean value='");
+    if (threads)
+        cfrds_buffer_append(request,"true");
+    else
+        cfrds_buffer_append(request,"false");
+    cfrds_buffer_append(request,"'/></var><var name='WATCH'><boolean value='");
+    if (watch)
+        cfrds_buffer_append(request,"true");
+    else
+        cfrds_buffer_append(request,"false");
+    cfrds_buffer_append(request,"'/></var><var name='SCOPES'><boolean value='");
+    if (scopes)
+        cfrds_buffer_append(request,"true");
+    else
+        cfrds_buffer_append(request,"false");
+    cfrds_buffer_append(request,"'/></var><var name='CF_TRACE'><boolean value='");
+    if (cf_trace)
+        cfrds_buffer_append(request,"true");
+    else
+        cfrds_buffer_append(request,"false");
+    cfrds_buffer_append(request,"'/></var><var name='JAVA_TRACE'><boolean value='");
+    if (java_trace)
+        cfrds_buffer_append(request,"true");
+    else
+        cfrds_buffer_append(request,"false");
+    cfrds_buffer_append(request,"'/></var></struct></data></wddxPacket>");
+
+    ret = cfrds_internal_command(server, &response, "DBGREQUEST", (const char *[]){ "DBG_EVENTS", session_id, cfrds_buffer_data(request), nullptr});
+    if (ret == CFRDS_STATUS_OK)
+    {
+        *event = cfrds_buffer_to_debugger_event(response);
+    }
+
+    return ret;
+}
+
+enum cfrds_status cfrds_command_debugger_step_in(cfrds_server *server, const char *session_id, const char *thread_name)
+{
+    enum cfrds_status ret;
+
+    cfrds_buffer_defer(response);
+    cfrds_buffer_defer(request);
+
+    if (server == nullptr)
+    {
+        return CFRDS_STATUS_SERVER_IS_nullptr;
+    }
+
+    if ((session_id == nullptr)||(thread_name == nullptr))
+    {
+        return CFRDS_STATUS_PARAM_IS_nullptr;
+    }
+
+    cfrds_buffer_create(&request);
+    cfrds_buffer_append(request, "<wddxPacket version='1.0'><header/><data><array length='1'><struct><var name='COMMAND'><string>STEP_IN</string></var><var name='THREAD'><string>");
+    cfrds_buffer_append(request, thread_name);
+    cfrds_buffer_append(request, "</string></var></struct></array></data></wddxPacket>");
+
+    ret = cfrds_internal_command(server, &response, "DBGREQUEST", (const char *[]){ "DBG_REQUEST", session_id, cfrds_buffer_data(request), nullptr});
+
+    return ret;
+}
+
+enum cfrds_status cfrds_command_debugger_step_over(cfrds_server *server, const char *session_id, const char *thread_name)
+{
+    enum cfrds_status ret;
+
+    cfrds_buffer_defer(response);
+    cfrds_buffer_defer(request);
+
+    if (server == nullptr)
+    {
+        return CFRDS_STATUS_SERVER_IS_nullptr;
+    }
+
+    if ((session_id == nullptr)||(thread_name == nullptr))
+    {
+        return CFRDS_STATUS_PARAM_IS_nullptr;
+    }
+
+    cfrds_buffer_create(&request);
+    cfrds_buffer_append(request, "<wddxPacket version='1.0'><header/><data><array length='1'><struct><var name='COMMAND'><string>STEP_OVER</string></var><var name='THREAD'><string>");
+    cfrds_buffer_append(request, thread_name);
+    cfrds_buffer_append(request, "</string></var></struct></array></data></wddxPacket>");
+
+    ret = cfrds_internal_command(server, &response, "DBGREQUEST", (const char *[]){ "DBG_REQUEST", session_id, cfrds_buffer_data(request), nullptr});
+
+    return ret;
+}
+
+enum cfrds_status cfrds_command_debugger_step_out(cfrds_server *server, const char *session_id, const char *thread_name)
+{
+    enum cfrds_status ret;
+
+    cfrds_buffer_defer(response);
+    cfrds_buffer_defer(request);
+
+    if (server == nullptr)
+    {
+        return CFRDS_STATUS_SERVER_IS_nullptr;
+    }
+
+    if ((session_id == nullptr)||(thread_name == nullptr))
+    {
+        return CFRDS_STATUS_PARAM_IS_nullptr;
+    }
+
+    cfrds_buffer_create(&request);
+    cfrds_buffer_append(request, "<wddxPacket version='1.0'><header/><data><array length='1'><struct><var name='COMMAND'><string>STEP_OUT</string></var><var name='THREAD'><string>");
+    cfrds_buffer_append(request, thread_name);
+    cfrds_buffer_append(request, "</string></var></struct></array></data></wddxPacket>");
+
+    ret = cfrds_internal_command(server, &response, "DBGREQUEST", (const char *[]){ "DBG_REQUEST", session_id, cfrds_buffer_data(request), nullptr});
+
+    return ret;
+}
+
+enum cfrds_status cfrds_command_debugger_continue(cfrds_server *server, const char *session_id, const char *thread_name)
+{
+    enum cfrds_status ret;
+
+    cfrds_buffer_defer(response);
+    cfrds_buffer_defer(request);
+
+    if (server == nullptr)
+    {
+        return CFRDS_STATUS_SERVER_IS_nullptr;
+    }
+
+    if ((session_id == nullptr)||(thread_name == nullptr))
+    {
+        return CFRDS_STATUS_PARAM_IS_nullptr;
+    }
+
+    cfrds_buffer_create(&request);
+    cfrds_buffer_append(request, "<wddxPacket version='1.0'><header/><data><array length='1'><struct><var name='COMMAND'><string>CONTINUE</string></var><var name='THREAD'><string>");
+    cfrds_buffer_append(request, thread_name);
+    cfrds_buffer_append(request, "</string></var></struct></array></data></wddxPacket>");
+
+    ret = cfrds_internal_command(server, &response, "DBGREQUEST", (const char *[]){ "DBG_REQUEST", session_id, cfrds_buffer_data(request), nullptr});
 
     return ret;
 }

@@ -231,6 +231,15 @@ void cfrds_buffer_append(cfrds_buffer *buffer, const char *str)
     }
 }
 
+void cfrds_buffer_append_int(cfrds_buffer *buffer, int number)
+{
+    char str[16];
+
+    snprintf(str, sizeof(str), "%d", number);
+
+    cfrds_buffer_append(buffer, str);
+}
+
 void cfrds_buffer_append_bytes(cfrds_buffer *buffer, const void *data, size_t length)
 {
     cfrds_buffer_int *buffer_int = buffer;
@@ -1600,7 +1609,6 @@ int cfrds_buffer_to_debugger_info(cfrds_buffer *buffer)
 
     if (ret)
     {
-
         xmlDoc_defer(doc);
         doc = xmlParseMemory(ret, strlen(ret));
 
@@ -1663,4 +1671,37 @@ int cfrds_buffer_to_debugger_info(cfrds_buffer *buffer)
     }
 
     return -1;
+}
+
+cfrds_debugger_event *cfrds_buffer_to_debugger_event(cfrds_buffer *buffer)
+{
+    cfrds_str_defer(xml);
+
+    cfrds_buffer_int *buffer_int = buffer;
+    int64_t rows = 0;
+
+    if (buffer_int == nullptr)
+        return nullptr;
+
+    char *data = (char *)buffer_int->data;
+    size_t size = buffer_int->size;
+
+    if (!cfrds_buffer_skip_httpheader(&data, &size))
+        return nullptr;
+
+    cfrds_buffer_parse_number(&data, &size, &rows);
+    if (rows != 1)
+        return nullptr;
+
+    cfrds_buffer_parse_string(&data, &size, &xml);
+    if (xml)
+    {
+        printf("xml:%s\n", xml);
+        xmlDoc_defer(doc);
+        doc = xmlParseMemory(xml, strlen(xml));
+
+        xmlNodePtr rootEl = xmlDocGetRootElement(doc);
+    }
+
+    return nullptr;
 }

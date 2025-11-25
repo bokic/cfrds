@@ -2383,7 +2383,7 @@ void cfrds_buffer_debugger_event_free(cfrds_debugger_event *event)
     free(event);
 }
 
-enum cfrds_debugger_type cfrds_buffer_debugger_event_get_type(cfrds_debugger_event *event)
+enum cfrds_debugger_type cfrds_buffer_debugger_event_get_type(const cfrds_debugger_event *event)
 {
     if (event == nullptr)
     {
@@ -2395,27 +2395,98 @@ enum cfrds_debugger_type cfrds_buffer_debugger_event_get_type(cfrds_debugger_eve
     return event_int->type;
 }
 
+const char *cfrds_buffer_debugger_event_breakpoint_get_source(const cfrds_debugger_event *event)
+{
+    if (event == nullptr)
+    {
+        return nullptr;
+    }
+
+    const cfrds_debugger_event_breakpoint_int *event_int = (cfrds_debugger_event_breakpoint_int *)event;
+
+    return event_int->source;
+}
+
+int cfrds_buffer_debugger_event_breakpoint_get_line(const cfrds_debugger_event *event)
+{
+    if (event == nullptr)
+    {
+        return 0;
+    }
+
+    const cfrds_debugger_event_breakpoint_int *event_int = (cfrds_debugger_event_breakpoint_int *)event;
+
+    return event_int->line;
+}
+
+const char *cfrds_buffer_debugger_event_breakpoint_get_thread_name(const cfrds_debugger_event *event)
+{
+    if (event == nullptr)
+    {
+        return nullptr;
+    }
+
+    const cfrds_debugger_event_breakpoint_int *event_int = (cfrds_debugger_event_breakpoint_int *)event;
+
+    return event_int->thread_name;
+}
+
+const char *cfrds_buffer_debugger_event_breakpoint_set_get_pathname(const cfrds_debugger_event *event)
+{
+    if (event == nullptr)
+    {
+        return nullptr;
+    }
+
+    const cfrds_debugger_event_breakpoint_set_int *event_int = (cfrds_debugger_event_breakpoint_set_int *)event;
+
+    return event_int->pathname;
+}
+
+int cfrds_buffer_debugger_event_breakpoint_set_get_req_line(const cfrds_debugger_event *event)
+{
+    if (event == nullptr)
+    {
+        return 0;
+    }
+
+    const cfrds_debugger_event_breakpoint_set_int *event_int = (cfrds_debugger_event_breakpoint_set_int *)event;
+
+    return event_int->req_line;
+}
+
+int cfrds_buffer_debugger_event_breakpoint_set_get_act_line(const cfrds_debugger_event *event)
+{
+    if (event == nullptr)
+    {
+        return 0;
+    }
+
+    const cfrds_debugger_event_breakpoint_set_int *event_int = (cfrds_debugger_event_breakpoint_set_int *)event;
+
+    return event_int->act_line;
+}
 enum cfrds_status cfrds_command_debugger_watch_expression(cfrds_server *server, const char *session_id, const char *thread_name, const char *variable)
 {
-
+    return CFRDS_STATUS_OK;
 }
 
 enum cfrds_status cfrds_command_debugger_set_variable(cfrds_server *server, const char *session_id, const char *thread_name, const char *variable, const char *value)
 {
-
+    return CFRDS_STATUS_OK;
 }
 
 enum cfrds_status cfrds_command_debugger_watch_variable(cfrds_server *server, const char *session_id, const char *thread_name, const char *variable)
 {
-
+    return CFRDS_STATUS_OK;
 }
 
 enum cfrds_status cfrds_command_debugger_get_output(cfrds_server *server, const char *session_id, const char *thread_name)
 {
-
+    return CFRDS_STATUS_OK;
 }
 
 enum cfrds_status cfrds_command_debugger_set_scope_filter(cfrds_server *server, const char *session_id, const char *filter)
 {
-
+    return CFRDS_STATUS_OK;
 }

@@ -1713,7 +1713,6 @@ cfrds_debugger_event *cfrds_buffer_to_debugger_event(cfrds_buffer *buffer)
     cfrds_buffer_parse_string(&data, &size, &xml);
     if (xml)
     {
-        printf("xml:%s\n", xml);
         xmlDoc_defer(doc);
         doc = xmlParseMemory(xml, strlen(xml));
 
@@ -1822,7 +1821,7 @@ const char *cfrds_xml_get_struct_var_string(xmlNodePtr xml_node, const char *var
                         {
                             if (var_value_node->type == XML_ELEMENT_NODE)
                             {
-                                if (strcmp((const char *)var_value_node->name, "string") == 0)
+                                if ((strcmp((const char *)var_value_node->name, "string") == 0)||(strcmp((const char *)var_value_node->name, "number") == 0))
                                 {
                                     xmlNodePtr content = var_value_node->children;
                                     if (content != nullptr)

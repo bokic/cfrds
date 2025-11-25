@@ -4,7 +4,7 @@
 #include <structmember.h>
 #include <stddef.h>
 
-#define CHECK_FOR_ERORRS(function_call)                                                          \
+#define CHECK_FOR_ERRORS(function_call)                                                          \
     {                                                                                            \
     enum cfrds_status res = function_call;                                                       \
         if (res != CFRDS_STATUS_OK)                                                              \
@@ -133,7 +133,7 @@ cfrds_server_browse_dir(cfrds_server_Object *self, PyObject *args)
         goto exit;
     }
 
-    CHECK_FOR_ERORRS(cfrds_command_browse_dir(self->server, path, &dir));
+    CHECK_FOR_ERRORS(cfrds_command_browse_dir(self->server, path, &dir));
 
     if (dir)
     {
@@ -180,7 +180,7 @@ cfrds_server_file_read(cfrds_server_Object *self, PyObject *args)
         goto exit;
     }
 
-    CHECK_FOR_ERORRS(cfrds_command_file_read(self->server, filepath, &file_content));
+    CHECK_FOR_ERRORS(cfrds_command_file_read(self->server, filepath, &file_content));
 
     ret = PyByteArray_FromStringAndSize(cfrds_buffer_file_content_get_data(file_content), cfrds_buffer_file_content_get_size(file_content));
 
@@ -202,7 +202,7 @@ cfrds_server_file_write(cfrds_server_Object *self, PyObject *args)
         goto exit;
     }
 
-    CHECK_FOR_ERORRS(cfrds_command_file_write(self->server, filepath, PyByteArray_AsString(file_content),PyByteArray_Size(file_content)));
+    CHECK_FOR_ERRORS(cfrds_command_file_write(self->server, filepath, PyByteArray_AsString(file_content),PyByteArray_Size(file_content)));
 
 exit:
     return Py_None;
@@ -220,7 +220,7 @@ cfrds_server_file_rename(cfrds_server_Object *self, PyObject *args)
         goto exit;
     }
 
-    CHECK_FOR_ERORRS(cfrds_command_file_rename(self->server, filepath_from, filepath_to));
+    CHECK_FOR_ERRORS(cfrds_command_file_rename(self->server, filepath_from, filepath_to));
 
 exit:
     return Py_None;
@@ -237,7 +237,7 @@ cfrds_server_file_remove(cfrds_server_Object *self, PyObject *args)
         goto exit;
     }
 
-    CHECK_FOR_ERORRS(cfrds_command_file_remove_file(self->server, filepath));
+    CHECK_FOR_ERRORS(cfrds_command_file_remove_file(self->server, filepath));
 
 exit:
     return Py_None;
@@ -254,7 +254,7 @@ cfrds_server_dir_remove(cfrds_server_Object *self, PyObject *args)
         goto exit;
     }
 
-    CHECK_FOR_ERORRS(cfrds_command_file_remove_dir(self->server, dirpath));
+    CHECK_FOR_ERRORS(cfrds_command_file_remove_dir(self->server, dirpath));
 
 exit:
     return Py_None;
@@ -272,7 +272,7 @@ cfrds_server_file_exists(cfrds_server_Object *self, PyObject *args)
         goto exit;
     }
 
-    CHECK_FOR_ERORRS(cfrds_command_file_exists(self->server, pathname, &exists));
+    CHECK_FOR_ERRORS(cfrds_command_file_exists(self->server, pathname, &exists));
 
     return PyBool_FromLong(exists);
 
@@ -291,7 +291,7 @@ cfrds_server_dir_create(cfrds_server_Object *self, PyObject *args)
         goto exit;
     }
 
-    CHECK_FOR_ERORRS(cfrds_command_file_create_dir(self->server, dirpath));
+    CHECK_FOR_ERRORS(cfrds_command_file_create_dir(self->server, dirpath));
 
 exit:
     return Py_None;
@@ -303,7 +303,7 @@ cfrds_server_cf_root_dir(cfrds_server_Object *self)
     PyObject *ret = nullptr;
     char *dirpath = nullptr;
 
-    CHECK_FOR_ERORRS(cfrds_command_file_get_root_dir(self->server, &dirpath));
+    CHECK_FOR_ERRORS(cfrds_command_file_get_root_dir(self->server, &dirpath));
 
     if (!dirpath)
         goto exit;
@@ -325,7 +325,7 @@ cfrds_server_sql_dsninfo(cfrds_server_Object *self)
     cfrds_sql_dsninfo *dsninfo = nullptr;
     size_t cnt = 0;
 
-    CHECK_FOR_ERORRS(cfrds_command_sql_dsninfo(self->server, &dsninfo));
+    CHECK_FOR_ERRORS(cfrds_command_sql_dsninfo(self->server, &dsninfo));
 
     if (!dsninfo)
         goto exit;
@@ -362,7 +362,7 @@ cfrds_server_sql_tableinfo(cfrds_server_Object *self, PyObject *args)
         goto exit;
     }
 
-    CHECK_FOR_ERORRS(cfrds_command_sql_tableinfo(self->server, tablename, &tableinfo));
+    CHECK_FOR_ERRORS(cfrds_command_sql_tableinfo(self->server, tablename, &tableinfo));
 
     cnt = cfrds_buffer_sql_tableinfo_count(tableinfo);
     ret = PyList_New(cnt);
@@ -405,7 +405,7 @@ cfrds_server_sql_columninfo(cfrds_server_Object *self, PyObject *args)
         goto exit;
     }
 
-    CHECK_FOR_ERORRS(cfrds_command_sql_columninfo(self->server, tablename, columnname, &columninfo));
+    CHECK_FOR_ERRORS(cfrds_command_sql_columninfo(self->server, tablename, columnname, &columninfo));
 
     cnt = cfrds_buffer_sql_columninfo_count(columninfo);
     ret = PyList_New(cnt);
@@ -454,7 +454,7 @@ cfrds_server_sql_primarykeys(cfrds_server_Object *self, PyObject *args)
         goto exit;
     }
 
-    CHECK_FOR_ERORRS(cfrds_command_sql_primarykeys(self->server, tablename, columnname, &primarykeys));
+    CHECK_FOR_ERRORS(cfrds_command_sql_primarykeys(self->server, tablename, columnname, &primarykeys));
 
     cnt = cfrds_buffer_sql_primarykeys_count(primarykeys);
     ret = PyList_New(cnt);
@@ -500,7 +500,7 @@ cfrds_server_sql_foreignkeys(cfrds_server_Object *self, PyObject *args)
         goto exit;
     }
 
-    CHECK_FOR_ERORRS(cfrds_command_sql_foreignkeys(self->server, tablename, columnname, &foreignkeys));
+    CHECK_FOR_ERRORS(cfrds_command_sql_foreignkeys(self->server, tablename, columnname, &foreignkeys));
 
     cnt = cfrds_buffer_sql_foreignkeys_count(foreignkeys);
     ret = PyList_New(cnt);
@@ -552,7 +552,7 @@ cfrds_server_sql_importedkeys(cfrds_server_Object *self, PyObject *args)
         goto exit;
     }
 
-    CHECK_FOR_ERORRS(cfrds_command_sql_importedkeys(self->server, tablename, columnname, &importedkeys));
+    CHECK_FOR_ERRORS(cfrds_command_sql_importedkeys(self->server, tablename, columnname, &importedkeys));
 
     cnt = cfrds_buffer_sql_importedkeys_count(importedkeys);
     ret = PyList_New(cnt);
@@ -604,7 +604,7 @@ cfrds_server_sql_exportedkeys(cfrds_server_Object *self, PyObject *args)
         goto exit;
     }
 
-    CHECK_FOR_ERORRS(cfrds_command_sql_exportedkeys(self->server, tablename, columnname, &exportedkeys));
+    CHECK_FOR_ERRORS(cfrds_command_sql_exportedkeys(self->server, tablename, columnname, &exportedkeys));
 
     cnt = cfrds_buffer_sql_exportedkeys_count(exportedkeys);
     ret = PyList_New(cnt);
@@ -655,7 +655,7 @@ cfrds_server_sql_sqlstmnt(cfrds_server_Object *self, PyObject *args)
         goto exit;
     }
 
-    CHECK_FOR_ERORRS(cfrds_command_sql_sqlstmnt(self->server, tablename, sql, &resultset));
+    CHECK_FOR_ERRORS(cfrds_command_sql_sqlstmnt(self->server, tablename, sql, &resultset));
 
     ret = PyDict_New();
     if (ret == NULL)
@@ -714,7 +714,7 @@ cfrds_server_sql_metadata(cfrds_server_Object *self, PyObject *args)
         goto exit;
     }
 
-    CHECK_FOR_ERORRS(cfrds_command_sql_sqlmetadata(self->server, tablename, sql, &metadata));
+    CHECK_FOR_ERRORS(cfrds_command_sql_sqlmetadata(self->server, tablename, sql, &metadata));
 
     cols = cfrds_buffer_sql_metadata_count(metadata);
 
@@ -751,7 +751,7 @@ cfrds_server_sql_getsupportedcommands(cfrds_server_Object *self, PyObject *args)
 
     size_t cols = 0;
 
-    CHECK_FOR_ERORRS(cfrds_command_sql_getsupportedcommands(self->server, &supportedcommands));
+    CHECK_FOR_ERRORS(cfrds_command_sql_getsupportedcommands(self->server, &supportedcommands));
 
     cols = cfrds_buffer_sql_supportedcommands_count(supportedcommands);
 
@@ -787,7 +787,7 @@ cfrds_server_sql_dbdescription(cfrds_server_Object *self, PyObject *args)
         goto exit;
     }
 
-    CHECK_FOR_ERORRS(cfrds_command_sql_dbdescription(self->server, tablename, &dbdescription));
+    CHECK_FOR_ERRORS(cfrds_command_sql_dbdescription(self->server, tablename, &dbdescription));
 
     ret = PyUnicode_FromString(dbdescription);
 
@@ -802,7 +802,7 @@ cfrds_server_debugger_start(cfrds_server_Object *self, PyObject *args)
 
     cfrds_str_defer(session_name);
 
-    CHECK_FOR_ERORRS(cfrds_command_debugger_start(self->server, &session_name));
+    CHECK_FOR_ERRORS(cfrds_command_debugger_start(self->server, &session_name));
 
     ret = PyUnicode_FromString(session_name);
 
@@ -821,7 +821,7 @@ cfrds_server_debugger_stop(cfrds_server_Object *self, PyObject *args)
         goto exit;
     }
 
-    CHECK_FOR_ERORRS(cfrds_command_debugger_stop(self->server, session_name));
+    CHECK_FOR_ERRORS(cfrds_command_debugger_stop(self->server, session_name));
 
 exit:
     return Py_None;
@@ -834,9 +834,9 @@ cfrds_server_debugger_get_server_info(cfrds_server_Object *self, PyObject *args)
     enum cfrds_status res = CFRDS_STATUS_OK;
     uint16_t port = 0;
 
-    CHECK_FOR_ERORRS(cfrds_command_debugger_start(self->server, &session_name));
+    CHECK_FOR_ERRORS(cfrds_command_debugger_start(self->server, &session_name));
     res = cfrds_command_debugger_get_server_info(self->server,  session_name, &port);
-    CHECK_FOR_ERORRS(cfrds_command_debugger_stop(self->server, session_name));
+    CHECK_FOR_ERRORS(cfrds_command_debugger_stop(self->server, session_name));
 
     if (res == CFRDS_STATUS_OK)
         return PyLong_FromUnsignedLong(port);
@@ -857,7 +857,7 @@ cfrds_server_debugger_breakpoint_on_exception(cfrds_server_Object *self, PyObjec
         goto exit;
     }
 
-    CHECK_FOR_ERORRS(cfrds_command_debugger_breakpoint_on_exception(self->server, session_name, enable));
+    CHECK_FOR_ERRORS(cfrds_command_debugger_breakpoint_on_exception(self->server, session_name, enable));
 
 exit:
     return Py_None;
@@ -877,7 +877,7 @@ cfrds_server_debugger_breakpoint(cfrds_server_Object *self, PyObject *args)
         goto exit;
     }
 
-    CHECK_FOR_ERORRS(cfrds_command_debugger_breakpoint(self->server, session_name, filepath, line, enable));
+    CHECK_FOR_ERRORS(cfrds_command_debugger_breakpoint(self->server, session_name, filepath, line, enable));
 
 exit:
     return Py_None;
@@ -894,16 +894,45 @@ cfrds_server_debugger_clear_all_breakpoints(cfrds_server_Object *self, PyObject 
         goto exit;
     }
 
-    CHECK_FOR_ERORRS(cfrds_command_debugger_clear_all_breakpoints(self->server, session_name));
+    CHECK_FOR_ERRORS(cfrds_command_debugger_clear_all_breakpoints(self->server, session_name));
 
 exit:
     return Py_None;
 }
 
 static PyObject *
+parse_debug_events_response(const cfrds_debugger_event *event)
+{
+    enum cfrds_debugger_type type = cfrds_buffer_debugger_event_get_type(event);
+    switch (type)
+    {
+        case CFRDS_DEBUGGER_EVENT_TYPE_BREAKPOINT_SET:
+        {
+            PyObject *ret = PyDict_New();
+            PyDict_SetItemString(ret, "pathname", PyUnicode_FromString(cfrds_buffer_debugger_event_breakpoint_set_get_pathname(event)));
+            PyDict_SetItemString(ret, "req_line", PyLong_FromLong(cfrds_buffer_debugger_event_breakpoint_set_get_req_line(event)));
+            PyDict_SetItemString(ret, "act_line", PyLong_FromLong(cfrds_buffer_debugger_event_breakpoint_set_get_act_line(event)));
+            return ret;
+        }
+        case CFRDS_DEBUGGER_EVENT_TYPE_BREAKPOINT:
+        {
+            PyObject *ret = PyDict_New();
+            PyDict_SetItemString(ret, "source", PyUnicode_FromString(cfrds_buffer_debugger_event_breakpoint_get_source(event)));
+            PyDict_SetItemString(ret, "line", PyLong_FromLong(cfrds_buffer_debugger_event_breakpoint_get_line(event)));
+            PyDict_SetItemString(ret, "thread_name", PyUnicode_FromString(cfrds_buffer_debugger_event_breakpoint_get_thread_name(event)));
+            return ret;
+        }
+        default:
+    }
+
+    PyErr_SetString(PyExc_RuntimeError, "Unknown debugger event type received!");
+    return Py_None;
+}
+
+static PyObject *
 cfrds_server_debugger_get_debug_events(cfrds_server_Object *self, PyObject *args)
 {
-    cfrds_debugger_event *event = nullptr;
+    cfrds_debugger_event_defer(event);
     char *session_name = nullptr; 
 
     if (!PyArg_ParseTuple(args, "s", &session_name))
@@ -912,9 +941,9 @@ cfrds_server_debugger_get_debug_events(cfrds_server_Object *self, PyObject *args
         goto exit;
     }
 
-    CHECK_FOR_ERORRS(cfrds_command_debugger_get_debug_events(self->server, session_name, &event));
+    CHECK_FOR_ERRORS(cfrds_command_debugger_get_debug_events(self->server, session_name, &event));
 
-    // TODO: implement parse response
+    return parse_debug_events_response(event);
 
 exit:
     return Py_None;
@@ -923,7 +952,7 @@ exit:
 static PyObject *
 cfrds_server_debugger_all_fetch_flags_enabled(cfrds_server_Object *self, PyObject *args)
 {
-    cfrds_debugger_event *event = nullptr;
+    cfrds_debugger_event_defer(event);
     char *session_name = nullptr; 
     int threads;
     int watch;
@@ -937,9 +966,9 @@ cfrds_server_debugger_all_fetch_flags_enabled(cfrds_server_Object *self, PyObjec
         goto exit;
     }
 
-    CHECK_FOR_ERORRS(cfrds_command_debugger_all_fetch_flags_enabled(self->server, session_name, threads, watch, scopes, cf_trace, java_trace, &event));
+    CHECK_FOR_ERRORS(cfrds_command_debugger_all_fetch_flags_enabled(self->server, session_name, threads, watch, scopes, cf_trace, java_trace, &event));
 
-    // TODO: implement parse response
+    return parse_debug_events_response(event);
 
 exit:
     return Py_None;
@@ -948,32 +977,72 @@ exit:
 static PyObject *
 cfrds_server_debugger_step_in(cfrds_server_Object *self, PyObject *args)
 {
-    // TODO: implement
+    const char *session_name = nullptr; 
+    const char *thread_name = nullptr; 
 
+    if (!PyArg_ParseTuple(args, "ss", &session_name, &thread_name))
+    {
+        PyErr_SetString(PyExc_RuntimeError, "session_name or thread_name parameter not set!");
+        goto exit;
+    }
+
+    CHECK_FOR_ERRORS(cfrds_command_debugger_step_in(self->server, session_name, thread_name));
+
+exit:
     return Py_None;
 }
 
 static PyObject *
 cfrds_server_debugger_step_over(cfrds_server_Object *self, PyObject *args)
 {
-    // TODO: implement
+    const char *session_name = nullptr; 
+    const char *thread_name = nullptr; 
 
+    if (!PyArg_ParseTuple(args, "ss", &session_name, &thread_name))
+    {
+        PyErr_SetString(PyExc_RuntimeError, "session_name or thread_name parameter not set!");
+        goto exit;
+    }
+
+    CHECK_FOR_ERRORS(cfrds_command_debugger_step_over(self->server, session_name, thread_name));
+
+exit:
     return Py_None;
 }
 
 static PyObject *
 cfrds_server_debugger_step_out(cfrds_server_Object *self, PyObject *args)
 {
-    // TODO: implement
+    const char *session_name = nullptr; 
+    const char *thread_name = nullptr; 
 
+    if (!PyArg_ParseTuple(args, "ss", &session_name, &thread_name))
+    {
+        PyErr_SetString(PyExc_RuntimeError, "session_name or thread_name parameter not set!");
+        goto exit;
+    }
+
+    CHECK_FOR_ERRORS(cfrds_command_debugger_step_out(self->server, session_name, thread_name));
+
+exit:
     return Py_None;
 }
 
 static PyObject *
 cfrds_server_debugger_continue(cfrds_server_Object *self, PyObject *args)
 {
-    // TODO: implement
+    const char *session_name = nullptr; 
+    const char *thread_name = nullptr; 
 
+    if (!PyArg_ParseTuple(args, "ss", &session_name, &thread_name))
+    {
+        PyErr_SetString(PyExc_RuntimeError, "session_name or thread_name parameter not set!");
+        goto exit;
+    }
+
+    CHECK_FOR_ERRORS(cfrds_command_debugger_continue(self->server, session_name, thread_name));
+
+exit:
     return Py_None;
 }
 

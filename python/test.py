@@ -41,10 +41,14 @@ print("Debugger session ID:", debugger_session_id)
 #print(rds.debugger_clear_all_breakpoints(debugger_session_id))
 
 print(rds.debbuger_breakpoint(debugger_session_id, "/app/index.cfm", 2, True))
-print(rds.debugger_get_debug_events(debugger_session_id))
-print(rds.debugger_get_debug_events(debugger_session_id))
+event = rds.debugger_get_debug_events(debugger_session_id)
+print(event)
+event = rds.debugger_get_debug_events(debugger_session_id)
+print(event)
 print(rds.debugger_clear_all_breakpoints(debugger_session_id))
-#print(rds.debugger_continue(debugger_session_id))
+
+print("continuing... " + event['thread_name'])
+print(rds.debugger_continue(debugger_session_id, event['thread_name']))
 
 print("Stopping Debugger...")
 rds.debugger_stop(debugger_session_id)

@@ -244,17 +244,23 @@ EXPORT_CFRDS enum cfrds_status cfrds_command_debugger_get_server_info(cfrds_serv
 EXPORT_CFRDS enum cfrds_status cfrds_command_debugger_breakpoint_on_exception(cfrds_server *server, const char *session_id, bool value);
 EXPORT_CFRDS enum cfrds_status cfrds_command_debugger_breakpoint(cfrds_server *server, const char *session_id, const char *filepath, int line, bool enable);
 EXPORT_CFRDS enum cfrds_status cfrds_command_debugger_clear_all_breakpoints(cfrds_server *server, const char *session_id);
+
 EXPORT_CFRDS enum cfrds_status cfrds_command_debugger_get_debug_events(cfrds_server *server, const char *session_id, cfrds_debugger_event **event);
 EXPORT_CFRDS enum cfrds_status cfrds_command_debugger_all_fetch_flags_enabled(cfrds_server *server, const char *session_id, bool threads, bool watch, bool scopes, bool cf_trace, bool java_trace, cfrds_debugger_event **event);
+EXPORT_CFRDS void cfrds_buffer_debugger_event_free(cfrds_debugger_event *event);
+EXPORT_CFRDS void cfrds_debugger_event_cleanup(cfrds_debugger_event **buf);
+EXPORT_CFRDS enum cfrds_debugger_type cfrds_buffer_debugger_event_get_type(const cfrds_debugger_event *event);
+EXPORT_CFRDS const char *cfrds_buffer_debugger_event_breakpoint_get_source(const cfrds_debugger_event *event);
+EXPORT_CFRDS int cfrds_buffer_debugger_event_breakpoint_get_line(const cfrds_debugger_event *event);
+EXPORT_CFRDS const char *cfrds_buffer_debugger_event_breakpoint_get_thread_name(const cfrds_debugger_event *event);
+EXPORT_CFRDS const char *cfrds_buffer_debugger_event_breakpoint_set_get_pathname(const cfrds_debugger_event *event);
+EXPORT_CFRDS int cfrds_buffer_debugger_event_breakpoint_set_get_req_line(const cfrds_debugger_event *event);
+EXPORT_CFRDS int cfrds_buffer_debugger_event_breakpoint_set_get_act_line(const cfrds_debugger_event *event);
+
 EXPORT_CFRDS enum cfrds_status cfrds_command_debugger_step_in(cfrds_server *server, const char *session_id, const char *thread_name);
 EXPORT_CFRDS enum cfrds_status cfrds_command_debugger_step_over(cfrds_server *server, const char *session_id, const char *thread_name);
 EXPORT_CFRDS enum cfrds_status cfrds_command_debugger_step_out(cfrds_server *server, const char *session_id, const char *thread_name);
 EXPORT_CFRDS enum cfrds_status cfrds_command_debugger_continue(cfrds_server *server, const char *session_id, const char *thread_name);
-
-EXPORT_CFRDS void cfrds_buffer_debugger_event_free(cfrds_debugger_event *event);
-EXPORT_CFRDS void cfrds_debugger_event_cleanup(cfrds_debugger_event **buf);
-EXPORT_CFRDS enum cfrds_debugger_type cfrds_buffer_debugger_event_get_type(cfrds_debugger_event *event);
-
 EXPORT_CFRDS enum cfrds_status cfrds_command_debugger_watch_expression(cfrds_server *server, const char *session_id, const char *thread_name, const char *expression);
 EXPORT_CFRDS enum cfrds_status cfrds_command_debugger_set_variable(cfrds_server *server, const char *session_id, const char *thread_name, const char *variable, const char *value);
 EXPORT_CFRDS enum cfrds_status cfrds_command_debugger_watch_variable(cfrds_server *server, const char *session_id, const char *thread_name, const char *variable);

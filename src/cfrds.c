@@ -2600,7 +2600,7 @@ enum cfrds_status cfrds_command_debugger_set_scope_filter(cfrds_server *server, 
 
     cfrds_buffer_create(&request);
     cfrds_buffer_append(request, "<wddxPacket version='1.0'><header/><data><array length='1'><struct type='java.util.HashMap'><var name='FILTER'><string>");
-    cfrds_buffer_append(request, filter);
+    cfrds_buffer_append(request, filter); // TODO: Hardcoded array size 1
     cfrds_buffer_append(request, "</string></var><var name='COMMAND'><string>SET_SCOPE_FILTER</string></var></struct></array></data></wddxPacket>");
 
     ret = cfrds_internal_command(server, &response, "DBGREQUEST", (const char *[]){ "DBG_REQUEST", session_id, cfrds_buffer_data(request), nullptr});

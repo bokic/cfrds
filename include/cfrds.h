@@ -87,6 +87,7 @@ extern "C"
 #endif
 
 EXPORT_CFRDS void cfrds_buffer_cleanup(cfrds_buffer **buf);
+EXPORT_CFRDS void cfrds_file_content_cleanup(cfrds_file_content **buf);
 EXPORT_CFRDS void cfrds_str_cleanup(char **str);
 EXPORT_CFRDS void cfrds_fd_cleanup(int *fd);
 

@@ -1792,9 +1792,28 @@ cfrds_debugger_event *cfrds_buffer_to_debugger_event(cfrds_buffer *buffer)
 
             return ret;
         }
+        else if (strcmp(event_type, "STEP") == 0)
+        {
+            cfrds_debugger_event_breakpoint_int *ret = malloc(sizeof(cfrds_debugger_event_breakpoint_int));
+            if (ret)
+            {
+                const char *source = cfrds_xml_get_struct_var_string(structEl, "SOURCE");
+                const char *line = cfrds_xml_get_struct_var_string(structEl, "LINE");
+                const char *thread = cfrds_xml_get_struct_var_string(structEl, "THREAD");
+
+                explicit_bzero(ret, sizeof(cfrds_debugger_event_breakpoint_int));
+
+                ret->event.type = CFRDS_DEBUGGER_EVENT_TYPE_BREAKPOINT;
+                ret->source = strdup(source);
+                if (line) ret->line = atoi(line);
+                ret->thread_name = strdup(thread);
+            }
+
+            return ret;
+        }
         else
         {
-            fprintf(stderr, "Unknown debugger event_type: %s.", event_type);
+            fprintf(stderr, "Unknown debugger event_type: %s.\n", event_type);
         }
     }
 

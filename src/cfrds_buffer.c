@@ -1585,20 +1585,29 @@ bool cfrds_buffer_to_debugger_stop(cfrds_buffer *buffer)
         if (strcmp((const char *)structEl->name, "struct") != 0) return false;
 
         xmlNodePtr varEl = structEl->children;
-        if (varEl == nullptr) return false;
-        if (varEl->type != XML_ELEMENT_NODE) return false;
-        if (strcmp((const char *)varEl->name, "var") != 0) return false;
+        while(varEl)
+        {
+            if (varEl->type != XML_ELEMENT_NODE) return false;
+            if (strcmp((const char *)varEl->name, "var") != 0) return false;
+            if (strcmp((const char *)xmlGetProp(varEl, (const xmlChar *)"name"), "STATUS") != 0)
+            {
+                varEl = varEl->next;
+                continue;
+            }
 
-        xmlNodePtr stringEl = varEl->children;
-        if (stringEl == nullptr) return false;
-        if (stringEl->type != XML_ELEMENT_NODE) return false;
-        if (strcmp((const char *)stringEl->name, "string") != 0) return false;
+            xmlNodePtr stringEl = varEl->children;
+            if (stringEl == nullptr) return false;
+            if (stringEl->type != XML_ELEMENT_NODE) return false;
+            if (strcmp((const char *)stringEl->name, "string") != 0) return false;
 
-        xmlNodePtr content = stringEl->children;
-        if (content == nullptr) return false;
-        if (content->type != XML_TEXT_NODE) return false;
-        if (strstr((const char *)content->content, "RDS_OK") != nullptr)
-            return true;
+            xmlNodePtr content = stringEl->children;
+            if (content == nullptr) return false;
+            if (content->type != XML_TEXT_NODE) return false;
+            if (strstr((const char *)content->content, "RDS_OK") != nullptr)
+                return true;
+
+            varEl = varEl->next;
+        }
     }
 
     return false;

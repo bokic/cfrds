@@ -264,7 +264,7 @@ EXPORT_CFRDS enum cfrds_status cfrds_command_debugger_step_out(cfrds_server *ser
 EXPORT_CFRDS enum cfrds_status cfrds_command_debugger_continue(cfrds_server *server, const char *session_id, const char *thread_name);
 EXPORT_CFRDS enum cfrds_status cfrds_command_debugger_watch_expression(cfrds_server *server, const char *session_id, const char *thread_name, const char *expression);
 EXPORT_CFRDS enum cfrds_status cfrds_command_debugger_set_variable(cfrds_server *server, const char *session_id, const char *thread_name, const char *variable, const char *value);
-EXPORT_CFRDS enum cfrds_status cfrds_command_debugger_watch_variable(cfrds_server *server, const char *session_id, const char *thread_name, const char *variable);
+EXPORT_CFRDS enum cfrds_status cfrds_command_debugger_watch_variable(cfrds_server *server, const char *session_id, const char *thread_name);
 EXPORT_CFRDS enum cfrds_status cfrds_command_debugger_get_output(cfrds_server *server, const char *session_id, const char *thread_name);
 EXPORT_CFRDS enum cfrds_status cfrds_command_debugger_set_scope_filter(cfrds_server *server, const char *session_id, const char *filter);
 

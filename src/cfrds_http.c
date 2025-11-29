@@ -127,11 +127,12 @@ enum cfrds_status cfrds_http_post(cfrds_server_int *server, const char *command,
     const char *response_data = cfrds_buffer_data(int_response);
     size_t response_size = cfrds_buffer_data_size(int_response);
 
-    static const char *good_response_http1_0 = "HTTP/1.0 200 ";
     static const char *good_response_http1_1 = "HTTP/1.1 200 ";
 
     if (strncmp(response_data, good_response_http1_1, strlen(good_response_http1_1)) != 0)
     {
+        static const char *good_response_http1_0 = "HTTP/1.0 200 ";
+
         if (strncmp(response_data, good_response_http1_0, strlen(good_response_http1_0)) != 0)
         {
             cfrds_server_set_error(server, CFRDS_STATUS_RESPONSE_ERROR, "Invalid server response...");

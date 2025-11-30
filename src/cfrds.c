@@ -220,7 +220,7 @@ const char *cfrds_server_get_password(const cfrds_server *server)
     return server_int->orig_password;
 }
 
-static enum cfrds_status cfrds_internal_command(cfrds_server *server, cfrds_buffer **response, const char *command, const char *list[])
+static enum cfrds_status cfrds_send_command(cfrds_server *server, cfrds_buffer **response, const char *command, const char *list[])
 {
     enum cfrds_status ret = CFRDS_STATUS_OK;
 
@@ -279,7 +279,7 @@ enum cfrds_status cfrds_command_browse_dir(cfrds_server *server, const char *pat
         return CFRDS_STATUS_PARAM_IS_nullptr;
     }
 
-    ret = cfrds_internal_command(server, &response, "BROWSEDIR", (const char *[]){ path, "", nullptr});
+    ret = cfrds_send_command(server, &response, "BROWSEDIR", (const char *[]){ path, "", nullptr});
     if (ret == CFRDS_STATUS_OK)
     {
         *out = cfrds_buffer_to_browse_dir(response);
@@ -298,7 +298,7 @@ enum cfrds_status cfrds_command_file_read(cfrds_server *server, const char *path
         return CFRDS_STATUS_PARAM_IS_nullptr;
     }
 
-    ret = cfrds_internal_command(server, &response, "FILEIO", (const char *[]){ pathname, "READ", "", nullptr});
+    ret = cfrds_send_command(server, &response, "FILEIO", (const char *[]){ pathname, "READ", "", nullptr});
     if (ret == CFRDS_STATUS_OK)
     {
         *out = cfrds_buffer_to_file_content(response);
@@ -353,7 +353,7 @@ enum cfrds_status cfrds_command_file_rename(cfrds_server *server, const char *cu
         return CFRDS_STATUS_PARAM_IS_nullptr;
     }
 
-    return cfrds_internal_command(server, nullptr, "FILEIO", (const char *[]){ current_pathname, "RENAME", "", new_pathname, nullptr});
+    return cfrds_send_command(server, nullptr, "FILEIO", (const char *[]){ current_pathname, "RENAME", "", new_pathname, nullptr});
 }
 
 enum cfrds_status cfrds_command_file_remove_file(cfrds_server *server, const char *pathname)
@@ -363,7 +363,7 @@ enum cfrds_status cfrds_command_file_remove_file(cfrds_server *server, const cha
         return CFRDS_STATUS_PARAM_IS_nullptr;
     }
 
-    return cfrds_internal_command(server, nullptr, "FILEIO", (const char *[]){ pathname, "REMOVE", "", "F", nullptr});
+    return cfrds_send_command(server, nullptr, "FILEIO", (const char *[]){ pathname, "REMOVE", "", "F", nullptr});
 }
 
 enum cfrds_status cfrds_command_file_remove_dir(cfrds_server *server, const char *path)
@@ -373,7 +373,7 @@ enum cfrds_status cfrds_command_file_remove_dir(cfrds_server *server, const char
         return CFRDS_STATUS_PARAM_IS_nullptr;
     }
 
-    return cfrds_internal_command(server, nullptr, "FILEIO", (const char *[]){ path, "REMOVE", "", "D", nullptr});
+    return cfrds_send_command(server, nullptr, "FILEIO", (const char *[]){ path, "REMOVE", "", "D", nullptr});
 }
 
 enum cfrds_status cfrds_command_file_exists(cfrds_server *server, const char *pathname, bool *out)
@@ -394,7 +394,7 @@ enum cfrds_status cfrds_command_file_exists(cfrds_server *server, const char *pa
 
     cfrds_server_int *server_int = nullptr;
 
-    ret = cfrds_internal_command(server, nullptr, "FILEIO", (const char *[]){ pathname, "EXISTENCE", "", "", nullptr});
+    ret = cfrds_send_command(server, nullptr, "FILEIO", (const char *[]){ pathname, "EXISTENCE", "", "", nullptr});
     if (ret == CFRDS_STATUS_OK)
     {
         *out = true;
@@ -422,7 +422,7 @@ enum cfrds_status cfrds_command_file_create_dir(cfrds_server *server, const char
         return CFRDS_STATUS_PARAM_IS_nullptr;
     }
 
-    return cfrds_internal_command(server, nullptr, "FILEIO", (const char *[]){ path, "CREATE", "", "", nullptr});
+    return cfrds_send_command(server, nullptr, "FILEIO", (const char *[]){ path, "CREATE", "", "", nullptr});
 }
 
 enum cfrds_status cfrds_command_file_get_root_dir(cfrds_server *server, char **out)
@@ -437,7 +437,7 @@ enum cfrds_status cfrds_command_file_get_root_dir(cfrds_server *server, char **o
         return CFRDS_STATUS_PARAM_IS_nullptr;
     }
 
-    ret = cfrds_internal_command(server, &response, "FILEIO", (const char *[]){ "", "CF_DIRECTORY", nullptr});
+    ret = cfrds_send_command(server, &response, "FILEIO", (const char *[]){ "", "CF_DIRECTORY", nullptr});
     if (ret == CFRDS_STATUS_OK)
     {
         const char *response_data = cfrds_buffer_data(response);
@@ -473,7 +473,7 @@ enum cfrds_status cfrds_command_sql_dsninfo(cfrds_server *server, cfrds_sql_dsni
         return CFRDS_STATUS_PARAM_IS_nullptr;
     }
 
-    ret = cfrds_internal_command(server, &response, "DBFUNCS", (const char *[]){ "", "DSNINFO", nullptr});
+    ret = cfrds_send_command(server, &response, "DBFUNCS", (const char *[]){ "", "DSNINFO", nullptr});
     if (ret == CFRDS_STATUS_OK)
     {
         *dsninfo = cfrds_buffer_to_sql_dsninfo(response);
@@ -500,7 +500,7 @@ enum cfrds_status cfrds_command_sql_tableinfo(cfrds_server *server, const char *
         return CFRDS_STATUS_PARAM_IS_nullptr;
     }
 
-    ret = cfrds_internal_command(server, &response, "DBFUNCS", (const char *[]){ connection_name, "TABLEINFO", nullptr});
+    ret = cfrds_send_command(server, &response, "DBFUNCS", (const char *[]){ connection_name, "TABLEINFO", nullptr});
     if (ret == CFRDS_STATUS_OK)
     {
         *tableinfo = cfrds_buffer_to_sql_tableinfo(response);
@@ -527,7 +527,7 @@ enum cfrds_status cfrds_command_sql_columninfo(cfrds_server *server, const char 
         return CFRDS_STATUS_PARAM_IS_nullptr;
     }
 
-    ret = cfrds_internal_command(server, &response, "DBFUNCS", (const char *[]){ connection_name, "COLUMNINFO", table_name, nullptr});
+    ret = cfrds_send_command(server, &response, "DBFUNCS", (const char *[]){ connection_name, "COLUMNINFO", table_name, nullptr});
     if (ret == CFRDS_STATUS_OK)
     {
         *columninfo = cfrds_buffer_to_sql_columninfo(response);
@@ -554,7 +554,7 @@ enum cfrds_status cfrds_command_sql_primarykeys(cfrds_server *server, const char
         return CFRDS_STATUS_PARAM_IS_nullptr;
     }
 
-    ret = cfrds_internal_command(server, &response, "DBFUNCS", (const char *[]){ connection_name, "PRIMARYKEYS", table_name, nullptr});
+    ret = cfrds_send_command(server, &response, "DBFUNCS", (const char *[]){ connection_name, "PRIMARYKEYS", table_name, nullptr});
     if (ret == CFRDS_STATUS_OK)
     {
         *primarykeys = cfrds_buffer_to_sql_primarykeys(response);
@@ -581,7 +581,7 @@ enum cfrds_status cfrds_command_sql_foreignkeys(cfrds_server *server, const char
         return CFRDS_STATUS_PARAM_IS_nullptr;
     }
 
-    ret = cfrds_internal_command(server, &response, "DBFUNCS", (const char *[]){ connection_name, "FOREIGNKEYS", table_name, nullptr});
+    ret = cfrds_send_command(server, &response, "DBFUNCS", (const char *[]){ connection_name, "FOREIGNKEYS", table_name, nullptr});
     if (ret == CFRDS_STATUS_OK)
     {
         *foreignkeys = cfrds_buffer_to_sql_foreignkeys(response);
@@ -608,7 +608,7 @@ enum cfrds_status cfrds_command_sql_importedkeys(cfrds_server *server, const cha
         return CFRDS_STATUS_PARAM_IS_nullptr;
     }
 
-    ret = cfrds_internal_command(server, &response, "DBFUNCS", (const char *[]){ connection_name, "IMPORTEDKEYS", table_name, nullptr});
+    ret = cfrds_send_command(server, &response, "DBFUNCS", (const char *[]){ connection_name, "IMPORTEDKEYS", table_name, nullptr});
     if (ret == CFRDS_STATUS_OK)
     {
         *importedkeys = cfrds_buffer_to_sql_importedkeys(response);
@@ -635,7 +635,7 @@ enum cfrds_status cfrds_command_sql_exportedkeys(cfrds_server *server, const cha
         return CFRDS_STATUS_PARAM_IS_nullptr;
     }
 
-    ret = cfrds_internal_command(server, &response, "DBFUNCS", (const char *[]){ connection_name, "EXPORTEDKEYS", table_name, nullptr});
+    ret = cfrds_send_command(server, &response, "DBFUNCS", (const char *[]){ connection_name, "EXPORTEDKEYS", table_name, nullptr});
     if (ret == CFRDS_STATUS_OK)
     {
         *exportedkeys = cfrds_buffer_to_sql_exportedkeys(response);
@@ -662,7 +662,7 @@ enum cfrds_status cfrds_command_sql_sqlstmnt(cfrds_server *server, const char *c
         return CFRDS_STATUS_PARAM_IS_nullptr;
     }
 
-    ret = cfrds_internal_command(server, &response, "DBFUNCS", (const char *[]){ connection_name, "SQLSTMNT", sql, nullptr});
+    ret = cfrds_send_command(server, &response, "DBFUNCS", (const char *[]){ connection_name, "SQLSTMNT", sql, nullptr});
     if (ret == CFRDS_STATUS_OK)
     {
         *resultset = cfrds_buffer_to_sql_sqlstmnt(response);
@@ -689,7 +689,7 @@ enum cfrds_status cfrds_command_sql_sqlmetadata(cfrds_server *server, const char
         return CFRDS_STATUS_PARAM_IS_nullptr;
     }
 
-    ret = cfrds_internal_command(server, &response, "DBFUNCS", (const char *[]){ connection_name, "SQLMETADATA", sql, nullptr});
+    ret = cfrds_send_command(server, &response, "DBFUNCS", (const char *[]){ connection_name, "SQLMETADATA", sql, nullptr});
     if (ret == CFRDS_STATUS_OK)
     {
         *metadata = cfrds_buffer_to_sql_metadata(response);
@@ -716,7 +716,7 @@ enum cfrds_status cfrds_command_sql_getsupportedcommands(cfrds_server *server, c
         return CFRDS_STATUS_PARAM_IS_nullptr;
     }
 
-    ret = cfrds_internal_command(server, &response, "DBFUNCS", (const char *[]){ "", "SUPPORTEDCOMMANDS", nullptr});
+    ret = cfrds_send_command(server, &response, "DBFUNCS", (const char *[]){ "", "SUPPORTEDCOMMANDS", nullptr});
     if (ret == CFRDS_STATUS_OK)
     {
         *supportedcommands = cfrds_buffer_to_sql_supportedcommands(response);
@@ -743,7 +743,7 @@ enum cfrds_status cfrds_command_sql_dbdescription(cfrds_server *server, const ch
         return CFRDS_STATUS_PARAM_IS_nullptr;
     }
 
-    ret = cfrds_internal_command(server, &response, "DBFUNCS", (const char *[]){ connection_name, "DBDESCRIPTION", nullptr});
+    ret = cfrds_send_command(server, &response, "DBFUNCS", (const char *[]){ connection_name, "DBDESCRIPTION", nullptr});
     if (ret == CFRDS_STATUS_OK)
     {
         *description = cfrds_buffer_to_sql_dbdescription(response);
@@ -1992,7 +1992,7 @@ enum cfrds_status cfrds_command_debugger_start(cfrds_server *server, char **sess
     wddx = wddx_create();
     wddx_put_bool(wddx, "0,REMOTE_SESSION", true);
 
-    ret = cfrds_internal_command(server, &response, "DBGREQUEST", (const char *[]){ "DBG_START", wddx_to_xml(wddx), nullptr});
+    ret = cfrds_send_command(server, &response, "DBGREQUEST", (const char *[]){ "DBG_START", wddx_to_xml(wddx), nullptr});
     if (ret == CFRDS_STATUS_OK)
     {
         *session_id = cfrds_buffer_to_debugger_start(response);
@@ -2024,7 +2024,7 @@ enum cfrds_status cfrds_command_debugger_stop(cfrds_server *server, const char *
         return CFRDS_STATUS_PARAM_IS_nullptr;
     }
 
-    ret = cfrds_internal_command(server, &response, "DBGREQUEST", (const char *[]){ "DBG_STOP", session_id, nullptr});
+    ret = cfrds_send_command(server, &response, "DBGREQUEST", (const char *[]){ "DBG_STOP", session_id, nullptr});
     if (ret == CFRDS_STATUS_OK)
     {
         if (cfrds_buffer_to_debugger_stop(response) == false)
@@ -2055,7 +2055,7 @@ enum cfrds_status cfrds_command_debugger_get_server_info(cfrds_server *server, c
         return CFRDS_STATUS_PARAM_IS_nullptr;
     }
 
-    ret = cfrds_internal_command(server, &response, "DBGREQUEST", (const char *[]){ "DBG_GET_DEBUG_SERVER_INFO", session_id, nullptr});
+    ret = cfrds_send_command(server, &response, "DBGREQUEST", (const char *[]){ "DBG_GET_DEBUG_SERVER_INFO", session_id, nullptr});
     if (ret == CFRDS_STATUS_OK)
     {
         int val = cfrds_buffer_to_debugger_info(response);
@@ -2094,7 +2094,7 @@ enum cfrds_status cfrds_command_debugger_breakpoint_on_exception(cfrds_server *s
     wddx_put_bool(wddx, "0,BREAK_ON_EXCEPTION", value);
     wddx_put_string(wddx, "0,COMMAND", "SESSION_BREAK_ON_EXCEPTION");
 
-    ret = cfrds_internal_command(server, &response, "DBGREQUEST", (const char *[]){ "DBG_GET_DEBUG_SERVER_INFO", session_id, wddx_to_xml(wddx), nullptr});
+    ret = cfrds_send_command(server, &response, "DBGREQUEST", (const char *[]){ "DBG_GET_DEBUG_SERVER_INFO", session_id, wddx_to_xml(wddx), nullptr});
     if (ret == CFRDS_STATUS_OK)
     {
         int val = cfrds_buffer_to_debugger_info(response);
@@ -2135,7 +2135,7 @@ enum cfrds_status cfrds_command_debugger_breakpoint(cfrds_server *server, const 
     wddx_put_string(wddx, "0,FILE", filepath);
     wddx_put_number(wddx, "0,SEQ", 1.0);
 
-    ret = cfrds_internal_command(server, &response, "DBGREQUEST", (const char *[]){ "DBG_REQUEST", session_id, wddx_to_xml(wddx), nullptr});
+    ret = cfrds_send_command(server, &response, "DBGREQUEST", (const char *[]){ "DBG_REQUEST", session_id, wddx_to_xml(wddx), nullptr});
 
     return ret;
 }
@@ -2160,7 +2160,7 @@ EXPORT_CFRDS enum cfrds_status cfrds_command_debugger_clear_all_breakpoints(cfrd
     wddx = wddx_create();
     wddx_put_string(wddx, "0,COMMAND", "UNSET_ALL_BREAKPOINTS");
 
-    ret = cfrds_internal_command(server, &response, "DBGREQUEST", (const char *[]){ "DBG_REQUEST", session_id, wddx_to_xml(wddx), nullptr});
+    ret = cfrds_send_command(server, &response, "DBGREQUEST", (const char *[]){ "DBG_REQUEST", session_id, wddx_to_xml(wddx), nullptr});
 
     return ret;
 }
@@ -2181,7 +2181,7 @@ enum cfrds_status cfrds_command_debugger_get_debug_events(cfrds_server *server, 
         return CFRDS_STATUS_PARAM_IS_nullptr;
     }
 
-    ret = cfrds_internal_command(server, &response, "DBGREQUEST", (const char *[]){ "DBG_EVENTS", session_id, nullptr});
+    ret = cfrds_send_command(server, &response, "DBGREQUEST", (const char *[]){ "DBG_EVENTS", session_id, nullptr});
     if (ret == CFRDS_STATUS_OK)
     {
         *event = cfrds_buffer_to_debugger_event(response);
@@ -2214,7 +2214,7 @@ enum cfrds_status cfrds_command_debugger_all_fetch_flags_enabled(cfrds_server *s
     wddx_put_bool(wddx, "CF_TRACE", cf_trace);
     wddx_put_bool(wddx, "JAVA_TRACE", java_trace);
 
-    ret = cfrds_internal_command(server, &response, "DBGREQUEST", (const char *[]){ "DBG_EVENTS", session_id, wddx_to_xml(wddx), nullptr});
+    ret = cfrds_send_command(server, &response, "DBGREQUEST", (const char *[]){ "DBG_EVENTS", session_id, wddx_to_xml(wddx), nullptr});
     if (ret == CFRDS_STATUS_OK)
     {
         *event = cfrds_buffer_to_debugger_event(response);
@@ -2244,7 +2244,7 @@ enum cfrds_status cfrds_command_debugger_step_in(cfrds_server *server, const cha
     wddx_put_string(wddx, "0,COMMAND", "STEP_IN");
     wddx_put_string(wddx, "0,THREAD", thread_name);
 
-    ret = cfrds_internal_command(server, &response, "DBGREQUEST", (const char *[]){ "DBG_REQUEST", session_id, wddx_to_xml(wddx), nullptr});
+    ret = cfrds_send_command(server, &response, "DBGREQUEST", (const char *[]){ "DBG_REQUEST", session_id, wddx_to_xml(wddx), nullptr});
 
     return ret;
 }
@@ -2270,7 +2270,7 @@ enum cfrds_status cfrds_command_debugger_step_over(cfrds_server *server, const c
     wddx_put_string(wddx, "0,COMMAND", "STEP_OVER");
     wddx_put_string(wddx, "0,THREAD", thread_name);
 
-    ret = cfrds_internal_command(server, &response, "DBGREQUEST", (const char *[]){ "DBG_REQUEST", session_id, wddx_to_xml(wddx), nullptr});
+    ret = cfrds_send_command(server, &response, "DBGREQUEST", (const char *[]){ "DBG_REQUEST", session_id, wddx_to_xml(wddx), nullptr});
 
     return ret;
 }
@@ -2296,7 +2296,7 @@ enum cfrds_status cfrds_command_debugger_step_out(cfrds_server *server, const ch
     wddx_put_string(wddx, "0,COMMAND", "STEP_OUT");
     wddx_put_string(wddx, "0,THREAD", thread_name);
 
-    ret = cfrds_internal_command(server, &response, "DBGREQUEST", (const char *[]){ "DBG_REQUEST", session_id, wddx_to_xml(wddx), nullptr});
+    ret = cfrds_send_command(server, &response, "DBGREQUEST", (const char *[]){ "DBG_REQUEST", session_id, wddx_to_xml(wddx), nullptr});
 
     return ret;
 }
@@ -2322,7 +2322,7 @@ enum cfrds_status cfrds_command_debugger_continue(cfrds_server *server, const ch
     wddx_put_string(wddx, "0,COMMAND", "CONTINUE");
     wddx_put_string(wddx, "0,THREAD", thread_name);
 
-    ret = cfrds_internal_command(server, &response, "DBGREQUEST", (const char *[]){ "DBG_REQUEST", session_id, wddx_to_xml(wddx), nullptr});
+    ret = cfrds_send_command(server, &response, "DBGREQUEST", (const char *[]){ "DBG_REQUEST", session_id, wddx_to_xml(wddx), nullptr});
 
     return ret;
 }
@@ -2462,7 +2462,7 @@ enum cfrds_status cfrds_command_debugger_watch_expression(cfrds_server *server, 
     wddx_put_string(wddx, "0,COMMAND", "GET_SINGLE_CF_VARIABLE");
     wddx_put_string(wddx, "0,THREAD", thread_name);
 
-    ret = cfrds_internal_command(server, &response, "DBGREQUEST", (const char *[]){ "DBG_REQUEST", session_id, wddx_to_xml(wddx), nullptr});
+    ret = cfrds_send_command(server, &response, "DBGREQUEST", (const char *[]){ "DBG_REQUEST", session_id, wddx_to_xml(wddx), nullptr});
 
     return ret;
 }
@@ -2490,7 +2490,7 @@ enum cfrds_status cfrds_command_debugger_set_variable(cfrds_server *server, cons
     wddx_put_string(wddx, "0,COMMAND", "SET_VARIABLE_VALUE");
     wddx_put_string(wddx, "0,THREAD", thread_name);
 
-    ret = cfrds_internal_command(server, &response, "DBGREQUEST", (const char *[]){ "DBG_REQUEST", session_id, wddx_to_xml(wddx), nullptr});
+    ret = cfrds_send_command(server, &response, "DBGREQUEST", (const char *[]){ "DBG_REQUEST", session_id, wddx_to_xml(wddx), nullptr});
 
     return ret;
 }
@@ -2516,7 +2516,7 @@ enum cfrds_status cfrds_command_debugger_watch_variable(cfrds_server *server, co
     wddx_put_string(wddx, "0,COMMAND", "SET_WATCH_VARIABLES");
     wddx_put_string(wddx, "0,WATCH,0", variable);// TODO: Hardcoded one watch variable
 
-    ret = cfrds_internal_command(server, &response, "DBGREQUEST", (const char *[]){ "DBG_REQUEST", session_id, wddx_to_xml(wddx), nullptr});
+    ret = cfrds_send_command(server, &response, "DBGREQUEST", (const char *[]){ "DBG_REQUEST", session_id, wddx_to_xml(wddx), nullptr});
 
     return ret;
 }
@@ -2543,7 +2543,7 @@ enum cfrds_status cfrds_command_debugger_get_output(cfrds_server *server, const 
     //wddx_put_string(wddx, "0,COMMAND", "SET_WATCH_VARIABLES");
     wddx_put_string(wddx, "0,THREAD", thread_name);
 
-    ret = cfrds_internal_command(server, &response, "DBGREQUEST", (const char *[]){ "DBG_REQUEST", session_id, wddx_to_xml(wddx), nullptr});
+    ret = cfrds_send_command(server, &response, "DBGREQUEST", (const char *[]){ "DBG_REQUEST", session_id, wddx_to_xml(wddx), nullptr});
 
     return ret;
 }
@@ -2569,7 +2569,7 @@ enum cfrds_status cfrds_command_debugger_set_scope_filter(cfrds_server *server, 
     wddx_put_string(wddx, "0,FILTER", filter);
     wddx_put_string(wddx, "0,COMMAND", "SET_SCOPE_FILTER");
 
-    ret = cfrds_internal_command(server, &response, "DBGREQUEST", (const char *[]){ "DBG_REQUEST", session_id, wddx_to_xml(wddx), nullptr});
+    ret = cfrds_send_command(server, &response, "DBGREQUEST", (const char *[]){ "DBG_REQUEST", session_id, wddx_to_xml(wddx), nullptr});
 
     return ret;
 }

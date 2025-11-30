@@ -27,11 +27,27 @@ void cfrds_sock_cleanup(int* sock);
 #define cfrds_sock_defer(var) int var __attribute__((cleanup(cfrds_sock_cleanup))) = 0
 #endif
 
+static bool cfrds_buffer_skip_httpheader(const char **data, size_t *remaining)
+{
+    const char *body = nullptr;
+
+    body = strstr(*data, "\r\n\r\n");
+    if (body == nullptr)
+        return false;
+
+    *remaining -= body - *data;
+    *data = body + 4;
+    *remaining -= 4;
+
+    return true;
+}
+
 enum cfrds_status cfrds_http_post(cfrds_server_int *server, const char *command, cfrds_buffer *payload, cfrds_buffer **response)
 {
     struct sockaddr_in servaddr;
 
-    cfrds_buffer_defer(int_response);
+    cfrds_buffer_defer(tmp_response);
+    cfrds_buffer_defer(swap_buf);
     cfrds_buffer_defer(send_buf);
     char datasize_str[16] = {0, };
     ssize_t sock_written = 0;
@@ -106,12 +122,12 @@ enum cfrds_status cfrds_http_post(cfrds_server_int *server, const char *command,
         }
     }
 
-    cfrds_buffer_create(&int_response);
+    cfrds_buffer_create(&tmp_response);
     while(1)
     {
-        cfrds_buffer_reserve_above_size(int_response, 4096);
+        cfrds_buffer_reserve_above_size(tmp_response, 4096);
 
-        ssize_t readed = recv(sockfd, cfrds_buffer_data(int_response) + cfrds_buffer_data_size(int_response), 4096, 0);
+        ssize_t readed = recv(sockfd, cfrds_buffer_data(tmp_response) + cfrds_buffer_data_size(tmp_response), 4096, 0);
         if (readed <= 0) {
             if (readed == -1) {
                 server->_errno = errno;
@@ -121,11 +137,11 @@ enum cfrds_status cfrds_http_post(cfrds_server_int *server, const char *command,
             break;
         }
 
-        cfrds_buffer_expand(int_response, readed);
+        cfrds_buffer_expand(tmp_response, readed);
     }
 
-    const char *response_data = cfrds_buffer_data(int_response);
-    size_t response_size = cfrds_buffer_data_size(int_response);
+    const char *response_data = cfrds_buffer_data(tmp_response);
+    size_t response_size = cfrds_buffer_data_size(tmp_response);
 
     static const char *good_response_http1_1 = "HTTP/1.1 200 ";
 
@@ -143,6 +159,13 @@ enum cfrds_status cfrds_http_post(cfrds_server_int *server, const char *command,
     if (cfrds_buffer_skip_httpheader(&response_data, &response_size) == false)
         return CFRDS_STATUS_HTTP_RESPONSE_NOT_FOUND;
 
+    cfrds_buffer_create(&swap_buf);
+    cfrds_buffer_append_bytes(swap_buf, response_data, response_size);
+    response_data = cfrds_buffer_data(swap_buf);
+    response_size = cfrds_buffer_data_size(swap_buf);
+    cfrds_buffer_free(tmp_response);
+    tmp_response = swap_buf; swap_buf = nullptr;
+
     if (!cfrds_buffer_parse_number(&response_data, &response_size, &server->error_code))
     {
         server->error_code = -1;
@@ -158,7 +181,7 @@ enum cfrds_status cfrds_http_post(cfrds_server_int *server, const char *command,
 
     if (response)
     {
-        *response = int_response; int_response = nullptr;
+        *response = tmp_response; tmp_response = nullptr;
     }
 
     return CFRDS_STATUS_OK;

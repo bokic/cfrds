@@ -239,8 +239,6 @@ cfrds_debugger_event *cfrds_buffer_to_debugger_event(cfrds_buffer *buffer);
 
 const char *cfrds_xml_get_struct_var_string(xmlNodePtr xml_node, const char *var_name);
 
-bool cfrds_buffer_skip_httpheader(const char **data, size_t *size);
-
 #ifdef __cplusplus
 }
 #endif

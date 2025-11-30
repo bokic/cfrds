@@ -2,6 +2,7 @@
 #include <cfrds.h>
 #include <cfrds.h>
 #include <internal/cfrds_buffer.h>
+#include <internal/wddx.h>
 
 #include <libxml/parser.h>
 #include <libxml/tree.h>
@@ -147,7 +148,7 @@ void cfrds_debugger_event_cleanup(cfrds_debugger_event **buf) {
     }
 }
 
-void xmlDoc_cleanup(xmlDoc **value)
+static void xmlDoc_cleanup(xmlDoc **value)
 {
     if (value)
     {
@@ -156,7 +157,7 @@ void xmlDoc_cleanup(xmlDoc **value)
     }
 }
 
-void xmlChar_cleanup(xmlChar **value)
+static void xmlChar_cleanup(xmlChar **value)
 {
     if (value)
     {
@@ -175,6 +176,7 @@ void cfrds_buffer_realloc_if_needed(cfrds_buffer *buffer, size_t len)
         new_size = (((new_size + 512) / 1024) + 1) * 1024;
 
         buffer_int->data = realloc(buffer_int->data, new_size);
+        // TODO: Zero new bytes.
         buffer_int->allocated = new_size;
     }
 }
@@ -353,6 +355,7 @@ void cfrds_buffer_reserve_above_size(cfrds_buffer *buffer, size_t size)
         size_t new_size = buffer_int->size + size;
 
         buffer_int->data = realloc(buffer_int->data, new_size);
+        // TODO: Zero new bytes.
         buffer_int->allocated = new_size;
     }
 }
@@ -507,21 +510,6 @@ bool cfrds_buffer_parse_string_list_item(const char **data, size_t *remaining, c
     return true;
 }
 
-bool cfrds_buffer_skip_httpheader(const char **data, size_t *remaining)
-{
-    const char *body = nullptr;
-
-    body = strstr(*data, "\r\n\r\n");
-    if (body == nullptr)
-        return false;
-
-    *remaining -= body - *data;
-    *data = body + 4;
-    *remaining -= 4;
-
-    return true;
-}
-
 cfrds_browse_dir_int *cfrds_buffer_to_browse_dir(cfrds_buffer *buffer)
 {
     cfrds_browse_dir_int *ret = nullptr;
@@ -537,9 +525,6 @@ cfrds_browse_dir_int *cfrds_buffer_to_browse_dir(cfrds_buffer *buffer)
 
     const char *data = (const char *)buffer_int->data;
     size_t size = buffer_int->size;
-
-    if (!cfrds_buffer_skip_httpheader(&data, &size))
-        return nullptr;
 
     if (!cfrds_buffer_parse_number(&data, &size, &total))
         return nullptr;
@@ -634,9 +619,6 @@ cfrds_file_content_int *cfrds_buffer_to_file_content(cfrds_buffer *buffer)
     const char *data = (const char *)buffer_int->data;
     size_t size = buffer_int->size;
 
-    if (!cfrds_buffer_skip_httpheader(&data, &size))
-        return nullptr;
-
     if (!cfrds_buffer_parse_number(&data, &size, &total))
         return nullptr;
 
@@ -661,55 +643,52 @@ cfrds_sql_dsninfo_int *cfrds_buffer_to_sql_dsninfo(cfrds_buffer *buffer)
     const char *response_data = cfrds_buffer_data(buffer);
     size_t response_size = cfrds_buffer_data_size(buffer);
 
-    if (cfrds_buffer_skip_httpheader(&response_data, &response_size))
-    {
-        int64_t cnt = 0;
+      int64_t cnt = 0;
 
-        if (!cfrds_buffer_parse_number(&response_data, &response_size, &cnt))
-        {
-            return nullptr;
-        }
+      if (!cfrds_buffer_parse_number(&response_data, &response_size, &cnt))
+      {
+          return nullptr;
+      }
 
-        if (cnt > 10000)
-            return nullptr;
+      if (cnt > 10000)
+          return nullptr;
 
-        ret = malloc(offsetof(cfrds_sql_dsninfo_int, names) + sizeof(char *) * cnt);
-        if (ret == nullptr)
-            return nullptr;
+      ret = malloc(offsetof(cfrds_sql_dsninfo_int, names) + sizeof(char *) * cnt);
+      if (ret == nullptr)
+          return nullptr;
 
-        ret->cnt = cnt;
+      ret->cnt = cnt;
 
-        for(int c = 0; c < cnt; c++)
-        {
-            cfrds_str_defer(item);
+      for(int c = 0; c < cnt; c++)
+      {
+          cfrds_str_defer(item);
 
-            cfrds_buffer_parse_string(&response_data, &response_size, &item);
+          cfrds_buffer_parse_string(&response_data, &response_size, &item);
 
-            if (item)
-            {
-                const char *pos1 = strchr(item, '"');
-                if (pos1)
-                {
-                    const char *pos2 = strchr(pos1 + 1, '"');
-                    if (pos2)
-                    {
-                        size_t len = pos2 - pos1 - 1;
+          if (item)
+          {
+              const char *pos1 = strchr(item, '"');
+              if (pos1)
+              {
+                  const char *pos2 = strchr(pos1 + 1, '"');
+                  if (pos2)
+                  {
+                      size_t len = pos2 - pos1 - 1;
 
-                        char *tmp = malloc(len + 1);
-                        if (tmp == nullptr)
-                            return nullptr;
+                      char *tmp = malloc(len + 1);
+                      if (tmp == nullptr)
+                          return nullptr;
 
-                        memcpy(tmp, pos1 + 1, len);
-                        tmp[len] = '\0';
-                        free(item);
-                        item = tmp;
-                    }
-                }
+                      memcpy(tmp, pos1 + 1, len);
+                      tmp[len] = '\0';
+                      free(item);
+                      item = tmp;
+                  }
+              }
 
-                ret->names[c] = item; item = nullptr;
-            }
-        }
-    }
+              ret->names[c] = item; item = nullptr;
+          }
+      }
 
     return ret;
 }
@@ -721,138 +700,135 @@ cfrds_sql_tableinfo_int *cfrds_buffer_to_sql_tableinfo(cfrds_buffer *buffer)
     const char *response_data = cfrds_buffer_data(buffer);
     size_t response_size = cfrds_buffer_data_size(buffer);
 
-    if (cfrds_buffer_skip_httpheader(&response_data, &response_size))
+    int64_t cnt = 0;
+
+    if (!cfrds_buffer_parse_number(&response_data, &response_size, &cnt))
     {
-        int64_t cnt = 0;
+        return nullptr;
+    }
 
-        if (!cfrds_buffer_parse_number(&response_data, &response_size, &cnt))
+    if (cnt > 10000)
+        return nullptr;
+
+    size_t malloc_size = offsetof(cfrds_sql_tableinfo_int, items) + sizeof(cfrds_sql_tableinfoitem_int) * cnt;
+
+    ret = malloc(malloc_size);
+    if (ret == nullptr)
+        return nullptr;
+
+    explicit_bzero(ret, malloc_size);
+
+    ret->cnt = 0;
+
+    for(int c = 0; c < cnt; c++)
+    {
+        cfrds_str_defer(item);
+
+        cfrds_buffer_parse_string(&response_data, &response_size, &item);
+        if (item)
         {
-            return nullptr;
-        }
+            cfrds_str_defer(field1);
+            cfrds_str_defer(field2);
+            cfrds_str_defer(field3);
+            cfrds_str_defer(field4);
 
-        if (cnt > 10000)
-            return nullptr;
+            const char *current_item = item;
+            const char *end_item = nullptr;
 
-        size_t malloc_size = offsetof(cfrds_sql_tableinfo_int, items) + sizeof(cfrds_sql_tableinfoitem_int) * cnt;
+            if (current_item[0] != '"')
+                return nullptr;
+            current_item++;
+            end_item = strchr(current_item, '"');
+            if (!end_item)
+                return nullptr;
+            if (end_item > current_item) {
+                int size = end_item - current_item;
 
-        ret = malloc(malloc_size);
-        if (ret == nullptr)
-            return nullptr;
-
-        explicit_bzero(ret, malloc_size);
-
-        ret->cnt = 0;
-
-        for(int c = 0; c < cnt; c++)
-        {
-            cfrds_str_defer(item);
-
-            cfrds_buffer_parse_string(&response_data, &response_size, &item);
-            if (item)
-            {
-                cfrds_str_defer(field1);
-                cfrds_str_defer(field2);
-                cfrds_str_defer(field3);
-                cfrds_str_defer(field4);
-
-                const char *current_item = item;
-                const char *end_item = nullptr;
-
-                if (current_item[0] != '"')
-                    return nullptr;
-                current_item++;
-                end_item = strchr(current_item, '"');
-                if (!end_item)
-                    return nullptr;
-                if (end_item > current_item) {
-                    int size = end_item - current_item;
-
-                    field1 = malloc(size + 1);
-                    if (field1 == nullptr)
-                        return nullptr;
-
-                    memcpy(field1, current_item, size);
-                    field1[size] = '\0';
-                }
-                current_item = end_item + 1;
-
-                if (current_item[0] != ',')
-                    return nullptr;
-                current_item++;
-
-                if (current_item[0] != '"')
-                    return nullptr;
-                current_item++;
-
-                end_item = strchr(current_item, '"');
-                if (!end_item)
+                field1 = malloc(size + 1);
+                if (field1 == nullptr)
                     return nullptr;
 
-                if (end_item > current_item) {
-                    int size = end_item - current_item;
-
-                    field2 = malloc(size + 1);
-                    if (!field2)
-                        return nullptr;
-
-                    memcpy(field2, current_item, size);
-                    field2[size] = '\0';
-                }
-                current_item = end_item + 1;
-
-                if (current_item[0] != ',')
-                    return nullptr;
-                current_item++;
-
-                if (current_item[0] != '"')
-                    return nullptr;
-                current_item++;
-
-                end_item = strchr(current_item, '"');
-                if (!end_item)
-                    return nullptr;
-
-                if (end_item > current_item) {
-                    int size = end_item - current_item;
-
-                    field3 = malloc(size + 1);
-                    if (!field3)
-                        return nullptr;
-
-                    memcpy(field3, current_item, size);
-                    field3[size] = '\0';
-                }
-                current_item = end_item + 1;
-
-                if (current_item[0] != ',')
-                    return nullptr;
-                current_item++;
-
-                if (current_item[0] != '"')
-                    return nullptr;
-                current_item++;
-
-                end_item = strchr(current_item, '"');
-                if (!end_item)
-                    return nullptr;
-
-                if (end_item > current_item) {
-                    int size = end_item - current_item;
-
-                    field4 = malloc(size + 1);
-                    if (!field4)
-                        return nullptr;
-
-                    memcpy(field4, current_item, size);
-                    field4[size] = '\0';
-                }
-
-                ret->items[ret->cnt].unknown = field1; field1 = nullptr;
-                ret->items[ret->cnt].schema  = field2; field2 = nullptr;
-                ret->items[ret->cnt].name    = field3; field3 = nullptr;
-                ret->items[ret->cnt].type    = field4; field4 = nullptr;
-                ret->cnt++;
+                memcpy(field1, current_item, size);
+                field1[size] = '\0';
             }
+            current_item = end_item + 1;
+
+            if (current_item[0] != ',')
+                return nullptr;
+            current_item++;
+
+            if (current_item[0] != '"')
+                return nullptr;
+            current_item++;
+
+            end_item = strchr(current_item, '"');
+            if (!end_item)
+                return nullptr;
+
+            if (end_item > current_item) {
+                int size = end_item - current_item;
+
+                field2 = malloc(size + 1);
+                if (!field2)
+                    return nullptr;
+
+                memcpy(field2, current_item, size);
+                field2[size] = '\0';
+            }
+            current_item = end_item + 1;
+
+            if (current_item[0] != ',')
+                return nullptr;
+            current_item++;
+
+            if (current_item[0] != '"')
+                return nullptr;
+            current_item++;
+
+            end_item = strchr(current_item, '"');
+            if (!end_item)
+                return nullptr;
+
+            if (end_item > current_item) {
+                int size = end_item - current_item;
+
+                field3 = malloc(size + 1);
+                if (!field3)
+                    return nullptr;
+
+                memcpy(field3, current_item, size);
+                field3[size] = '\0';
+            }
+            current_item = end_item + 1;
+
+            if (current_item[0] != ',')
+                return nullptr;
+            current_item++;
+
+            if (current_item[0] != '"')
+                return nullptr;
+            current_item++;
+
+            end_item = strchr(current_item, '"');
+            if (!end_item)
+                return nullptr;
+
+            if (end_item > current_item) {
+                int size = end_item - current_item;
+
+                field4 = malloc(size + 1);
+                if (!field4)
+                    return nullptr;
+
+                memcpy(field4, current_item, size);
+                field4[size] = '\0';
+            }
+
+            ret->items[ret->cnt].unknown = field1; field1 = nullptr;
+            ret->items[ret->cnt].schema  = field2; field2 = nullptr;
+            ret->items[ret->cnt].name    = field3; field3 = nullptr;
+            ret->items[ret->cnt].type    = field4; field4 = nullptr;
+            ret->cnt++;
         }
     }
 
@@ -872,9 +848,6 @@ cfrds_sql_columninfo_int *cfrds_buffer_to_sql_columninfo(cfrds_buffer *buffer)
 
     const char *data = (const char *)buffer_int->data;
     size_t size = buffer_int->size;
-
-    if (!cfrds_buffer_skip_httpheader(&data, &size))
-        return nullptr;
 
     if (!cfrds_buffer_parse_number(&data, &size, &columns))
         return nullptr;
@@ -968,9 +941,6 @@ cfrds_sql_primarykeys_int *cfrds_buffer_to_sql_primarykeys(cfrds_buffer *buffer)
     const char *data = (const char *)buffer_int->data;
     size_t size = buffer_int->size;
 
-    if (!cfrds_buffer_skip_httpheader(&data, &size))
-        return nullptr;
-
     if (!cfrds_buffer_parse_number(&data, &size, &cnt))
         return nullptr;
 
@@ -1030,9 +1000,6 @@ cfrds_sql_foreignkeys_int *cfrds_buffer_to_sql_foreignkeys(cfrds_buffer *buffer)
 
     const char *data = (const char *)buffer_int->data;
     size_t size = buffer_int->size;
-
-    if (!cfrds_buffer_skip_httpheader(&data, &size))
-        return nullptr;
 
     if (!cfrds_buffer_parse_number(&data, &size, &cnt))
         return nullptr;
@@ -1111,9 +1078,6 @@ cfrds_sql_importedkeys_int *cfrds_buffer_to_sql_importedkeys(cfrds_buffer *buffe
 
     const char *data = (const char *)buffer_int->data;
     size_t size = buffer_int->size;
-
-    if (!cfrds_buffer_skip_httpheader(&data, &size))
-        return nullptr;
 
     if (!cfrds_buffer_parse_number(&data, &size, &cnt))
         return nullptr;
@@ -1196,9 +1160,6 @@ cfrds_sql_exportedkeys_int *cfrds_buffer_to_sql_exportedkeys(cfrds_buffer *buffe
     const char *data = (const char *)buffer_int->data;
     size_t size = buffer_int->size;
 
-    if (!cfrds_buffer_skip_httpheader(&data, &size))
-        return nullptr;
-
     if (!cfrds_buffer_parse_number(&data, &size, &cnt))
         return nullptr;
 
@@ -1279,9 +1240,6 @@ cfrds_sql_resultset_int *cfrds_buffer_to_sql_sqlstmnt(cfrds_buffer *buffer)
 
     const char *response_data = cfrds_buffer_data(buffer);
     size_t response_size = cfrds_buffer_data_size(buffer);
-
-    if (!cfrds_buffer_skip_httpheader(&response_data, &response_size))
-        return nullptr;
 
     if (!cfrds_buffer_parse_number(&response_data, &response_size, &cnt))
         return nullptr;
@@ -1365,9 +1323,6 @@ cfrds_sql_metadata_int *cfrds_buffer_to_sql_metadata(cfrds_buffer *buffer)
     const char *response_data = cfrds_buffer_data(buffer);
     size_t response_size = cfrds_buffer_data_size(buffer);
 
-    if (!cfrds_buffer_skip_httpheader(&response_data, &response_size))
-        return nullptr;
-
     if (!cfrds_buffer_parse_number(&response_data, &response_size, &cnt))
         return nullptr;
 
@@ -1425,9 +1380,6 @@ cfrds_sql_supportedcommands_int *cfrds_buffer_to_sql_supportedcommands(cfrds_buf
 
     const char *data = (const char *)buffer_int->data;
     size_t size = buffer_int->size;
-
-    if (!cfrds_buffer_skip_httpheader(&data, &size))
-        return nullptr;
 
     if (!cfrds_buffer_parse_number(&data, &size, &rows))
         return nullptr;
@@ -1487,10 +1439,6 @@ char *cfrds_buffer_to_sql_dbdescription(cfrds_buffer *buffer)
     const char *data = (const char *)buffer_int->data;
     size_t size = buffer_int->size;
 
-    if (!cfrds_buffer_skip_httpheader(&data, &size))
-        return nullptr;
-
-
     cfrds_buffer_parse_number(&data, &size, &rows);
     if (rows != 1)
         return nullptr;
@@ -1520,9 +1468,6 @@ char *cfrds_buffer_to_debugger_start(cfrds_buffer *buffer)
     const char *data = (const char *)buffer_int->data;
     size_t size = buffer_int->size;
 
-    if (!cfrds_buffer_skip_httpheader(&data, &size))
-        return nullptr;
-
     cfrds_buffer_parse_number(&data, &size, &rows);
     if (rows != 2)
         return nullptr;
@@ -1534,7 +1479,7 @@ char *cfrds_buffer_to_debugger_start(cfrds_buffer *buffer)
 
 bool cfrds_buffer_to_debugger_stop(cfrds_buffer *buffer)
 {
-    cfrds_str_defer(ret);
+    cfrds_str_defer(xml);
 
     cfrds_buffer_int *buffer_int = buffer;
     int64_t rows = 0;
@@ -1545,69 +1490,24 @@ bool cfrds_buffer_to_debugger_stop(cfrds_buffer *buffer)
     const char *data = (const char *)buffer_int->data;
     size_t size = buffer_int->size;
 
-    if (!cfrds_buffer_skip_httpheader(&data, &size))
-        return false;
-
     cfrds_buffer_parse_number(&data, &size, &rows);
     if (rows != 1)
         return false;
 
-    cfrds_buffer_parse_string(&data, &size, &ret);
+    cfrds_buffer_parse_string(&data, &size, &xml);
 
-    if (ret)
+    if (xml)
     {
-        xmlDoc_defer(doc);
-        doc = xmlParseMemory(ret, strlen(ret));
+        WDDX_defer(result);
 
-        xmlNodePtr rootEl = xmlDocGetRootElement(doc);
-        if (rootEl == nullptr) return false;
-        if (rootEl->type != XML_ELEMENT_NODE) return false;
-        if (strcmp((const char *)rootEl->name, "wddxPacket") != 0) return false;
+        result = wddx_from_xml(xml);
 
-        xmlNodePtr headerEl = rootEl->children;
-        if (headerEl == nullptr) return false;
-        if (headerEl->type != XML_ELEMENT_NODE) return false;
-        if (strcmp((const char *)headerEl->name, "header") != 0) return false;
+        const char *status = wddx_get_string(result, "0,STATUS");
+        if (status == nullptr)
+            return false;
 
-        xmlNodePtr dataEl = headerEl->next;
-        if (dataEl == nullptr) return false;
-        if (dataEl->type != XML_ELEMENT_NODE) return false;
-        if (strcmp((const char *)dataEl->name, "data") != 0) return false;
-
-        xmlNodePtr arrayEl = dataEl->children;
-        if (arrayEl == nullptr) return false;
-        if (arrayEl->type != XML_ELEMENT_NODE) return false;
-        if (strcmp((const char *)arrayEl->name, "array") != 0) return false;
-
-        xmlNodePtr structEl = arrayEl->children;
-        if (structEl == nullptr) return false;
-        if (structEl->type != XML_ELEMENT_NODE) return false;
-        if (strcmp((const char *)structEl->name, "struct") != 0) return false;
-
-        xmlNodePtr varEl = structEl->children;
-        while(varEl)
-        {
-            if (varEl->type != XML_ELEMENT_NODE) return false;
-            if (strcmp((const char *)varEl->name, "var") != 0) return false;
-            if (strcmp((const char *)xmlGetProp(varEl, (const xmlChar *)"name"), "STATUS") != 0)
-            {
-                varEl = varEl->next;
-                continue;
-            }
-
-            xmlNodePtr stringEl = varEl->children;
-            if (stringEl == nullptr) return false;
-            if (stringEl->type != XML_ELEMENT_NODE) return false;
-            if (strcmp((const char *)stringEl->name, "string") != 0) return false;
-
-            xmlNodePtr content = stringEl->children;
-            if (content == nullptr) return false;
-            if (content->type != XML_TEXT_NODE) return false;
-            if (strstr((const char *)content->content, "RDS_OK") != nullptr)
-                return true;
-
-            varEl = varEl->next;
-        }
+        if (strcmp(status, "RDS_OK") == 0)
+            return true;
     }
 
     return false;
@@ -1627,9 +1527,6 @@ int cfrds_buffer_to_debugger_info(cfrds_buffer *buffer)
     const char *data = (const char *)buffer_int->data;
     size_t size = buffer_int->size;
 
-    if (!cfrds_buffer_skip_httpheader(&data, &size))
-        return -1;
-
     cfrds_buffer_parse_number(&data, &size, &rows);
     if (rows != 1)
         return -1;
@@ -1638,65 +1535,15 @@ int cfrds_buffer_to_debugger_info(cfrds_buffer *buffer)
 
     if (ret)
     {
-        xmlDoc_defer(doc);
-        doc = xmlParseMemory(ret, strlen(ret));
+        WDDX_defer(result);
 
-        xmlNodePtr rootEl = xmlDocGetRootElement(doc);
-        if (rootEl == nullptr) return -1;
-        if (rootEl->type != XML_ELEMENT_NODE) return -1;
-        if (strcmp((const char *)rootEl->name, "wddxPacket") != 0) return -1;
+        result = wddx_from_xml(ret);
 
-        xmlNodePtr headerEl = rootEl->children;
-        if (headerEl == nullptr) return -1;
-        if (headerEl->type != XML_ELEMENT_NODE) return -1;
-        if (strcmp((const char *)headerEl->name, "header") != 0) return -1;
+        const char *status = wddx_get_string(result, "0,STATUS");
+        if ((status == nullptr)||(strcmp(status, "RDS_OK") != 0))
+            return -1;
 
-        xmlNodePtr dataEl = headerEl->next;
-        if (dataEl == nullptr) return -1;
-        if (dataEl->type != XML_ELEMENT_NODE) return -1;
-        if (strcmp((const char *)dataEl->name, "data") != 0) return -1;
-
-        xmlNodePtr arrayEl = dataEl->children;
-        if (arrayEl == nullptr) return -1;
-        if (arrayEl->type != XML_ELEMENT_NODE) return -1;
-        if (strcmp((const char *)arrayEl->name, "array") != 0) return -1;
-
-        xmlNodePtr structEl = arrayEl->children;
-        if (structEl == nullptr) return -1;
-        if (structEl->type != XML_ELEMENT_NODE) return -1;
-        if (strcmp((const char *)structEl->name, "struct") != 0) return -1;
-
-        xmlNodePtr varStatusEl = structEl->children;
-        if (varStatusEl == nullptr) return -1;
-        if (varStatusEl->type != XML_ELEMENT_NODE) return -1;
-        if (strcmp((const char *)varStatusEl->name, "var") != 0) return -1;
-        // TODO: Check for variable name
-
-        xmlNodePtr varStatusTypeEl = varStatusEl->children;
-        if (varStatusTypeEl == nullptr) return -1;
-        if (varStatusTypeEl->type != XML_ELEMENT_NODE) return -1;
-        if (strcmp((const char *)varStatusTypeEl->name, "string") != 0) return -1;
-
-        xmlNodePtr varStatusValueEl = varStatusTypeEl->children;
-        if (varStatusValueEl == nullptr) return -1;
-        if (varStatusValueEl->type != XML_TEXT_NODE) return -1;
-        if (strstr((const char *)varStatusValueEl->content, "RDS_OK") == nullptr) return -1;
-
-        xmlNodePtr varDebugServerPortEl = varStatusEl->next;
-        if (varDebugServerPortEl == nullptr) return -1;
-        if (varDebugServerPortEl->type != XML_ELEMENT_NODE) return -1;
-        if (strcmp((const char *)varDebugServerPortEl->name, "var") != 0) return -1;
-        // TODO: Check for variable name
-
-        xmlNodePtr varDebugServerPortTypeEl = varDebugServerPortEl->children;
-        if (varDebugServerPortTypeEl == nullptr) return -1;
-        if (varDebugServerPortTypeEl->type != XML_ELEMENT_NODE) return -1;
-        if (strcmp((const char *)varDebugServerPortTypeEl->name, "number") != 0) return -1;
-
-        xmlNodePtr varDebugServerPortValueEl = varDebugServerPortTypeEl->children;
-        if (varDebugServerPortValueEl == nullptr) return -1;
-        if (varDebugServerPortValueEl->type != XML_TEXT_NODE) return -1;
-        return atof((const char *)varDebugServerPortValueEl->content);
+        return wddx_get_number(result, "0,DEBUG_SERVER_PORT", nullptr);
     }
 
     return -1;
@@ -1715,116 +1562,13 @@ cfrds_debugger_event *cfrds_buffer_to_debugger_event(cfrds_buffer *buffer)
     const char *data = (const char *)buffer_int->data;
     size_t size = buffer_int->size;
 
-    if (!cfrds_buffer_skip_httpheader(&data, &size))
-        return nullptr;
-
     cfrds_buffer_parse_number(&data, &size, &rows);
     if (rows != 1)
         return nullptr;
 
     cfrds_buffer_parse_string(&data, &size, &xml);
     if (xml)
-    {
-        xmlDoc_defer(doc);
-        doc = xmlParseMemory(xml, strlen(xml));
-
-        xmlNodePtr rootEl = xmlDocGetRootElement(doc);
-        if (rootEl == nullptr) return nullptr;
-        if (rootEl->type != XML_ELEMENT_NODE) return nullptr;
-        if (strcmp((const char *)rootEl->name, "wddxPacket") != 0) return nullptr;
-
-        xmlNodePtr headerEl = rootEl->children;
-        if (headerEl == nullptr) return nullptr;
-        if (headerEl->type != XML_ELEMENT_NODE) return nullptr;
-        if (strcmp((const char *)headerEl->name, "header") != 0) return nullptr;
-
-        xmlNodePtr dataEl = headerEl->next;
-        if (dataEl == nullptr) return nullptr;
-        if (dataEl->type != XML_ELEMENT_NODE) return nullptr;
-        if (strcmp((const char *)dataEl->name, "data") != 0) return nullptr;
-
-        xmlNodePtr arrayEl = dataEl->children;
-        if (arrayEl == nullptr) return nullptr;
-        if (arrayEl->type != XML_ELEMENT_NODE) return nullptr;
-        if (strcmp((const char *)arrayEl->name, "array") != 0) return nullptr;
-
-        const unsigned char *array_length = xmlGetProp(arrayEl, (const unsigned char *)"length");
-        if (strcmp((const char *)array_length, "1") != 0)
-        {
-            fprintf(stderr, "array_length != 1: %s.", array_length);
-            return nullptr;
-        }
-
-        xmlNodePtr structEl = arrayEl->children;
-        if (structEl == nullptr) return nullptr;
-        if (structEl->type != XML_ELEMENT_NODE) return nullptr;
-        if (strcmp((const char *)structEl->name, "struct") != 0) return nullptr;
-
-        const char *event_type = cfrds_xml_get_struct_var_string(structEl, "EVENT");
-        if (event_type == nullptr) return nullptr;
-
-        if (strcmp(event_type, "CF_BREAKPOINT_SET") == 0)
-        {
-            cfrds_debugger_event_breakpoint_set_int *ret = malloc(sizeof(cfrds_debugger_event_breakpoint_set_int));
-            if (ret)
-            {
-                const char *pathname = cfrds_xml_get_struct_var_string(structEl, "CFML_PATH");
-                const char *req_line = cfrds_xml_get_struct_var_string(structEl, "REQ_LINE_NUM");
-                const char *act_line = cfrds_xml_get_struct_var_string(structEl, "ACTUAL_LINE_NUM");
-
-                explicit_bzero(ret, sizeof(cfrds_debugger_event_breakpoint_set_int));
-
-                ret->event.type = CFRDS_DEBUGGER_EVENT_TYPE_BREAKPOINT_SET;
-                ret->pathname = strdup(pathname);
-                if (req_line) ret->req_line = atoi(req_line);
-                if (act_line) ret->act_line = atoi(act_line);
-            }
-
-            return ret;
-        }
-        else if (strcmp(event_type, "BREAKPOINT") == 0)
-        {
-            cfrds_debugger_event_breakpoint_int *ret = malloc(sizeof(cfrds_debugger_event_breakpoint_int));
-            if (ret)
-            {
-                const char *source = cfrds_xml_get_struct_var_string(structEl, "SOURCE");
-                const char *line = cfrds_xml_get_struct_var_string(structEl, "LINE");
-                const char *thread = cfrds_xml_get_struct_var_string(structEl, "THREAD");
-
-                explicit_bzero(ret, sizeof(cfrds_debugger_event_breakpoint_int));
-
-                ret->event.type = CFRDS_DEBUGGER_EVENT_TYPE_BREAKPOINT;
-                ret->source = strdup(source);
-                if (line) ret->line = atoi(line);
-                ret->thread_name = strdup(thread);
-            }
-
-            return ret;
-        }
-        else if (strcmp(event_type, "STEP") == 0)
-        {
-            cfrds_debugger_event_breakpoint_int *ret = malloc(sizeof(cfrds_debugger_event_breakpoint_int));
-            if (ret)
-            {
-                const char *source = cfrds_xml_get_struct_var_string(structEl, "SOURCE");
-                const char *line = cfrds_xml_get_struct_var_string(structEl, "LINE");
-                const char *thread = cfrds_xml_get_struct_var_string(structEl, "THREAD");
-
-                explicit_bzero(ret, sizeof(cfrds_debugger_event_breakpoint_int));
-
-                ret->event.type = CFRDS_DEBUGGER_EVENT_TYPE_BREAKPOINT;
-                ret->source = strdup(source);
-                if (line) ret->line = atoi(line);
-                ret->thread_name = strdup(thread);
-            }
-
-            return ret;
-        }
-        else
-        {
-            fprintf(stderr, "Unknown debugger event_type: %s.\n", event_type);
-        }
-    }
+        return wddx_from_xml(xml);
 
     return nullptr;
 }

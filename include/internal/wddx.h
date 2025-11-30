@@ -21,5 +21,11 @@ EXPORT_WDDX WDDX *wddx_create();
 EXPORT_WDDX bool wddx_put_bool(WDDX *dest, const char *path, bool value);
 EXPORT_WDDX bool wddx_put_number(WDDX *dest, const char *path, double value);
 EXPORT_WDDX bool wddx_put_string(WDDX *dest, const char *path, const char *value);
-EXPORT_WDDX const char *wddx_to_string(WDDX *src);
+EXPORT_WDDX const char *wddx_to_xml(WDDX *src);
+
+EXPORT_WDDX WDDX *wddx_from_xml(const char *xml);
+EXPORT_WDDX bool wddx_get_bool(const WDDX *src, const char *path, bool *ok);
+EXPORT_WDDX double wddx_get_number(const WDDX *src, const char *path, bool *ok);
+EXPORT_WDDX const char *wddx_get_string(const WDDX *src, const char *path);
+
 EXPORT_WDDX void wddx_cleanup(WDDX **value);

@@ -172,12 +172,13 @@ void cfrds_buffer_realloc_if_needed(cfrds_buffer *buffer, size_t len)
 
     if (buffer_int->size + len > buffer_int->allocated)
     {
-        size_t new_size = buffer_int->size + len;
-        new_size = (((new_size + 512) / 1024) + 1) * 1024;
+        size_t newsize = buffer_int->size + len;
+        newsize = (((newsize + 512) / 1024) + 1) * 1024;
 
-        buffer_int->data = realloc(buffer_int->data, new_size);
-        // TODO: Zero new bytes.
-        buffer_int->allocated = new_size;
+        buffer_int->data = realloc(buffer_int->data, newsize);
+        int oldsize = buffer_int->allocated;
+        explicit_bzero(buffer_int->data + oldsize, newsize - oldsize);
+        buffer_int->allocated = newsize;
     }
 }
 
@@ -352,11 +353,12 @@ void cfrds_buffer_reserve_above_size(cfrds_buffer *buffer, size_t size)
 
     if (buffer_int->allocated - buffer_int->size < size)
     {
-        size_t new_size = buffer_int->size + size;
+        size_t newsize = buffer_int->size + size;
 
-        buffer_int->data = realloc(buffer_int->data, new_size);
-        // TODO: Zero new bytes.
-        buffer_int->allocated = new_size;
+        buffer_int->data = realloc(buffer_int->data, newsize);
+        int oldsize = buffer_int->allocated;
+        explicit_bzero(buffer_int->data + oldsize, newsize- oldsize);
+        buffer_int->allocated = newsize;
     }
 }
 

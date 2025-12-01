@@ -15,57 +15,57 @@ void cfrds_server_cleanup(cfrds_server **server)
     if (*server == nullptr)
         return;
 
-    cfrds_server_int *_server = *server;
+    cfrds_server_int *server_int = *server;
 
-    _server->_errno = 0;
-    _server->error_code = 1;
+    server_int->_errno = 0;
+    server_int->error_code = 1;
 
-    if (_server->host)
+    if (server_int->host)
     {
-        free(_server->host);
-        _server->host = nullptr;
+        free(server_int->host);
+        server_int->host = nullptr;
     }
 
-    if (_server->username)
+    if (server_int->username)
     {
-        free(_server->username);
-        _server->username = nullptr;
+        free(server_int->username);
+        server_int->username = nullptr;
     }
 
-    if (_server->orig_password)
+    if (server_int->orig_password)
     {
-        free(_server->orig_password);
-        _server->orig_password = nullptr;
+        free(server_int->orig_password);
+        server_int->orig_password = nullptr;
     }
 
-    if (_server->password)
+    if (server_int->password)
     {
-        free(_server->password);
-        _server->password = nullptr;
+        free(server_int->password);
+        server_int->password = nullptr;
     }
 
-    if (_server->error)
+    if (server_int->error)
     {
-        free(_server->error);
-        _server->error = nullptr;
+        free(server_int->error);
+        server_int->error = nullptr;
     }
 
-    free(_server);
+    free(server_int);
 }
 
 void cfrds_server_clear_error(cfrds_server *server)
 {
-    cfrds_server_int *_server = server;
-    if (_server == nullptr)
+    cfrds_server_int *server_int = server;
+    if (server_int == nullptr)
         return;
 
-    _server->_errno = 0;
-    _server->error_code = 1;
+    server_int->_errno = 0;
+    server_int->error_code = 1;
 
-    if (_server->error)
+    if (server_int->error)
     {
-        free(_server->error);
-        _server->error = nullptr;
+        free(server_int->error);
+        server_int->error = nullptr;
     }
 }
 
@@ -135,10 +135,10 @@ void cfrds_server_free(cfrds_server *server)
 
     server_int = server;
 
-    free(server_int->host);
-    free(server_int->username);
-    free(server_int->orig_password);
-    free(server_int->password);
+    if (server_int->host) free(server_int->host);
+    if (server_int->username) free(server_int->username);
+    if (server_int->orig_password) free(server_int->orig_password);
+    if (server_int->password) free(server_int->password);
 
     free(server);
 }

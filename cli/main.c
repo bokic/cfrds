@@ -45,7 +45,7 @@ static void usage()
            "\n"
            "  - 'mv', 'move' - Moves/renames file or folder.\n"
            "         example: `cfrds mv rds://username:password@host/pathname {new_name}`\n"
-           "            or    `cfrds upload rds://username:password@host/pathname {new_name}`\n"
+           "            or    `cfrds move rds://username:password@host/pathname {new_name}`\n"
            "\n"
            "  - 'rm', 'delete' - Delete a file to server.\n"
            "         example: `cfrds rm rds://username:password@host/pathname`\n"
@@ -360,6 +360,14 @@ int main(int argc, char *argv[])
             fprintf(stderr, "upload FAILED with error: %s\n", cfrds_server_get_error(server));
         }
         os_unmap(buf, src_size);
+    } else if ((strcmp(command, "mv") == 0)||(strcmp(command, "move") == 0)) {
+        const char *dest_pathname = argv[3];
+        res = cfrds_command_file_rename(server, path, dest_pathname);
+        if (res != CFRDS_STATUS_OK)
+        {
+            fprintf(stderr, "rm/delete FAILED with error: %s\n", cfrds_server_get_error(server));
+            return EXIT_FAILURE;
+        }
     } else if ((strcmp(command, "rm") == 0)||(strcmp(command, "delete") == 0)) {
         res = cfrds_command_file_remove_file(server, path);
         if (res != CFRDS_STATUS_OK)

@@ -1,8 +1,8 @@
 #include <string.h>
 #include <cfrds.h>
 #include <cfrds.h>
+#include <wddx.h>
 #include <internal/cfrds_buffer.h>
-#include <internal/wddx.h>
 
 #include <stdlib.h>
 #include <string.h>

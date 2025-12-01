@@ -1,7 +1,7 @@
 #include <internal/cfrds_buffer.h>
 #include <internal/cfrds_http.h>
-#include <internal/wddx.h>
 #include <cfrds.h>
+#include <wddx.h>
 
 #include <string.h>
 #include <stdlib.h>
@@ -2345,6 +2345,8 @@ enum cfrds_debugger_type cfrds_buffer_debugger_event_get_type(const cfrds_debugg
         return CFRDS_DEBUGGER_EVENT_TYPE_BREAKPOINT_SET;
     else if (strcmp(event_name, "BREAKPOINT") == 0)
         return CFRDS_DEBUGGER_EVENT_TYPE_BREAKPOINT;
+    else if (strcmp(event_name, "STEP") == 0)
+        return CFRDS_DEBUGGER_EVENT_TYPE_STEP;
 
     return CFRDS_DEBUGGER_EVENT_UNKNOWN;
 }

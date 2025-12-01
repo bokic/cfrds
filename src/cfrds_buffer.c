@@ -4,9 +4,6 @@
 #include <internal/cfrds_buffer.h>
 #include <internal/wddx.h>
 
-#include <libxml/parser.h>
-#include <libxml/tree.h>
-
 #include <stdlib.h>
 #include <string.h>
 #include <stddef.h>
@@ -19,9 +16,6 @@
 
 #include <stdio.h>
 
-
-#define xmlDoc_defer(var) xmlDoc* var __attribute__((cleanup(xmlDoc_cleanup))) = nullptr
-#define xmlChar_defer(var) xmlChar* var __attribute__((cleanup(xmlChar_cleanup))) = nullptr
 
 typedef struct {
     size_t allocated;
@@ -145,24 +139,6 @@ void cfrds_debugger_event_cleanup(cfrds_debugger_event **buf) {
     if (*buf) {
         cfrds_buffer_debugger_event_free(*buf);
         *buf = nullptr;
-    }
-}
-
-static void xmlDoc_cleanup(xmlDoc **value)
-{
-    if (value)
-    {
-        xmlFreeDoc(*value);
-        *value = nullptr;
-    }
-}
-
-static void xmlChar_cleanup(xmlChar **value)
-{
-    if (value)
-    {
-        xmlFree(*value);
-        *value = nullptr;
     }
 }
 
@@ -1571,54 +1547,6 @@ cfrds_debugger_event *cfrds_buffer_to_debugger_event(cfrds_buffer *buffer)
     cfrds_buffer_parse_string(&data, &size, &xml);
     if (xml)
         return wddx_from_xml(xml);
-
-    return nullptr;
-}
-
-const char *cfrds_xml_get_struct_var_string(xmlNodePtr xml_node, const char *var_name)
-{
-    if (xml_node == nullptr)
-        return nullptr;
-
-    xmlNodePtr child = xml_node->children;
-    while(child != nullptr)
-    {
-        if (child->type == XML_ELEMENT_NODE)
-        {
-            if (strcmp((const char *)child->name, "var") == 0)
-            {
-                const unsigned char *name_attr = xmlGetProp(child, (const unsigned char *)"name");
-                if (name_attr != nullptr)
-                {
-                    if (strcmp((const char *)name_attr, var_name) == 0)
-                    {
-                        xmlNodePtr var_value_node = child->children;
-                        while(var_value_node != nullptr)
-                        {
-                            if (var_value_node->type == XML_ELEMENT_NODE)
-                            {
-                                if ((strcmp((const char *)var_value_node->name, "string") == 0)||(strcmp((const char *)var_value_node->name, "number") == 0))
-                                {
-                                    xmlNodePtr content = var_value_node->children;
-                                    if (content != nullptr)
-                                    {
-                                        if (content->type == XML_TEXT_NODE)
-                                        {
-                                            return (const char *)content->content;
-                                        }
-                                    }
-                                }
-                            }
-
-                            var_value_node = var_value_node->next;
-                        }
-                    }
-                }
-            }
-
-            child = child->next;
-        }
-    }
 
     return nullptr;
 }

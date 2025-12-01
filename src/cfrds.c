@@ -2329,31 +2329,7 @@ enum cfrds_status cfrds_command_debugger_continue(cfrds_server *server, const ch
 
 void cfrds_buffer_debugger_event_free(cfrds_debugger_event *event)
 {
-    if (event == nullptr)
-        return;
-
-    enum cfrds_debugger_type type = cfrds_buffer_debugger_event_get_type(event);
-    switch(type)
-    {
-    case CFRDS_DEBUGGER_EVENT_TYPE_BREAKPOINT_SET:
-        {
-            cfrds_debugger_event_breakpoint_set_int *event_int = (cfrds_debugger_event_breakpoint_set_int *)event;
-            if (event_int->pathname) {free(event_int->pathname); event_int->pathname = nullptr; }
-        }
-        break;
-    case CFRDS_DEBUGGER_EVENT_TYPE_BREAKPOINT:
-        {
-            cfrds_debugger_event_breakpoint_int *event_int = (cfrds_debugger_event_breakpoint_int *)event;
-            if (event_int->source) {free(event_int->source); event_int->source = nullptr; }
-            if (event_int->thread_name) {free(event_int->thread_name); event_int->thread_name = nullptr; }
-        }
-        break;
-    default:
-        fprintf(stderr, "Unknown debugger event type %u.\n", type);
-        break;
-    }
-
-    free(event);
+    wddx_cleanup(&event);
 }
 
 enum cfrds_debugger_type cfrds_buffer_debugger_event_get_type(const cfrds_debugger_event *event)
@@ -2363,81 +2339,69 @@ enum cfrds_debugger_type cfrds_buffer_debugger_event_get_type(const cfrds_debugg
         return CFRDS_DEBUGGER_EVENT_UNKNOWN;
     }
 
-    const cfrds_debugger_event_int *event_int = (cfrds_debugger_event_int *)event;
+    const char *event_name = wddx_get_string(event, "0,EVENT");
 
-    return event_int->type;
+    if (strcmp(event_name, "CF_BREAKPOINT_SET") == 0)
+        return CFRDS_DEBUGGER_EVENT_TYPE_BREAKPOINT_SET;
+    else if (strcmp(event_name, "BREAKPOINT") == 0)
+        return CFRDS_DEBUGGER_EVENT_TYPE_BREAKPOINT;
+
+    return CFRDS_DEBUGGER_EVENT_UNKNOWN;
 }
 
 const char *cfrds_buffer_debugger_event_breakpoint_get_source(const cfrds_debugger_event *event)
 {
-    if (event == nullptr)
-    {
-        return nullptr;
-    }
-
-    const cfrds_debugger_event_breakpoint_int *event_int = (cfrds_debugger_event_breakpoint_int *)event;
-
-    return event_int->source;
+    return wddx_get_string(event, "0,GET_SOURCE");
 }
 
 int cfrds_buffer_debugger_event_breakpoint_get_line(const cfrds_debugger_event *event)
 {
-    if (event == nullptr)
-    {
-        return 0;
-    }
-
-    const cfrds_debugger_event_breakpoint_int *event_int = (cfrds_debugger_event_breakpoint_int *)event;
-
-    return event_int->line;
+    return wddx_get_number(event, "0,LINE", nullptr);
 }
 
 const char *cfrds_buffer_debugger_event_breakpoint_get_thread_name(const cfrds_debugger_event *event)
 {
-    if (event == nullptr)
-    {
-        return nullptr;
-    }
-
-    const cfrds_debugger_event_breakpoint_int *event_int = (cfrds_debugger_event_breakpoint_int *)event;
-
-    return event_int->thread_name;
+    return wddx_get_string(event, "0,THREAD");
 }
 
 const char *cfrds_buffer_debugger_event_breakpoint_set_get_pathname(const cfrds_debugger_event *event)
 {
-    if (event == nullptr)
-    {
-        return nullptr;
-    }
-
-    const cfrds_debugger_event_breakpoint_set_int *event_int = (cfrds_debugger_event_breakpoint_set_int *)event;
-
-    return event_int->pathname;
+    return wddx_get_string(event, "0,CFML_PATH");
 }
 
 int cfrds_buffer_debugger_event_breakpoint_set_get_req_line(const cfrds_debugger_event *event)
 {
-    if (event == nullptr)
-    {
-        return 0;
-    }
-
-    const cfrds_debugger_event_breakpoint_set_int *event_int = (cfrds_debugger_event_breakpoint_set_int *)event;
-
-    return event_int->req_line;
+    return wddx_get_number(event, "0,REQ_LINE_NUM", nullptr);
 }
 
 int cfrds_buffer_debugger_event_breakpoint_set_get_act_line(const cfrds_debugger_event *event)
 {
-    if (event == nullptr)
-    {
-        return 0;
-    }
+    return wddx_get_number(event, "0,ACTUAL_LINE_NUM", nullptr);
+}
 
-    const cfrds_debugger_event_breakpoint_set_int *event_int = (cfrds_debugger_event_breakpoint_set_int *)event;
+const cfrds_variable *cfrds_buffer_debugger_event_get_scopes(const cfrds_debugger_event *event)
+{
+    return wddx_get_var(event, "0,SCOPES");
+}
 
-    return event_int->act_line;
+const cfrds_variable *cfrds_buffer_debugger_event_get_threads(const cfrds_debugger_event *event)
+{
+    return wddx_get_var(event, "0,THREADS");
+}
+
+const cfrds_variable *cfrds_buffer_debugger_event_get_watch(const cfrds_debugger_event *event)
+{
+    return wddx_get_var(event, "0,WATCH");
+}
+
+const cfrds_variable *cfrds_buffer_debugger_event_get_cf_trace(const cfrds_debugger_event *event)
+{
+    return wddx_get_var(event, "0,CF_TRACE");
+}
+
+const cfrds_variable *cfrds_buffer_debugger_event_get_java_trace(const cfrds_debugger_event *event)
+{
+    return wddx_get_var(event, "0,JAVA_TRACE");
 }
 
 enum cfrds_status cfrds_command_debugger_watch_expression(cfrds_server *server, const char *session_id, const char *thread_name, const char *variable)

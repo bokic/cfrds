@@ -169,24 +169,6 @@ typedef struct {
     char *commands[];
 } cfrds_sql_supportedcommands_int;
 
-typedef struct {
-    int type;
-} cfrds_debugger_event_int;
-
-typedef struct {
-    cfrds_debugger_event_int event;
-    char *source;
-    int line;
-    char *thread_name;
-} cfrds_debugger_event_breakpoint_int;
-
-typedef struct {
-    cfrds_debugger_event_int event;
-    char *pathname;
-    int req_line;
-    int act_line;
-} cfrds_debugger_event_breakpoint_set_int;
-
 #ifdef __cplusplus
 extern "C"
 {

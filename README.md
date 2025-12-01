@@ -27,28 +27,28 @@ Some of the features RDS protocol supports:
 > RDS_HOST=rds://localhost:8500 RDS_DSN=cf_dsn RDS_DSN_TABLE=some_table ./test.sh
 
 ## CLI examples
-* List directory - `cfrds ls <rds://{username}:{password}@{host}:{port}/{pathname}>`
-* Print file content - `cfrds cat <rds://{username}:{password}@{host}:{port}/{pathname}>`
-* File download - `cfrds download <rds://{username}:{password}@{host}:{port}/{pathname}> <destination_file>`
-* File upload - `cfrds upload <source_file> <rds://{username}:{password}@{host}:{port}/{pathname}>`
-* File rename - `cfrds mv <source_file> <rds://{username}:{password}@{host}:{port}/{pathname}> <destination_file>`
-* File delete - `cfrds rm <source_file> <rds://{username}:{password}@{host}:{port}/{pathname}>`
-* Create directory - `cfrds mkdir <rds://{username}:{password}@{host}:{port}/{pathname}>`
-* Delete directory - `cfrds rmdir <rds://{username}:{password}@{host}:{port}/{pathname}>`
-* Get ColdFusion installation directory - `cfrds cfroot <rds://{username}:{password}@{host}:{port}>`
-* Get ColdFusion datasources info - `cfrds dsninfo <rds://{username}:{password}@{host}:{port}>`
-* Get ColdFusion datasource tables info - `cfrds tableinfo <rds://{username}:{password}@{host}:{port}/{dsn}>`
-* Get ColdFusion datasource table columns info - `cfrds columninfo <rds://{username}:{password}@{host}:{port}/{dsn}/{table}>`
-* Get ColdFusion datasource table primary keys info - `cfrds primarykeys <rds://{username}:{password}@{host}:{port}/{dsn}/{table}>`
-* Get ColdFusion datasource table foreign keys info - `cfrds primarykeys <rds://{username}:{password}@{host}:{port}/{dsn}/{table}>`
-* Get ColdFusion datasource table imported keys info - `cfrds primarykeys <rds://{username}:{password}@{host}:{port}/{dsn}/{table}>`
-* Get ColdFusion datasource table exported keys info - `cfrds primarykeys <rds://{username}:{password}@{host}:{port}/{dsn}/{table}>`
-* Execute ColdFusion datasource SQL - `cfrds sql <rds://{username}:{password}@{host}:{port}/{dsn}> <SQL>`
-* Get ColdFusion datasource SQL metadata - `cfrds sqlmetadata <rds://{username}:{password}@{host}:{port}/{dsn}> <SQL>`
-* Get ColdFusion datasource database server info - `cfrds dbdescription <rds://{username}:{password}@{host}:{port}/{dsn}>`
-* Start ColdFusion debugger - `cfrds dbg_start <rds://{username}:{password}@{host}:{port}>`
-* Stop ColdFusion debugger - `cfrds dbg_stop <rds://{username}:{password}@{host}:{port}>/{session_id}`
-* Get ColdFusion debugger server info - `cfrds dbg_info <rds://{username}:{password}@{host}:{port}>`
+* List directory - `cfrds ls <rds://{username{:password}@}host{:port}/pathname>`
+* Print file content - `cfrds cat <rds://{username{:password}@}host{:port}/pathname>`
+* File download - `cfrds download <rds://{username{:password}@}host{:port}/pathname> <destination name/pathname>`
+* File upload - `cfrds upload <source_file> <rds://{username{:password}@}host{:port}/pathname>`
+* File/dir rename - `cfrds mv <rds://{username{:password}@}host{:port}/pathname> <destination name/pathname>`
+* File delete - `cfrds rm <rds://{username{:password}@}host{:port}/pathname>`
+* Create directory - `cfrds mkdir <rds://{username{:password}@}host{:port}/pathname>`
+* Delete directory - `cfrds rmdir <rds://{username{:password}@}host{:port}/pathname>`
+* Get ColdFusion installation directory - `cfrds cfroot <rds://{username{:password}@}host{:port}>`
+* Get ColdFusion data source names info - `cfrds dsninfo <rds://{username{:password}@}host{:port}>`
+* Get ColdFusion data source name tables info - `cfrds tableinfo <rds://{username{:password}@}host{:port}/dsn>`
+* Get ColdFusion data source name table columns info - `cfrds columninfo <rds://{username{:password}@}host{:port}/dsn/table>`
+* Get ColdFusion data source name table primary keys info - `cfrds primarykeys <rds://{username{:password}@}host{:port}/dsn/table>`
+* Get ColdFusion data source name table foreign keys info - `cfrds primarykeys <rds://{username{:password}@}host{:port}/dsn/table>`
+* Get ColdFusion data source name table imported keys info - `cfrds primarykeys <rds://{username{:password}@}host{:port}/dsn/table>`
+* Get ColdFusion data source name table exported keys info - `cfrds primarykeys <rds://{username{:password}@}host{:port}/dsn/table>`
+* Execute ColdFusion data source name SQL - `cfrds sql <rds://{username{:password}@}host{:port}/dsn> '<SQL>'`
+* Get ColdFusion data source name SQL metadata - `cfrds sqlmetadata <rds://{username{:password}@}host{:port}/dsn> '<SQL>'`
+* Get ColdFusion data source name database info - `cfrds dbdescription <rds://{username{:password}@}host{:port}/dsn>`
+* Start ColdFusion debugger - `cfrds dbg_start <rds://{username{:password}@}host{:port}>`
+* Stop ColdFusion debugger - `cfrds dbg_stop <rds://{username{:password}@}host{:port}/session_id`
+* Get ColdFusion debugger server info - `cfrds dbg_info <rds://{username{:password}@}host{:port}>`
 
 ## Build
 > cd \<root of the project\>

@@ -23,6 +23,9 @@ Some of the features RDS protocol supports:
 * Remote ColdFusion server webapp security analyzer service.
 * Code cleanup.
 
+## CLI test script usage ex:
+> RDS_HOST=rds://localhost:8500 RDS_DSN=cf_dsn RDS_DSN_TABLE=some_table ./test.sh
+
 ## CLI examples
 * List directory - `cfrds ls <rds://{username}:{password}@{host}:{port}/{pathname}>`
 * Print file content - `cfrds cat <rds://{username}:{password}@{host}:{port}/{pathname}>`
@@ -34,15 +37,15 @@ Some of the features RDS protocol supports:
 * Delete directory - `cfrds rmdir <rds://{username}:{password}@{host}:{port}/{pathname}>`
 * Get ColdFusion installation directory - `cfrds cfroot <rds://{username}:{password}@{host}:{port}>`
 * Get ColdFusion datasources info - `cfrds dsninfo <rds://{username}:{password}@{host}:{port}>`
-* Get ColdFusion datasource tables info - `cfrds tableinfo <rds://{username}:{password}@{host}:{port}/{dns}>`
-* Get ColdFusion datasource table columns info - `cfrds columninfo <rds://{username}:{password}@{host}:{port}/{dns}/{table}>`
-* Get ColdFusion datasource table primary keys info - `cfrds primarykeys <rds://{username}:{password}@{host}:{port}/{dns}/{table}>`
-* Get ColdFusion datasource table foreign keys info - `cfrds primarykeys <rds://{username}:{password}@{host}:{port}/{dns}/{table}>`
-* Get ColdFusion datasource table imported keys info - `cfrds primarykeys <rds://{username}:{password}@{host}:{port}/{dns}/{table}>`
-* Get ColdFusion datasource table exported keys info - `cfrds primarykeys <rds://{username}:{password}@{host}:{port}/{dns}/{table}>`
-* Execute ColdFusion datasource SQL - `cfrds sql <rds://{username}:{password}@{host}:{port}/{dns}> <SQL>`
-* Get ColdFusion datasource SQL metadata - `cfrds sqlmetadata <rds://{username}:{password}@{host}:{port}/{dns}> <SQL>`
-* Get ColdFusion datasource database server info - `cfrds dbdescription <rds://{username}:{password}@{host}:{port}/{dns}>`
+* Get ColdFusion datasource tables info - `cfrds tableinfo <rds://{username}:{password}@{host}:{port}/{dsn}>`
+* Get ColdFusion datasource table columns info - `cfrds columninfo <rds://{username}:{password}@{host}:{port}/{dsn}/{table}>`
+* Get ColdFusion datasource table primary keys info - `cfrds primarykeys <rds://{username}:{password}@{host}:{port}/{dsn}/{table}>`
+* Get ColdFusion datasource table foreign keys info - `cfrds primarykeys <rds://{username}:{password}@{host}:{port}/{dsn}/{table}>`
+* Get ColdFusion datasource table imported keys info - `cfrds primarykeys <rds://{username}:{password}@{host}:{port}/{dsn}/{table}>`
+* Get ColdFusion datasource table exported keys info - `cfrds primarykeys <rds://{username}:{password}@{host}:{port}/{dsn}/{table}>`
+* Execute ColdFusion datasource SQL - `cfrds sql <rds://{username}:{password}@{host}:{port}/{dsn}> <SQL>`
+* Get ColdFusion datasource SQL metadata - `cfrds sqlmetadata <rds://{username}:{password}@{host}:{port}/{dsn}> <SQL>`
+* Get ColdFusion datasource database server info - `cfrds dbdescription <rds://{username}:{password}@{host}:{port}/{dsn}>`
 * Start ColdFusion debugger - `cfrds dbg_start <rds://{username}:{password}@{host}:{port}>`
 * Stop ColdFusion debugger - `cfrds dbg_stop <rds://{username}:{password}@{host}:{port}>/{session_id}`
 * Get ColdFusion debugger server info - `cfrds dbg_info <rds://{username}:{password}@{host}:{port}>`

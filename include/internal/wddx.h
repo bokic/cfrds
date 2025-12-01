@@ -27,5 +27,6 @@ EXPORT_WDDX WDDX *wddx_from_xml(const char *xml);
 EXPORT_WDDX bool wddx_get_bool(const WDDX *src, const char *path, bool *ok);
 EXPORT_WDDX double wddx_get_number(const WDDX *src, const char *path, bool *ok);
 EXPORT_WDDX const char *wddx_get_string(const WDDX *src, const char *path);
+EXPORT_WDDX const WDDX *wddx_get_var(const WDDX *src, const char *path);
 
 EXPORT_WDDX void wddx_cleanup(WDDX **value);

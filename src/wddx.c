@@ -663,6 +663,18 @@ const char *wddx_get_string(const WDDX *src, const char *path)
     return node->string;
 }
 
+EXPORT_WDDX const WDDX *wddx_get_var(const WDDX *src, const char *path)
+{
+    const WDDX_int *src_int = (const WDDX_int *)src;
+
+    if (src_int == nullptr)
+    {
+        return nullptr;
+    }
+
+    return wddx_recursively_get(src_int->data, path);
+}
+
 void wddx_node_free(WDDX_node *value)
 {
     if (value == nullptr) return;

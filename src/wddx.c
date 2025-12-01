@@ -8,6 +8,10 @@
 #include <ctype.h>
 
 
+#if defined(__APPLE__)
+#define explicit_bzero bzero
+#endif
+
 #define xmlDoc_defer(var) xmlDoc* var __attribute__((cleanup(xmlDoc_cleanup))) = nullptr
 #define xmlChar_defer(var) xmlChar* var __attribute__((cleanup(xmlChar_cleanup))) = nullptr
 

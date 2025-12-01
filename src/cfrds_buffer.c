@@ -17,6 +17,10 @@
 #include <stdio.h>
 
 
+#if defined(__APPLE__)
+#define explicit_bzero bzero
+#endif
+
 typedef struct {
     size_t allocated;
     size_t size;

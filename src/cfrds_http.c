@@ -19,6 +19,11 @@
 #include <stdio.h>
 #include <errno.h>
 
+
+#if defined(__APPLE__)
+#define explicit_bzero bzero
+#endif
+
 #ifdef _WIN32
 void cfrds_sock_cleanup(SOCKET* sock);
 #define cfrds_sock_defer(var) SOCKET var __attribute__((cleanup(cfrds_sock_cleanup))) = INVALID_SOCKET

@@ -734,7 +734,7 @@ int main(int argc, char *argv[])
             cfrds_sql_resultset_defer(resultset);
             const char *schema = path + 1;
 
-            const char *sql = argv[2];
+            const char *sql = argv[3];
 
             res = cfrds_command_sql_sqlstmnt(server, schema, sql, &resultset);
             if (res != CFRDS_STATUS_OK)
@@ -751,7 +751,7 @@ int main(int argc, char *argv[])
             cfrds_sql_metadata_defer(metadata);
             const char *schema = path + 1;
 
-            const char *sql = argv[2];
+            const char *sql = argv[3];
 
             res = cfrds_command_sql_sqlmetadata(server, schema, sql, &metadata);
             if (res != CFRDS_STATUS_OK)

@@ -618,7 +618,7 @@ double wddx_get_number(const WDDX *src, const char *path, bool *ok)
     if (src_int == nullptr)
     {
         if (ok) *ok = false;
-        return false;
+        return 0.;
     }
 
     const WDDX_node *node = wddx_recursively_get(src_int->data, path);
@@ -626,13 +626,13 @@ double wddx_get_number(const WDDX *src, const char *path, bool *ok)
     if (node == nullptr)
     {
         if (ok) *ok = false;
-        return false;
+        return 0.;
     }
 
     if (node->type != WDDX_NUMBER)
     {
         if (ok) *ok = false;
-        return 0;
+        return 0.;
     }
 
     if (ok) *ok = true;

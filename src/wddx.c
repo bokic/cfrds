@@ -158,7 +158,7 @@ static WDDX_NODE_int *wddx_recursively_put(WDDX_NODE_int *node, const char *path
     {
         if (node == nullptr)
         {
-            newsize = offsetof(WDDX_NODE_int, items);
+            newsize = sizeof(WDDX_NODE_int);
             node = (WDDX_NODE_int *)malloc(newsize);
             explicit_bzero(node, newsize);
             node->type = WDDX_STRUCT;

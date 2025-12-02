@@ -245,7 +245,7 @@ bool wddx_put_bool(WDDX *dest, const char *path, bool value)
 
 bool wddx_put_number(WDDX *dest, const char *path, double value)
 {
-    char valueStr[20];
+    char valueStr[32];
 
     snprintf(valueStr, sizeof(valueStr), "%.16g", value);
 

@@ -359,7 +359,6 @@ static WDDX_NODE_int *wddx_from_xml_element(xmlNodePtr xml_node)
 
     if (xml_node == nullptr) return nullptr;
     if (xml_node->type != XML_ELEMENT_NODE) return nullptr;
-    if (xml_node->children == nullptr) return nullptr;
 
     const char *name = (const char *)xml_node->name;
     if (name == nullptr) return nullptr;
@@ -399,10 +398,11 @@ static WDDX_NODE_int *wddx_from_xml_element(xmlNodePtr xml_node)
     }
     else if (strcmp(name, "string") == 0)
     {
-        if (xml_node->children == nullptr) return nullptr;
-        if (xml_node->children->content == nullptr) return nullptr;
+        int str_size = 0;
+        if ((xml_node->children != nullptr)&&(xml_node->children->content != nullptr))
+            str_size = strlen((const char *)xml_node->children->content);
 
-        malloc_size = offsetof(WDDX_NODE_int, string) + strlen((const char *)xml_node->children->content) + 1;
+        malloc_size = offsetof(WDDX_NODE_int, string) + str_size + 1;
         ret = malloc(malloc_size);
         if (ret == nullptr) return nullptr;
 
@@ -410,7 +410,8 @@ static WDDX_NODE_int *wddx_from_xml_element(xmlNodePtr xml_node)
 
         ret->type = WDDX_STRING;
 
-        strcpy(ret->string, (const char *)xml_node->children->content);
+        if (str_size > 0)
+            strcpy(ret->string, (const char *)xml_node->children->content);
     }
     else if (strcmp(name, "array") == 0)
     {

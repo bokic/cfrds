@@ -193,7 +193,6 @@ static WDDX_NODE_int *wddx_recursively_put(WDDX_NODE_int *node, const char *path
             newsize = offsetof(WDDX_NODE_int, items) + (sizeof(WDDX_STRUCT_NODE_int *) * (node->cnt + 1));
             node = (WDDX_NODE_int *)realloc(node, newsize);
             if (node == nullptr) return nullptr;
-            int oldsize = offsetof(WDDX_NODE_int, items) + (sizeof(WDDX_STRUCT_NODE_int) * node->cnt);
             node->items[node->cnt] = malloc(sizeof(WDDX_STRUCT_NODE_int));
             if (node->items[node->cnt] == nullptr) return nullptr;
             ((WDDX_STRUCT_NODE_int *)node->items[node->cnt])->name = strdup(newkey);
@@ -240,7 +239,6 @@ bool wddx_put_bool(WDDX *dest, const char *path, bool value)
         valueStr = "true";
     else
         valueStr = "false";
-
 
     return wddx_put(dest, path, valueStr, WDDX_BOOLEAN);
 }

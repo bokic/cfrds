@@ -2,7 +2,7 @@ from distutils.core import setup, Extension
 
 def main():
     setup(name="cfrds",
-          version="0.9.6",
+          version="0.9.7",
           description="Python interface for ColdFusion RDS service.",
           author="Boris Barbulovski",
           author_email="bbarbulovski@gmail.com",

@@ -25,12 +25,15 @@
 #endif
 
 #ifdef _WIN32
-void cfrds_sock_cleanup(SOCKET* sock);
-#define cfrds_sock_defer(var) SOCKET var __attribute__((cleanup(cfrds_sock_cleanup))) = INVALID_SOCKET
+#define CFRDS_SOCKET SOCKET
+#define CFRDS_SOCKET_INVALID_VALUE INVALID_SOCKET
 #else
 void cfrds_sock_cleanup(int* sock);
-#define cfrds_sock_defer(var) int var __attribute__((cleanup(cfrds_sock_cleanup))) = 0
+#define CFRDS_SOCKET int
+#define CFRDS_SOCKET_INVALID_VALUE 0
 #endif
+void cfrds_sock_cleanup(CFRDS_SOCKET* sock);
+#define cfrds_sock_defer(var) CFRDS_SOCKET var __attribute__((cleanup(cfrds_sock_cleanup))) = CFRDS_SOCKET_INVALID_VALUE
 
 static bool cfrds_buffer_skip_httpheader(const char **data, size_t *remaining)
 {

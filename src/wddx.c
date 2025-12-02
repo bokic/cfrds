@@ -13,7 +13,6 @@
 #endif
 
 #define xmlDoc_defer(var) xmlDoc* var __attribute__((cleanup(xmlDoc_cleanup))) = nullptr
-#define xmlChar_defer(var) xmlChar* var __attribute__((cleanup(xmlChar_cleanup))) = nullptr
 
 enum wddx_type {
     WDDX_BOOLEAN,
@@ -53,15 +52,6 @@ static void xmlDoc_cleanup(xmlDoc **value)
     if (value)
     {
         xmlFreeDoc(*value);
-        *value = nullptr;
-    }
-}
-
-static void xmlChar_cleanup(xmlChar **value)
-{
-    if (value)
-    {
-        xmlFree(*value);
         *value = nullptr;
     }
 }

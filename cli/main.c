@@ -877,6 +877,8 @@ int main(int argc, char *argv[])
             }
         }
     } else {
+        fprintf(stderr, "Unknown command %s\n", command);
+        return EXIT_FAILURE;
     }
 
     return ret;

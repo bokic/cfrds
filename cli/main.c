@@ -837,13 +837,15 @@ int main(int argc, char *argv[])
         }
 
         res = cfrds_command_debugger_get_server_info(server, dbg_session, &debuggerPort);
-        if (res != CFRDS_STATUS_OK)
+        if (res == CFRDS_STATUS_OK)
+        {
+            printf("%d\n", debuggerPort);
+        }
+        else
         {
             fprintf(stderr, "cfrds_command_debugger_get_server_info FAILED with error: %s\n", cfrds_server_get_error(server));
             ret = EXIT_FAILURE;
         }
-
-        printf("%d\n", debuggerPort);
 
         res = cfrds_command_debugger_stop(server, dbg_session);
         if (res != CFRDS_STATUS_OK)

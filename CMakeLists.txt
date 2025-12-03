@@ -32,6 +32,13 @@ target_link_libraries(cfrds_cli PRIVATE
     libcfrds
 )
 
+if(WIN32)
+    target_link_libraries(cfrds_cli PRIVATE
+        wsock32
+        ws2_32
+    )
+endif()
+
 install(TARGETS cfrds_cli
 )
 ###
@@ -52,9 +59,18 @@ target_include_directories(libcfrds PUBLIC
     include
 )
 
+if(WIN32)
+target_include_directories(libcfrds PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/deps/libxml2/include
+)
+target_link_directories(libcfrds PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/deps/libxml2
+)
+else()
 target_include_directories(libcfrds PRIVATE
     /usr/include/libxml2
 )
+endif()
 
 target_link_libraries(libcfrds PRIVATE xml2)
 

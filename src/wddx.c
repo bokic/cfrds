@@ -5,11 +5,17 @@
 #include <string.h>
 #include <stdlib.h>
 #include <stddef.h>
+#include <stdint.h>
 #include <ctype.h>
 
 
-#if defined(__APPLE__)
-#define explicit_bzero bzero
+#if defined(__APPLE__) || defined(_WIN32)
+static void explicit_bzero(void *s, size_t n) {
+    volatile unsigned char *ptr = (volatile unsigned char *)s;
+    while (n--) {
+        *ptr++ = 0;
+    }
+}
 #endif
 
 #define xmlDoc_defer(var) xmlDoc* var __attribute__((cleanup(xmlDoc_cleanup))) = nullptr

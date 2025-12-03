@@ -45,6 +45,7 @@ enum cfrds_status {
     CFRDS_STATUS_MEMORY_ERROR,
     CFRDS_STATUS_PARAM_IS_nullptr,
     CFRDS_STATUS_SERVER_IS_nullptr,
+    CFRDS_STATUS_INVALID_INPUT_PARAMETER,
     CFRDS_STATUS_INDEX_OUT_OF_BOUNDS,
     CFRDS_STATUS_COMMAND_FAILED,
     CFRDS_STATUS_RESPONSE_ERROR,
@@ -271,7 +272,7 @@ EXPORT_CFRDS enum cfrds_status cfrds_command_debugger_step_out(cfrds_server *ser
 EXPORT_CFRDS enum cfrds_status cfrds_command_debugger_continue(cfrds_server *server, const char *session_id, const char *thread_name);
 EXPORT_CFRDS enum cfrds_status cfrds_command_debugger_watch_expression(cfrds_server *server, const char *session_id, const char *thread_name, const char *expression);
 EXPORT_CFRDS enum cfrds_status cfrds_command_debugger_set_variable(cfrds_server *server, const char *session_id, const char *thread_name, const char *variable, const char *value);
-EXPORT_CFRDS enum cfrds_status cfrds_command_debugger_watch_variable(cfrds_server *server, const char *session_id, const char *thread_name);
+EXPORT_CFRDS enum cfrds_status cfrds_command_debugger_watch_variables(cfrds_server *server, const char *session_id, const char *variables);
 EXPORT_CFRDS enum cfrds_status cfrds_command_debugger_get_output(cfrds_server *server, const char *session_id, const char *thread_name);
 EXPORT_CFRDS enum cfrds_status cfrds_command_debugger_set_scope_filter(cfrds_server *server, const char *session_id, const char *filter);
 

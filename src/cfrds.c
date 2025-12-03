@@ -2461,9 +2461,12 @@ enum cfrds_status cfrds_command_debugger_set_variable(cfrds_server *server, cons
     return ret;
 }
 
-enum cfrds_status cfrds_command_debugger_watch_variable(cfrds_server *server, const char *session_id, const char *variable)
+enum cfrds_status cfrds_command_debugger_watch_variables(cfrds_server *server, const char *session_id, const char *variables)
 {
     enum cfrds_status ret;
+    char command[32];
+    int index = 0;
+    int pos = 0;
 
     cfrds_buffer_defer(response);
 
@@ -2480,7 +2483,35 @@ enum cfrds_status cfrds_command_debugger_watch_variable(cfrds_server *server, co
     WDDX_defer(wddx);
     wddx = wddx_create();
     wddx_put_string(wddx, "0,COMMAND", "SET_WATCH_VARIABLES");
-    wddx_put_string(wddx, "0,WATCH,0", variable);// TODO: Hardcoded one watch variable
+
+    while(pos >= 0)
+    {
+        cfrds_str_defer(variable);
+
+        const char *delimiter = strchr(variables + pos, ',');
+        if (delimiter == nullptr)
+        {
+            variable = strdup(variables + pos);
+            if (variable == nullptr) return CFRDS_STATUS_MEMORY_ERROR;
+        } else {
+            int len = (size_t)(delimiter - variables) + pos;
+            variable = malloc(len + 1);
+            if (variable == nullptr) return CFRDS_STATUS_MEMORY_ERROR;
+            memcpy(variable, variables + pos, len);
+            variable[len] = '\0';
+        }
+
+        if (strlen(variable) == 0)
+            continue;
+
+        snprintf(command, sizeof(command), "0,WATCH,%d", index++);
+        wddx_put_string(wddx, command, variable);
+
+        pos = (size_t)(delimiter - variables) + 1;
+    }
+
+    if (index == 0)
+        return CFRDS_STATUS_INVALID_INPUT_PARAMETER;
 
     ret = cfrds_send_command(server, &response, "DBGREQUEST", (const char *[]){ "DBG_REQUEST", session_id, wddx_to_xml(wddx), nullptr});
 
@@ -2506,7 +2537,6 @@ enum cfrds_status cfrds_command_debugger_get_output(cfrds_server *server, const 
     WDDX_defer(wddx);
     wddx = wddx_create();
     wddx_put_bool(wddx, "0,BODY_ONLY", true);
-    //wddx_put_string(wddx, "0,COMMAND", "SET_WATCH_VARIABLES");
     wddx_put_string(wddx, "0,THREAD", thread_name);
 
     ret = cfrds_send_command(server, &response, "DBGREQUEST", (const char *[]){ "DBG_REQUEST", session_id, wddx_to_xml(wddx), nullptr});

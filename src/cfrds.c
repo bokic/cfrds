@@ -69,6 +69,15 @@ void cfrds_server_clear_error(cfrds_server *server)
     }
 }
 
+void cfrds_server_shutdown_socket(cfrds_server *server)
+{
+    cfrds_server_int *server_int = server;
+    if (server_int == nullptr)
+        return;
+
+    cfrds_sock_shutdown(server_int->socket);
+}
+
 static char *cfrds_server_encode_password(const char *password)
 {
     char *ret = nullptr;

@@ -29,16 +29,8 @@ static void explicit_bzero(void *s, size_t n) {
 }
 #endif
 
-#ifdef _WIN32
-#define CFRDS_SOCKET SOCKET
-#define CFRDS_SOCKET_INVALID_VALUE INVALID_SOCKET
-#else
-void cfrds_sock_cleanup(int* sock);
-#define CFRDS_SOCKET int
-#define CFRDS_SOCKET_INVALID_VALUE 0
-#endif
-void cfrds_sock_cleanup(CFRDS_SOCKET* sock);
-#define cfrds_sock_defer(var) CFRDS_SOCKET var __attribute__((cleanup(cfrds_sock_cleanup))) = CFRDS_SOCKET_INVALID_VALUE
+void cfrds_sock_cleanup(cfrds_socket* sock);
+#define cfrds_sock_defer(var) cfrds_socket var __attribute__((cleanup(cfrds_sock_cleanup))) = CFRDS_SOCKET_INVALID_VALUE
 
 static bool cfrds_buffer_skip_httpheader(const char **data, size_t *remaining)
 {
@@ -106,6 +98,7 @@ enum cfrds_status cfrds_http_post(cfrds_server_int *server, const char *command,
         cfrds_server_set_error(server, CFRDS_STATUS_SOCKET_CREATION_FAILED, "failed to create socket...");
         return CFRDS_STATUS_SOCKET_CREATION_FAILED;
     }
+    server->socket = sockfd;
 
     explicit_bzero(&servaddr, sizeof(servaddr));
 
@@ -225,3 +218,15 @@ void cfrds_sock_cleanup(int* sock)
     }
 }
 #endif
+
+
+void cfrds_sock_shutdown(cfrds_socket sock)
+{
+    if (sock)
+    {
+        if (sock != CFRDS_SOCKET_INVALID_VALUE)
+        {
+            shutdown(sock, SHUT_RD);
+        }
+    }
+}

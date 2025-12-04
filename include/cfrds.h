@@ -98,6 +98,7 @@ EXPORT_CFRDS bool cfrds_server_init(cfrds_server **server, const char *host, uin
 EXPORT_CFRDS void cfrds_server_free(cfrds_server *server);
 EXPORT_CFRDS void cfrds_server_cleanup(cfrds_server **server);
 EXPORT_CFRDS void cfrds_server_clear_error(cfrds_server *server);
+EXPORT_CFRDS void cfrds_server_shutdown_socket(cfrds_server *server);
 EXPORT_CFRDS const char *cfrds_server_get_error(const cfrds_server *server);
 EXPORT_CFRDS const char *cfrds_server_get_host(const cfrds_server *server);
 EXPORT_CFRDS uint16_t cfrds_server_get_port(const cfrds_server *server);

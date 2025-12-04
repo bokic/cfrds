@@ -40,18 +40,6 @@ void cfrds_str_cleanup(char **str) {
     }
 }
 
-void cfrds_fd_cleanup(int *fd) {
-    if (fd) {
-#ifdef _WIN32
-        closesocket((SOCKET)*fd);
-#else
-        close(*fd);
-#endif
-
-        *fd = 0;
-    }
-}
-
 void cfrds_buffer_cleanup(cfrds_buffer **buf) {
     if (*buf) {
         cfrds_buffer_free(*buf);

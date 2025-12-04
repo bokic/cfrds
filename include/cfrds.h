@@ -5,6 +5,15 @@
 #include <stddef.h>
 
 #ifdef _WIN32
+#include <WinSock2.h>
+#include <ws2tcpip.h>
+#else
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
+#endif
+
+#ifdef _WIN32
 #include <BaseTsd.h>
 typedef ULONG_PTR SIZE_T;
 typedef LONG_PTR SSIZE_T;
@@ -21,6 +30,14 @@ typedef SSIZE_T ssize_t;
  #endif
 #else
  #define EXPORT_CFRDS
+#endif
+
+#ifdef _WIN32
+#define cfrds_socket SOCKET
+#define CFRDS_SOCKET_INVALID_VALUE INVALID_SOCKET
+#else
+#define cfrds_socket int
+#define CFRDS_INVALID_SOCKET 0
 #endif
 
 typedef void cfrds_server;
@@ -92,7 +109,6 @@ extern "C"
 EXPORT_CFRDS void cfrds_buffer_cleanup(cfrds_buffer **buf);
 EXPORT_CFRDS void cfrds_file_content_cleanup(cfrds_file_content **buf);
 EXPORT_CFRDS void cfrds_str_cleanup(char **str);
-EXPORT_CFRDS void cfrds_fd_cleanup(int *fd);
 
 EXPORT_CFRDS bool cfrds_server_init(cfrds_server **server, const char *host, uint16_t port, const char *username, const char *password);
 EXPORT_CFRDS void cfrds_server_free(cfrds_server *server);

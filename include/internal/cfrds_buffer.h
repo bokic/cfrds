@@ -8,14 +8,6 @@
 #include <cfrds.h>
 
 
-#ifdef _WIN32
-#define cfrds_socket SOCKET
-#define CFRDS_SOCKET_INVALID_VALUE INVALID_SOCKET
-#else
-#define cfrds_socket int
-#define CFRDS_SOCKET_INVALID_VALUE 0
-#endif
-
 typedef void cfrds_buffer;
 
 typedef struct {

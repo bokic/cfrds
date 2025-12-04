@@ -30,7 +30,7 @@ static void explicit_bzero(void *s, size_t n) {
 #endif
 
 void cfrds_sock_cleanup(cfrds_socket* sock);
-#define cfrds_sock_defer(var) cfrds_socket var __attribute__((cleanup(cfrds_sock_cleanup))) = CFRDS_SOCKET_INVALID_VALUE
+#define cfrds_sock_defer(var) cfrds_socket var __attribute__((cleanup(cfrds_sock_cleanup))) = CFRDS_INVALID_SOCKET
 
 static bool cfrds_buffer_skip_httpheader(const char **data, size_t *remaining)
 {
@@ -224,9 +224,13 @@ void cfrds_sock_shutdown(cfrds_socket sock)
 {
     if (sock)
     {
-        if (sock != CFRDS_SOCKET_INVALID_VALUE)
+        if (sock != CFRDS_INVALID_SOCKET)
         {
-            shutdown(sock, SHUT_RD);
+#ifdef _WIN32
+            shutdown(sock, SD_BOTH);
+#else
+            shutdown(sock, SHUT_RDWR);
+#endif
         }
     }
 }

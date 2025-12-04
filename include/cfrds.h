@@ -34,7 +34,7 @@ typedef SSIZE_T ssize_t;
 
 #ifdef _WIN32
 #define cfrds_socket SOCKET
-#define CFRDS_SOCKET_INVALID_VALUE INVALID_SOCKET
+#define CFRDS_INVALID_SOCKET INVALID_SOCKET
 #else
 #define cfrds_socket int
 #define CFRDS_INVALID_SOCKET 0

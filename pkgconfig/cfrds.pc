@@ -5,6 +5,6 @@ includedir=/usr/include
 
 Name: cfrds
 Description: The ColdFusion RDS Library
-Version: 0.9.7
+Version: 0.9.8
 Libs: -L${libdir} -lcfrds
 Cflags: -I${includedir}

@@ -2,7 +2,6 @@ from distutils.core import setup, Extension
 
 def main():
     setup(name="cfrds",
-          version="0.9.7",
           description="Python interface for ColdFusion RDS service.",
           author="Boris Barbulovski",
           author_email="bbarbulovski@gmail.com",
@@ -14,6 +13,7 @@ def main():
             ],
             include_dirs=['../include', '/usr/include/libxml2'],
             libraries=['xml2'])]
+        version="0.9.8",
     )
 
 if __name__ == "__main__":

@@ -50,14 +50,10 @@ Some of the features RDS protocol supports:
 * Stop ColdFusion debugger - `cfrds dbg_stop <rds://{username{:password}@}host{:port}/session_id`
 * Get ColdFusion debugger server info - `cfrds dbg_info <rds://{username{:password}@}host{:port}>`
 
-## Build
-> cd \<root of the project\>
-> 
-> mkdir build
-> 
-> cmake -Bbuild -G Ninja
-> 
-> ninja -Cbuild
+## Build(from git)
+> git clone https://github.com/bokic/cfrds.git
+> cmake -B build -S cfrds -G Ninja
+> cmake --build build
 
 ## Installation
 * Linux

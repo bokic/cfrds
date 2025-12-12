@@ -52,7 +52,9 @@ Some of the features RDS protocol supports:
 
 ## Build(from git)
 > git clone https://github.com/bokic/cfrds.git
+> 
 > cmake -B build -S cfrds -G Ninja
+> 
 > cmake --build build
 
 ## Installation

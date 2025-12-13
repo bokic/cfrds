@@ -11,6 +11,19 @@ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/bin")
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/bin")
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/bin")
 
+if(WIN32)
+    # Define the location of the template and the output file
+    set(RC_IN_FILE "version.rc.in")
+    set(RC_OUT_FILE "version.rc")
+
+    # Configure the file (replaces @VAR@ with CMake variable values)
+    configure_file(
+        ${RC_IN_FILE}
+        ${RC_OUT_FILE}
+        @ONLY # Only substitute variables in the @VAR@ format
+    )
+endif()
+
 ###
 if(WIN32)
     add_executable(cfrds_cli
@@ -75,6 +88,7 @@ endif()
 target_link_libraries(libcfrds PRIVATE xml2)
 
 if(WIN32)
+    target_sources(libcfrds PRIVATE ${RC_OUT_FILE})
     target_link_libraries(libcfrds PRIVATE
         wsock32
         ws2_32

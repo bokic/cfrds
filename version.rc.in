@@ -1,0 +1,37 @@
+#include <windows.h>
+
+// Use CMake variables to fill in version numbers
+#define VER_MAJOR    @PROJECT_VERSION_MAJOR@
+#define VER_MINOR    @PROJECT_VERSION_MINOR@
+#define VER_PATCH    @PROJECT_VERSION_PATCH@
+#define VER_BUILD    0 // Use TWEAK for the build/revision number
+
+VS_VERSION_INFO VERSIONINFO
+ FILEVERSION VER_MAJOR,VER_MINOR,VER_PATCH,VER_BUILD
+ PRODUCTVERSION VER_MAJOR,VER_MINOR,VER_PATCH,VER_BUILD
+ FILEFLAGSMASK 0x3fL
+#ifdef _DEBUG
+ FILEFLAGS 0x1L
+#else
+ FILEFLAGS 0x0L
+#endif
+ FILEOS VOS_NT_WINDOWS32
+ FILETYPE VFT_APP
+ FILESUBTYPE VFT2_UNKNOWN
+BEGIN
+    BLOCK "StringFileInfo"
+    BEGIN
+        BLOCK "040904E4" // U.S. English and Windows-1252 codepage
+        BEGIN
+            VALUE "FileVersion", "@PROJECT_VERSION@\0"
+            VALUE "ProductVersion", "@PROJECT_VERSION@\0"
+            VALUE "LegalCopyright", "Copyright (C) 2025\0"
+            VALUE "OriginalFilename", "@CMAKE_PROJECT_NAME@.dll\0"
+            VALUE "ProductName", "@CMAKE_PROJECT_NAME@\0"
+        END
+    END
+    BLOCK "VarFileInfo"
+    BEGIN
+        VALUE "Translation", 0x0409, 1252
+    END
+END

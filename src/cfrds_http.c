@@ -105,6 +105,9 @@ enum cfrds_status cfrds_http_post(cfrds_server_int *server, const char *command,
     servaddr.sin_family = AF_INET;
     servaddr.sin_port = htons(port);
     servaddr.sin_addr.s_addr = inet_addr(cfrds_server_get_host(server));
+    if (servaddr.sin_addr.s_addr == INADDR_NONE) {
+        return CFRDS_STATUS_SOCKET_HOST_NOT_FOUND;
+    }
 
     if (connect(sockfd, (struct sockaddr *)&servaddr, sizeof(servaddr)) != 0) {
         server->_errno = errno;

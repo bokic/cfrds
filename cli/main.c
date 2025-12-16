@@ -120,11 +120,11 @@ static bool init_server_from_uri(const char *uri, char **hostname, uint16_t *por
 
     uri += 6;
 
-    int uri_strlen = strlen(uri);
+    size_t uri_strlen = strlen(uri);
 
     const char *path_start = strchr(uri, '/');
     if (path_start) {
-        int path_strlen = uri_strlen - (path_start - uri);
+        size_t path_strlen = uri_strlen - (path_start - uri);
         _path = malloc(path_strlen + 1);
         if (!_path)
             return false;
@@ -193,7 +193,7 @@ static bool init_server_from_uri(const char *uri, char **hostname, uint16_t *por
         if (!_hostname)
             return false;
         memcpy(_hostname, uri, host_strlen);
-        _path[host_strlen] = '\0';
+        _hostname[host_strlen] = '\0';
         _port = 80;
     }
 

@@ -195,7 +195,7 @@ size_t cfrds_buffer_data_size(cfrds_buffer *buffer)
     const cfrds_buffer_int *ret = nullptr;
 
     if (buffer == nullptr)
-         return false;
+         return 0;
 
     ret = buffer;
 

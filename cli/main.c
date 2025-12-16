@@ -189,7 +189,7 @@ static bool init_server_from_uri(const char *uri, char **hostname, uint16_t *por
         _port = tmp_port;
     } else {
         int host_strlen = path_start - uri;
-        _hostname = malloc(host_strlen);
+        _hostname = malloc(host_strlen + 1);
         if (!_hostname)
             return false;
         memcpy(_hostname, uri, host_strlen);

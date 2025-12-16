@@ -82,15 +82,15 @@ static bool is_string_numeric(const char *str)
 
 static WDDX_NODE_int *wddx_recursively_put(WDDX_NODE_int *node, const char *path, const char *value, enum wddx_type type)
 {
-    int path_len = strlen(path);
-    int newsize = 0;
+    size_t path_len = strlen(path);
+    size_t newsize = 0;
 
     if (path_len == 0)
     {
         WDDX_NODE_int *new_node = nullptr;
         int value_len = strlen(value);
 
-        int size = offsetof(WDDX_NODE_int, string) + value_len + 1;
+        size_t size = offsetof(WDDX_NODE_int, string) + value_len + 1;
         new_node = malloc(size);
         if (new_node == nullptr) return nullptr;
 
@@ -105,7 +105,7 @@ static WDDX_NODE_int *wddx_recursively_put(WDDX_NODE_int *node, const char *path
         newsize = path_len;
     else
         newsize = next - path;
-    if (newsize <= 0) return nullptr;
+    if (newsize == 0) return nullptr;
 
     char newkey[newsize + 1];
     memcpy(newkey, path, newsize);
@@ -360,7 +360,7 @@ const char *wddx_to_xml(WDDX *src)
 static WDDX_NODE_int *wddx_from_xml_element(xmlNodePtr xml_node)
 {
     WDDX_NODE_int *ret = nullptr;
-    int malloc_size = 0;
+    size_t malloc_size = 0;
 
     if (xml_node == nullptr) return nullptr;
     if (xml_node->type != XML_ELEMENT_NODE) return nullptr;
@@ -403,7 +403,7 @@ static WDDX_NODE_int *wddx_from_xml_element(xmlNodePtr xml_node)
     }
     else if (strcmp(name, "string") == 0)
     {
-        int str_size = 0;
+        size_t str_size = 0;
         if ((xml_node->children != nullptr)&&(xml_node->children->content != nullptr))
             str_size = strlen((const char *)xml_node->children->content);
 
@@ -508,7 +508,7 @@ static WDDX_NODE_int *wddx_from_xml_element(xmlNodePtr xml_node)
 WDDX *wddx_from_xml(const char *xml)
 {
     xmlDoc_defer(doc);
-    doc = xmlParseMemory(xml, strlen(xml));
+    doc = xmlParseMemory(xml, (int)strlen(xml));
 
     xmlNodePtr rootEl = xmlDocGetRootElement(doc);
     if (rootEl == nullptr) return nullptr;

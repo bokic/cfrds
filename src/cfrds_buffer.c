@@ -716,7 +716,7 @@ cfrds_sql_tableinfo_int *cfrds_buffer_to_sql_tableinfo(cfrds_buffer *buffer)
             if (!end_item)
                 return nullptr;
             if (end_item > current_item) {
-                int size = end_item - current_item;
+                size_t size = end_item - current_item;
 
                 field1 = malloc(size + 1);
                 if (field1 == nullptr)
@@ -740,7 +740,7 @@ cfrds_sql_tableinfo_int *cfrds_buffer_to_sql_tableinfo(cfrds_buffer *buffer)
                 return nullptr;
 
             if (end_item > current_item) {
-                int size = end_item - current_item;
+                size_t size = end_item - current_item;
 
                 field2 = malloc(size + 1);
                 if (!field2)
@@ -764,7 +764,7 @@ cfrds_sql_tableinfo_int *cfrds_buffer_to_sql_tableinfo(cfrds_buffer *buffer)
                 return nullptr;
 
             if (end_item > current_item) {
-                int size = end_item - current_item;
+                size_t size = end_item - current_item;
 
                 field3 = malloc(size + 1);
                 if (!field3)
@@ -788,7 +788,7 @@ cfrds_sql_tableinfo_int *cfrds_buffer_to_sql_tableinfo(cfrds_buffer *buffer)
                 return nullptr;
 
             if (end_item > current_item) {
-                int size = end_item - current_item;
+                size_t size = end_item - current_item;
 
                 field4 = malloc(size + 1);
                 if (!field4)
@@ -1207,7 +1207,7 @@ cfrds_sql_resultset_int *cfrds_buffer_to_sql_sqlstmnt(cfrds_buffer *buffer)
     int64_t cnt = 0;
     int64_t cols = 0;
     int64_t rows = 0;
-    int buf_size = 0;
+    size_t buf_size = 0;
 
     if (buffer_int == nullptr)
         return nullptr;
@@ -1289,7 +1289,7 @@ cfrds_sql_metadata_int *cfrds_buffer_to_sql_metadata(cfrds_buffer *buffer)
 
     cfrds_sql_resultset_defer(tmp);
     int64_t cnt = 0;
-    int buf_size = 0;
+    size_t buf_size = 0;
 
     if (buffer_int == nullptr)
         return nullptr;
@@ -1347,7 +1347,7 @@ cfrds_sql_supportedcommands_int *cfrds_buffer_to_sql_supportedcommands(cfrds_buf
     int64_t rows = 0;
     int64_t row_size = 0;
     int64_t cnt = 0;
-    int buf_size = 0;
+    size_t buf_size = 0;
 
     if (buffer_int == nullptr)
         return nullptr;

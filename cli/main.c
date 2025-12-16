@@ -108,7 +108,7 @@ static bool init_server_from_uri(const char *uri, char **hostname, uint16_t *por
 {
     cfrds_str_defer(_hostname);
     cfrds_str_defer(_port_str);
-    int _port = 80;
+    uint16_t _port = 80;
     cfrds_str_defer(_username);
     cfrds_str_defer(_password);
     cfrds_str_defer(_path);
@@ -139,8 +139,8 @@ static bool init_server_from_uri(const char *uri, char **hostname, uint16_t *por
     if (login_start) {
         const char *pass_start = strchr(uri, ':');
         if ((pass_start)&&(pass_start < login_start)) {
-            int user_strlen = pass_start - uri;
-            int pass_strlen = login_start - pass_start - 1;
+            size_t user_strlen = pass_start - uri;
+            size_t pass_strlen = login_start - pass_start - 1;
 
             if (user_strlen) {
                 _username = malloc(user_strlen + 1);
@@ -157,7 +157,7 @@ static bool init_server_from_uri(const char *uri, char **hostname, uint16_t *por
                 _password[pass_strlen] = '\0';
             }
         } else {
-            int user_strlen = login_start - uri;
+            size_t user_strlen = login_start - uri;
             _username = malloc(user_strlen + 1);
             if (!_username)
                 return false;
@@ -169,8 +169,8 @@ static bool init_server_from_uri(const char *uri, char **hostname, uint16_t *por
 
     const char *port_start = strchr(uri, ':');
     if (port_start) {
-        int host_strlen = port_start - uri;
-        int port_strlen = path_start - port_start - 1;
+        size_t host_strlen = port_start - uri;
+        size_t port_strlen = path_start - port_start - 1;
 
         _hostname = malloc(host_strlen + 1);
         if (!_hostname)
@@ -186,9 +186,9 @@ static bool init_server_from_uri(const char *uri, char **hostname, uint16_t *por
         long tmp_port = atol(_port_str);
         if ((tmp_port < 0x0000)||(tmp_port > 0xffff))
             return false;
-        _port = tmp_port;
+        _port = (uint16_t)tmp_port;
     } else {
-        int host_strlen = path_start - uri;
+        size_t host_strlen = path_start - uri;
         _hostname = malloc(host_strlen + 1);
         if (!_hostname)
             return false;
@@ -198,7 +198,7 @@ static bool init_server_from_uri(const char *uri, char **hostname, uint16_t *por
     }
 
     *hostname = _hostname; _hostname = nullptr;
-    *port = (uint16_t)_port;
+    *port = _port;
     *username = _username; _username = nullptr;
     *password = _password; _password = nullptr;
     *path = _path;         _path = nullptr;
@@ -443,7 +443,7 @@ int main(int argc, char *argv[])
             const char *table = strchr(schema, '/');
             if(table) {
                 cfrds_sql_columninfo_defer(columninfo);
-                int tmp_size = 0;
+                size_t tmp_size = 0;
                 cfrds_str_defer(tmp);
 
                 tmp_size = table - schema;
@@ -493,7 +493,7 @@ int main(int argc, char *argv[])
             if(table) {
                 cfrds_sql_primarykeys_defer(primarykeys);
                 cfrds_str_defer(tablename);
-                int tmp_size = 0;
+                size_t tmp_size = 0;
                 cfrds_str_defer(tmp);
 
                 tmp_size = table - schema;
@@ -541,7 +541,7 @@ int main(int argc, char *argv[])
             if(table) {
                 cfrds_sql_foreignkeys_defer(foreignkeys);
                 cfrds_str_defer(tablename);
-                int tmp_size = 0;
+                size_t tmp_size = 0;
                 cfrds_str_defer(tmp);
 
                 tmp_size = table - schema;
@@ -606,7 +606,7 @@ int main(int argc, char *argv[])
             if(table) {
                 cfrds_sql_importedkeys_defer(importedkeys);
                 cfrds_str_defer(tablename);
-                int tmp_size = 0;
+                size_t tmp_size = 0;
                 cfrds_str_defer(tmp);
 
                 tmp_size = table - schema;
@@ -671,7 +671,7 @@ int main(int argc, char *argv[])
             if(table) {
                 cfrds_sql_exportedkeys_defer(exportedkeys);
                 cfrds_str_defer(tablename);
-                int tmp_size = 0;
+                size_t tmp_size = 0;
                 cfrds_str_defer(tmp);
 
                 tmp_size = table - schema;

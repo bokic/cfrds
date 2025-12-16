@@ -2474,8 +2474,8 @@ enum cfrds_status cfrds_command_debugger_watch_variables(cfrds_server *server, c
 {
     enum cfrds_status ret;
     char command[32];
-    int index = 0;
-    int pos = 0;
+    size_t index = 0;
+    size_t pos = 0;
 
     cfrds_buffer_defer(response);
 
@@ -2503,7 +2503,7 @@ enum cfrds_status cfrds_command_debugger_watch_variables(cfrds_server *server, c
             variable = strdup(variables + pos);
             if (variable == nullptr) return CFRDS_STATUS_MEMORY_ERROR;
         } else {
-            int len = (size_t)(delimiter - variables) + pos;
+            size_t len = (delimiter - variables) + pos;
             variable = malloc(len + 1);
             if (variable == nullptr) return CFRDS_STATUS_MEMORY_ERROR;
             memcpy(variable, variables + pos, len);
@@ -2513,7 +2513,7 @@ enum cfrds_status cfrds_command_debugger_watch_variables(cfrds_server *server, c
         if (strlen(variable) == 0)
             continue;
 
-        snprintf(command, sizeof(command), "0,WATCH,%d", index++);
+        snprintf(command, sizeof(command), "0,WATCH,%zu", index++);
         wddx_put_string(wddx, command, variable);
 
         pos = (size_t)(delimiter - variables) + 1;

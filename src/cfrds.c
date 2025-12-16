@@ -2484,7 +2484,7 @@ enum cfrds_status cfrds_command_debugger_watch_variables(cfrds_server *server, c
         return CFRDS_STATUS_SERVER_IS_nullptr;
     }
 
-    if (session_id == nullptr)
+    if ((session_id == nullptr)||(variables == nullptr))
     {
         return CFRDS_STATUS_PARAM_IS_nullptr;
     }
@@ -2493,7 +2493,7 @@ enum cfrds_status cfrds_command_debugger_watch_variables(cfrds_server *server, c
     wddx = wddx_create();
     wddx_put_string(wddx, "0,COMMAND", "SET_WATCH_VARIABLES");
 
-    while(pos >= 0)
+    while(1)
     {
         cfrds_str_defer(variable);
 
@@ -2510,11 +2510,11 @@ enum cfrds_status cfrds_command_debugger_watch_variables(cfrds_server *server, c
             variable[len] = '\0';
         }
 
-        if (strlen(variable) == 0)
-            continue;
-
-        snprintf(command, sizeof(command), "0,WATCH,%zu", index++);
-        wddx_put_string(wddx, command, variable);
+        if (strlen(variable) > 0)
+        {
+            snprintf(command, sizeof(command), "0,WATCH,%zu", index++);
+            wddx_put_string(wddx, command, variable);
+        }
 
         pos = (size_t)(delimiter - variables) + 1;
     }

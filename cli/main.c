@@ -19,6 +19,7 @@
 #include <stdlib.h>
 #include <fcntl.h>
 #include <stdio.h>
+#include <errno.h>
 #include <time.h>
 
 
@@ -314,7 +315,7 @@ int main(int argc, char *argv[])
         ssize_t written = os_write_to_terminal(cfrds_buffer_file_content_get_data(content), to_write);
         if (written != to_write)
         {
-            fprintf(stderr, "write FAILED with error: %m\n");
+            fprintf(stderr, "write FAILED with error: %s\n", strerror(errno));
             return EXIT_FAILURE;
         }
     } else if ((strcmp(command, "get") == 0)||(strcmp(command, "download") == 0)) {
@@ -332,7 +333,7 @@ int main(int argc, char *argv[])
         fd = os_creat_file(dest_fname);
         if (fd == ERROR_FILE_HND_FD)
         {
-            fprintf(stderr, "open FAILED with error: %m\n");
+            fprintf(stderr, "open FAILED with error: %s\n", strerror(errno));
             return EXIT_FAILURE;
         }
 
@@ -340,7 +341,7 @@ int main(int argc, char *argv[])
         ssize_t written = os_write(fd, cfrds_buffer_file_content_get_data(content), to_write);
         if (written != to_write)
         {
-            fprintf(stderr, "write FAILED with error: %m\n");
+            fprintf(stderr, "write FAILED with error: %s\n", strerror(errno));
             return EXIT_FAILURE;
         }
     } else if ((strcmp(command, "put") == 0)||(strcmp(command, "upload") == 0)) {
@@ -351,7 +352,7 @@ int main(int argc, char *argv[])
         buf = os_map(src_fname, &src_size);
         if ((buf == nullptr)&&(src_size > 0))
         {
-            fprintf(stderr, "mmap FAILED with error: %m\n");
+            fprintf(stderr, "mmap FAILED with error: %s\n", strerror(errno));
             return EXIT_FAILURE;
         }
 
@@ -365,7 +366,7 @@ int main(int argc, char *argv[])
         res = cfrds_command_file_rename(server, path, dest_pathname);
         if (res != CFRDS_STATUS_OK)
         {
-            fprintf(stderr, "rm/delete FAILED with error: %s\n", cfrds_server_get_error(server));
+            fprintf(stderr, "mv/move FAILED with error: %s\n", cfrds_server_get_error(server));
             return EXIT_FAILURE;
         }
     } else if ((strcmp(command, "rm") == 0)||(strcmp(command, "delete") == 0)) {
@@ -739,7 +740,7 @@ int main(int argc, char *argv[])
             res = cfrds_command_sql_sqlstmnt(server, schema, sql, &resultset);
             if (res != CFRDS_STATUS_OK)
             {
-                fprintf(stderr, "exportedkeys FAILED with error: %s\n", cfrds_server_get_error(server));
+                fprintf(stderr, "sql FAILED with error: %s\n", cfrds_server_get_error(server));
                 return EXIT_FAILURE;
             }
 
@@ -756,7 +757,7 @@ int main(int argc, char *argv[])
             res = cfrds_command_sql_sqlmetadata(server, schema, sql, &metadata);
             if (res != CFRDS_STATUS_OK)
             {
-                fprintf(stderr, "exportedkeys FAILED with error: %s\n", cfrds_server_get_error(server));
+                fprintf(stderr, "sqlmetadata FAILED with error: %s\n", cfrds_server_get_error(server));
                 return EXIT_FAILURE;
             }
 
@@ -778,7 +779,7 @@ int main(int argc, char *argv[])
             res = cfrds_command_sql_getsupportedcommands(server, &supportedcommands);
             if (res != CFRDS_STATUS_OK)
             {
-                fprintf(stderr, "exportedkeys FAILED with error: %s\n", cfrds_server_get_error(server));
+                fprintf(stderr, "supportedcommands FAILED with error: %s\n", cfrds_server_get_error(server));
                 return EXIT_FAILURE;
             }
 

@@ -738,7 +738,119 @@ int main(int argc, char *argv[])
                 return EXIT_FAILURE;
             }
 
-            // TODO: Implement printing of SQL resultset
+            int cols = cfrds_buffer_sql_resultset_columns(resultset);
+            if (cols == 0)
+            {
+                fprintf(stderr, "No columns\n");
+                return EXIT_FAILURE;
+            }
+
+            int *sizes = malloc(cols * sizeof(int));
+            if (sizes == nullptr)
+            {
+                fprintf(stderr, "No memory\n");
+                return EXIT_FAILURE;
+            }
+
+            for(int c = 0; c < cols; c++)
+            {
+                const char *name  = cfrds_buffer_sql_resultset_column_name(resultset, c);
+                sizes[c] = strlen(name);
+            }
+
+            int rows = cfrds_buffer_sql_resultset_rows(resultset);
+            for (int r = 0; r < rows; r++)
+            {
+                for (int c = 0; c < cols; c++)
+                {
+                    const char *value = cfrds_buffer_sql_resultset_value(resultset, r, c);
+                    if (strlen(value) > sizes[c])
+                    {
+                        sizes[c] = strlen(value);
+                    }
+                }
+            }
+
+            putchar('+');
+            for(int col = 0; col < cols; col++)
+            {
+                int size = sizes[col];
+
+                for(int c = 0; c < size; c++)
+                {
+                    putchar('-');
+                }
+
+                putchar('+');
+            }
+            putchar('\n');
+
+            putchar('|');
+            for(int col = 0; col < cols; col++)
+            {
+                int size = sizes[col];
+
+                const char *value = cfrds_buffer_sql_resultset_column_name(resultset, col);
+
+                printf("%s", value);
+
+                for(int c = strlen(value); c < size; c++)
+                {
+                    putchar(' ');
+                }
+
+                putchar('|');
+            }
+            putchar('\n');
+
+            putchar('+');
+            for(int col = 0; col < cols; col++)
+            {
+                int size = sizes[col];
+
+                for(int c = 0; c < size; c++)
+                {
+                    putchar('-');
+                }
+
+                putchar('+');
+            }
+            putchar('\n');
+
+            for (int row = 0; row < rows; row++)
+            {
+                putchar('|');
+                for(int col = 0; col < cols; col++)
+                {
+                    int size = sizes[col];
+
+                    const char *value = cfrds_buffer_sql_resultset_value(resultset, row, col);
+
+                    printf("%s", value);
+
+                    for(int c = strlen(value); c < size; c++)
+                    {
+                        putchar(' ');
+                    }
+
+                    putchar('|');
+                }
+                putchar('\n');
+
+                putchar('+');
+                for(int col = 0; col < cols; col++)
+                {
+                    int size = sizes[col];
+
+                    for(int c = 0; c < size; c++)
+                    {
+                        putchar('-');
+                    }
+
+                    putchar('+');
+                }
+                putchar('\n');
+            }
         }
     } else if (strcmp(command, "sqlmetadata") == 0) {
         if ((path != nullptr)&&(strlen(path) > 1))

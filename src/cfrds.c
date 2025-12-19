@@ -109,26 +109,44 @@ static char *cfrds_server_encode_password(const char *password)
 
 bool cfrds_server_init(cfrds_server **server, const char *host, uint16_t port, const char *username, const char *password)
 {
-    cfrds_server_int *ret = nullptr;
+    cfrds_server_defer(ret);
 
     if ((server == nullptr)||(host == nullptr)||(port == 0)||(username == nullptr)||(password == nullptr))
         return false;
 
     ret = malloc(sizeof(cfrds_server_int));
-
     if (ret == nullptr)
         return false;
 
-    ret->host = strdup(host);
-    ret->port = port;
-    ret->username = strdup(username);
-    ret->orig_password = strdup(password);
-    ret->password = cfrds_server_encode_password(password);
-    ret->_errno = 0;
-    ret->error_code = 1;
-    ret->error = nullptr;
+    explicit_bzero(ret, sizeof(cfrds_server_int));
+
+    ((cfrds_server_int *)ret)->host = strdup(host);
+    if (((cfrds_server_int *)ret)->host == nullptr)
+        return false;
+
+    ((cfrds_server_int *)ret)->port = port;
+
+    ((cfrds_server_int *)ret)->username = strdup(username);
+    if (((cfrds_server_int *)ret)->username == nullptr)
+        return false;
+
+    ((cfrds_server_int *)ret)->orig_password = strdup(password);
+    if (((cfrds_server_int *)ret)->orig_password == nullptr)
+        return false;
+
+    if (strlen(((cfrds_server_int *)ret)->orig_password) > 0)
+    {
+        ((cfrds_server_int *)ret)->password = cfrds_server_encode_password(password);
+        if (((cfrds_server_int *)ret)->password == nullptr)
+            return false;
+    }
+
+    ((cfrds_server_int *)ret)->_errno = 0;
+    ((cfrds_server_int *)ret)->error_code = 1;
+    ((cfrds_server_int *)ret)->error = nullptr;
 
     *server = ret;
+    ret = nullptr;
 
     return true;
 }
@@ -666,7 +684,7 @@ enum cfrds_status cfrds_command_sql_sqlstmnt(cfrds_server *server, const char *c
     cfrds_server_int *server_int = nullptr;
     cfrds_buffer_defer(response);
 
-    if (server == nullptr)
+    if ((server == nullptr)||(resultset == nullptr))
     {
         return CFRDS_STATUS_PARAM_IS_nullptr;
     }
@@ -2475,7 +2493,6 @@ enum cfrds_status cfrds_command_debugger_watch_variables(cfrds_server *server, c
     enum cfrds_status ret;
     char command[32];
     size_t index = 0;
-    size_t pos = 0;
 
     cfrds_buffer_defer(response);
 
@@ -2493,21 +2510,28 @@ enum cfrds_status cfrds_command_debugger_watch_variables(cfrds_server *server, c
     wddx = wddx_create();
     wddx_put_string(wddx, "0,COMMAND", "SET_WATCH_VARIABLES");
 
-    while(1)
+    while(strlen(variables) > 0)
     {
         cfrds_str_defer(variable);
 
-        const char *delimiter = strchr(variables + pos, ',');
+        const char *delimiter = strchr(variables, ',');
         if (delimiter == nullptr)
         {
-            variable = strdup(variables + pos);
+            variable = strdup(variables);
             if (variable == nullptr) return CFRDS_STATUS_MEMORY_ERROR;
+            variables += strlen(variables);
         } else {
-            size_t len = (delimiter - variables) + pos;
+            size_t len = delimiter - variables;
+            if (len == 0)
+            {
+                variables++;
+                continue;
+            }
             variable = malloc(len + 1);
             if (variable == nullptr) return CFRDS_STATUS_MEMORY_ERROR;
-            memcpy(variable, variables + pos, len);
+            memcpy(variable, variables, len);
             variable[len] = '\0';
+            variables += len + 1;
         }
 
         if (strlen(variable) > 0)
@@ -2515,8 +2539,6 @@ enum cfrds_status cfrds_command_debugger_watch_variables(cfrds_server *server, c
             snprintf(command, sizeof(command), "0,WATCH,%zu", index++);
             wddx_put_string(wddx, command, variable);
         }
-
-        pos = (size_t)(delimiter - variables) + 1;
     }
 
     if (index == 0)

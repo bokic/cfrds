@@ -1,5 +1,4 @@
 #include <cfrds.h>
-
 #include "os.h"
 
 #ifdef _WIN32
@@ -440,31 +439,26 @@ int main(int argc, char *argv[])
     } else if (strcmp(command, "columninfo") == 0) {
         if ((path != nullptr)&&(strlen(path) > 1))
         {
-            const char *schema = path + 1;
-            const char *table = strchr(schema, '/');
-            if(table) {
+            const char *schema_separator = path + 1;
+            const char *table_separator = strchr(schema_separator, '/');
+            if(table_separator) {
                 cfrds_sql_columninfo_defer(columninfo);
                 size_t tmp_size = 0;
-                cfrds_str_defer(tmp);
+                cfrds_str_defer(schema);
 
-                tmp_size = table - schema;
-                tmp = malloc(tmp_size + 1);
-                if (tmp == nullptr)
+                tmp_size = table_separator - schema_separator;
+                schema = malloc(tmp_size + 1);
+                if (schema == nullptr)
                 {
                     fprintf(stderr, "malloc FAILED!\n");
                     return EXIT_FAILURE;
                 }
 
-                memcpy(tmp, schema, tmp_size);
-                tmp[tmp_size] = '\0';
-                schema = tmp;
+                memcpy(schema, schema_separator, tmp_size);
+                schema[tmp_size] = '\0';
+                schema_separator = schema;
 
-                table = strdup(table + 1);
-                if (table == nullptr)
-                {
-                    fprintf(stderr, "strdup FAILED!\n");
-                    return EXIT_FAILURE;
-                }
+                const char *table = table_separator + 1;
 
                 res = cfrds_command_sql_columninfo(server, schema, table, &columninfo);
                 if (res != CFRDS_STATUS_OK)

@@ -62,37 +62,30 @@ add_library(libcfrds SHARED
     src/cfrds_http.c   include/internal/cfrds_http.h
 )
 
-if(WIN32)
-set_target_properties(libcfrds
-    PROPERTIES OUTPUT_NAME "cfrds"
-)
-endif()
-
 target_include_directories(libcfrds PUBLIC
     include
 )
 
 if(WIN32)
+set_target_properties(libcfrds
+    PROPERTIES OUTPUT_NAME "cfrds"
+)
+target_sources(libcfrds PRIVATE ${RC_OUT_FILE})
 target_include_directories(libcfrds PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/deps/libxml2/include
 )
 target_link_directories(libcfrds PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/deps/libxml2
 )
-else()
-target_include_directories(libcfrds PRIVATE
-    /usr/include/libxml2
+target_link_libraries(libcfrds PRIVATE
+    wsock32
+    ws2_32
+    xml2
 )
-endif()
-
-target_link_libraries(libcfrds PRIVATE xml2)
-
-if(WIN32)
-    target_sources(libcfrds PRIVATE ${RC_OUT_FILE})
-    target_link_libraries(libcfrds PRIVATE
-        wsock32
-        ws2_32
-    )
+else()
+find_package(LibXml2 REQUIRED)
+include_directories(${LIBXML2_INCLUDE_DIR})
+target_link_libraries(libcfrds PRIVATE LibXml2::LibXml2)
 endif()
 
 set_target_properties(libcfrds PROPERTIES
@@ -108,4 +101,4 @@ install(TARGETS libcfrds
     PUBLIC_HEADER
 )
 
-subdirs(python)
+add_subdirectory(python)

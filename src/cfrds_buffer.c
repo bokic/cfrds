@@ -138,20 +138,27 @@ void cfrds_debugger_event_cleanup(cfrds_debugger_event **buf) {
     }
 }
 
-void cfrds_buffer_realloc_if_needed(cfrds_buffer *buffer, size_t len)
+static bool cfrds_buffer_realloc_if_needed(cfrds_buffer *buffer, size_t len)
 {
     cfrds_buffer_int *buffer_int = buffer;
+    void *tmp = nullptr;
 
     if (buffer_int->size + len > buffer_int->allocated)
     {
         size_t newsize = buffer_int->size + len;
         newsize = (((newsize + 512) / 1024) + 1) * 1024;
 
-        buffer_int->data = realloc(buffer_int->data, newsize);
-        int oldsize = buffer_int->allocated;
+        tmp = realloc(buffer_int->data, newsize);
+        if (tmp == nullptr)
+            return false;
+
+        size_t oldsize = buffer_int->allocated;
+        buffer_int->data = tmp;
         explicit_bzero(buffer_int->data + oldsize, newsize - oldsize);
         buffer_int->allocated = newsize;
     }
+
+    return true;
 }
 
 bool cfrds_buffer_create(cfrds_buffer **buffer)
@@ -184,7 +191,9 @@ char *cfrds_buffer_data(cfrds_buffer *buffer)
 
     ret = buffer;
 
-    cfrds_buffer_realloc_if_needed(ret, ret->size + 1);
+    if (cfrds_buffer_realloc_if_needed(ret, ret->size + 1) == false)
+        return nullptr;
+
     ret->data[ret->size] = 0;
 
     return (char *)ret->data;
@@ -214,7 +223,10 @@ void cfrds_buffer_append(cfrds_buffer *buffer, const char *str)
 
     len = strlen(str);
 
-    cfrds_buffer_realloc_if_needed(buffer_int, len);
+    if (cfrds_buffer_realloc_if_needed(buffer_int, len) == false)
+    {
+        return;
+    }
 
     if (len > 0)
     {
@@ -241,7 +253,10 @@ void cfrds_buffer_append_bytes(cfrds_buffer *buffer, const void *data, size_t le
         return;
     }
 
-    cfrds_buffer_realloc_if_needed(buffer_int, length);
+    if (cfrds_buffer_realloc_if_needed(buffer_int, length) == false)
+    {
+        return;
+    }
 
     memcpy(&buffer_int->data[buffer_int->size], data, length);
     buffer_int->size += length;
@@ -253,7 +268,10 @@ void cfrds_buffer_append_buffer(cfrds_buffer *buffer, cfrds_buffer *new)
     const cfrds_buffer_int *new_int = new;
     size_t len = new_int->size;
 
-    cfrds_buffer_realloc_if_needed(buffer_int, len);
+    if (cfrds_buffer_realloc_if_needed(buffer_int, len) == false)
+    {
+        return;
+    }
 
     memcpy(&buffer_int->data[buffer_int->size], new_int->data, len);
     buffer_int->size += len;
@@ -313,25 +331,35 @@ void cfrds_buffer_append_char(cfrds_buffer *buffer, const char ch)
 {
     cfrds_buffer_int *buffer_int = buffer;
 
-    cfrds_buffer_realloc_if_needed(buffer_int, 1);
+    if (cfrds_buffer_realloc_if_needed(buffer_int, 1) == false)
+    {
+        return;
+    }
 
     buffer_int->data[buffer_int->size] = ch;
     buffer_int->size++;
 }
 
-void cfrds_buffer_reserve_above_size(cfrds_buffer *buffer, size_t size)
+bool cfrds_buffer_reserve_above_size(cfrds_buffer *buffer, size_t size)
 {
     cfrds_buffer_int *buffer_int = buffer;
+    void *tmp = nullptr;
 
     if (buffer_int->allocated - buffer_int->size < size)
     {
         size_t newsize = buffer_int->size + size;
 
-        buffer_int->data = realloc(buffer_int->data, newsize);
+        tmp = realloc(buffer_int->data, newsize);
+        if (tmp == nullptr)
+            return false;
+
+        buffer_int->data = tmp;
         int oldsize = buffer_int->allocated;
         explicit_bzero(buffer_int->data + oldsize, newsize- oldsize);
         buffer_int->allocated = newsize;
     }
+
+    return true;
 }
 
 void cfrds_buffer_expand(cfrds_buffer *buffer, size_t size)
@@ -389,6 +417,9 @@ bool cfrds_buffer_parse_bytearray(const char **data, size_t *remaining, char **o
     if (size < 0)
         return false;
 
+    if (size > *remaining)
+        return false;
+
     *out = malloc(size + 1);
     if (*out == nullptr)
         return false;
@@ -414,7 +445,10 @@ bool cfrds_buffer_parse_string(const char **data, size_t *remaining, char **out)
     if (!cfrds_buffer_parse_number(data, remaining, &size))
         return false;
 
-    if (size <= 0)
+    if (size < 0)
+        return false;
+
+    if (size > *remaining)
         return false;
 
     *out = malloc(size + 1);

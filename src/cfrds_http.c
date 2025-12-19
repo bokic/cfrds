@@ -134,7 +134,8 @@ enum cfrds_status cfrds_http_post(cfrds_server_int *server, const char *command,
     cfrds_buffer_create(&tmp_response);
     while(1)
     {
-        cfrds_buffer_reserve_above_size(tmp_response, 4096);
+        if (cfrds_buffer_reserve_above_size(tmp_response, 4096) == false)
+            return CFRDS_STATUS_MEMORY_ERROR;
 
         ssize_t readed = recv(sockfd, cfrds_buffer_data(tmp_response) + cfrds_buffer_data_size(tmp_response), 4096, 0);
         if (readed <= 0) {
@@ -211,13 +212,10 @@ void cfrds_sock_cleanup(SOCKET* sock)
 #else
 void cfrds_sock_cleanup(int* sock)
 {
-    if (*sock)
+    if ((sock != nullptr)&&(*sock != CFRDS_INVALID_SOCKET))
     {
-        if (*sock > 0)
-        {
-            close(*sock);
-            *sock = 0;
-        }
+        close(*sock);
+        *sock = CFRDS_INVALID_SOCKET;
     }
 }
 #endif

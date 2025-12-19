@@ -190,7 +190,7 @@ void cfrds_buffer_append_rds_count(cfrds_buffer *buffer, size_t cnt);
 void cfrds_buffer_append_rds_string(cfrds_buffer *buffer, const char *str);
 void cfrds_buffer_append_rds_bytes(cfrds_buffer *buffer, const void *data, size_t length);
 
-void cfrds_buffer_reserve_above_size(cfrds_buffer *buffer, size_t size);
+bool cfrds_buffer_reserve_above_size(cfrds_buffer *buffer, size_t size);
 void cfrds_buffer_expand(cfrds_buffer *buffer, size_t size);
 void cfrds_buffer_free(cfrds_buffer *buffer);
 

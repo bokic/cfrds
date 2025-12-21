@@ -211,21 +211,21 @@ size_t cfrds_buffer_data_size(cfrds_buffer *buffer)
     return ret->size;
 }
 
-void cfrds_buffer_append(cfrds_buffer *buffer, const char *str)
+bool cfrds_buffer_append(cfrds_buffer *buffer, const char *str)
 {
     cfrds_buffer_int *buffer_int = buffer;
     size_t len = 0;
 
     if ((!buffer_int)||(!str))
     {
-         return;
+         return false;
     }
 
     len = strlen(str);
 
     if (cfrds_buffer_realloc_if_needed(buffer_int, len) == false)
     {
-        return;
+        return false;
     }
 
     if (len > 0)
@@ -233,36 +233,42 @@ void cfrds_buffer_append(cfrds_buffer *buffer, const char *str)
         memcpy(&buffer_int->data[buffer_int->size], str, len);
         buffer_int->size += len;
     }
+
+    return true;
 }
 
-void cfrds_buffer_append_int(cfrds_buffer *buffer, int number)
+bool cfrds_buffer_append_int(cfrds_buffer *buffer, int number)
 {
     char str[16];
 
     snprintf(str, sizeof(str), "%d", number);
 
-    cfrds_buffer_append(buffer, str);
+    if (cfrds_buffer_append(buffer, str) == false) return false;
+
+    return true;
 }
 
-void cfrds_buffer_append_bytes(cfrds_buffer *buffer, const void *data, size_t length)
+bool cfrds_buffer_append_bytes(cfrds_buffer *buffer, const void *data, size_t length)
 {
     cfrds_buffer_int *buffer_int = buffer;
 
     if ((!buffer_int)||(!data)||(length == 0))
     {
-        return;
+        return false;
     }
 
     if (cfrds_buffer_realloc_if_needed(buffer_int, length) == false)
     {
-        return;
+        return false;
     }
 
     memcpy(&buffer_int->data[buffer_int->size], data, length);
     buffer_int->size += length;
+
+    return true;
 }
 
-void cfrds_buffer_append_buffer(cfrds_buffer *buffer, cfrds_buffer *new)
+bool cfrds_buffer_append_buffer(cfrds_buffer *buffer, cfrds_buffer *new)
 {
     cfrds_buffer_int *buffer_int = buffer;
     const cfrds_buffer_int *new_int = new;
@@ -270,14 +276,16 @@ void cfrds_buffer_append_buffer(cfrds_buffer *buffer, cfrds_buffer *new)
 
     if (cfrds_buffer_realloc_if_needed(buffer_int, len) == false)
     {
-        return;
+        return false;
     }
 
     memcpy(&buffer_int->data[buffer_int->size], new_int->data, len);
     buffer_int->size += len;
+
+    return true;
 }
 
-void cfrds_buffer_append_rds_count(cfrds_buffer *buffer, size_t cnt)
+bool cfrds_buffer_append_rds_count(cfrds_buffer *buffer, size_t cnt)
 {
     char str[16] = {0, };
     int n = 0;
@@ -285,12 +293,14 @@ void cfrds_buffer_append_rds_count(cfrds_buffer *buffer, size_t cnt)
     n = snprintf(str, sizeof(str), "%zu", cnt);
     if (n > 0)
     {
-        cfrds_buffer_append(buffer, str);
-        cfrds_buffer_append_char(buffer, ':');
+        if (cfrds_buffer_append(buffer, str) == false) return false;
+        if (cfrds_buffer_append_char(buffer, ':') == false) return false;
     }
+
+    return true;
 }
 
-void cfrds_buffer_append_rds_string(cfrds_buffer *buffer, const char *str)
+bool cfrds_buffer_append_rds_string(cfrds_buffer *buffer, const char *str)
 {
     char str_len[16] = {0, };
     size_t len = 0;
@@ -298,21 +308,23 @@ void cfrds_buffer_append_rds_string(cfrds_buffer *buffer, const char *str)
 
     if ((!buffer)||(!str))
     {
-        return;
+        return false;
     }
 
     len = strlen(str);
     n = snprintf(str_len, sizeof(str_len), "%zu", len);
     if (n > 0)
     {
-        cfrds_buffer_append(buffer, "STR:");
-        cfrds_buffer_append(buffer, str_len);
-        cfrds_buffer_append_char(buffer, ':');
-        cfrds_buffer_append(buffer, str);
+        if (cfrds_buffer_append(buffer, "STR:") == false) return false;
+        if (cfrds_buffer_append(buffer, str_len) == false) return false;
+        if (cfrds_buffer_append_char(buffer, ':') == false) return false;
+        if (cfrds_buffer_append(buffer, str) == false) return false;
     }
+
+    return true;
 }
 
-void cfrds_buffer_append_rds_bytes(cfrds_buffer *buffer, const void *data, size_t length)
+bool cfrds_buffer_append_rds_bytes(cfrds_buffer *buffer, const void *data, size_t length)
 {
     char str_len[16] = {0, };
     int n = 0;
@@ -320,24 +332,28 @@ void cfrds_buffer_append_rds_bytes(cfrds_buffer *buffer, const void *data, size_
     n = snprintf(str_len, sizeof(str_len), "%zu", length);
     if (n > 0)
     {
-        cfrds_buffer_append(buffer, "STR:");
-        cfrds_buffer_append(buffer, str_len);
-        cfrds_buffer_append_char(buffer, ':');
-        cfrds_buffer_append_bytes(buffer, data, length);
+        if (cfrds_buffer_append(buffer, "STR:") == false) return false;
+        if (cfrds_buffer_append(buffer, str_len) == false) return false;
+        if (cfrds_buffer_append_char(buffer, ':') == false) return false;
+        if (cfrds_buffer_append_bytes(buffer, data, length) == false) return false;
     }
+
+    return true;
 }
 
-void cfrds_buffer_append_char(cfrds_buffer *buffer, const char ch)
+bool cfrds_buffer_append_char(cfrds_buffer *buffer, const char ch)
 {
     cfrds_buffer_int *buffer_int = buffer;
 
     if (cfrds_buffer_realloc_if_needed(buffer_int, 1) == false)
     {
-        return;
+        return false;
     }
 
     buffer_int->data[buffer_int->size] = ch;
     buffer_int->size++;
+
+    return true;
 }
 
 bool cfrds_buffer_reserve_above_size(cfrds_buffer *buffer, size_t size)
@@ -362,11 +378,19 @@ bool cfrds_buffer_reserve_above_size(cfrds_buffer *buffer, size_t size)
     return true;
 }
 
-void cfrds_buffer_expand(cfrds_buffer *buffer, size_t size)
+bool cfrds_buffer_expand(cfrds_buffer *buffer, size_t size)
 {
+    if (buffer == nullptr)
+        return false;
+
     cfrds_buffer_int *buffer_int = buffer;
 
+    if (size <= buffer_int->allocated)
+        cfrds_buffer_reserve_above_size(buffer, size);
+
     buffer_int->size += size;
+
+    return true;
 }
 
 void cfrds_buffer_free(cfrds_buffer *buffer)
@@ -469,7 +493,7 @@ bool cfrds_buffer_parse_string_list_item(const char **data, size_t *remaining, c
     bool with_quotes = false;
     const char *endstr = nullptr;
     cfrds_str_defer(tmp);
-    int len = 0;
+    size_t len = 0;
 
     if ((data == nullptr)||(out == nullptr)||(*remaining < 2))
         return false;
@@ -492,7 +516,6 @@ bool cfrds_buffer_parse_string_list_item(const char **data, size_t *remaining, c
         else
             len = endstr - *data;
     }
-
 
     tmp = malloc(len + 1);
     if (tmp == nullptr)

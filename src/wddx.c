@@ -88,7 +88,7 @@ static WDDX_NODE_int *wddx_recursively_put(WDDX_NODE_int *node, const char *path
     if (path_len == 0)
     {
         WDDX_NODE_int *new_node = nullptr;
-        int value_len = strlen(value);
+        size_t value_len = strlen(value);
 
         size_t size = offsetof(WDDX_NODE_int, string) + value_len + 1;
         new_node = malloc(size);
@@ -119,7 +119,7 @@ static WDDX_NODE_int *wddx_recursively_put(WDDX_NODE_int *node, const char *path
     {
         int idx = atoi(newkey) + 1;
 
-        if (node == nullptr)
+        if ((node == nullptr)&&(idx > 0))
         {
             newsize = offsetof(WDDX_NODE_int, items) + (sizeof(WDDX_NODE_int) * idx);
             node = (WDDX_NODE_int *)malloc(newsize);

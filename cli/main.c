@@ -745,7 +745,7 @@ int main(int argc, char *argv[])
                 return EXIT_FAILURE;
             }
 
-            int *sizes = malloc(cols * sizeof(int));
+            size_t *sizes = malloc(cols * sizeof(size_t));
             if (sizes == nullptr)
             {
                 fprintf(stderr, "No memory\n");
@@ -774,9 +774,9 @@ int main(int argc, char *argv[])
             putchar('+');
             for(int col = 0; col < cols; col++)
             {
-                int size = sizes[col];
+                size_t size = sizes[col];
 
-                for(int c = 0; c < size; c++)
+                for(size_t c = 0; c < size; c++)
                 {
                     putchar('-');
                 }
@@ -788,13 +788,13 @@ int main(int argc, char *argv[])
             putchar('|');
             for(int col = 0; col < cols; col++)
             {
-                int size = sizes[col];
+                size_t size = sizes[col];
 
                 const char *value = cfrds_buffer_sql_resultset_column_name(resultset, col);
 
                 printf("%s", value);
 
-                for(int c = strlen(value); c < size; c++)
+                for(size_t c = strlen(value); c < size; c++)
                 {
                     putchar(' ');
                 }
@@ -806,9 +806,9 @@ int main(int argc, char *argv[])
             putchar('+');
             for(int col = 0; col < cols; col++)
             {
-                int size = sizes[col];
+                size_t size = sizes[col];
 
-                for(int c = 0; c < size; c++)
+                for(size_t c = 0; c < size; c++)
                 {
                     putchar('-');
                 }
@@ -822,13 +822,13 @@ int main(int argc, char *argv[])
                 putchar('|');
                 for(int col = 0; col < cols; col++)
                 {
-                    int size = sizes[col];
+                    size_t size = sizes[col];
 
                     const char *value = cfrds_buffer_sql_resultset_value(resultset, row, col);
 
                     printf("%s", value);
 
-                    for(int c = strlen(value); c < size; c++)
+                    for(size_t c = strlen(value); c < size; c++)
                     {
                         putchar(' ');
                     }
@@ -838,11 +838,11 @@ int main(int argc, char *argv[])
                 putchar('\n');
 
                 putchar('+');
-                for(int col = 0; col < cols; col++)
+                for(size_t col = 0; col < cols; col++)
                 {
-                    int size = sizes[col];
+                    size_t size = sizes[col];
 
-                    for(int c = 0; c < size; c++)
+                    for(size_t c = 0; c < size; c++)
                     {
                         putchar('-');
                     }

@@ -180,18 +180,18 @@ bool cfrds_buffer_create(cfrds_buffer **buffer);
 char *cfrds_buffer_data(cfrds_buffer *buffer);
 size_t cfrds_buffer_data_size(cfrds_buffer *buffer);
 
-void cfrds_buffer_append(cfrds_buffer *buffer, const char *str);
-void cfrds_buffer_append_int(cfrds_buffer *buffer, int number);
-void cfrds_buffer_append_bytes(cfrds_buffer *buffer, const void *data, size_t length);
-void cfrds_buffer_append_buffer(cfrds_buffer *buffer, cfrds_buffer *new);
-void cfrds_buffer_append_char(cfrds_buffer *buffer, const char ch);
+bool cfrds_buffer_append(cfrds_buffer *buffer, const char *str);
+bool cfrds_buffer_append_int(cfrds_buffer *buffer, int number);
+bool cfrds_buffer_append_bytes(cfrds_buffer *buffer, const void *data, size_t length);
+bool cfrds_buffer_append_buffer(cfrds_buffer *buffer, cfrds_buffer *new);
+bool cfrds_buffer_append_char(cfrds_buffer *buffer, const char ch);
 
-void cfrds_buffer_append_rds_count(cfrds_buffer *buffer, size_t cnt);
-void cfrds_buffer_append_rds_string(cfrds_buffer *buffer, const char *str);
-void cfrds_buffer_append_rds_bytes(cfrds_buffer *buffer, const void *data, size_t length);
+bool cfrds_buffer_append_rds_count(cfrds_buffer *buffer, size_t cnt);
+bool cfrds_buffer_append_rds_string(cfrds_buffer *buffer, const char *str);
+bool cfrds_buffer_append_rds_bytes(cfrds_buffer *buffer, const void *data, size_t length);
 
 bool cfrds_buffer_reserve_above_size(cfrds_buffer *buffer, size_t size);
-void cfrds_buffer_expand(cfrds_buffer *buffer, size_t size);
+bool cfrds_buffer_expand(cfrds_buffer *buffer, size_t size);
 void cfrds_buffer_free(cfrds_buffer *buffer);
 
 bool cfrds_buffer_parse_number(const char **data, size_t *remaining, int64_t *out);

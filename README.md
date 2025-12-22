@@ -12,9 +12,9 @@ Some of the features RDS protocol supports:
 * Remote ColdFusion debugger.
 * other...
 
-## Implemented Features
-* Remote ColdFusion server file/dir access.
-* Remote ColdFusion server Database access.
+## Implemented
+* Remote ColdFusion server file system access.
+* Remote ColdFusion server database access.
 * Remote ColdFusion server debugger.
 
 ## TODO
@@ -50,12 +50,16 @@ Some of the features RDS protocol supports:
 * Stop ColdFusion debugger - `cfrds dbg_stop <rds://{username{:password}@}host{:port}/session_id`
 * Get ColdFusion debugger server info - `cfrds dbg_info <rds://{username{:password}@}host{:port}>`
 
-## Build(from git)
+## Build
 > git clone https://github.com/bokic/cfrds.git
 > 
-> cmake -B build -S cfrds -G Ninja
+> cd cfrds
+> 
+> cmake -B build
 > 
 > cmake --build build
+> 
+> bin/cfrds
 
 ## Installation
 * Linux

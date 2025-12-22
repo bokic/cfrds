@@ -89,4 +89,12 @@ echo "Fetching dbdescription..."
 bin/cfrds dbdescription $RDS_HOST/$RDS_DSN
 echo "Fetched dbdescription"
 
+#echo "Fetching dbg_info..."
+#bin/cfrds dbg_info $RDS_HOST
+#echo "Fetched dbg_info"
+
+#echo "Fetching dbg_brk_on_exception..."
+#bin/cfrds dbg_brk_on_exception $RDS_HOST true
+#echo "Fetched dbg_brk_on_exception"
+
 echo "Done..."

@@ -33,29 +33,29 @@ static void usage()
            "            or    `cfrds dir rds://username:password@host/dir`\n"
            "\n"
            "  - 'cat' - Print server file content to stdout.\n"
-           "         example: `cfrds cat rds://username:password@host/pathname`\n"
+           "         example: `cfrds cat rds://username:password@host/{absolute pathname}`\n"
            "\n"
            "  - 'get', 'download' - Downloads a file from server.\n"
-           "         example: `cfrds get rds://username:password@host/pathname local_file`\n"
-           "            or    `cfrds download rds://username:password@host/pathname local_file`\n"
+           "         example: `cfrds get rds://username:password@host/{absolute pathname} local_file`\n"
+           "            or    `cfrds download rds://username:password@host/{absolute pathname} local_file`\n"
            "\n"
            "  - 'put', 'upload' - Uploads a file to server.\n"
-           "         example: `cfrds put local_file rds://username:password@host/pathname`\n"
-           "            or    `cfrds upload local_file rds://username:password@host/pathname`\n"
+           "         example: `cfrds put local_file rds://username:password@host/{absolute pathname}`\n"
+           "            or    `cfrds upload local_file rds://username:password@host/{absolute pathname}`\n"
            "\n"
            "  - 'mv', 'move' - Moves/renames file or folder.\n"
-           "         example: `cfrds mv rds://username:password@host/pathname {new_name}`\n"
-           "            or    `cfrds move rds://username:password@host/pathname {new_name}`\n"
+           "         example: `cfrds mv rds://username:password@host/{absolute pathname} {new_pathname}`\n"
+           "            or    `cfrds move rds://username:password@host/{absolute pathname} {new_pathname}`\n"
            "\n"
            "  - 'rm', 'delete' - Delete a file to server.\n"
-           "         example: `cfrds rm rds://username:password@host/pathname`\n"
-           "            or    `cfrds delete rds://username:password@host/pathname`\n"
+           "         example: `cfrds rm rds://username:password@host/{absolute pathname}`\n"
+           "            or    `cfrds delete rds://username:password@host/{absolute pathname}`\n"
            "\n"
            "  - 'mkdir' - Create a directory on a server.\n"
-           "         example: `cfrds mkdir rds://username:password@host/pathname`\n"
+           "         example: `cfrds mkdir rds://username:password@host/{absolute path}`\n"
            "\n"
            "  - 'rmdir' - Deletes a directory from a server.\n"
-           "         example: `cfrds rmdir rds://username:password@host/pathname`\n"
+           "         example: `cfrds rmdir rds://username:password@host/{absolute path}`\n"
            "\n"
            "  - 'cfroot' - Return ColdFusion installation directory.\n"
            "         example: `cfrds cfroot rds://username:password@host`\n"
@@ -92,7 +92,7 @@ static void usage()
            "\n"
            "  - 'dbdescription' - Return ColdFusion data sources database info.\n"
            "         example: `cfrds dbdescription rds://username:password@host/dsn`\n"
-           "\n"
+/*         "\n"
            "  - 'dbg_start' - Start ColdFusion debugger session.\n"
            "         example: `cfrds dbg_start rds://username:password@host`\n"
            "\n"
@@ -102,11 +102,11 @@ static void usage()
            "  - 'dbg_info' - Get ColdFusion debugger server info.\n"
            "         example: `cfrds dbg_info rds://username:password@host`\n"
            "\n"
-           "  - 'dbg_brk_on_exception' - Set ColdFusion debugger server to stop on exception.\n"
+           "  - 'dbg_brk_on_exception' - Set/reset ColdFusion debugger server to stop on exception.\n"
            "         example: `cfrds dbg_brk_on_exception rds://username:password@host/dbg_session` {true/false}\n"
            "\n"
            "  - 'dbg_brk' - Set ColdFusion debugger server set/reset breakpoint on specific line of coldfusion template.\n"
-           "         example: `cfrds dbg_brk rds://username:password@host/{cftemplate pathname:line}` {session_id} {*true|false}\n"
+           "         example: `cfrds dbg_brk rds://username:password@host/{cftemplate pathname:line}` {session_id} {true|false}\n"
            "\n"
            "  - 'dbg_clear_all_brk' - Set ColdFusion debugger clear all breakpoints for specific debugging session.\n"
            "         example: `cfrds dbg_clear_all_brk rds://username:password@host` {session_id}\n"
@@ -142,7 +142,7 @@ static void usage()
            "         example: `cfrds dbg_get_output rds://username:password@host` {session_id} {thread_name}\n"
            "\n"
            "  - 'dbg_set_scope_filter' - Get ColdFusion debugger set scope filter.\n"
-           "         example: `cfrds dbg_set_scope_filter rds://username:password@host` {session_id} {filter}\n"
+           "         example: `cfrds dbg_set_scope_filter rds://username:password@host` {session_id} {filter}\n"*/
            );
 }
 
@@ -278,12 +278,18 @@ int main(int argc, char *argv[])
 
     const char *command = argv[1];
 
-    if ((strcmp(command, "put") == 0)||(strcmp(command, "upload") == 0)||(strcmp(command, "dbg_brk_on_exception") == 0)) {
+    if ((strcmp(command, "put") == 0)||(strcmp(command, "upload") == 0)) {
         if (argc < 4) {
             usage();
             return EXIT_FAILURE;
         }
         uri = argv[3];
+    } else if (strcmp(command, "dbg_brk") == 0) {
+        if (argc < 5) {
+            usage();
+            return EXIT_FAILURE;
+        }
+        uri = argv[2];
     } else {
         uri = argv[2];
     }
@@ -1010,7 +1016,7 @@ int main(int argc, char *argv[])
 
             printf("%s\n", dbdescription);
         }
-    } else if (strcmp(command, "dbg_start") == 0) {
+/*    } else if (strcmp(command, "dbg_start") == 0) {
         cfrds_str_defer(dbg_session);
 
         res = cfrds_command_debugger_start(server, &dbg_session);
@@ -1060,55 +1066,54 @@ int main(int argc, char *argv[])
             return EXIT_FAILURE;
         }
     } else if (strcmp(command, "dbg_brk_on_exception") == 0) {
-        if ((path != NULL)&&(strlen(path) > 1))
+        const char *dbg_session = argv[3];
+        const char *boolValue = argv[4];
+        bool value;
+
+        if (strcmp(boolValue, "true") == 0)
+            value = true;
+        else if (strcmp(boolValue, "false") == 0)
+            value = false;
+        else
         {
-            const char *strValue = argv[4];
-            bool value;
-
-            if (strcmp(strValue, "true") == 0)
-                value = true;
-            else if (strcmp(strValue, "false") == 0)
-                value = false;
-            else
-            {
-                fprintf(stderr, "Invalid value(%s) dbg_brk_on_exception command. Valid are 'true' or 'false'.\n", strValue);
-                return EXIT_FAILURE;
-            }
-
-            res = cfrds_command_debugger_breakpoint_on_exception(server, path, value);
-            if (res != CFRDS_STATUS_OK)
-            {
-                fprintf(stderr, "dbg_brk_on_exception FAILED with error: %s\n", cfrds_server_get_error(server));
-                return EXIT_FAILURE;
-            }
+            fprintf(stderr, "Invalid value(%s) dbg_brk_on_exception command. Valid are 'true' or 'false'.\n", boolValue);
+            return EXIT_FAILURE;
         }
-/*    } else if (strcmp(command, "dbg_brk") == 0) {
+
+        res = cfrds_command_debugger_breakpoint_on_exception(server, dbg_session, value);
+        if (res != CFRDS_STATUS_OK)
+        {
+            fprintf(stderr, "dbg_brk_on_exception FAILED with error: %s\n", cfrds_server_get_error(server));
+            return EXIT_FAILURE;
+        }
+    } else if (strcmp(command, "dbg_brk") == 0) {
         if ((path != NULL)&&(strlen(path) > 1))
         {
-            const char *strValue = argv[4];
+            const char *dbg_session = argv[3];
+            const char *boolValue = argv[4];
             bool value;
 
-            if (strcmp(strValue, "true") == 0)
+            if (strcmp(boolValue, "true") == 0)
                 value = true;
-            else if (strcmp(strValue, "false") == 0)
+            else if (strcmp(boolValue, "false") == 0)
                 value = false;
             else
             {
-                fprintf(stderr, "Invalid value(%s) dbg_brk command. Valid are 'true' or 'false'.\n", strValue);
+                fprintf(stderr, "Invalid value(%s) dbg_brk command. Valid are 'true' or 'false'.\n", boolValue);
                 return EXIT_FAILURE;
             }
 
-            res = cfrds_command_debugger_breakpoint(server, dbg_session, path, line, value);
+            res = cfrds_command_debugger_breakpoint(server, dbg_session, path, 1, value);
             if (res != CFRDS_STATUS_OK)
             {
                 fprintf(stderr, "dbg_brk FAILED with error: %s\n", cfrds_server_get_error(server));
                 return EXIT_FAILURE;
             }
-        }*/
+        }
     } else if (strcmp(command, "dbg_clear_all_brk") == 0) {
         if ((path != NULL)&&(strlen(path) > 1))
         {
-            const char *dbg_session = argv[4];
+            const char *dbg_session = argv[3];
             if (strlen(dbg_session) < 1)
             {
                 fprintf(stderr, "dbg_session is not set for dbg_clear_all_brk command.\n");
@@ -1121,7 +1126,7 @@ int main(int argc, char *argv[])
                 fprintf(stderr, "dbg_clear_all_brk FAILED with error: %s\n", cfrds_server_get_error(server));
                 return EXIT_FAILURE;
             }
-        }
+        }*/
 
 /*      cfrds_command_debugger_step_in(cfrds_server *server, const char *session_id, const char *thread_name);
         cfrds_command_debugger_step_over(cfrds_server *server, const char *session_id, const char *thread_name);
@@ -1132,106 +1137,6 @@ int main(int argc, char *argv[])
         cfrds_command_debugger_watch_variables(cfrds_server *server, const char *session_id, const char *variables);
         cfrds_command_debugger_get_output(cfrds_server *server, const char *session_id, const char *thread_name);
         cfrds_command_debugger_set_scope_filter(cfrds_server *server, const char *session_id, const char *filter);*/
-
-
-
-
-/*    } else if (strcmp(command, "test") == 0) {
-        cfrds_str_defer(dbg_session);
-        res = cfrds_command_debugger_start(server, &dbg_session);
-        if (res != CFRDS_STATUS_OK)
-        {
-            fprintf(stderr, "dbg_start FAILED with error: %s\n", cfrds_server_get_error(server));
-            return EXIT_FAILURE;
-        }
-
-        uint16_t debuggerPort;
-        res = cfrds_command_debugger_get_server_info(server, dbg_session, &debuggerPort);
-        if (res != CFRDS_STATUS_OK)
-        {
-            fprintf(stderr, "cfrds_command_debugger_get_server_info FAILED with error: %s\n", cfrds_server_get_error(server));
-            ret = EXIT_FAILURE;
-            goto stop_server;
-        }
-
-        res = cfrds_command_debugger_watch_variables(server, dbg_session, "A,B");
-        if (res != CFRDS_STATUS_OK)
-        {
-            fprintf(stderr, "cfrds_command_debugger_watch_variable FAILED with error: %s\n", cfrds_server_get_error(server));
-            ret = EXIT_FAILURE;
-            goto stop_server;
-        }
-
-        res = cfrds_command_debugger_breakpoint(server, dbg_session, "/app/index.cfm", 7, true);
-        if (res != CFRDS_STATUS_OK)
-        {
-            fprintf(stderr, "cfrds_command_debugger_breakpoint FAILED with error: %s\n", cfrds_server_get_error(server));
-            ret = EXIT_FAILURE;
-            goto stop_server;
-        }
-
-        {
-            cfrds_debugger_event_defer(event);
-            res = cfrds_command_debugger_get_debug_events(server, dbg_session, &event);
-            if (res != CFRDS_STATUS_OK)
-            {
-                fprintf(stderr, "cfrds_command_debugger_get_debug_events FAILED with error: %s\n", cfrds_server_get_error(server));
-                ret = EXIT_FAILURE;
-                goto stop_server;
-            }
-            cfrds_buffer_debugger_event_get_type(event);
-            cfrds_buffer_debugger_event_breakpoint_set_get_act_line(event);
-        }
-
-
-        {
-            cfrds_debugger_event_defer(event);
-
-            //res = cfrds_command_debugger_get_debug_events(server, dbg_session, &event);
-            //if (res != CFRDS_STATUS_OK)
-            //{
-            //    fprintf(stderr, "cfrds_command_debugger_get_debug_events FAILED with error: %s\n", cfrds_server_get_error(server));
-            //    ret = EXIT_FAILURE;
-            //    goto stop_server;
-            //}
-
-            res = cfrds_command_debugger_all_fetch_flags_enabled(server, dbg_session, true, true, true, true, true, &event);
-            if (res != CFRDS_STATUS_OK)
-            {
-                fprintf(stderr, "cfrds_command_debugger_all_fetch_flags_enabled FAILED with error: %s\n", cfrds_server_get_error(server));
-                ret = EXIT_FAILURE;
-                goto stop_server;
-            }
-
-            cfrds_buffer_debugger_event_get_type(event);
-            cfrds_buffer_debugger_event_get_scopes(event);
-
-            const char *thread_name = cfrds_buffer_debugger_event_breakpoint_get_thread_name(event);
-
-            res = cfrds_command_debugger_clear_all_breakpoints(server, dbg_session);
-            if (res != CFRDS_STATUS_OK)
-            {
-                fprintf(stderr, "cfrds_command_debugger_clear_all_breakpoints FAILED with error: %s\n", cfrds_server_get_error(server));
-                ret = EXIT_FAILURE;
-                goto stop_server;
-            }
-
-            res = cfrds_command_debugger_continue(server, dbg_session, thread_name);
-            if (res != CFRDS_STATUS_OK)
-            {
-                fprintf(stderr, "cfrds_command_debugger_continue FAILED with error: %s\n", cfrds_server_get_error(server));
-                ret = EXIT_FAILURE;
-                goto stop_server;
-            }
-        }
-
-stop_server:
-        res = cfrds_command_debugger_stop(server, dbg_session);
-        if (res != CFRDS_STATUS_OK)
-        {
-            fprintf(stderr, "dbg_stop FAILED with error: %s\n", cfrds_server_get_error(server));
-            return EXIT_FAILURE;
-        }*/
     } else {
         fprintf(stderr, "Unknown command %s\n", command);
         return EXIT_FAILURE;

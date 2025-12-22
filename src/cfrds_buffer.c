@@ -945,8 +945,11 @@ cfrds_sql_columninfo_int *cfrds_buffer_to_sql_columninfo(cfrds_buffer *buffer)
             return NULL;
         if (!cfrds_buffer_parse_string_list_item(&column_buf, &list_remaining, &field11))
             return NULL;
-        if (!cfrds_buffer_parse_string_list_item(&column_buf, &list_remaining, &field12))
-            return NULL;
+        if (list_remaining > 0)
+        {
+            if (!cfrds_buffer_parse_string_list_item(&column_buf, &list_remaining, &field12))
+                return NULL;
+        }
         if (list_remaining != 0)
             return NULL;
 

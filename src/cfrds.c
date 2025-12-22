@@ -1,7 +1,7 @@
 #include <internal/cfrds_buffer.h>
 #include <internal/cfrds_http.h>
+#include <internal/wddx.h>
 #include <cfrds.h>
-#include <wddx.h>
 
 #include <string.h>
 #include <stdlib.h>

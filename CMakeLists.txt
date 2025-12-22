@@ -57,7 +57,7 @@ install(TARGETS cfrds_cli
 ###
 add_library(libcfrds SHARED
     src/cfrds.c        include/cfrds.h
-    src/wddx.c         include/wddx.h
+    src/wddx.c         include/internal/wddx.h
     src/cfrds_buffer.c include/internal/cfrds_buffer.h
     src/cfrds_http.c   include/internal/cfrds_http.h
 )

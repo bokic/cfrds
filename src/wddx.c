@@ -1,4 +1,4 @@
-#include <wddx.h>
+#include <internal/wddx.h>
 
 #include <libxml/tree.h>
 

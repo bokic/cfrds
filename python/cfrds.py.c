@@ -11,11 +11,11 @@
         {                                                                                        \
             switch(res)                                                                          \
             {                                                                                    \
-            case CFRDS_STATUS_PARAM_IS_nullptr:                                                  \
-                PyErr_SetString(PyExc_RuntimeError, "CFRDS_STATUS_PARAM_IS_nullptr");            \
+            case CFRDS_STATUS_PARAM_IS_NULL:                                                  \
+                PyErr_SetString(PyExc_RuntimeError, "CFRDS_STATUS_PARAM_IS_NULL");            \
                 break;                                                                           \
-            case CFRDS_STATUS_SERVER_IS_nullptr:                                                 \
-                PyErr_SetString(PyExc_RuntimeError, "CFRDS_STATUS_SERVER_IS_nullptr");           \
+            case CFRDS_STATUS_SERVER_IS_NULL:                                                 \
+                PyErr_SetString(PyExc_RuntimeError, "CFRDS_STATUS_SERVER_IS_NULL");           \
                 break;                                                                           \
             case CFRDS_STATUS_INDEX_OUT_OF_BOUNDS:                                               \
                 PyErr_SetString(PyExc_RuntimeError, "CFRDS_STATUS_INDEX_OUT_OF_BOUNDS");         \
@@ -64,13 +64,13 @@ typedef struct {
 static PyObject *
 cfrds_server_new(PyTypeObject *type, PyObject *args, PyObject *kwargs)
 {
-    cfrds_server_Object *self = nullptr;
+    cfrds_server_Object *self = NULL;
 
-    static char *kwlist[] = {"hostname", "port", "username", "password", nullptr};
+    static char *kwlist[] = {"hostname", "port", "username", "password", NULL};
 
-    cfrds_server *server = nullptr;
+    cfrds_server *server = NULL;
     const char *hostname = "127.0.0.1";
-    int port = 8500;
+    uint16_t port = 8500;
     const char *username = "admin";
     const char *password = "";
 
@@ -85,9 +85,14 @@ cfrds_server_new(PyTypeObject *type, PyObject *args, PyObject *kwargs)
         PyErr_SetString(PyExc_RuntimeError, "cfrds_server_init function failed!");
         goto error;
     }
+    if (server == NULL)
+    {
+        PyErr_SetString(PyExc_RuntimeError, "failed to create server struct!");
+        goto error;
+    }
 
     self = (cfrds_server_Object *) type->tp_alloc(type, 0);
-    if (!server)
+    if (!self)
     {
         PyErr_SetString(PyExc_RuntimeError, "Can't create self!");
         goto error;
@@ -103,7 +108,7 @@ error:
         cfrds_server_free(server);
     }
 
-    return nullptr;
+    return NULL;
 }
 
 static int
@@ -112,7 +117,7 @@ cfrds_server_dealloc(cfrds_server_Object *self)
     if (self->server)
     {
         cfrds_server_free(self->server);
-        self->server = nullptr;
+        self->server = NULL;
     }
 
     return 0;
@@ -121,9 +126,9 @@ cfrds_server_dealloc(cfrds_server_Object *self)
 static PyObject *
 cfrds_server_browse_dir(cfrds_server_Object *self, PyObject *args)
 {
-    cfrds_browse_dir *dir = nullptr;
-    PyObject *ret = nullptr;
-    char *path = nullptr;
+    cfrds_browse_dir *dir = NULL;
+    PyObject *ret = NULL;
+    char *path = NULL;
 
     ret = PyList_New(0);
 
@@ -158,6 +163,7 @@ cfrds_server_browse_dir(cfrds_server_Object *self, PyObject *args)
             PyDict_SetItemString(item, "modified", PyLong_FromUnsignedLongLong(cfrds_buffer_browse_dir_item_get_modified(dir, c)));
 
             PyList_Append(ret, item);
+            Py_DECREF(item);
         }
     }
 
@@ -170,9 +176,9 @@ exit:
 static PyObject *
 cfrds_server_file_read(cfrds_server_Object *self, PyObject *args)
 {
-    PyObject *ret = nullptr;
-    char *filepath = nullptr;
-    cfrds_file_content *file_content = nullptr;
+    PyObject *ret = NULL;
+    char *filepath = NULL;
+    cfrds_file_content *file_content = NULL;
 
     if (!PyArg_ParseTuple(args, "s", &filepath))
     {
@@ -193,8 +199,8 @@ exit:
 static PyObject *
 cfrds_server_file_write(cfrds_server_Object *self, PyObject *args)
 {
-    char *filepath = nullptr;
-    PyObject *file_content = nullptr;
+    char *filepath = NULL;
+    PyObject *file_content = NULL;
 
     if (!PyArg_ParseTuple(args, "sY", &filepath, &file_content))
     {
@@ -211,8 +217,8 @@ exit:
 static PyObject *
 cfrds_server_file_rename(cfrds_server_Object *self, PyObject *args)
 {
-    char *filepath_from = nullptr;
-    char *filepath_to = nullptr;
+    char *filepath_from = NULL;
+    char *filepath_to = NULL;
 
     if (!PyArg_ParseTuple(args, "ss", &filepath_from, &filepath_to))
     {
@@ -229,7 +235,7 @@ exit:
 static PyObject *
 cfrds_server_file_remove(cfrds_server_Object *self, PyObject *args)
 {
-    char *filepath = nullptr;
+    char *filepath = NULL;
 
     if (!PyArg_ParseTuple(args, "s", &filepath))
     {
@@ -246,7 +252,7 @@ exit:
 static PyObject *
 cfrds_server_dir_remove(cfrds_server_Object *self, PyObject *args)
 {
-    char *dirpath = nullptr;
+    char *dirpath = NULL;
 
     if (!PyArg_ParseTuple(args, "s", &dirpath))
     {
@@ -263,7 +269,7 @@ exit:
 static PyObject *
 cfrds_server_file_exists(cfrds_server_Object *self, PyObject *args)
 {
-    char *pathname = nullptr;
+    char *pathname = NULL;
     bool exists = false;
 
     if (!PyArg_ParseTuple(args, "s", &pathname))
@@ -283,7 +289,7 @@ exit:
 static PyObject *
 cfrds_server_dir_create(cfrds_server_Object *self, PyObject *args)
 {
-    char *dirpath = nullptr;
+    char *dirpath = NULL;
 
     if (!PyArg_ParseTuple(args, "s", &dirpath))
     {
@@ -300,15 +306,15 @@ exit:
 static PyObject *
 cfrds_server_cf_root_dir(cfrds_server_Object *self)
 {
-    PyObject *ret = nullptr;
-    char *dirpath = nullptr;
+    PyObject *ret = NULL;
+    char *dirpath = NULL;
 
     CHECK_FOR_ERRORS(cfrds_command_file_get_root_dir(self->server, &dirpath));
 
     if (!dirpath)
         goto exit;
 
-    ret = PyUnicode_DecodeUTF8(dirpath, strlen(dirpath), nullptr);
+    ret = PyUnicode_DecodeUTF8(dirpath, strlen(dirpath), NULL);
 
     free(dirpath);
 
@@ -321,8 +327,8 @@ exit:
 static PyObject *
 cfrds_server_sql_dsninfo(cfrds_server_Object *self)
 {
-    PyObject *ret = nullptr;
-    cfrds_sql_dsninfo *dsninfo = nullptr;
+    PyObject *ret = NULL;
+    cfrds_sql_dsninfo *dsninfo = NULL;
     size_t cnt = 0;
 
     CHECK_FOR_ERRORS(cfrds_command_sql_dsninfo(self->server, &dsninfo));
@@ -349,12 +355,12 @@ exit:
 static PyObject *
 cfrds_server_sql_tableinfo(cfrds_server_Object *self, PyObject *args)
 {
-    PyObject *ret = nullptr;
+    PyObject *ret = NULL;
 
-    cfrds_sql_tableinfo *tableinfo = nullptr;
+    cfrds_sql_tableinfo *tableinfo = NULL;
     size_t cnt = 0;
 
-    char *tablename = nullptr;
+    char *tablename = NULL;
 
     if (!PyArg_ParseTuple(args, "s", &tablename))
     {
@@ -370,7 +376,7 @@ cfrds_server_sql_tableinfo(cfrds_server_Object *self, PyObject *args)
     for(size_t c = 0; c < cnt; c++)
     {
         PyObject *item = PyDict_New();
-        const char *tmp_name = nullptr;
+        const char *tmp_name = NULL;
 
         tmp_name = cfrds_buffer_sql_tableinfo_get_unknown(tableinfo, c); if (tmp_name) PyDict_SetItemString(item, "unknown", PyUnicode_FromString(tmp_name)); else PyDict_SetItemString(item, "unknown", Py_None);
         tmp_name = cfrds_buffer_sql_tableinfo_get_schema(tableinfo, c); if (tmp_name) PyDict_SetItemString(item, "schema", PyUnicode_FromString(tmp_name)); else PyDict_SetItemString(item, "schema", Py_None);
@@ -391,13 +397,13 @@ exit:
 static PyObject *
 cfrds_server_sql_columninfo(cfrds_server_Object *self, PyObject *args)
 {
-    PyObject *ret = nullptr;
+    PyObject *ret = NULL;
 
-    cfrds_sql_columninfo *columninfo = nullptr;
+    cfrds_sql_columninfo *columninfo = NULL;
     size_t cnt = 0;
 
-    char *tablename = nullptr;
-    char *columnname = nullptr;
+    char *tablename = NULL;
+    char *columnname = NULL;
 
     if (!PyArg_ParseTuple(args, "ss", &tablename, &columnname))
     {
@@ -440,13 +446,13 @@ exit:
 static PyObject *
 cfrds_server_sql_primarykeys(cfrds_server_Object *self, PyObject *args)
 {
-    PyObject *ret = nullptr;
+    PyObject *ret = NULL;
 
-    cfrds_sql_primarykeys *primarykeys = nullptr;
+    cfrds_sql_primarykeys *primarykeys = NULL;
     size_t cnt = 0;
 
-    const char *tablename = nullptr;
-    const char *columnname = nullptr;
+    const char *tablename = NULL;
+    const char *columnname = NULL;
 
     if (!PyArg_ParseTuple(args, "ss", &tablename, &columnname))
     {
@@ -486,13 +492,13 @@ exit:
 static PyObject *
 cfrds_server_sql_foreignkeys(cfrds_server_Object *self, PyObject *args)
 {
-    PyObject *ret = nullptr;
+    PyObject *ret = NULL;
 
-    cfrds_sql_foreignkeys *foreignkeys = nullptr;
+    cfrds_sql_foreignkeys *foreignkeys = NULL;
     size_t cnt = 0;
 
-    const char *tablename = nullptr;
-    const char *columnname = nullptr;
+    const char *tablename = NULL;
+    const char *columnname = NULL;
 
     if (!PyArg_ParseTuple(args, "ss", &tablename, &columnname))
     {
@@ -538,13 +544,13 @@ exit:
 static PyObject *
 cfrds_server_sql_importedkeys(cfrds_server_Object *self, PyObject *args)
 {
-    PyObject *ret = nullptr;
+    PyObject *ret = NULL;
 
-    cfrds_sql_importedkeys *importedkeys = nullptr;
+    cfrds_sql_importedkeys *importedkeys = NULL;
     size_t cnt = 0;
 
-    const char *tablename = nullptr;
-    const char *columnname = nullptr;
+    const char *tablename = NULL;
+    const char *columnname = NULL;
 
     if (!PyArg_ParseTuple(args, "ss", &tablename, &columnname))
     {
@@ -590,13 +596,13 @@ exit:
 static PyObject *
 cfrds_server_sql_exportedkeys(cfrds_server_Object *self, PyObject *args)
 {
-    PyObject *ret = nullptr;
+    PyObject *ret = NULL;
 
-    cfrds_sql_exportedkeys *exportedkeys = nullptr;
+    cfrds_sql_exportedkeys *exportedkeys = NULL;
     size_t cnt = 0;
 
-    const char *tablename = nullptr;
-    const char *columnname = nullptr;
+    const char *tablename = NULL;
+    const char *columnname = NULL;
 
     if (!PyArg_ParseTuple(args, "ss", &tablename, &columnname))
     {
@@ -644,10 +650,10 @@ cfrds_server_sql_sqlstmnt(cfrds_server_Object *self, PyObject *args)
 {
     PyObject *ret = Py_None;
 
-    cfrds_sql_resultset *resultset = nullptr;
+    cfrds_sql_resultset *resultset = NULL;
 
-    const char *tablename = nullptr;
-    const char *sql = nullptr;
+    const char *tablename = NULL;
+    const char *sql = NULL;
 
     if (!PyArg_ParseTuple(args, "ss", &tablename, &sql))
     {
@@ -691,9 +697,11 @@ cfrds_server_sql_sqlstmnt(cfrds_server_Object *self, PyObject *args)
     }
     PyDict_SetItemString(ret, "data", data);
 
-    cfrds_buffer_sql_resultset_free(resultset);
-
 exit:
+
+    if (resultset)
+        cfrds_buffer_sql_resultset_free(resultset);
+
     return ret;
 }
 
@@ -702,10 +710,10 @@ cfrds_server_sql_metadata(cfrds_server_Object *self, PyObject *args)
 {
     PyObject *ret = Py_None;
 
-    cfrds_sql_metadata *metadata = nullptr;
+    cfrds_sql_metadata *metadata = NULL;
 
-    const char *tablename = nullptr;
-    const char *sql = nullptr;
+    const char *tablename = NULL;
+    const char *sql = NULL;
     size_t cols = 0;
 
     if (!PyArg_ParseTuple(args, "ss", &tablename, &sql))
@@ -736,9 +744,10 @@ cfrds_server_sql_metadata(cfrds_server_Object *self, PyObject *args)
         PyList_SetItem(ret, c, item);
     }
 
-    cfrds_buffer_sql_metadata_free(metadata);
-
 exit:
+    if (metadata)
+        cfrds_buffer_sql_metadata_free(metadata);
+
     return ret;
 }
 
@@ -747,7 +756,7 @@ cfrds_server_sql_getsupportedcommands(cfrds_server_Object *self, PyObject *args)
 {
     PyObject *ret = Py_None;
 
-    cfrds_sql_supportedcommands *supportedcommands = nullptr;
+    cfrds_sql_supportedcommands *supportedcommands = NULL;
 
     size_t cols = 0;
 
@@ -769,6 +778,9 @@ cfrds_server_sql_getsupportedcommands(cfrds_server_Object *self, PyObject *args)
     }
 
 exit:
+    if (supportedcommands)
+        cfrds_buffer_sql_supportedcommands_free(supportedcommands);
+
     return ret;
 }
 
@@ -779,7 +791,7 @@ cfrds_server_sql_dbdescription(cfrds_server_Object *self, PyObject *args)
 
     cfrds_str_defer(dbdescription);
 
-    const char *tablename = nullptr;
+    const char *tablename = NULL;
 
     if (!PyArg_ParseTuple(args, "s", &tablename))
     {
@@ -813,7 +825,7 @@ exit:
 static PyObject *
 cfrds_server_debugger_stop(cfrds_server_Object *self, PyObject *args)
 {
-    char *session_name = nullptr;
+    char *session_name = NULL;
 
     if (!PyArg_ParseTuple(args, "s", &session_name))
     {
@@ -829,8 +841,8 @@ exit:
 
 static PyObject *
 cfrds_server_debugger_get_server_info(cfrds_server_Object *self, PyObject *args)
-{           
-    cfrds_str_defer(session_name);         
+{
+    cfrds_str_defer(session_name);
     enum cfrds_status res = CFRDS_STATUS_OK;
     uint16_t port = 0;
 
@@ -848,7 +860,7 @@ exit:
 static PyObject *
 cfrds_server_debugger_breakpoint_on_exception(cfrds_server_Object *self, PyObject *args)
 {
-    char *session_name = nullptr; 
+    char *session_name = NULL;
     int enable;
 
     if (!PyArg_ParseTuple(args, "sp", &session_name, &enable))
@@ -866,8 +878,8 @@ exit:
 static PyObject *
 cfrds_server_debugger_breakpoint(cfrds_server_Object *self, PyObject *args)
 {
-    char *session_name = nullptr; 
-    char *filepath = nullptr; 
+    char *session_name = NULL;
+    char *filepath = NULL;
     int line;
     int enable;
 
@@ -886,7 +898,7 @@ exit:
 static PyObject *
 cfrds_server_debugger_clear_all_breakpoints(cfrds_server_Object *self, PyObject *args)
 {
-    char *session_name = nullptr; 
+    char *session_name = NULL;
 
     if (!PyArg_ParseTuple(args, "s", &session_name))
     {
@@ -915,6 +927,7 @@ parse_debug_events_response(const cfrds_debugger_event *event)
             return ret;
         }
         case CFRDS_DEBUGGER_EVENT_TYPE_BREAKPOINT:
+        case CFRDS_DEBUGGER_EVENT_TYPE_STEP:
         {
             PyObject *ret = PyDict_New();
             PyDict_SetItemString(ret, "source", PyUnicode_FromString(cfrds_buffer_debugger_event_breakpoint_get_source(event)));
@@ -933,7 +946,7 @@ static PyObject *
 cfrds_server_debugger_get_debug_events(cfrds_server_Object *self, PyObject *args)
 {
     cfrds_debugger_event_defer(event);
-    char *session_name = nullptr; 
+    char *session_name = NULL;
 
     if (!PyArg_ParseTuple(args, "s", &session_name))
     {
@@ -953,7 +966,7 @@ static PyObject *
 cfrds_server_debugger_all_fetch_flags_enabled(cfrds_server_Object *self, PyObject *args)
 {
     cfrds_debugger_event_defer(event);
-    char *session_name = nullptr; 
+    char *session_name = NULL;
     int threads;
     int watch;
     int scopes;
@@ -968,7 +981,7 @@ cfrds_server_debugger_all_fetch_flags_enabled(cfrds_server_Object *self, PyObjec
 
     CHECK_FOR_ERRORS(cfrds_command_debugger_all_fetch_flags_enabled(self->server, session_name, threads, watch, scopes, cf_trace, java_trace, &event));
 
-    return parse_debug_events_response(event);
+    //return parse_debug_events_response(event);
 
 exit:
     return Py_None;
@@ -977,8 +990,8 @@ exit:
 static PyObject *
 cfrds_server_debugger_step_in(cfrds_server_Object *self, PyObject *args)
 {
-    const char *session_name = nullptr; 
-    const char *thread_name = nullptr; 
+    const char *session_name = NULL;
+    const char *thread_name = NULL;
 
     if (!PyArg_ParseTuple(args, "ss", &session_name, &thread_name))
     {
@@ -995,8 +1008,8 @@ exit:
 static PyObject *
 cfrds_server_debugger_step_over(cfrds_server_Object *self, PyObject *args)
 {
-    const char *session_name = nullptr; 
-    const char *thread_name = nullptr; 
+    const char *session_name = NULL;
+    const char *thread_name = NULL;
 
     if (!PyArg_ParseTuple(args, "ss", &session_name, &thread_name))
     {
@@ -1013,8 +1026,8 @@ exit:
 static PyObject *
 cfrds_server_debugger_step_out(cfrds_server_Object *self, PyObject *args)
 {
-    const char *session_name = nullptr; 
-    const char *thread_name = nullptr; 
+    const char *session_name = NULL;
+    const char *thread_name = NULL;
 
     if (!PyArg_ParseTuple(args, "ss", &session_name, &thread_name))
     {
@@ -1031,8 +1044,8 @@ exit:
 static PyObject *
 cfrds_server_debugger_continue(cfrds_server_Object *self, PyObject *args)
 {
-    const char *session_name = nullptr; 
-    const char *thread_name = nullptr; 
+    const char *session_name = NULL;
+    const char *thread_name = NULL;
 
     if (!PyArg_ParseTuple(args, "ss", &session_name, &thread_name))
     {
@@ -1045,6 +1058,33 @@ cfrds_server_debugger_continue(cfrds_server_Object *self, PyObject *args)
 exit:
     return Py_None;
 }
+
+static PyObject *
+cfrds_server_debugger_watch_expression(cfrds_server_Object *self, PyObject *args)
+{
+    const char *session_name = NULL;
+    const char *thread_name = NULL;
+    const char *expression = NULL;
+
+    if (!PyArg_ParseTuple(args, "sss", &session_name, &thread_name, &expression))
+    {
+        PyErr_SetString(PyExc_RuntimeError, "session_name or thread_name parameter not set!");
+        goto exit;
+    }
+
+    CHECK_FOR_ERRORS(cfrds_command_debugger_watch_expression(self->server, session_name, thread_name, expression));
+
+exit:
+    return Py_None;
+}
+
+/*
+ {"debugger_watch_expression", (PyCFunction) cfrds_server_debugger_watch_expression, METH_VARARGS, "ColdFusion debugger watch expression"},
+ {"debugger_set_variable", (PyCFunction) cfrds_server_debugger_set_variable, METH_VARARGS, "ColdFusion debugger set variable"},
+ {"debugger_watch_variable", (PyCFunction) cfrds_server_debugger_watch_variable, METH_VARARGS, "ColdFusion debugger watch variable"},
+ {"debugger_get_output", (PyCFunction) cfrds_server_debugger_get_output, METH_VARARGS, "ColdFusion debugger get output"},
+ {"debugger_set_scope_filter", (PyCFunction) cfrds_server_debugger_set_scope_filter, METH_VARARGS, "ColdFusion debugger set scope filter"},
+ */
 
 static PyMethodDef cfrds_server_methods[] = {
     {"browse_dir",  (PyCFunction) cfrds_server_browse_dir,  METH_VARARGS, "List directory entries"},
@@ -1079,11 +1119,16 @@ static PyMethodDef cfrds_server_methods[] = {
     {"debugger_step_over", (PyCFunction) cfrds_server_debugger_step_over, METH_VARARGS, "ColdFusion debugger step over"},
     {"debugger_step_out", (PyCFunction) cfrds_server_debugger_step_out, METH_VARARGS, "ColdFusion debugger step out"},
     {"debugger_continue", (PyCFunction) cfrds_server_debugger_continue, METH_VARARGS, "ColdFusion debugger continue"},
-    {nullptr}  /* Sentinel */
+    {"debugger_watch_expression", (PyCFunction) cfrds_server_debugger_watch_expression, METH_VARARGS, "ColdFusion debugger watch expression"},
+    //{"debugger_set_variable", (PyCFunction) cfrds_server_debugger_set_variable, METH_VARARGS, "ColdFusion debugger set variable"},
+    //{"debugger_watch_variable", (PyCFunction) cfrds_server_debugger_watch_variable, METH_VARARGS, "ColdFusion debugger watch variable"},
+    //{"debugger_get_output", (PyCFunction) cfrds_server_debugger_get_output, METH_VARARGS, "ColdFusion debugger get output"},
+    //{"debugger_set_scope_filter", (PyCFunction) cfrds_server_debugger_set_scope_filter, METH_VARARGS, "ColdFusion debugger set scope filter"},
+    {NULL}  /* Sentinel */
 };
 
 static PyTypeObject cfrds_server_Type = {
-    PyVarObject_HEAD_INIT(nullptr, 0)
+    PyVarObject_HEAD_INIT(NULL, 0)
     .tp_name = "cfrds.server",
     .tp_doc = PyDoc_STR("server objects"),
     .tp_basicsize = sizeof(cfrds_server_Object),
@@ -1104,20 +1149,20 @@ static PyModuleDef cfrds_module = {
 
 // The module init function
 PyMODINIT_FUNC PyInit_cfrds(void) {
-    PyObject *m = nullptr;
+    PyObject *m = NULL;
 
     if (PyType_Ready(&cfrds_server_Type) < 0)
-        return nullptr;
+        return NULL;
 
     m = PyModule_Create(&cfrds_module);
-    if (m == nullptr)
-        return nullptr;
+    if (m == NULL)
+        return NULL;
 
     Py_INCREF(&cfrds_server_Type);
     if (PyModule_AddObject(m, "server", (PyObject *) &cfrds_server_Type) < 0) {
         Py_DECREF(&cfrds_server_Type);
         Py_DECREF(m);
-        return nullptr;
+        return NULL;
     }
 
     return m;

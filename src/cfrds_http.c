@@ -34,10 +34,10 @@ void cfrds_sock_cleanup(cfrds_socket* sock);
 
 static bool cfrds_buffer_skip_httpheader(const char **data, size_t *remaining)
 {
-    const char *body = nullptr;
+    const char *body = NULL;
 
     body = strstr(*data, "\r\n\r\n");
-    if (body == nullptr)
+    if (body == NULL)
         return false;
 
     *remaining -= body - *data;
@@ -174,7 +174,7 @@ enum cfrds_status cfrds_http_post(cfrds_server_int *server, const char *command,
     response_data = cfrds_buffer_data(swap_buf);
     response_size = cfrds_buffer_data_size(swap_buf);
     cfrds_buffer_free(tmp_response);
-    tmp_response = swap_buf; swap_buf = nullptr;
+    tmp_response = swap_buf; swap_buf = NULL;
 
     if (!cfrds_buffer_parse_number(&response_data, &response_size, &server->error_code))
     {
@@ -191,7 +191,7 @@ enum cfrds_status cfrds_http_post(cfrds_server_int *server, const char *command,
 
     if (response)
     {
-        *response = tmp_response; tmp_response = nullptr;
+        *response = tmp_response; tmp_response = NULL;
     }
 
     return CFRDS_STATUS_OK;
@@ -212,7 +212,7 @@ void cfrds_sock_cleanup(SOCKET* sock)
 #else
 void cfrds_sock_cleanup(int* sock)
 {
-    if ((sock != nullptr)&&(*sock != CFRDS_INVALID_SOCKET))
+    if ((sock != NULL)&&(*sock != CFRDS_INVALID_SOCKET))
     {
         close(*sock);
         *sock = CFRDS_INVALID_SOCKET;

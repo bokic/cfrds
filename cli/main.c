@@ -155,7 +155,7 @@ static bool init_server_from_uri(const char *uri, char **hostname, uint16_t *por
     cfrds_str_defer(_password);
     cfrds_str_defer(_path);
 
-    if (uri == nullptr)
+    if (uri == NULL)
         return false;
     if (strstr(uri, "rds://") != uri)
         return false;
@@ -239,11 +239,11 @@ static bool init_server_from_uri(const char *uri, char **hostname, uint16_t *por
         _port = 80;
     }
 
-    *hostname = _hostname; _hostname = nullptr;
+    *hostname = _hostname; _hostname = NULL;
     *port = _port;
-    *username = _username; _username = nullptr;
-    *password = _password; _password = nullptr;
-    *path = _path;         _path = nullptr;
+    *username = _username; _username = NULL;
+    *password = _password; _password = NULL;
+    *path = _path;         _path = NULL;
 
     return true;
 }
@@ -260,10 +260,10 @@ int main(int argc, char *argv[])
     }
 #endif
     cfrds_server_defer(server);
-    cfrds_file_content *content = nullptr;
+    cfrds_file_content *content = NULL;
     enum cfrds_status res;
 
-    const char *uri = nullptr;
+    const char *uri = NULL;
     cfrds_str_defer(hostname);
     uint16_t port = 80;
     cfrds_str_defer(username);
@@ -294,15 +294,15 @@ int main(int argc, char *argv[])
         return EXIT_FAILURE;
     }
 
-    if (path == nullptr) {
+    if (path == NULL) {
         path = strdup("/");
     }
 
-    if (username == nullptr) {
+    if (username == NULL) {
         username = strdup("");
     }
 
-    if (password == nullptr) {
+    if (password == NULL) {
         password = strdup("");
     }
 
@@ -388,10 +388,10 @@ int main(int argc, char *argv[])
     } else if ((strcmp(command, "put") == 0)||(strcmp(command, "upload") == 0)) {
         const char *src_fname = argv[2];
         size_t src_size = 0;
-        void *buf = nullptr;
+        void *buf = NULL;
 
         buf = os_map(src_fname, &src_size);
-        if ((buf == nullptr)&&(src_size > 0))
+        if ((buf == NULL)&&(src_size > 0))
         {
             fprintf(stderr, "mmap FAILED with error: %s\n", strerror(errno));
             return EXIT_FAILURE;
@@ -456,7 +456,7 @@ int main(int argc, char *argv[])
             puts(item);
         }
     } else if (strcmp(command, "tableinfo") == 0) {
-        if ((path != nullptr)&&(strlen(path) > 1))
+        if ((path != NULL)&&(strlen(path) > 1))
         {
             cfrds_sql_tableinfo_defer(tableinfo);
             const char *dsn = path + 1;
@@ -479,7 +479,7 @@ int main(int argc, char *argv[])
             fprintf(stderr, "No schema name\n");
         }
     } else if (strcmp(command, "columninfo") == 0) {
-        if ((path != nullptr)&&(strlen(path) > 1))
+        if ((path != NULL)&&(strlen(path) > 1))
         {
             const char *schema_separator = path + 1;
             const char *table_separator = strchr(schema_separator, '/');
@@ -490,7 +490,7 @@ int main(int argc, char *argv[])
 
                 tmp_size = table_separator - schema_separator;
                 schema = malloc(tmp_size + 1);
-                if (schema == nullptr)
+                if (schema == NULL)
                 {
                     fprintf(stderr, "malloc FAILED!\n");
                     return EXIT_FAILURE;
@@ -523,7 +523,7 @@ int main(int argc, char *argv[])
             fprintf(stderr, "No schema name\n");
         }
     } else if (strcmp(command, "primarykeys") == 0) {
-        if ((path != nullptr)&&(strlen(path) > 1))
+        if ((path != NULL)&&(strlen(path) > 1))
         {
             const char *schema = path + 1;
             const char *table = strchr(schema, '/');
@@ -535,7 +535,7 @@ int main(int argc, char *argv[])
 
                 tmp_size = table - schema;
                 tmp = malloc(tmp_size + 1);
-                if (tmp == nullptr)
+                if (tmp == NULL)
                     return EXIT_FAILURE;
 
                 memcpy(tmp, schema, tmp_size);
@@ -543,7 +543,7 @@ int main(int argc, char *argv[])
                 schema = tmp;
 
                 tablename = strdup(table + 1);
-                if (tablename == nullptr)
+                if (tablename == NULL)
                     return EXIT_FAILURE;
 
                 res = cfrds_command_sql_primarykeys(server, schema, tablename, &primarykeys);
@@ -571,7 +571,7 @@ int main(int argc, char *argv[])
             fprintf(stderr, "No schema name\n");
         }
     } else if (strcmp(command, "foreignkeys") == 0) {
-        if ((path != nullptr)&&(strlen(path) > 1))
+        if ((path != NULL)&&(strlen(path) > 1))
         {
             const char *schema = path + 1;
             const char *table = strchr(schema, '/');
@@ -583,7 +583,7 @@ int main(int argc, char *argv[])
 
                 tmp_size = table - schema;
                 tmp = malloc(tmp_size + 1);
-                if (tmp == nullptr)
+                if (tmp == NULL)
                     return EXIT_FAILURE;
 
                 memcpy(tmp, schema, tmp_size);
@@ -591,7 +591,7 @@ int main(int argc, char *argv[])
                 schema = tmp;
 
                 tablename = strdup(table + 1);
-                if (tablename == nullptr)
+                if (tablename == NULL)
                     return EXIT_FAILURE;
 
                 res = cfrds_command_sql_foreignkeys(server, schema, tablename, &foreignkeys);
@@ -636,7 +636,7 @@ int main(int argc, char *argv[])
             fprintf(stderr, "No schema name\n");
         }
     } else if (strcmp(command, "importedkeys") == 0) {
-        if ((path != nullptr)&&(strlen(path) > 1))
+        if ((path != NULL)&&(strlen(path) > 1))
         {
             const char *schema = path + 1;
             const char *table = strchr(schema, '/');
@@ -648,7 +648,7 @@ int main(int argc, char *argv[])
 
                 tmp_size = table - schema;
                 tmp = malloc(tmp_size + 1);
-                if (tmp == nullptr)
+                if (tmp == NULL)
                     return EXIT_FAILURE;
 
                 memcpy(tmp, schema, tmp_size);
@@ -656,7 +656,7 @@ int main(int argc, char *argv[])
                 schema = tmp;
 
                 tablename = strdup(table + 1);
-                if (tablename == nullptr)
+                if (tablename == NULL)
                     return EXIT_FAILURE;
 
                 res = cfrds_command_sql_importedkeys(server, schema, tablename, &importedkeys);
@@ -701,7 +701,7 @@ int main(int argc, char *argv[])
             fprintf(stderr, "No schema name\n");
         }
     } else if (strcmp(command, "exportedkeys") == 0) {
-        if ((path != nullptr)&&(strlen(path) > 1))
+        if ((path != NULL)&&(strlen(path) > 1))
         {
             const char *schema = path + 1;
             const char *table = strchr(schema, '/');
@@ -713,7 +713,7 @@ int main(int argc, char *argv[])
 
                 tmp_size = table - schema;
                 tmp = malloc(tmp_size + 1);
-                if (tmp == nullptr)
+                if (tmp == NULL)
                     return EXIT_FAILURE;
 
                 memcpy(tmp, schema, tmp_size);
@@ -721,7 +721,7 @@ int main(int argc, char *argv[])
                 schema = tmp;
 
                 tablename = strdup(table + 1);
-                if (tablename == nullptr)
+                if (tablename == NULL)
                     return EXIT_FAILURE;
 
                 res = cfrds_command_sql_exportedkeys(server, schema, tablename, &exportedkeys);
@@ -766,7 +766,7 @@ int main(int argc, char *argv[])
             fprintf(stderr, "No schema name\n");
         }
     } else if (strcmp(command, "sql") == 0) {
-        if ((path != nullptr)&&(strlen(path) > 1))
+        if ((path != NULL)&&(strlen(path) > 1))
         {
             cfrds_sql_resultset_defer(resultset);
             const char *schema = path + 1;
@@ -788,7 +788,7 @@ int main(int argc, char *argv[])
             }
 
             size_t *sizes = malloc(cols * sizeof(size_t));
-            if (sizes == nullptr)
+            if (sizes == NULL)
             {
                 fprintf(stderr, "No memory\n");
                 return EXIT_FAILURE;
@@ -953,7 +953,7 @@ int main(int argc, char *argv[])
             }
         }
     } else if (strcmp(command, "sqlmetadata") == 0) {
-        if ((path != nullptr)&&(strlen(path) > 1))
+        if ((path != NULL)&&(strlen(path) > 1))
         {
             cfrds_sql_metadata_defer(metadata);
             const char *schema = path + 1;
@@ -978,7 +978,7 @@ int main(int argc, char *argv[])
             }
         }
     } else if (strcmp(command, "supportedcommands") == 0) {
-        if ((path != nullptr)&&(strlen(path) > 1))
+        if ((path != NULL)&&(strlen(path) > 1))
         {
             cfrds_sql_supportedcommands_defer(supportedcommands);
 
@@ -997,7 +997,7 @@ int main(int argc, char *argv[])
             }
         }
     } else if (strcmp(command, "dbdescription") == 0) {
-        if ((path != nullptr)&&(strlen(path) > 1))
+        if ((path != NULL)&&(strlen(path) > 1))
         {
             cfrds_str_defer(dbdescription);
             const char *schema = path + 1;
@@ -1023,7 +1023,7 @@ int main(int argc, char *argv[])
 
         printf("%s\n", dbg_session);
     } else if (strcmp(command, "dbg_stop") == 0) {
-        if ((path != nullptr)&&(strlen(path) > 1))
+        if ((path != NULL)&&(strlen(path) > 1))
         {
             res = cfrds_command_debugger_stop(server, path);
             if (res != CFRDS_STATUS_OK)
@@ -1061,7 +1061,7 @@ int main(int argc, char *argv[])
             return EXIT_FAILURE;
         }
     } else if (strcmp(command, "dbg_brk_on_exception") == 0) {
-        if ((path != nullptr)&&(strlen(path) > 1))
+        if ((path != NULL)&&(strlen(path) > 1))
         {
             const char *strValue = argv[4];
             bool value;
@@ -1083,6 +1083,156 @@ int main(int argc, char *argv[])
                 return EXIT_FAILURE;
             }
         }
+/*    } else if (strcmp(command, "dbg_brk") == 0) {
+        if ((path != NULL)&&(strlen(path) > 1))
+        {
+            const char *strValue = argv[4];
+            bool value;
+
+            if (strcmp(strValue, "true") == 0)
+                value = true;
+            else if (strcmp(strValue, "false") == 0)
+                value = false;
+            else
+            {
+                fprintf(stderr, "Invalid value(%s) dbg_brk command. Valid are 'true' or 'false'.\n", strValue);
+                return EXIT_FAILURE;
+            }
+
+            res = cfrds_command_debugger_breakpoint(server, dbg_session, path, line, value);
+            if (res != CFRDS_STATUS_OK)
+            {
+                fprintf(stderr, "dbg_brk FAILED with error: %s\n", cfrds_server_get_error(server));
+                return EXIT_FAILURE;
+            }
+        }*/
+    } else if (strcmp(command, "dbg_clear_all_brk") == 0) {
+        if ((path != NULL)&&(strlen(path) > 1))
+        {
+            const char *dbg_session = argv[4];
+            if (strlen(dbg_session) < 1)
+            {
+                fprintf(stderr, "dbg_session is not set for dbg_clear_all_brk command.\n");
+                return EXIT_FAILURE;
+            }
+
+            res = cfrds_command_debugger_clear_all_breakpoints(server, dbg_session);
+            if (res != CFRDS_STATUS_OK)
+            {
+                fprintf(stderr, "dbg_clear_all_brk FAILED with error: %s\n", cfrds_server_get_error(server));
+                return EXIT_FAILURE;
+            }
+        }
+
+/*      cfrds_command_debugger_step_in(cfrds_server *server, const char *session_id, const char *thread_name);
+        cfrds_command_debugger_step_over(cfrds_server *server, const char *session_id, const char *thread_name);
+        cfrds_command_debugger_step_out(cfrds_server *server, const char *session_id, const char *thread_name);
+        cfrds_command_debugger_continue(cfrds_server *server, const char *session_id, const char *thread_name);
+        cfrds_command_debugger_watch_expression(cfrds_server *server, const char *session_id, const char *thread_name, const char *expression);
+        cfrds_command_debugger_set_variable(cfrds_server *server, const char *session_id, const char *thread_name, const char *variable, const char *value);
+        cfrds_command_debugger_watch_variables(cfrds_server *server, const char *session_id, const char *variables);
+        cfrds_command_debugger_get_output(cfrds_server *server, const char *session_id, const char *thread_name);
+        cfrds_command_debugger_set_scope_filter(cfrds_server *server, const char *session_id, const char *filter);*/
+
+
+
+
+/*    } else if (strcmp(command, "test") == 0) {
+        cfrds_str_defer(dbg_session);
+        res = cfrds_command_debugger_start(server, &dbg_session);
+        if (res != CFRDS_STATUS_OK)
+        {
+            fprintf(stderr, "dbg_start FAILED with error: %s\n", cfrds_server_get_error(server));
+            return EXIT_FAILURE;
+        }
+
+        uint16_t debuggerPort;
+        res = cfrds_command_debugger_get_server_info(server, dbg_session, &debuggerPort);
+        if (res != CFRDS_STATUS_OK)
+        {
+            fprintf(stderr, "cfrds_command_debugger_get_server_info FAILED with error: %s\n", cfrds_server_get_error(server));
+            ret = EXIT_FAILURE;
+            goto stop_server;
+        }
+
+        res = cfrds_command_debugger_watch_variables(server, dbg_session, "A,B");
+        if (res != CFRDS_STATUS_OK)
+        {
+            fprintf(stderr, "cfrds_command_debugger_watch_variable FAILED with error: %s\n", cfrds_server_get_error(server));
+            ret = EXIT_FAILURE;
+            goto stop_server;
+        }
+
+        res = cfrds_command_debugger_breakpoint(server, dbg_session, "/app/index.cfm", 7, true);
+        if (res != CFRDS_STATUS_OK)
+        {
+            fprintf(stderr, "cfrds_command_debugger_breakpoint FAILED with error: %s\n", cfrds_server_get_error(server));
+            ret = EXIT_FAILURE;
+            goto stop_server;
+        }
+
+        {
+            cfrds_debugger_event_defer(event);
+            res = cfrds_command_debugger_get_debug_events(server, dbg_session, &event);
+            if (res != CFRDS_STATUS_OK)
+            {
+                fprintf(stderr, "cfrds_command_debugger_get_debug_events FAILED with error: %s\n", cfrds_server_get_error(server));
+                ret = EXIT_FAILURE;
+                goto stop_server;
+            }
+            cfrds_buffer_debugger_event_get_type(event);
+            cfrds_buffer_debugger_event_breakpoint_set_get_act_line(event);
+        }
+
+
+        {
+            cfrds_debugger_event_defer(event);
+
+            //res = cfrds_command_debugger_get_debug_events(server, dbg_session, &event);
+            //if (res != CFRDS_STATUS_OK)
+            //{
+            //    fprintf(stderr, "cfrds_command_debugger_get_debug_events FAILED with error: %s\n", cfrds_server_get_error(server));
+            //    ret = EXIT_FAILURE;
+            //    goto stop_server;
+            //}
+
+            res = cfrds_command_debugger_all_fetch_flags_enabled(server, dbg_session, true, true, true, true, true, &event);
+            if (res != CFRDS_STATUS_OK)
+            {
+                fprintf(stderr, "cfrds_command_debugger_all_fetch_flags_enabled FAILED with error: %s\n", cfrds_server_get_error(server));
+                ret = EXIT_FAILURE;
+                goto stop_server;
+            }
+
+            cfrds_buffer_debugger_event_get_type(event);
+            cfrds_buffer_debugger_event_get_scopes(event);
+
+            const char *thread_name = cfrds_buffer_debugger_event_breakpoint_get_thread_name(event);
+
+            res = cfrds_command_debugger_clear_all_breakpoints(server, dbg_session);
+            if (res != CFRDS_STATUS_OK)
+            {
+                fprintf(stderr, "cfrds_command_debugger_clear_all_breakpoints FAILED with error: %s\n", cfrds_server_get_error(server));
+                ret = EXIT_FAILURE;
+                goto stop_server;
+            }
+
+            res = cfrds_command_debugger_continue(server, dbg_session, thread_name);
+            if (res != CFRDS_STATUS_OK)
+            {
+                fprintf(stderr, "cfrds_command_debugger_continue FAILED with error: %s\n", cfrds_server_get_error(server));
+                ret = EXIT_FAILURE;
+                goto stop_server;
+            }
+        }
+
+stop_server:
+        res = cfrds_command_debugger_stop(server, dbg_session);
+        if (res != CFRDS_STATUS_OK)
+        {
+            fprintf(stderr, "dbg_stop FAILED with error: %s\n", cfrds_server_get_error(server));
+            return EXIT_FAILURE;
+        }*/
     } else {
         fprintf(stderr, "Unknown command %s\n", command);
         return EXIT_FAILURE;

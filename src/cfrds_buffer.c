@@ -36,112 +36,112 @@ typedef struct {
 void cfrds_str_cleanup(char **str) {
     if (*str) {
         free(*str);
-        *str = nullptr;
+        *str = NULL;
     }
 }
 
 void cfrds_buffer_cleanup(cfrds_buffer **buf) {
     if (*buf) {
         cfrds_buffer_free(*buf);
-        *buf = nullptr;
+        *buf = NULL;
     }
 }
 
 void cfrds_file_content_cleanup(cfrds_file_content **buf) {
     if (*buf) {
         cfrds_buffer_file_content_free(*buf);
-        *buf = nullptr;
+        *buf = NULL;
     }
 }
 
 void cfrds_browse_dir_cleanup(cfrds_browse_dir **buf) {
     if (*buf) {
         cfrds_buffer_browse_dir_free(*buf);
-        *buf = nullptr;
+        *buf = NULL;
     }
 }
 
 void cfrds_sql_dsninfo_cleanup(cfrds_sql_dsninfo **buf) {
     if (*buf) {
         cfrds_buffer_sql_dsninfo_free(*buf);
-        *buf = nullptr;
+        *buf = NULL;
     }
 }
 
 void cfrds_sql_tableinfo_cleanup(cfrds_sql_tableinfo **buf) {
     if (*buf) {
         cfrds_buffer_sql_tableinfo_free(*buf);
-        *buf = nullptr;
+        *buf = NULL;
     }
 }
 
 void cfrds_sql_columninfo_cleanup(cfrds_sql_columninfo **buf) {
     if (*buf) {
         cfrds_buffer_sql_columninfo_free(*buf);
-        *buf = nullptr;
+        *buf = NULL;
     }
 }
 
 void cfrds_sql_primarykeys_cleanup(cfrds_sql_primarykeys **buf) {
     if (*buf) {
         cfrds_buffer_sql_primarykeys_free(*buf);
-        *buf = nullptr;
+        *buf = NULL;
     }
 }
 
 void cfrds_sql_foreignkeys_cleanup(cfrds_sql_foreignkeys **buf) {
     if (*buf) {
         cfrds_buffer_sql_foreignkeys_free(*buf);
-        *buf = nullptr;
+        *buf = NULL;
     }
 }
 
 void cfrds_sql_importedkeys_cleanup(cfrds_sql_importedkeys **buf) {
     if (*buf) {
         cfrds_buffer_sql_importedkeys_free(*buf);
-        *buf = nullptr;
+        *buf = NULL;
     }
 }
 
 void cfrds_sql_exportedkeys_cleanup(cfrds_sql_exportedkeys **buf) {
     if (*buf) {
         cfrds_buffer_sql_exportedkeys_free(*buf);
-        *buf = nullptr;
+        *buf = NULL;
     }
 }
 
 void cfrds_sql_resultset_cleanup(cfrds_sql_resultset **buf) {
     if (*buf) {
         cfrds_buffer_sql_resultset_free(*buf);
-        *buf = nullptr;
+        *buf = NULL;
     }
 }
 
 void cfrds_sql_metadata_cleanup(cfrds_sql_metadata **buf) {
     if (*buf) {
         cfrds_buffer_sql_metadata_free(*buf);
-        *buf = nullptr;
+        *buf = NULL;
     }
 }
 
 void cfrds_sql_supportedcommands_cleanup(cfrds_sql_supportedcommands **buf) {
     if (*buf) {
         cfrds_buffer_sql_supportedcommands_free(*buf);
-        *buf = nullptr;
+        *buf = NULL;
     }
 }
 
 void cfrds_debugger_event_cleanup(cfrds_debugger_event **buf) {
     if (*buf) {
         cfrds_buffer_debugger_event_free(*buf);
-        *buf = nullptr;
+        *buf = NULL;
     }
 }
 
 static bool cfrds_buffer_realloc_if_needed(cfrds_buffer *buffer, size_t len)
 {
     cfrds_buffer_int *buffer_int = buffer;
-    void *tmp = nullptr;
+    void *tmp = NULL;
 
     if (buffer_int->size + len > buffer_int->allocated)
     {
@@ -149,7 +149,7 @@ static bool cfrds_buffer_realloc_if_needed(cfrds_buffer *buffer, size_t len)
         newsize = (((newsize + 512) / 1024) + 1) * 1024;
 
         tmp = realloc(buffer_int->data, newsize);
-        if (tmp == nullptr)
+        if (tmp == NULL)
             return false;
 
         size_t oldsize = buffer_int->allocated;
@@ -163,19 +163,19 @@ static bool cfrds_buffer_realloc_if_needed(cfrds_buffer *buffer, size_t len)
 
 bool cfrds_buffer_create(cfrds_buffer **buffer)
 {
-    cfrds_buffer_int *tmp = nullptr;
+    cfrds_buffer_int *tmp = NULL;
 
-    if (buffer == nullptr)
+    if (buffer == NULL)
          return false;
 
     tmp = malloc(sizeof(cfrds_buffer_int));
-    if (tmp == nullptr)
+    if (tmp == NULL)
         return false;
 
     tmp->allocated = 0;
     tmp->size = 0;
     tmp->offset = 0;
-    tmp->data = nullptr;
+    tmp->data = NULL;
 
     *buffer = tmp;
 
@@ -184,15 +184,15 @@ bool cfrds_buffer_create(cfrds_buffer **buffer)
 
 char *cfrds_buffer_data(cfrds_buffer *buffer)
 {
-    cfrds_buffer_int *ret = nullptr;
+    cfrds_buffer_int *ret = NULL;
 
-    if (buffer == nullptr)
-        return nullptr;
+    if (buffer == NULL)
+        return NULL;
 
     ret = buffer;
 
     if (cfrds_buffer_realloc_if_needed(ret, ret->size + 1) == false)
-        return nullptr;
+        return NULL;
 
     ret->data[ret->size] = 0;
 
@@ -201,9 +201,9 @@ char *cfrds_buffer_data(cfrds_buffer *buffer)
 
 size_t cfrds_buffer_data_size(cfrds_buffer *buffer)
 {
-    const cfrds_buffer_int *ret = nullptr;
+    const cfrds_buffer_int *ret = NULL;
 
-    if (buffer == nullptr)
+    if (buffer == NULL)
          return 0;
 
     ret = buffer;
@@ -359,14 +359,14 @@ bool cfrds_buffer_append_char(cfrds_buffer *buffer, const char ch)
 bool cfrds_buffer_reserve_above_size(cfrds_buffer *buffer, size_t size)
 {
     cfrds_buffer_int *buffer_int = buffer;
-    void *tmp = nullptr;
+    void *tmp = NULL;
 
     if (buffer_int->allocated - buffer_int->size < size)
     {
         size_t newsize = buffer_int->size + size;
 
         tmp = realloc(buffer_int->data, newsize);
-        if (tmp == nullptr)
+        if (tmp == NULL)
             return false;
 
         buffer_int->data = tmp;
@@ -380,7 +380,7 @@ bool cfrds_buffer_reserve_above_size(cfrds_buffer *buffer, size_t size)
 
 bool cfrds_buffer_expand(cfrds_buffer *buffer, size_t size)
 {
-    if (buffer == nullptr)
+    if (buffer == NULL)
         return false;
 
     cfrds_buffer_int *buffer_int = buffer;
@@ -395,15 +395,15 @@ bool cfrds_buffer_expand(cfrds_buffer *buffer, size_t size)
 
 void cfrds_buffer_free(cfrds_buffer *buffer)
 {
-    if (buffer == nullptr)
+    if (buffer == NULL)
         return;
 
     cfrds_buffer_int *buffer_int = buffer;
 
-    if (buffer_int->data != nullptr)
+    if (buffer_int->data != NULL)
     {
         free(buffer_int->data);
-        buffer_int->data = nullptr;
+        buffer_int->data = NULL;
     }
 
     free(buffer);
@@ -411,13 +411,13 @@ void cfrds_buffer_free(cfrds_buffer *buffer)
 
 bool cfrds_buffer_parse_number(const char **data, size_t *remaining, int64_t *out)
 {
-    char *end = nullptr;
+    char *end = NULL;
 
-    if (data == nullptr)
+    if (data == NULL)
         return false;
 
     end = strchr(*data, ':');
-    if ((end == nullptr)||((unsigned)(end - *data) > *remaining))
+    if ((end == NULL)||((unsigned)(end - *data) > *remaining))
         return false;
 
     *out = atol(*data);
@@ -433,7 +433,7 @@ bool cfrds_buffer_parse_bytearray(const char **data, size_t *remaining, char **o
     size_t size = 0;
     int64_t tmp = 0;
 
-    if (out == nullptr)
+    if (out == NULL)
         return false;
 
     if (!cfrds_buffer_parse_number(data, remaining, &tmp))
@@ -448,7 +448,7 @@ bool cfrds_buffer_parse_bytearray(const char **data, size_t *remaining, char **o
         return false;
 
     *out = malloc(size + 1);
-    if (*out == nullptr)
+    if (*out == NULL)
         return false;
 
     memcpy(*out, *data, size);
@@ -467,7 +467,7 @@ bool cfrds_buffer_parse_string(const char **data, size_t *remaining, char **out)
     int64_t size = 0;
     int64_t tmp = 0;
 
-    if (out == nullptr)
+    if (out == NULL)
         return false;
 
     if (!cfrds_buffer_parse_number(data, remaining, &tmp))
@@ -482,7 +482,7 @@ bool cfrds_buffer_parse_string(const char **data, size_t *remaining, char **out)
         return false;
 
     *out = malloc(size + 1);
-    if(*out == nullptr)
+    if(*out == NULL)
         return false;
 
     memcpy(*out, *data, size);
@@ -497,11 +497,11 @@ bool cfrds_buffer_parse_string(const char **data, size_t *remaining, char **out)
 bool cfrds_buffer_parse_string_list_item(const char **data, size_t *remaining, char **out)
 {
     bool with_quotes = false;
-    const char *endstr = nullptr;
+    const char *endstr = NULL;
     cfrds_str_defer(tmp);
     size_t len = 0;
 
-    if ((data == nullptr)||(out == nullptr)||(*remaining < 2))
+    if ((data == NULL)||(out == NULL)||(*remaining < 2))
         return false;
 
     if (*data[0] == '"')
@@ -510,21 +510,21 @@ bool cfrds_buffer_parse_string_list_item(const char **data, size_t *remaining, c
         (*data)++; (*remaining)--;
 
         endstr = strchr(*data, '"');
-        if (endstr == nullptr)
+        if (endstr == NULL)
             return false;
         len = endstr - *data;
     }
     else
     {
         endstr = strchr(*data, ',');
-        if (endstr == nullptr)
+        if (endstr == NULL)
             len = strlen(*data);
         else
             len = endstr - *data;
     }
 
     tmp = malloc(len + 1);
-    if (tmp == nullptr)
+    if (tmp == NULL)
         return false;
 
     memcpy(tmp, *data, len);
@@ -542,14 +542,14 @@ bool cfrds_buffer_parse_string_list_item(const char **data, size_t *remaining, c
         (*data)++; (*remaining)--;
     }
 
-    *out = tmp; tmp = nullptr;
+    *out = tmp; tmp = NULL;
 
     return true;
 }
 
 cfrds_browse_dir_int *cfrds_buffer_to_browse_dir(cfrds_buffer *buffer)
 {
-    cfrds_browse_dir_int *ret = nullptr;
+    cfrds_browse_dir_int *ret = NULL;
 
     cfrds_buffer_int *buffer_int = buffer;
     cfrds_browse_dir_defer(tmp);
@@ -557,25 +557,25 @@ cfrds_browse_dir_int *cfrds_buffer_to_browse_dir(cfrds_buffer *buffer)
     int64_t total = 0;
     int64_t cnt = 0;
 
-    if (buffer_int == nullptr)
-        return nullptr;
+    if (buffer_int == NULL)
+        return NULL;
 
     const char *data = (const char *)buffer_int->data;
     size_t size = buffer_int->size;
 
     if (!cfrds_buffer_parse_number(&data, &size, &total))
-        return nullptr;
+        return NULL;
 
     if ((total <= 0)||(total % 5))
-        return nullptr;
+        return NULL;
 
     cnt = total / 5;
 
     malloc_size = offsetof(cfrds_browse_dir_int, items) + (cnt * (offsetof(cfrds_browse_dir_int, items[1]) - (offsetof(cfrds_browse_dir_int, items[0]))));
 
     tmp = malloc(malloc_size);
-    if (tmp == nullptr)
-        return nullptr;
+    if (tmp == NULL)
+        return NULL;
 
     explicit_bzero(tmp, malloc_size);
 
@@ -631,40 +631,40 @@ cfrds_browse_dir_int *cfrds_buffer_to_browse_dir(cfrds_buffer *buffer)
         }
 
         if(((file_type != 'D')&&(file_type != 'F'))||(!filename)||(permissions < 0)||(permissions > 0xff)||(filesize < 0))
-            return nullptr;
+            return NULL;
 
         ((cfrds_browse_dir_int *)tmp)->items[c].kind = file_type;
-        ((cfrds_browse_dir_int *)tmp)->items[c].name = filename; filename = nullptr;
+        ((cfrds_browse_dir_int *)tmp)->items[c].name = filename; filename = NULL;
         ((cfrds_browse_dir_int *)tmp)->items[c].permissions = permissions;
         ((cfrds_browse_dir_int *)tmp)->items[c].size = filesize;
         ((cfrds_browse_dir_int *)tmp)->items[c].modified = modified;
     }
 
-    ret = tmp; tmp = nullptr;
+    ret = tmp; tmp = NULL;
     return ret;
 }
 
 cfrds_file_content_int *cfrds_buffer_to_file_content(cfrds_buffer *buffer)
 {
-    cfrds_file_content_int *ret = nullptr;
+    cfrds_file_content_int *ret = NULL;
     cfrds_buffer_int *buffer_int = buffer;
     int64_t total = 0;
 
-    if (buffer_int == nullptr)
-        return nullptr;
+    if (buffer_int == NULL)
+        return NULL;
 
     const char *data = (const char *)buffer_int->data;
     size_t size = buffer_int->size;
 
     if (!cfrds_buffer_parse_number(&data, &size, &total))
-        return nullptr;
+        return NULL;
 
     if (total != 3)
-        return nullptr;
+        return NULL;
 
     ret = malloc(sizeof(cfrds_file_content_int));
-    if (ret == nullptr)
-        return nullptr;
+    if (ret == NULL)
+        return NULL;
 
     cfrds_buffer_parse_bytearray(&data, &size, &ret->data, &ret->size);
     cfrds_buffer_parse_string(&data, &size, &ret->modified);
@@ -675,7 +675,7 @@ cfrds_file_content_int *cfrds_buffer_to_file_content(cfrds_buffer *buffer)
 
 cfrds_sql_dsninfo_int *cfrds_buffer_to_sql_dsninfo(cfrds_buffer *buffer)
 {
-    cfrds_sql_dsninfo_int *ret = nullptr;
+    cfrds_sql_dsninfo_int *ret = NULL;
 
     const char *response_data = cfrds_buffer_data(buffer);
     size_t response_size = cfrds_buffer_data_size(buffer);
@@ -684,15 +684,15 @@ cfrds_sql_dsninfo_int *cfrds_buffer_to_sql_dsninfo(cfrds_buffer *buffer)
 
       if (!cfrds_buffer_parse_number(&response_data, &response_size, &cnt))
       {
-          return nullptr;
+          return NULL;
       }
 
       if (cnt > 10000)
-          return nullptr;
+          return NULL;
 
       ret = malloc(offsetof(cfrds_sql_dsninfo_int, names) + sizeof(char *) * cnt);
-      if (ret == nullptr)
-          return nullptr;
+      if (ret == NULL)
+          return NULL;
 
       ret->cnt = cnt;
 
@@ -713,8 +713,8 @@ cfrds_sql_dsninfo_int *cfrds_buffer_to_sql_dsninfo(cfrds_buffer *buffer)
                       size_t len = pos2 - pos1 - 1;
 
                       char *tmp = malloc(len + 1);
-                      if (tmp == nullptr)
-                          return nullptr;
+                      if (tmp == NULL)
+                          return NULL;
 
                       memcpy(tmp, pos1 + 1, len);
                       tmp[len] = '\0';
@@ -723,7 +723,7 @@ cfrds_sql_dsninfo_int *cfrds_buffer_to_sql_dsninfo(cfrds_buffer *buffer)
                   }
               }
 
-              ret->names[c] = item; item = nullptr;
+              ret->names[c] = item; item = NULL;
           }
       }
 
@@ -732,7 +732,7 @@ cfrds_sql_dsninfo_int *cfrds_buffer_to_sql_dsninfo(cfrds_buffer *buffer)
 
 cfrds_sql_tableinfo_int *cfrds_buffer_to_sql_tableinfo(cfrds_buffer *buffer)
 {
-    cfrds_sql_tableinfo_int *ret = nullptr;
+    cfrds_sql_tableinfo_int *ret = NULL;
 
     const char *response_data = cfrds_buffer_data(buffer);
     size_t response_size = cfrds_buffer_data_size(buffer);
@@ -741,17 +741,17 @@ cfrds_sql_tableinfo_int *cfrds_buffer_to_sql_tableinfo(cfrds_buffer *buffer)
 
     if (!cfrds_buffer_parse_number(&response_data, &response_size, &cnt))
     {
-        return nullptr;
+        return NULL;
     }
 
     if (cnt > 10000)
-        return nullptr;
+        return NULL;
 
     size_t malloc_size = offsetof(cfrds_sql_tableinfo_int, items) + sizeof(cfrds_sql_tableinfoitem_int) * cnt;
 
     ret = malloc(malloc_size);
-    if (ret == nullptr)
-        return nullptr;
+    if (ret == NULL)
+        return NULL;
 
     explicit_bzero(ret, malloc_size);
 
@@ -770,20 +770,20 @@ cfrds_sql_tableinfo_int *cfrds_buffer_to_sql_tableinfo(cfrds_buffer *buffer)
             cfrds_str_defer(field4);
 
             const char *current_item = item;
-            const char *end_item = nullptr;
+            const char *end_item = NULL;
 
             if (current_item[0] != '"')
-                return nullptr;
+                return NULL;
             current_item++;
             end_item = strchr(current_item, '"');
             if (!end_item)
-                return nullptr;
+                return NULL;
             if (end_item > current_item) {
                 size_t size = end_item - current_item;
 
                 field1 = malloc(size + 1);
-                if (field1 == nullptr)
-                    return nullptr;
+                if (field1 == NULL)
+                    return NULL;
 
                 memcpy(field1, current_item, size);
                 field1[size] = '\0';
@@ -791,23 +791,23 @@ cfrds_sql_tableinfo_int *cfrds_buffer_to_sql_tableinfo(cfrds_buffer *buffer)
             current_item = end_item + 1;
 
             if (current_item[0] != ',')
-                return nullptr;
+                return NULL;
             current_item++;
 
             if (current_item[0] != '"')
-                return nullptr;
+                return NULL;
             current_item++;
 
             end_item = strchr(current_item, '"');
             if (!end_item)
-                return nullptr;
+                return NULL;
 
             if (end_item > current_item) {
                 size_t size = end_item - current_item;
 
                 field2 = malloc(size + 1);
                 if (!field2)
-                    return nullptr;
+                    return NULL;
 
                 memcpy(field2, current_item, size);
                 field2[size] = '\0';
@@ -815,23 +815,23 @@ cfrds_sql_tableinfo_int *cfrds_buffer_to_sql_tableinfo(cfrds_buffer *buffer)
             current_item = end_item + 1;
 
             if (current_item[0] != ',')
-                return nullptr;
+                return NULL;
             current_item++;
 
             if (current_item[0] != '"')
-                return nullptr;
+                return NULL;
             current_item++;
 
             end_item = strchr(current_item, '"');
             if (!end_item)
-                return nullptr;
+                return NULL;
 
             if (end_item > current_item) {
                 size_t size = end_item - current_item;
 
                 field3 = malloc(size + 1);
                 if (!field3)
-                    return nullptr;
+                    return NULL;
 
                 memcpy(field3, current_item, size);
                 field3[size] = '\0';
@@ -839,32 +839,32 @@ cfrds_sql_tableinfo_int *cfrds_buffer_to_sql_tableinfo(cfrds_buffer *buffer)
             current_item = end_item + 1;
 
             if (current_item[0] != ',')
-                return nullptr;
+                return NULL;
             current_item++;
 
             if (current_item[0] != '"')
-                return nullptr;
+                return NULL;
             current_item++;
 
             end_item = strchr(current_item, '"');
             if (!end_item)
-                return nullptr;
+                return NULL;
 
             if (end_item > current_item) {
                 size_t size = end_item - current_item;
 
                 field4 = malloc(size + 1);
                 if (!field4)
-                    return nullptr;
+                    return NULL;
 
                 memcpy(field4, current_item, size);
                 field4[size] = '\0';
             }
 
-            ret->items[ret->cnt].unknown = field1; field1 = nullptr;
-            ret->items[ret->cnt].schema  = field2; field2 = nullptr;
-            ret->items[ret->cnt].name    = field3; field3 = nullptr;
-            ret->items[ret->cnt].type    = field4; field4 = nullptr;
+            ret->items[ret->cnt].unknown = field1; field1 = NULL;
+            ret->items[ret->cnt].schema  = field2; field2 = NULL;
+            ret->items[ret->cnt].name    = field3; field3 = NULL;
+            ret->items[ret->cnt].type    = field4; field4 = NULL;
             ret->cnt++;
         }
     }
@@ -874,27 +874,27 @@ cfrds_sql_tableinfo_int *cfrds_buffer_to_sql_tableinfo(cfrds_buffer *buffer)
 
 cfrds_sql_columninfo_int *cfrds_buffer_to_sql_columninfo(cfrds_buffer *buffer)
 {
-    cfrds_sql_columninfo_int *ret = nullptr;
+    cfrds_sql_columninfo_int *ret = NULL;
 
     cfrds_buffer_int *buffer_int = buffer;
 
     int64_t columns = 0;
 
-    if (buffer_int == nullptr)
-        return nullptr;
+    if (buffer_int == NULL)
+        return NULL;
 
     const char *data = (const char *)buffer_int->data;
     size_t size = buffer_int->size;
 
     if (!cfrds_buffer_parse_number(&data, &size, &columns))
-        return nullptr;
+        return NULL;
 
     if (columns <= 0)
-        return nullptr;
+        return NULL;
 
     ret = malloc(offsetof(cfrds_sql_columninfo_int, items) + sizeof(cfrds_sql_columninfoitem_int) * columns);
-    if (ret == nullptr)
-        return nullptr;
+    if (ret == NULL)
+        return NULL;
 
     explicit_bzero(ret, offsetof(cfrds_sql_columninfo_int, items) + sizeof(cfrds_sql_columninfoitem_int) * columns);
     ret->cnt = columns;
@@ -904,7 +904,7 @@ cfrds_sql_columninfo_int *cfrds_buffer_to_sql_columninfo(cfrds_buffer *buffer)
         cfrds_str_defer(row_buf);
 
         if (!cfrds_buffer_parse_string(&data, &size, &row_buf))
-            return nullptr;
+            return NULL;
 
         const char *column_buf = row_buf;
 
@@ -923,36 +923,36 @@ cfrds_sql_columninfo_int *cfrds_buffer_to_sql_columninfo(cfrds_buffer *buffer)
         cfrds_str_defer(field11);
 
         if (!cfrds_buffer_parse_string_list_item(&column_buf, &list_remaining, &field1))
-            return nullptr;
+            return NULL;
         if (!cfrds_buffer_parse_string_list_item(&column_buf, &list_remaining, &field2))
-            return nullptr;
+            return NULL;
         if (!cfrds_buffer_parse_string_list_item(&column_buf, &list_remaining, &field3))
-            return nullptr;
+            return NULL;
         if (!cfrds_buffer_parse_string_list_item(&column_buf, &list_remaining, &field4))
-            return nullptr;
+            return NULL;
         if (!cfrds_buffer_parse_string_list_item(&column_buf, &list_remaining, &field5))
-            return nullptr;
+            return NULL;
         if (!cfrds_buffer_parse_string_list_item(&column_buf, &list_remaining, &field6))
-            return nullptr;
+            return NULL;
         if (!cfrds_buffer_parse_string_list_item(&column_buf, &list_remaining, &field7))
-            return nullptr;
+            return NULL;
         if (!cfrds_buffer_parse_string_list_item(&column_buf, &list_remaining, &field8))
-            return nullptr;
+            return NULL;
         if (!cfrds_buffer_parse_string_list_item(&column_buf, &list_remaining, &field9))
-            return nullptr;
+            return NULL;
         if (!cfrds_buffer_parse_string_list_item(&column_buf, &list_remaining, &field10))
-            return nullptr;
+            return NULL;
         if (!cfrds_buffer_parse_string_list_item(&column_buf, &list_remaining, &field11))
-            return nullptr;
+            return NULL;
         if (list_remaining != 0)
-            return nullptr;
+            return NULL;
 
-        ret->items[column].schema    = field1; field1 = nullptr;
-        ret->items[column].owner     = field2; field2 = nullptr;
-        ret->items[column].table     = field3; field3 = nullptr;
-        ret->items[column].name      = field4; field4 = nullptr;
+        ret->items[column].schema    = field1; field1 = NULL;
+        ret->items[column].owner     = field2; field2 = NULL;
+        ret->items[column].table     = field3; field3 = NULL;
+        ret->items[column].name      = field4; field4 = NULL;
         ret->items[column].type      = atoi(field5);
-        ret->items[column].typeStr   = field6; field6 = nullptr;
+        ret->items[column].typeStr   = field6; field6 = NULL;
         ret->items[column].percision = atoi(field7);
         ret->items[column].length    = atoi(field8);
         ret->items[column].scale     = atoi(field9);
@@ -965,25 +965,25 @@ cfrds_sql_columninfo_int *cfrds_buffer_to_sql_columninfo(cfrds_buffer *buffer)
 
 cfrds_sql_primarykeys_int *cfrds_buffer_to_sql_primarykeys(cfrds_buffer *buffer)
 {
-    cfrds_sql_primarykeys_int *ret = nullptr;
+    cfrds_sql_primarykeys_int *ret = NULL;
 
     cfrds_buffer_int *buffer_int = buffer;
 
     cfrds_sql_primarykeys_defer(tmp);
     int64_t cnt = 0;
 
-    if (buffer_int == nullptr)
-        return nullptr;
+    if (buffer_int == NULL)
+        return NULL;
 
     const char *data = (const char *)buffer_int->data;
     size_t size = buffer_int->size;
 
     if (!cfrds_buffer_parse_number(&data, &size, &cnt))
-        return nullptr;
+        return NULL;
 
     tmp = malloc(offsetof(cfrds_sql_primarykeys_int, items) + sizeof(cfrds_sql_primarykeysitem_int) * cnt);
-    if (tmp == nullptr)
-        return nullptr;
+    if (tmp == NULL)
+        return NULL;
 
     ((cfrds_sql_primarykeys_int *)tmp)->cnt = cnt;
 
@@ -992,8 +992,8 @@ cfrds_sql_primarykeys_int *cfrds_buffer_to_sql_primarykeys(cfrds_buffer *buffer)
         cfrds_str_defer(item);
 
         cfrds_buffer_parse_string(&data, &size, &item);
-        if (item == nullptr)
-            return nullptr;
+        if (item == NULL)
+            return NULL;
 
         const char *column_buf = item;
 
@@ -1011,39 +1011,39 @@ cfrds_sql_primarykeys_int *cfrds_buffer_to_sql_primarykeys(cfrds_buffer *buffer)
         cfrds_buffer_parse_string_list_item(&column_buf, &list_remaining, &colName);
         cfrds_buffer_parse_string_list_item(&column_buf, &list_remaining, &keySequence);
 
-        ((cfrds_sql_primarykeys_int *)tmp)->items[c].tableCatalog = tableCatalog; tableCatalog = nullptr;
-        ((cfrds_sql_primarykeys_int *)tmp)->items[c].tableOwner   = tableOwner; tableOwner = nullptr;
-        ((cfrds_sql_primarykeys_int *)tmp)->items[c].tableName    = tableName; tableName = nullptr;
-        ((cfrds_sql_primarykeys_int *)tmp)->items[c].colName      = colName; colName = nullptr;
+        ((cfrds_sql_primarykeys_int *)tmp)->items[c].tableCatalog = tableCatalog; tableCatalog = NULL;
+        ((cfrds_sql_primarykeys_int *)tmp)->items[c].tableOwner   = tableOwner; tableOwner = NULL;
+        ((cfrds_sql_primarykeys_int *)tmp)->items[c].tableName    = tableName; tableName = NULL;
+        ((cfrds_sql_primarykeys_int *)tmp)->items[c].colName      = colName; colName = NULL;
         ((cfrds_sql_primarykeys_int *)tmp)->items[c].keySequence  = atoi(keySequence);
     }
 
-    ret = tmp; tmp = nullptr;
+    ret = tmp; tmp = NULL;
 
     return ret;
 }
 
 cfrds_sql_foreignkeys_int *cfrds_buffer_to_sql_foreignkeys(cfrds_buffer *buffer)
 {
-    cfrds_sql_foreignkeys_int *ret = nullptr;
+    cfrds_sql_foreignkeys_int *ret = NULL;
 
     cfrds_buffer_int *buffer_int = buffer;
 
     cfrds_sql_foreignkeys_defer(tmp);
     int64_t cnt = 0;
 
-    if (buffer_int == nullptr)
-        return nullptr;
+    if (buffer_int == NULL)
+        return NULL;
 
     const char *data = (const char *)buffer_int->data;
     size_t size = buffer_int->size;
 
     if (!cfrds_buffer_parse_number(&data, &size, &cnt))
-        return nullptr;
+        return NULL;
 
     tmp = malloc(offsetof(cfrds_sql_foreignkeys_int, items) + sizeof(cfrds_sql_foreignkeysitem_int) * cnt);
-    if (tmp == nullptr)
-        return nullptr;
+    if (tmp == NULL)
+        return NULL;
 
     ((cfrds_sql_foreignkeys_int *)tmp)->cnt = cnt;
 
@@ -1052,8 +1052,8 @@ cfrds_sql_foreignkeys_int *cfrds_buffer_to_sql_foreignkeys(cfrds_buffer *buffer)
         cfrds_str_defer(item);
 
         cfrds_buffer_parse_string(&data, &size, &item);
-        if (item == nullptr)
-            return nullptr;
+        if (item == NULL)
+            return NULL;
 
         const char *column_buf = item;
 
@@ -1083,48 +1083,48 @@ cfrds_sql_foreignkeys_int *cfrds_buffer_to_sql_foreignkeys(cfrds_buffer *buffer)
         cfrds_buffer_parse_string_list_item(&column_buf, &list_remaining, &updateRule);
         cfrds_buffer_parse_string_list_item(&column_buf, &list_remaining, &deleteRule);
 
-        ((cfrds_sql_foreignkeys_int *)tmp)->items[c].pkTableCatalog = pkTableCatalog; pkTableCatalog = nullptr;
-        ((cfrds_sql_foreignkeys_int *)tmp)->items[c].pkTableOwner   = pkTableOwner; pkTableOwner = nullptr;
-        ((cfrds_sql_foreignkeys_int *)tmp)->items[c].pkTableName    = pkTableName; pkTableName = nullptr;
-        ((cfrds_sql_foreignkeys_int *)tmp)->items[c].pkColName      = pkColName; pkColName = nullptr;
-        ((cfrds_sql_foreignkeys_int *)tmp)->items[c].fkTableCatalog = fkTableCatalog; fkTableCatalog = nullptr;
-        ((cfrds_sql_foreignkeys_int *)tmp)->items[c].fkTableOwner   = fkTableOwner; fkTableOwner = nullptr;
-        ((cfrds_sql_foreignkeys_int *)tmp)->items[c].fkTableName    = fkTableName; fkTableName = nullptr;
-        ((cfrds_sql_foreignkeys_int *)tmp)->items[c].fkColName      = fkColName; fkColName = nullptr;
+        ((cfrds_sql_foreignkeys_int *)tmp)->items[c].pkTableCatalog = pkTableCatalog; pkTableCatalog = NULL;
+        ((cfrds_sql_foreignkeys_int *)tmp)->items[c].pkTableOwner   = pkTableOwner; pkTableOwner = NULL;
+        ((cfrds_sql_foreignkeys_int *)tmp)->items[c].pkTableName    = pkTableName; pkTableName = NULL;
+        ((cfrds_sql_foreignkeys_int *)tmp)->items[c].pkColName      = pkColName; pkColName = NULL;
+        ((cfrds_sql_foreignkeys_int *)tmp)->items[c].fkTableCatalog = fkTableCatalog; fkTableCatalog = NULL;
+        ((cfrds_sql_foreignkeys_int *)tmp)->items[c].fkTableOwner   = fkTableOwner; fkTableOwner = NULL;
+        ((cfrds_sql_foreignkeys_int *)tmp)->items[c].fkTableName    = fkTableName; fkTableName = NULL;
+        ((cfrds_sql_foreignkeys_int *)tmp)->items[c].fkColName      = fkColName; fkColName = NULL;
         ((cfrds_sql_foreignkeys_int *)tmp)->items[c].keySequence    = atoi(keySequence);
         ((cfrds_sql_foreignkeys_int *)tmp)->items[c].updateRule     = atoi(updateRule);
         ((cfrds_sql_foreignkeys_int *)tmp)->items[c].deleteRule     = atoi(deleteRule);
     }
 
-    ret = tmp; tmp = nullptr;
+    ret = tmp; tmp = NULL;
 
     return ret;
 }
 
 cfrds_sql_importedkeys_int *cfrds_buffer_to_sql_importedkeys(cfrds_buffer *buffer)
 {
-    cfrds_sql_importedkeys_int *ret = nullptr;
+    cfrds_sql_importedkeys_int *ret = NULL;
 
     cfrds_buffer_int *buffer_int = buffer;
 
     cfrds_sql_importedkeys_defer(tmp);
     int64_t cnt = 0;
 
-    if (buffer_int == nullptr)
-        return nullptr;
+    if (buffer_int == NULL)
+        return NULL;
 
     const char *data = (const char *)buffer_int->data;
     size_t size = buffer_int->size;
 
     if (!cfrds_buffer_parse_number(&data, &size, &cnt))
-        return nullptr;
+        return NULL;
 
     if (cnt < 1)
-        return nullptr;
+        return NULL;
 
     tmp = malloc(offsetof(cfrds_sql_importedkeys_int, items) + sizeof(cfrds_sql_importedkeysitem_int) * cnt);
-    if (tmp == nullptr)
-        return nullptr;
+    if (tmp == NULL)
+        return NULL;
 
     ((cfrds_sql_importedkeys_int *)tmp)->cnt = cnt;
 
@@ -1133,8 +1133,8 @@ cfrds_sql_importedkeys_int *cfrds_buffer_to_sql_importedkeys(cfrds_buffer *buffe
         cfrds_str_defer(item);
 
         cfrds_buffer_parse_string(&data, &size, &item);
-        if (item == nullptr)
-            return nullptr;
+        if (item == NULL)
+            return NULL;
 
         const char *column_buf = item;
 
@@ -1164,45 +1164,45 @@ cfrds_sql_importedkeys_int *cfrds_buffer_to_sql_importedkeys(cfrds_buffer *buffe
         cfrds_buffer_parse_string_list_item(&column_buf, &list_remaining, &updateRule);
         cfrds_buffer_parse_string_list_item(&column_buf, &list_remaining, &deleteRule);
 
-        ((cfrds_sql_importedkeys_int *)tmp)->items[c].pkTableCatalog = pkTableCatalog; pkTableCatalog = nullptr;
-        ((cfrds_sql_importedkeys_int *)tmp)->items[c].pkTableOwner   = pkTableOwner; pkTableOwner = nullptr;
-        ((cfrds_sql_importedkeys_int *)tmp)->items[c].pkTableName    = pkTableName; pkTableName = nullptr;
-        ((cfrds_sql_importedkeys_int *)tmp)->items[c].pkColName      = pkColName; pkColName = nullptr;
-        ((cfrds_sql_importedkeys_int *)tmp)->items[c].fkTableCatalog = fkTableCatalog; fkTableCatalog = nullptr;
-        ((cfrds_sql_importedkeys_int *)tmp)->items[c].fkTableOwner   = fkTableOwner; fkTableOwner = nullptr;
-        ((cfrds_sql_importedkeys_int *)tmp)->items[c].fkTableName    = fkTableName; fkTableName = nullptr;
-        ((cfrds_sql_importedkeys_int *)tmp)->items[c].fkColName      = fkColName; fkColName = nullptr;
+        ((cfrds_sql_importedkeys_int *)tmp)->items[c].pkTableCatalog = pkTableCatalog; pkTableCatalog = NULL;
+        ((cfrds_sql_importedkeys_int *)tmp)->items[c].pkTableOwner   = pkTableOwner; pkTableOwner = NULL;
+        ((cfrds_sql_importedkeys_int *)tmp)->items[c].pkTableName    = pkTableName; pkTableName = NULL;
+        ((cfrds_sql_importedkeys_int *)tmp)->items[c].pkColName      = pkColName; pkColName = NULL;
+        ((cfrds_sql_importedkeys_int *)tmp)->items[c].fkTableCatalog = fkTableCatalog; fkTableCatalog = NULL;
+        ((cfrds_sql_importedkeys_int *)tmp)->items[c].fkTableOwner   = fkTableOwner; fkTableOwner = NULL;
+        ((cfrds_sql_importedkeys_int *)tmp)->items[c].fkTableName    = fkTableName; fkTableName = NULL;
+        ((cfrds_sql_importedkeys_int *)tmp)->items[c].fkColName      = fkColName; fkColName = NULL;
         ((cfrds_sql_importedkeys_int *)tmp)->items[c].keySequence    = atoi(keySequence);
         ((cfrds_sql_importedkeys_int *)tmp)->items[c].updateRule     = atoi(updateRule);
         ((cfrds_sql_importedkeys_int *)tmp)->items[c].deleteRule     = atoi(deleteRule);
     }
 
-    ret = tmp; tmp = nullptr;
+    ret = tmp; tmp = NULL;
 
     return ret;
 }
 
 cfrds_sql_exportedkeys_int *cfrds_buffer_to_sql_exportedkeys(cfrds_buffer *buffer)
 {
-    cfrds_sql_exportedkeys_int *ret = nullptr;
+    cfrds_sql_exportedkeys_int *ret = NULL;
 
     cfrds_buffer_int *buffer_int = buffer;
 
     cfrds_sql_exportedkeys_defer(tmp);
     int64_t cnt = 0;
 
-    if (buffer_int == nullptr)
-        return nullptr;
+    if (buffer_int == NULL)
+        return NULL;
 
     const char *data = (const char *)buffer_int->data;
     size_t size = buffer_int->size;
 
     if (!cfrds_buffer_parse_number(&data, &size, &cnt))
-        return nullptr;
+        return NULL;
 
     tmp = malloc(offsetof(cfrds_sql_exportedkeys_int, items) + sizeof(cfrds_sql_exportedkeysitem_int) * cnt);
-    if (tmp == nullptr)
-        return nullptr;
+    if (tmp == NULL)
+        return NULL;
 
     ((cfrds_sql_exportedkeys_int *)tmp)->cnt = cnt;
 
@@ -1211,8 +1211,8 @@ cfrds_sql_exportedkeys_int *cfrds_buffer_to_sql_exportedkeys(cfrds_buffer *buffe
         cfrds_str_defer(item);
 
         cfrds_buffer_parse_string(&data, &size, &item);
-        if (item == nullptr)
-            return nullptr;
+        if (item == NULL)
+            return NULL;
 
         const char *column_buf = item;
 
@@ -1242,27 +1242,27 @@ cfrds_sql_exportedkeys_int *cfrds_buffer_to_sql_exportedkeys(cfrds_buffer *buffe
         cfrds_buffer_parse_string_list_item(&column_buf, &list_remaining, &updateRule);
         cfrds_buffer_parse_string_list_item(&column_buf, &list_remaining, &deleteRule);
 
-        ((cfrds_sql_exportedkeys_int *)tmp)->items[c].pkTableCatalog = pkTableCatalog; pkTableCatalog = nullptr;
-        ((cfrds_sql_exportedkeys_int *)tmp)->items[c].pkTableOwner   = pkTableOwner; pkTableOwner = nullptr;
-        ((cfrds_sql_exportedkeys_int *)tmp)->items[c].pkTableName    = pkTableName; pkTableName = nullptr;
-        ((cfrds_sql_exportedkeys_int *)tmp)->items[c].pkColName      = pkColName; pkColName = nullptr;
-        ((cfrds_sql_exportedkeys_int *)tmp)->items[c].fkTableCatalog = fkTableCatalog; fkTableCatalog = nullptr;
-        ((cfrds_sql_exportedkeys_int *)tmp)->items[c].fkTableOwner   = fkTableOwner; fkTableOwner = nullptr;
-        ((cfrds_sql_exportedkeys_int *)tmp)->items[c].fkTableName    = fkTableName; fkTableName = nullptr;
-        ((cfrds_sql_exportedkeys_int *)tmp)->items[c].fkColName      = fkColName; fkColName = nullptr;
+        ((cfrds_sql_exportedkeys_int *)tmp)->items[c].pkTableCatalog = pkTableCatalog; pkTableCatalog = NULL;
+        ((cfrds_sql_exportedkeys_int *)tmp)->items[c].pkTableOwner   = pkTableOwner; pkTableOwner = NULL;
+        ((cfrds_sql_exportedkeys_int *)tmp)->items[c].pkTableName    = pkTableName; pkTableName = NULL;
+        ((cfrds_sql_exportedkeys_int *)tmp)->items[c].pkColName      = pkColName; pkColName = NULL;
+        ((cfrds_sql_exportedkeys_int *)tmp)->items[c].fkTableCatalog = fkTableCatalog; fkTableCatalog = NULL;
+        ((cfrds_sql_exportedkeys_int *)tmp)->items[c].fkTableOwner   = fkTableOwner; fkTableOwner = NULL;
+        ((cfrds_sql_exportedkeys_int *)tmp)->items[c].fkTableName    = fkTableName; fkTableName = NULL;
+        ((cfrds_sql_exportedkeys_int *)tmp)->items[c].fkColName      = fkColName; fkColName = NULL;
         ((cfrds_sql_exportedkeys_int *)tmp)->items[c].keySequence    = atoi(keySequence);
         ((cfrds_sql_exportedkeys_int *)tmp)->items[c].updateRule     = atoi(updateRule);
         ((cfrds_sql_exportedkeys_int *)tmp)->items[c].deleteRule     = atoi(deleteRule);
     }
 
-    ret = tmp; tmp = nullptr;
+    ret = tmp; tmp = NULL;
 
     return ret;
 }
 
 cfrds_sql_resultset_int *cfrds_buffer_to_sql_sqlstmnt(cfrds_buffer *buffer)
 {
-    cfrds_sql_resultset_int *ret = nullptr;
+    cfrds_sql_resultset_int *ret = NULL;
 
     cfrds_buffer_int *buffer_int = buffer;
 
@@ -1272,17 +1272,17 @@ cfrds_sql_resultset_int *cfrds_buffer_to_sql_sqlstmnt(cfrds_buffer *buffer)
     int64_t rows = 0;
     size_t buf_size = 0;
 
-    if (buffer_int == nullptr)
-        return nullptr;
+    if (buffer_int == NULL)
+        return NULL;
 
     const char *response_data = cfrds_buffer_data(buffer);
     size_t response_size = cfrds_buffer_data_size(buffer);
 
     if (!cfrds_buffer_parse_number(&response_data, &response_size, &cnt))
-        return nullptr;
+        return NULL;
 
     if (cnt < 1)
-        return nullptr;
+        return NULL;
 
     const char *response_start_data = response_data;
     size_t response_start_size = response_size;
@@ -1291,8 +1291,8 @@ cfrds_sql_resultset_int *cfrds_buffer_to_sql_sqlstmnt(cfrds_buffer *buffer)
     {
         cfrds_str_defer(col_row);
         cfrds_buffer_parse_string(&response_data, &response_size, &col_row);
-        if (col_row == nullptr)
-            return nullptr;
+        if (col_row == NULL)
+            return NULL;
 
         const char *row_walker = col_row;
         size_t row_size = strlen(row_walker);
@@ -1305,14 +1305,14 @@ cfrds_sql_resultset_int *cfrds_buffer_to_sql_sqlstmnt(cfrds_buffer *buffer)
     }
 
     if (cols < 1)
-        return nullptr;
+        return NULL;
 
     cnt = cols * (rows + 1);
 
     buf_size = offsetof(cfrds_sql_resultset_int, values) + sizeof(char *) * cnt;
     tmp = malloc(buf_size);
-    if (tmp == nullptr)
-        return nullptr;
+    if (tmp == NULL)
+        return NULL;
 
     explicit_bzero(tmp, buf_size);
 
@@ -1331,7 +1331,7 @@ cfrds_sql_resultset_int *cfrds_buffer_to_sql_sqlstmnt(cfrds_buffer *buffer)
 
         for(int64_t c = 0; c < cols; c++)
         {
-            char *field = nullptr;
+            char *field = NULL;
 
             cfrds_buffer_parse_string_list_item(&row_walker, &row_size, &field);
 
@@ -1339,14 +1339,14 @@ cfrds_sql_resultset_int *cfrds_buffer_to_sql_sqlstmnt(cfrds_buffer *buffer)
         }
     }
 
-    ret = tmp; tmp = nullptr;
+    ret = tmp; tmp = NULL;
 
     return ret;
 }
 
 cfrds_sql_metadata_int *cfrds_buffer_to_sql_metadata(cfrds_buffer *buffer)
 {
-    cfrds_sql_metadata_int *ret = nullptr;
+    cfrds_sql_metadata_int *ret = NULL;
 
     cfrds_buffer_int *buffer_int = buffer;
 
@@ -1354,19 +1354,19 @@ cfrds_sql_metadata_int *cfrds_buffer_to_sql_metadata(cfrds_buffer *buffer)
     int64_t cnt = 0;
     size_t buf_size = 0;
 
-    if (buffer_int == nullptr)
-        return nullptr;
+    if (buffer_int == NULL)
+        return NULL;
 
     const char *response_data = cfrds_buffer_data(buffer);
     size_t response_size = cfrds_buffer_data_size(buffer);
 
     if (!cfrds_buffer_parse_number(&response_data, &response_size, &cnt))
-        return nullptr;
+        return NULL;
 
     buf_size = offsetof(cfrds_sql_metadata_int, items) + sizeof(cfrds_sql_metadataitem_int) * cnt;
     tmp = malloc(buf_size);
-    if (tmp == nullptr)
-        return nullptr;
+    if (tmp == NULL)
+        return NULL;
 
     explicit_bzero(tmp, buf_size);
 
@@ -1374,12 +1374,12 @@ cfrds_sql_metadata_int *cfrds_buffer_to_sql_metadata(cfrds_buffer *buffer)
 
     for(int64_t c = 0; c < cnt; c++)
     {
-        char *field = nullptr;
+        char *field = NULL;
         cfrds_str_defer(row);
 
         cfrds_buffer_parse_string(&response_data, &response_size, &row);
-        if (row == nullptr)
-            return nullptr;
+        if (row == NULL)
+            return NULL;
 
         const char *row_walker = row;
         size_t row_size = strlen(row_walker);
@@ -1394,14 +1394,14 @@ cfrds_sql_metadata_int *cfrds_buffer_to_sql_metadata(cfrds_buffer *buffer)
         ((cfrds_sql_metadata_int *)tmp)->items[c].jtype = field;
     }
 
-    ret = tmp; tmp = nullptr;
+    ret = tmp; tmp = NULL;
 
     return ret;
 }
 
 cfrds_sql_supportedcommands_int *cfrds_buffer_to_sql_supportedcommands(cfrds_buffer *buffer)
 {
-    cfrds_sql_supportedcommands_int *ret = nullptr;
+    cfrds_sql_supportedcommands_int *ret = NULL;
 
     cfrds_buffer_int *buffer_int = buffer;
 
@@ -1412,23 +1412,23 @@ cfrds_sql_supportedcommands_int *cfrds_buffer_to_sql_supportedcommands(cfrds_buf
     int64_t cnt = 0;
     size_t buf_size = 0;
 
-    if (buffer_int == nullptr)
-        return nullptr;
+    if (buffer_int == NULL)
+        return NULL;
 
     const char *data = (const char *)buffer_int->data;
     size_t size = buffer_int->size;
 
     if (!cfrds_buffer_parse_number(&data, &size, &rows))
-        return nullptr;
+        return NULL;
 
     if (rows != 1)
-        return nullptr;
+        return NULL;
 
     if (!cfrds_buffer_parse_number(&data, &size, &row_size))
-        return nullptr;
+        return NULL;
 
     if (size != (size_t)row_size + 1)
-        return nullptr;
+        return NULL;
 
     {
         const char *start_data = data;
@@ -1443,8 +1443,8 @@ cfrds_sql_supportedcommands_int *cfrds_buffer_to_sql_supportedcommands(cfrds_buf
 
     buf_size = offsetof(cfrds_sql_supportedcommands_int, commands) + sizeof(char *) * cnt;
     tmp = malloc(buf_size);
-    if (tmp == nullptr)
-        return nullptr;
+    if (tmp == NULL)
+        return NULL;
 
     explicit_bzero(tmp, buf_size);
 
@@ -1452,13 +1452,13 @@ cfrds_sql_supportedcommands_int *cfrds_buffer_to_sql_supportedcommands(cfrds_buf
 
     for(int64_t c = 0; c < cnt; c++)
     {
-        char *field = nullptr;
+        char *field = NULL;
 
         cfrds_buffer_parse_string_list_item(&data, &size, &field);
         ((cfrds_sql_supportedcommands_int *)tmp)->commands[c] = field;
     }
 
-    ret = tmp; tmp = nullptr;
+    ret = tmp; tmp = NULL;
 
     return ret;
 }
@@ -1466,7 +1466,7 @@ cfrds_sql_supportedcommands_int *cfrds_buffer_to_sql_supportedcommands(cfrds_buf
 
 char *cfrds_buffer_to_sql_dbdescription(cfrds_buffer *buffer)
 {
-    char *ret = nullptr;
+    char *ret = NULL;
 
     cfrds_buffer_int *buffer_int = buffer;
 
@@ -1478,11 +1478,11 @@ char *cfrds_buffer_to_sql_dbdescription(cfrds_buffer *buffer)
 
     cfrds_buffer_parse_number(&data, &size, &rows);
     if (rows != 1)
-        return nullptr;
+        return NULL;
 
     cfrds_buffer_parse_string(&data, &size, &row);
-    if (row == nullptr)
-        return nullptr;
+    if (row == NULL)
+        return NULL;
 
     data = (const char *)row;
     size = strlen(data);
@@ -1494,20 +1494,20 @@ char *cfrds_buffer_to_sql_dbdescription(cfrds_buffer *buffer)
 
 char *cfrds_buffer_to_debugger_start(cfrds_buffer *buffer)
 {
-    char *ret = nullptr;
+    char *ret = NULL;
 
     cfrds_buffer_int *buffer_int = buffer;
     int64_t rows = 0;
 
-    if (buffer_int == nullptr)
-        return nullptr;
+    if (buffer_int == NULL)
+        return NULL;
 
     const char *data = (const char *)buffer_int->data;
     size_t size = buffer_int->size;
 
     cfrds_buffer_parse_number(&data, &size, &rows);
     if (rows != 2)
-        return nullptr;
+        return NULL;
 
     cfrds_buffer_parse_string(&data, &size, &ret);
 
@@ -1521,7 +1521,7 @@ bool cfrds_buffer_to_debugger_stop(cfrds_buffer *buffer)
     cfrds_buffer_int *buffer_int = buffer;
     int64_t rows = 0;
 
-    if (buffer_int == nullptr)
+    if (buffer_int == NULL)
         return false;
 
     const char *data = (const char *)buffer_int->data;
@@ -1540,7 +1540,7 @@ bool cfrds_buffer_to_debugger_stop(cfrds_buffer *buffer)
         result = wddx_from_xml(xml);
 
         const char *status = wddx_get_string(result, "0,STATUS");
-        if (status == nullptr)
+        if (status == NULL)
             return false;
 
         if (strcmp(status, "RDS_OK") == 0)
@@ -1558,7 +1558,7 @@ int cfrds_buffer_to_debugger_info(cfrds_buffer *buffer)
     cfrds_buffer_int *buffer_int = buffer;
     int64_t rows = 0;
 
-    if (buffer_int == nullptr)
+    if (buffer_int == NULL)
         return -1;
 
     const char *data = (const char *)buffer_int->data;
@@ -1577,10 +1577,10 @@ int cfrds_buffer_to_debugger_info(cfrds_buffer *buffer)
         result = wddx_from_xml(ret);
 
         const char *status = wddx_get_string(result, "0,STATUS");
-        if ((status == nullptr)||(strcmp(status, "RDS_OK") != 0))
+        if ((status == NULL)||(strcmp(status, "RDS_OK") != 0))
             return -1;
 
-        return wddx_get_number(result, "0,DEBUG_SERVER_PORT", nullptr);
+        return wddx_get_number(result, "0,DEBUG_SERVER_PORT", NULL);
     }
 
     return -1;
@@ -1593,19 +1593,19 @@ cfrds_debugger_event *cfrds_buffer_to_debugger_event(cfrds_buffer *buffer)
     cfrds_buffer_int *buffer_int = buffer;
     int64_t rows = 0;
 
-    if (buffer_int == nullptr)
-        return nullptr;
+    if (buffer_int == NULL)
+        return NULL;
 
     const char *data = (const char *)buffer_int->data;
     size_t size = buffer_int->size;
 
     cfrds_buffer_parse_number(&data, &size, &rows);
     if (rows != 1)
-        return nullptr;
+        return NULL;
 
     cfrds_buffer_parse_string(&data, &size, &xml);
     if (xml)
         return wddx_from_xml(xml);
 
-    return nullptr;
+    return NULL;
 }

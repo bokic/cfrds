@@ -60,8 +60,8 @@ typedef void cfrds_variable;
 enum cfrds_status {
     CFRDS_STATUS_OK,
     CFRDS_STATUS_MEMORY_ERROR,
-    CFRDS_STATUS_PARAM_IS_nullptr,
-    CFRDS_STATUS_SERVER_IS_nullptr,
+    CFRDS_STATUS_PARAM_IS_NULL,
+    CFRDS_STATUS_SERVER_IS_NULL,
     CFRDS_STATUS_INVALID_INPUT_PARAMETER,
     CFRDS_STATUS_INDEX_OUT_OF_BOUNDS,
     CFRDS_STATUS_COMMAND_FAILED,
@@ -83,23 +83,23 @@ enum cfrds_debugger_type {
     CFRDS_DEBUGGER_EVENT_UNKNOWN,
 };
 
-#define cfrds_server_defer(var) cfrds_server* var __attribute__((cleanup(cfrds_server_cleanup))) = nullptr
-#define cfrds_buffer_defer(var) cfrds_buffer* var __attribute__((cleanup(cfrds_buffer_cleanup))) = nullptr
-#define cfrds_file_content_defer(var) cfrds_file_content* var __attribute__((cleanup(cfrds_file_content_cleanup))) = nullptr
-#define cfrds_browse_dir_defer(var) cfrds_browse_dir* var __attribute__((cleanup(cfrds_browse_dir_cleanup))) = nullptr
-#define cfrds_sql_dsninfo_defer(var) cfrds_sql_dsninfo* var __attribute__((cleanup(cfrds_sql_dsninfo_cleanup))) = nullptr
-#define cfrds_sql_tableinfo_defer(var) cfrds_sql_tableinfo* var __attribute__((cleanup(cfrds_sql_tableinfo_cleanup))) = nullptr
-#define cfrds_sql_columninfo_defer(var) cfrds_sql_columninfo* var __attribute__((cleanup(cfrds_sql_columninfo_cleanup))) = nullptr
-#define cfrds_sql_primarykeys_defer(var) cfrds_sql_primarykeys* var __attribute__((cleanup(cfrds_sql_primarykeys_cleanup))) = nullptr
-#define cfrds_sql_foreignkeys_defer(var) cfrds_sql_foreignkeys* var __attribute__((cleanup(cfrds_sql_foreignkeys_cleanup))) = nullptr
-#define cfrds_sql_importedkeys_defer(var) cfrds_sql_importedkeys* var __attribute__((cleanup(cfrds_sql_importedkeys_cleanup))) = nullptr
-#define cfrds_sql_exportedkeys_defer(var) cfrds_sql_exportedkeys* var __attribute__((cleanup(cfrds_sql_exportedkeys_cleanup))) = nullptr
-#define cfrds_sql_resultset_defer(var) cfrds_sql_resultset* var __attribute__((cleanup(cfrds_sql_resultset_cleanup))) = nullptr
-#define cfrds_sql_metadata_defer(var) cfrds_sql_resultset* var __attribute__((cleanup(cfrds_sql_metadata_cleanup))) = nullptr
-#define cfrds_sql_supportedcommands_defer(var) cfrds_sql_supportedcommands* var __attribute__((cleanup(cfrds_sql_supportedcommands_cleanup))) = nullptr
-#define cfrds_debugger_event_defer(var) cfrds_debugger_event* var __attribute__((cleanup(cfrds_debugger_event_cleanup))) = nullptr
+#define cfrds_server_defer(var) cfrds_server* var __attribute__((cleanup(cfrds_server_cleanup))) = NULL
+#define cfrds_buffer_defer(var) cfrds_buffer* var __attribute__((cleanup(cfrds_buffer_cleanup))) = NULL
+#define cfrds_file_content_defer(var) cfrds_file_content* var __attribute__((cleanup(cfrds_file_content_cleanup))) = NULL
+#define cfrds_browse_dir_defer(var) cfrds_browse_dir* var __attribute__((cleanup(cfrds_browse_dir_cleanup))) = NULL
+#define cfrds_sql_dsninfo_defer(var) cfrds_sql_dsninfo* var __attribute__((cleanup(cfrds_sql_dsninfo_cleanup))) = NULL
+#define cfrds_sql_tableinfo_defer(var) cfrds_sql_tableinfo* var __attribute__((cleanup(cfrds_sql_tableinfo_cleanup))) = NULL
+#define cfrds_sql_columninfo_defer(var) cfrds_sql_columninfo* var __attribute__((cleanup(cfrds_sql_columninfo_cleanup))) = NULL
+#define cfrds_sql_primarykeys_defer(var) cfrds_sql_primarykeys* var __attribute__((cleanup(cfrds_sql_primarykeys_cleanup))) = NULL
+#define cfrds_sql_foreignkeys_defer(var) cfrds_sql_foreignkeys* var __attribute__((cleanup(cfrds_sql_foreignkeys_cleanup))) = NULL
+#define cfrds_sql_importedkeys_defer(var) cfrds_sql_importedkeys* var __attribute__((cleanup(cfrds_sql_importedkeys_cleanup))) = NULL
+#define cfrds_sql_exportedkeys_defer(var) cfrds_sql_exportedkeys* var __attribute__((cleanup(cfrds_sql_exportedkeys_cleanup))) = NULL
+#define cfrds_sql_resultset_defer(var) cfrds_sql_resultset* var __attribute__((cleanup(cfrds_sql_resultset_cleanup))) = NULL
+#define cfrds_sql_metadata_defer(var) cfrds_sql_resultset* var __attribute__((cleanup(cfrds_sql_metadata_cleanup))) = NULL
+#define cfrds_sql_supportedcommands_defer(var) cfrds_sql_supportedcommands* var __attribute__((cleanup(cfrds_sql_supportedcommands_cleanup))) = NULL
+#define cfrds_debugger_event_defer(var) cfrds_debugger_event* var __attribute__((cleanup(cfrds_debugger_event_cleanup))) = NULL
 
-#define cfrds_str_defer(var) char* var __attribute__((cleanup(cfrds_str_cleanup))) = nullptr
+#define cfrds_str_defer(var) char* var __attribute__((cleanup(cfrds_str_cleanup))) = NULL
 #define cfrds_fd_defer(var) int var __attribute__((cleanup(cfrds_fd_cleanup))) = -1
 
 #ifdef __cplusplus

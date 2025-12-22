@@ -16,7 +16,7 @@
 typedef void WDDX;
 typedef void WDDX_NODE;
 
-#define WDDX_defer(var) WDDX* var __attribute__((cleanup(wddx_cleanup))) = nullptr
+#define WDDX_defer(var) WDDX* var __attribute__((cleanup(wddx_cleanup))) = NULL
 
 #ifdef __cplusplus
 extern "C"

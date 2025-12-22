@@ -813,28 +813,28 @@ int main(int argc, char *argv[])
                 }
             }
 
-            printf((char*)u8"\u250F");
+            printf((const char*)u8"\u250F");
             for(int col = 0; col < cols; col++)
             {
                 size_t size = sizes[col];
 
                 for(size_t c = 0; c < size; c++)
                 {
-                    printf((char*)u8"\u2501");
+                    printf((const char*)u8"\u2501");
                 }
 
                 if (col == cols - 1)
                 {
-                    printf((char*)u8"\u2513");
+                    printf((const char*)u8"\u2513");
                 }
                 else
                 {
-                    printf((char*)u8"\u252F");
+                    printf((const char*)u8"\u252F");
                 }
             }
             putchar('\n');
 
-            printf((char*)u8"\u2503");
+            printf((const char*)u8"\u2503");
             for(int col = 0; col < cols; col++)
             {
                 size_t size = sizes[col];
@@ -850,54 +850,54 @@ int main(int argc, char *argv[])
 
                 if (col == cols - 1)
                 {
-                    printf((char*)u8"\u2503");
+                    printf((const char*)u8"\u2503");
                 }
                 else
                 {
-                    printf((char*)u8"\u2502");
+                    printf((const char*)u8"\u2502");
                 }
             }
             putchar('\n');
 
             if (rows == 0)
             {
-                printf((char*)u8"\u2517");
+                printf((const char*)u8"\u2517");
                 for(int col = 0; col < cols; col++)
                 {
                     size_t size = sizes[col];
 
                     for(size_t c = 0; c < size; c++)
                     {
-                        printf((char*)u8"\u2501");
+                        printf((const char*)u8"\u2501");
                     }
 
                     if (col == cols - 1)
                     {
-                        printf((char*)u8"\u251B");
+                        printf((const char*)u8"\u251B");
                     }
                     else
                     {
-                        printf((char*)u8"\u2537");
+                        printf((const char*)u8"\u2537");
                     }
                 }
             } else {
-                printf((char*)u8"\u2520");
+                printf((const char*)u8"\u2520");
                 for(int col = 0; col < cols; col++)
                 {
                     size_t size = sizes[col];
 
                     for(size_t c = 0; c < size; c++)
                     {
-                        printf((char*)u8"\u2500");
+                        printf((const char*)u8"\u2500");
                     }
 
                     if (col == cols - 1)
                     {
-                        printf((char*)u8"\u2528");
+                        printf((const char*)u8"\u2528");
                     }
                     else
                     {
-                        printf((char*)u8"\u253C");
+                        printf((const char*)u8"\u253C");
                     }
                 }
             }
@@ -905,7 +905,7 @@ int main(int argc, char *argv[])
 
             for (int row = 0; row < rows; row++)
             {
-                printf((char*)u8"\u2503");
+                printf((const char*)u8"\u2503");
                 for(int col = 0; col < cols; col++)
                 {
                     size_t size = sizes[col];
@@ -921,32 +921,32 @@ int main(int argc, char *argv[])
 
                     if (col == cols - 1)
                     {
-                        printf((char*)u8"\u2503");
+                        printf((const char*)u8"\u2503");
                     }
                     else
                     {
-                        printf((char*)u8"\u2502");
+                        printf((const char*)u8"\u2502");
                     }
                 }
                 putchar('\n');
 
-                printf((char*)u8"\u2517");
+                printf((const char*)u8"\u2517");
                 for(size_t col = 0; col < cols; col++)
                 {
                     size_t size = sizes[col];
 
                     for(size_t c = 0; c < size; c++)
                     {
-                        printf((char*)u8"\u2501");
+                        printf((const char*)u8"\u2501");
                     }
 
                     if (col == cols - 1)
                     {
-                        printf((char*)u8"\u251B");
+                        printf((const char*)u8"\u251B");
                     }
                     else
                     {
-                        printf((char*)u8"\u2537");
+                        printf((const char*)u8"\u2537");
                     }
                 }
                 putchar('\n');

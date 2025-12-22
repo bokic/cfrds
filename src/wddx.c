@@ -118,8 +118,9 @@ static WDDX_NODE_int *wddx_recursively_put(WDDX_NODE_int *node, const char *path
     if(is_string_numeric(newkey))
     {
         int idx = atoi(newkey) + 1;
+        if (idx < 1) return NULL;
 
-        if ((node == NULL)&&(idx > 0))
+        if (node == NULL)
         {
             newsize = offsetof(WDDX_NODE_int, items) + (sizeof(WDDX_NODE_int) * idx);
             node = (WDDX_NODE_int *)malloc(newsize);
@@ -140,7 +141,6 @@ static WDDX_NODE_int *wddx_recursively_put(WDDX_NODE_int *node, const char *path
             return NULL;
         case WDDX_STRING:
             return NULL;
-            break;
         case WDDX_ARRAY:
         {
             if(node->cnt < idx)
@@ -158,10 +158,8 @@ static WDDX_NODE_int *wddx_recursively_put(WDDX_NODE_int *node, const char *path
         }
         case WDDX_STRUCT:
             return NULL;
-            break;
         default:
             return NULL;
-            break;
         }
     }
     else

@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.21)
 
-project(cfrds VERSION 0.9.9 LANGUAGES C)
+project(cfrds VERSION 1.0.0 LANGUAGES C)
 
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_C_STANDARD_REQUIRED ON)
@@ -93,8 +93,8 @@ set_target_properties(libcfrds PROPERTIES
     INTERPROCEDURAL_OPTIMIZATION TRUE
     C_VISIBILITY_PRESET hidden
     OUTPUT_NAME "cfrds"
-    VERSION "0.9.9"
-    SOVERSION "0.9"
+    VERSION "1.0.0"
+    SOVERSION "1.0"
 )
 
 add_custom_command(TARGET libcfrds POST_BUILD

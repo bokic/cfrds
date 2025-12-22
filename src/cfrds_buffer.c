@@ -430,16 +430,19 @@ bool cfrds_buffer_parse_number(const char **data, size_t *remaining, int64_t *ou
 
 bool cfrds_buffer_parse_bytearray(const char **data, size_t *remaining, char **out, int *out_size)
 {
-    int64_t size = 0;
+    size_t size = 0;
+    int64_t tmp = 0;
 
     if (out == nullptr)
         return false;
 
-    if (!cfrds_buffer_parse_number(data, remaining, &size))
+    if (!cfrds_buffer_parse_number(data, remaining, &tmp))
         return false;
 
-    if (size < 0)
+    if (tmp < 0)
         return false;
+
+    size = (size_t)tmp;
 
     if (size > *remaining)
         return false;
@@ -462,15 +465,18 @@ bool cfrds_buffer_parse_bytearray(const char **data, size_t *remaining, char **o
 bool cfrds_buffer_parse_string(const char **data, size_t *remaining, char **out)
 {
     int64_t size = 0;
+    int64_t tmp = 0;
 
     if (out == nullptr)
         return false;
 
-    if (!cfrds_buffer_parse_number(data, remaining, &size))
+    if (!cfrds_buffer_parse_number(data, remaining, &tmp))
         return false;
 
-    if (size < 0)
+    if (tmp < 0)
         return false;
+
+    size = (size_t)tmp;
 
     if (size > *remaining)
         return false;

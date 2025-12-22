@@ -217,7 +217,6 @@ static WDDX_NODE_int *wddx_recursively_put(WDDX_NODE_int *node, const char *path
         }
         default:
             return NULL;
-            break;
         }
     }
 

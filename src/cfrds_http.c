@@ -93,7 +93,8 @@ enum cfrds_status cfrds_http_post(cfrds_server_int *server, const char *command,
     cfrds_buffer_append(send_buf, "\r\n\r\n");
     cfrds_buffer_append_buffer(send_buf, payload);
 
-    if ((sockfd = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
+    sockfd = socket(AF_INET, SOCK_STREAM, 0);
+    if (sockfd == -1) {
         server->_errno = errno;
         cfrds_server_set_error(server, CFRDS_STATUS_SOCKET_CREATION_FAILED, "failed to create socket...");
         return CFRDS_STATUS_SOCKET_CREATION_FAILED;

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../cfrds.h"
+#include <cfrds.h>
 #include "cfrds_buffer.h"
 
 #include <stdbool.h>

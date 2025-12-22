@@ -498,7 +498,6 @@ int main(int argc, char *argv[])
 
                 memcpy(schema, schema_separator, tmp_size);
                 schema[tmp_size] = '\0';
-                schema_separator = schema;
 
                 const char *table = table_separator + 1;
 

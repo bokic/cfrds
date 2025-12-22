@@ -921,6 +921,7 @@ cfrds_sql_columninfo_int *cfrds_buffer_to_sql_columninfo(cfrds_buffer *buffer)
         cfrds_str_defer(field9);
         cfrds_str_defer(field10);
         cfrds_str_defer(field11);
+        cfrds_str_defer(field12);
 
         if (!cfrds_buffer_parse_string_list_item(&column_buf, &list_remaining, &field1))
             return NULL;
@@ -943,6 +944,8 @@ cfrds_sql_columninfo_int *cfrds_buffer_to_sql_columninfo(cfrds_buffer *buffer)
         if (!cfrds_buffer_parse_string_list_item(&column_buf, &list_remaining, &field10))
             return NULL;
         if (!cfrds_buffer_parse_string_list_item(&column_buf, &list_remaining, &field11))
+            return NULL;
+        if (!cfrds_buffer_parse_string_list_item(&column_buf, &list_remaining, &field12))
             return NULL;
         if (list_remaining != 0)
             return NULL;

@@ -60,8 +60,12 @@ Some of the features RDS protocol supports:
 
 ## Installation
 * Linux
-  * arch - `yay -S cfrds`
-  * Ubuntu PPA - Work in progress.
+  * arch
+    > `yay -S cfrds`
+  * Ubuntu PPA
+    > `sudo add-apt-repository ppa:bbarbulovski-gmail/cfrds`
+    > 
+    > `sudo apt update`
 * Windows
   * Windows installation - Work in progress.
 * MacOS

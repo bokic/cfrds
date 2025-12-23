@@ -94,9 +94,9 @@ static char *cfrds_server_encode_password(const char *password)
     if (password == NULL)
         return NULL;
 
-    static const char * const hex = "0123456789abcdef";
-    static const char * const fillup = "4p0L@r1$";
-    static const size_t fillup_len = sizeof(fillup) - 1;
+    const char hex[] = "0123456789abcdef";
+    const char fillup[] = "4p0L@r1$";
+    size_t fillup_len = strlen(fillup);
 
     size_t len = strlen(password);
 

@@ -66,6 +66,8 @@ Some of the features RDS protocol supports:
     > `sudo add-apt-repository ppa:bbarbulovski-gmail/cfrds`
     > 
     > `sudo apt update`
+    >
+    >  `sudo apt install cfrds`
 * Windows
     > See project [releases](https://github.com/bokic/cfrds/releases) page.
 * MacOS

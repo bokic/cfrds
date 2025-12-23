@@ -62,11 +62,11 @@ Some of the features RDS protocol supports:
 * Linux
   * arch
     > `yay -S cfrds`
-  * Ubuntu PPA
+  * Ubuntu
     > `sudo add-apt-repository ppa:bbarbulovski-gmail/cfrds`
     > 
     > `sudo apt update`
 * Windows
-  * Windows installation - Work in progress.
+    > See project [releases](https://github.com/bokic/cfrds/releases) page.
 * MacOS
   * homebrew - Work in progress.

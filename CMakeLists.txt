@@ -113,5 +113,3 @@ install(TARGETS libcfrds
 install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/pkgconfig/cfrds.pc
     DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/pkgconfig
 )
-
-add_subdirectory(python)

@@ -11,6 +11,8 @@ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/bin")
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/bin")
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/bin")
 
+include(GNUInstallDirs)
+
 if(WIN32)
     # Define the location of the template and the output file
     set(RC_IN_FILE "version.rc.in")
@@ -105,6 +107,11 @@ add_custom_command(TARGET libcfrds POST_BUILD
 
 install(TARGETS libcfrds
     PUBLIC_HEADER
+)
+
+# install libcfrds.pc to proper directory
+install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/pkgconfig/cfrds.pc
+    DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/pkgconfig
 )
 
 add_subdirectory(python)

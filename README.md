@@ -24,7 +24,7 @@ Some of the features RDS protocol supports:
 * Code cleanup.
 
 ## CLI test script usage ex:
-> RDS_HOST=rds://localhost:8500 RDS_DSN=cf_dsn RDS_DSN_TABLE=some_table ./test.sh
+> `RDS_HOST=rds://localhost:8500 RDS_DSN={some_coldfusion_dsn} RDS_DSN_TABLE={some_table} ./test.sh`
 
 ## CLI examples
 * List directory - `cfrds ls <rds://{username{:password}@}host{:port}/pathname>`

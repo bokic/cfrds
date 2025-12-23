@@ -109,7 +109,6 @@ install(TARGETS libcfrds
     PUBLIC_HEADER
 )
 
-# install libcfrds.pc to proper directory
 install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/pkgconfig/cfrds.pc
     DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/pkgconfig
 )

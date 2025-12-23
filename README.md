@@ -46,9 +46,6 @@ Some of the features RDS protocol supports:
 * Execute ColdFusion data source name SQL - `cfrds sql <rds://{username{:password}@}host{:port}/dsn> '<SQL>'`
 * Get ColdFusion data source name SQL metadata - `cfrds sqlmetadata <rds://{username{:password}@}host{:port}/dsn> '<SQL>'`
 * Get ColdFusion data source name database info - `cfrds dbdescription <rds://{username{:password}@}host{:port}/dsn>`
-* Start ColdFusion debugger - `cfrds dbg_start <rds://{username{:password}@}host{:port}>`
-* Stop ColdFusion debugger - `cfrds dbg_stop <rds://{username{:password}@}host{:port}/session_id`
-* Get ColdFusion debugger server info - `cfrds dbg_info <rds://{username{:password}@}host{:port}>`
 
 ## Build
 > git clone https://github.com/bokic/cfrds.git

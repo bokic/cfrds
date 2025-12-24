@@ -1,42 +1,47 @@
 cmake_minimum_required(VERSION 3.21)
 
-SET(GIT_TAG CACHE STRING "")
+SET(MY_GIT_TAG CACHE STRING "")
+
+message("MY_GIT_TAG=${MY_GIT_TAG}")
 
 find_package(Git QUIET)
 
-if(Git_FOUND)
-    execute_process(
-        COMMAND ${GIT_EXECUTABLE} describe --tags --abbrev=0
-        WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-        OUTPUT_VARIABLE GIT_TAG
-        OUTPUT_STRIP_TRAILING_WHITESPACE # Removes trailing newline/whitespace
-        RESULT_VARIABLE GIT_DESCRIBE_RESULT
-        ERROR_QUIET
-    )
-    execute_process(
-        COMMAND ${GIT_EXECUTABLE} rev-list ${GIT_TAG}..HEAD --count
-        WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-        OUTPUT_VARIABLE GIT_REVISION
-        OUTPUT_STRIP_TRAILING_WHITESPACE # Removes trailing newline/whitespace
-        RESULT_VARIABLE GIT_REV_LIST_RESULT
-        ERROR_QUIET
-    ) 
-    execute_process(
-        COMMAND ${GIT_EXECUTABLE} describe --tags --dirty
-        WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-        OUTPUT_VARIABLE GIT_COMMIT_NAME
-        OUTPUT_STRIP_TRAILING_WHITESPACE # Removes trailing newline/whitespace
-        RESULT_VARIABLE GIT_DESCRIBE_RESULT
-        ERROR_QUIET
-    )
-    set(REVISION ${GIT_REVISION})
+set(GIT_DIR_PATH "${CMAKE_SOURCE_DIR}/.git")
+if(EXISTS ${GIT_DIR_PATH})
+    if(Git_FOUND)
+        execute_process(
+            COMMAND ${GIT_EXECUTABLE} describe --tags --abbrev=0
+            WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+            OUTPUT_VARIABLE MY_GIT_TAG
+            OUTPUT_STRIP_TRAILING_WHITESPACE # Removes trailing newline/whitespace
+            RESULT_VARIABLE GIT_DESCRIBE_RESULT
+            ERROR_QUIET
+        )
+        execute_process(
+            COMMAND ${GIT_EXECUTABLE} rev-list ${MY_GIT_TAG}..HEAD --count
+            WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+            OUTPUT_VARIABLE GIT_REVISION
+            OUTPUT_STRIP_TRAILING_WHITESPACE # Removes trailing newline/whitespace
+            RESULT_VARIABLE GIT_REV_LIST_RESULT
+            ERROR_QUIET
+        ) 
+        execute_process(
+            COMMAND ${GIT_EXECUTABLE} describe --tags --dirty
+            WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+            OUTPUT_VARIABLE GIT_COMMIT_NAME
+            OUTPUT_STRIP_TRAILING_WHITESPACE # Removes trailing newline/whitespace
+            RESULT_VARIABLE GIT_DESCRIBE_RESULT
+            ERROR_QUIET
+        )
+        set(REVISION ${GIT_REVISION})
+    endif()
 endif()
 
-if(NOT GIT_TAG MATCHES "^[0-9]+\\.[0-9]+\\.[0-9]+$")
-    message(FATAL_ERROR "Git last tag '${GIT_TAG}' is not in format X.Y.Z")
+if(NOT MY_GIT_TAG MATCHES "^[0-9]+\\.[0-9]+\\.[0-9]+$")
+    message(FATAL_ERROR "Git last tag '${MY_GIT_TAG}' is not in format X.Y.Z")
 endif()
 
-project(cfrds VERSION ${GIT_TAG} DESCRIPTION "ColdFusion RDS Library" LANGUAGES C)
+project(cfrds VERSION ${MY_GIT_TAG} DESCRIPTION "ColdFusion RDS Library" LANGUAGES C)
 
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_C_STANDARD_REQUIRED ON)
@@ -155,7 +160,7 @@ set_target_properties(libcfrds PROPERTIES
     INTERPROCEDURAL_OPTIMIZATION TRUE
     C_VISIBILITY_PRESET hidden
     OUTPUT_NAME "cfrds"
-    VERSION ${GIT_TAG}
+    VERSION ${MY_GIT_TAG}
 )
 
 add_custom_command(TARGET libcfrds POST_BUILD

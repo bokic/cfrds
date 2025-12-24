@@ -30,6 +30,10 @@ if(Git_FOUND)
     set(REVISION ${GIT_REVISION})
 endif()
 
+if(GIT_LAST_TAG STREQUAL "")
+    set(GIT_LAST_TAG "0.0.0")
+endif()
+
 if(NOT GIT_LAST_TAG MATCHES "^[0-9]+\\.[0-9]+\\.[0-9]+$")
     message(FATAL_ERROR "Git last tag '${GIT_LAST_TAG}' is not in format X.Y.Z")
 endif()

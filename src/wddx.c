@@ -1,11 +1,10 @@
-#include <internal/wddx.h>
+#include <wddx.h>
 
 #include <libxml/tree.h>
 
 #include <string.h>
 #include <stdlib.h>
 #include <stddef.h>
-#include <stdint.h>
 #include <ctype.h>
 
 
@@ -20,20 +19,11 @@ static void explicit_bzero(void *s, size_t n) {
 
 #define xmlDoc_defer(var) xmlDoc* var __attribute__((cleanup(xmlDoc_cleanup))) = NULL
 
-enum wddx_type {
-    WDDX_BOOLEAN,
-    WDDX_NUMBER,
-    WDDX_STRING,
-    WDDX_ARRAY,
-    WDDX_STRUCT
-};
-
 typedef struct {
     int type;
     int cnt;
     union {
         bool boolean;
-        int64_t integer;
         double number;
         void *items[];
         char string[];
@@ -597,6 +587,80 @@ static const WDDX_NODE_int *wddx_recursively_get(const WDDX_NODE_int *node, cons
     }
 
     return NULL;
+}
+
+const WDDX_NODE *wddx_header(const WDDX *src)
+{
+    const WDDX_int *src_int = (const WDDX_int *)src;
+
+    return src_int->header;
+}
+
+const WDDX_NODE *wddx_data(const WDDX *src)
+{
+    const WDDX_int *src_int = (const WDDX_int *)src;
+
+    return src_int->data;
+}
+
+int wddx_node_type(const WDDX_NODE *value)
+{
+    const WDDX_NODE_int *value_int = (const WDDX_NODE_int *)value;
+
+    return value_int->type;
+}
+
+bool wddx_node_bool(const WDDX_NODE *value)
+{
+    const WDDX_NODE_int *value_int = (const WDDX_NODE_int *)value;
+
+    return value_int->boolean;
+}
+
+double wddx_node_number(const WDDX_NODE *value)
+{
+    const WDDX_NODE_int *value_int = (const WDDX_NODE_int *)value;
+
+    return value_int->number;
+}
+
+const char *wddx_node_string(const WDDX_NODE *value)
+{
+    const WDDX_NODE_int *value_int = (const WDDX_NODE_int *)value;
+
+    return value_int->string;
+}
+
+int wddx_node_array_size(const WDDX_NODE *value)
+{
+    const WDDX_NODE_int *value_int = (const WDDX_NODE_int *)value;
+
+    return value_int->cnt;
+}
+
+const WDDX_NODE *wddx_node_array_at(const WDDX_NODE *value, int cnt)
+{
+    const WDDX_NODE_int *value_int = (const WDDX_NODE_int *)value;
+
+    return value_int->items[cnt];
+}
+
+int wddx_node_struct_size(const WDDX_NODE *value)
+{
+    const WDDX_NODE_int *value_int = (const WDDX_NODE_int *)value;
+
+    return value_int->cnt;
+}
+
+const WDDX_NODE *wddx_node_struct_at(const WDDX_NODE *value, int cnt, const char **name)
+{
+    const WDDX_NODE_int *value_int = (const WDDX_NODE_int *)value;
+
+    const WDDX_STRUCT_NODE_int *childs = (const WDDX_STRUCT_NODE_int *)&value_int->items;
+
+    *name = childs[cnt].name;
+
+    return childs[cnt].value;
 }
 
 bool wddx_get_bool(const WDDX *src, const char *path, bool *ok)

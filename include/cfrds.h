@@ -1,5 +1,7 @@
 #pragma once
 
+#include "wddx.h"
+
 #include <stdbool.h>
 #include <stdint.h>
 #include <stddef.h>
@@ -55,7 +57,6 @@ typedef void cfrds_sql_resultset;
 typedef void cfrds_sql_metadata;
 typedef void cfrds_sql_supportedcommands;
 typedef void cfrds_debugger_event;
-typedef void cfrds_variable;
 
 enum cfrds_status {
     CFRDS_STATUS_OK,
@@ -278,11 +279,11 @@ EXPORT_CFRDS const char *cfrds_buffer_debugger_event_breakpoint_get_thread_name(
 EXPORT_CFRDS const char *cfrds_buffer_debugger_event_breakpoint_set_get_pathname(const cfrds_debugger_event *event);
 EXPORT_CFRDS int cfrds_buffer_debugger_event_breakpoint_set_get_req_line(const cfrds_debugger_event *event);
 EXPORT_CFRDS int cfrds_buffer_debugger_event_breakpoint_set_get_act_line(const cfrds_debugger_event *event);
-EXPORT_CFRDS const cfrds_variable *cfrds_buffer_debugger_event_get_scopes(const cfrds_debugger_event *event);
-EXPORT_CFRDS const cfrds_variable *cfrds_buffer_debugger_event_get_threads(const cfrds_debugger_event *event);
-EXPORT_CFRDS const cfrds_variable *cfrds_buffer_debugger_event_get_watch(const cfrds_debugger_event *event);
-EXPORT_CFRDS const cfrds_variable *cfrds_buffer_debugger_event_get_cf_trace(const cfrds_debugger_event *event);
-EXPORT_CFRDS const cfrds_variable *cfrds_buffer_debugger_event_get_java_trace(const cfrds_debugger_event *event);
+EXPORT_CFRDS const WDDX_NODE *cfrds_buffer_debugger_event_get_scopes(const cfrds_debugger_event *event);
+EXPORT_CFRDS const WDDX_NODE *cfrds_buffer_debugger_event_get_threads(const cfrds_debugger_event *event);
+EXPORT_CFRDS const WDDX_NODE *cfrds_buffer_debugger_event_get_watch(const cfrds_debugger_event *event);
+EXPORT_CFRDS const WDDX_NODE *cfrds_buffer_debugger_event_get_cf_trace(const cfrds_debugger_event *event);
+EXPORT_CFRDS const WDDX_NODE *cfrds_buffer_debugger_event_get_java_trace(const cfrds_debugger_event *event);
 
 EXPORT_CFRDS enum cfrds_status cfrds_command_debugger_step_in(cfrds_server *server, const char *session_id, const char *thread_name);
 EXPORT_CFRDS enum cfrds_status cfrds_command_debugger_step_over(cfrds_server *server, const char *session_id, const char *thread_name);

@@ -3,6 +3,14 @@
 #include <stdbool.h>
 
 
+enum wddx_type {
+    WDDX_BOOLEAN,
+    WDDX_NUMBER,
+    WDDX_STRING,
+    WDDX_ARRAY,
+    WDDX_STRUCT
+};
+
 #ifdef libcfrds_EXPORTS
 #if defined(_MSC_VER)
 #define EXPORT_WDDX __declspec(dllexport)
@@ -30,6 +38,18 @@ EXPORT_WDDX bool wddx_put_string(WDDX *dest, const char *path, const char *value
 EXPORT_WDDX const char *wddx_to_xml(WDDX *src);
 
 EXPORT_WDDX WDDX *wddx_from_xml(const char *xml);
+
+EXPORT_WDDX const WDDX_NODE *wddx_header(const WDDX *src);
+EXPORT_WDDX const WDDX_NODE *wddx_data(const WDDX *src);
+
+EXPORT_WDDX int wddx_node_type(const WDDX_NODE *value);
+EXPORT_WDDX bool wddx_node_bool(const WDDX_NODE *value);
+EXPORT_WDDX double wddx_node_number(const WDDX_NODE *value);
+EXPORT_WDDX const char *wddx_node_string(const WDDX_NODE *value);
+EXPORT_WDDX int wddx_node_array_size(const WDDX_NODE *value);
+EXPORT_WDDX const WDDX_NODE *wddx_node_array_at(const WDDX_NODE *value, int cnt);
+EXPORT_WDDX int wddx_node_struct_size(const WDDX_NODE *value);
+
 EXPORT_WDDX bool wddx_get_bool(const WDDX *src, const char *path, bool *ok);
 EXPORT_WDDX double wddx_get_number(const WDDX *src, const char *path, bool *ok);
 EXPORT_WDDX const char *wddx_get_string(const WDDX *src, const char *path);

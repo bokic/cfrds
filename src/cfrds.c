@@ -1,7 +1,7 @@
 #include <internal/cfrds_buffer.h>
 #include <internal/cfrds_http.h>
-#include <internal/wddx.h>
 #include <cfrds.h>
+#include <wddx.h>
 
 #include <string.h>
 #include <stdlib.h>
@@ -2176,7 +2176,7 @@ enum cfrds_status cfrds_command_debugger_breakpoint(cfrds_server *server, const 
     return ret;
 }
 
-EXPORT_CFRDS enum cfrds_status cfrds_command_debugger_clear_all_breakpoints(cfrds_server *server, const char *session_id)
+enum cfrds_status cfrds_command_debugger_clear_all_breakpoints(cfrds_server *server, const char *session_id)
 {
     enum cfrds_status ret;
 
@@ -2417,27 +2417,27 @@ int cfrds_buffer_debugger_event_breakpoint_set_get_act_line(const cfrds_debugger
     return wddx_get_number(event, "0,ACTUAL_LINE_NUM", NULL);
 }
 
-const cfrds_variable *cfrds_buffer_debugger_event_get_scopes(const cfrds_debugger_event *event)
+const WDDX_NODE *cfrds_buffer_debugger_event_get_scopes(const cfrds_debugger_event *event)
 {
     return wddx_get_var(event, "0,SCOPES");
 }
 
-const cfrds_variable *cfrds_buffer_debugger_event_get_threads(const cfrds_debugger_event *event)
+const WDDX_NODE *cfrds_buffer_debugger_event_get_threads(const cfrds_debugger_event *event)
 {
     return wddx_get_var(event, "0,THREADS");
 }
 
-const cfrds_variable *cfrds_buffer_debugger_event_get_watch(const cfrds_debugger_event *event)
+const WDDX_NODE *cfrds_buffer_debugger_event_get_watch(const cfrds_debugger_event *event)
 {
     return wddx_get_var(event, "0,WATCH");
 }
 
-const cfrds_variable *cfrds_buffer_debugger_event_get_cf_trace(const cfrds_debugger_event *event)
+const WDDX_NODE *cfrds_buffer_debugger_event_get_cf_trace(const cfrds_debugger_event *event)
 {
     return wddx_get_var(event, "0,CF_TRACE");
 }
 
-const cfrds_variable *cfrds_buffer_debugger_event_get_java_trace(const cfrds_debugger_event *event)
+const WDDX_NODE *cfrds_buffer_debugger_event_get_java_trace(const cfrds_debugger_event *event)
 {
     return wddx_get_var(event, "0,JAVA_TRACE");
 }

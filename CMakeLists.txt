@@ -59,7 +59,7 @@ install(TARGETS cfrds_cli
 ###
 add_library(libcfrds SHARED
     src/cfrds.c        include/cfrds.h
-    src/wddx.c         include/internal/wddx.h
+    src/wddx.c         include/wddx.h
     src/cfrds_buffer.c include/internal/cfrds_buffer.h
     src/cfrds_http.c   include/internal/cfrds_http.h
 )
@@ -91,7 +91,7 @@ target_link_libraries(libcfrds PRIVATE LibXml2::LibXml2)
 endif()
 
 set_target_properties(libcfrds PROPERTIES
-    PUBLIC_HEADER "include/cfrds.h"
+    PUBLIC_HEADER "include/cfrds.h", "include/wddx.h"
     INTERPROCEDURAL_OPTIMIZATION TRUE
     C_VISIBILITY_PRESET hidden
     OUTPUT_NAME "cfrds"

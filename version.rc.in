@@ -4,7 +4,7 @@
 #define VER_MAJOR    @PROJECT_VERSION_MAJOR@
 #define VER_MINOR    @PROJECT_VERSION_MINOR@
 #define VER_PATCH    @PROJECT_VERSION_PATCH@
-#define VER_BUILD    0 // Use TWEAK for the build/revision number
+#define VER_BUILD    @REVISION@
 
 VS_VERSION_INFO VERSIONINFO
  FILEVERSION VER_MAJOR,VER_MINOR,VER_PATCH,VER_BUILD
@@ -23,10 +23,10 @@ BEGIN
     BEGIN
         BLOCK "040904E4" // U.S. English and Windows-1252 codepage
         BEGIN
-            VALUE "FileVersion", "@PROJECT_VERSION@\0"
-            VALUE "ProductVersion", "@PROJECT_VERSION@\0"
+            VALUE "FileVersion", "@GIT_COMMIT_NAME@\0"
+            VALUE "ProductVersion", "@GIT_COMMIT_NAME@\0"
             VALUE "LegalCopyright", "Copyright (C) 2025\0"
-            VALUE "OriginalFilename", "@CMAKE_PROJECT_NAME@.dll\0"
+            VALUE "OriginalFilename", "@CMAKE_PROJECT_NAME@.@RC_OUT_EXTENSION@\0"
             VALUE "ProductName", "@CMAKE_PROJECT_NAME@\0"
         END
     END

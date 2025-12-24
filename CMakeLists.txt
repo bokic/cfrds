@@ -53,23 +53,21 @@ if(WIN32)
     # Define the location of the template and the output file
     set(RC_DLL_IN_FILE "version.rc.in")
     set(RC_DLL_OUT_FILE "version_dll.rc")
-    set(RC_DLL_OUT_EXTENSION "dll")
+    set(RC_OUT_EXTENSION "dll")
 
     # Configure the file (replaces @VAR@ with CMake variable values)
     configure_file(
         ${RC_DLL_IN_FILE}
         ${RC_DLL_OUT_FILE}
-        ${RC_DLL_OUT_EXTENSION}
         @ONLY # Only substitute variables in the @VAR@ format
     )
 
     set(RC_EXE_IN_FILE "version.rc.in")
     set(RC_EXE_OUT_FILE "version_exe.rc")
-    set(RC_EXE_OUT_EXTENSION "exe")
+    set(RC_OUT_EXTENSION "exe")
     configure_file(
         ${RC_EXE_IN_FILE}
         ${RC_EXE_OUT_FILE}
-        ${RC_EXE_OUT_EXTENSION}
         @ONLY # Only substitute variables in the @VAR@ format
     )
 endif()

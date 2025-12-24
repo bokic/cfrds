@@ -4,6 +4,7 @@
 /python/build
 /python/*.so
 /build
+/deps
 /bin
 out
 .vs

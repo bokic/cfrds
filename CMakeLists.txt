@@ -2,7 +2,6 @@ cmake_minimum_required(VERSION 3.21)
 
 SET(MY_GIT_TAG CACHE STRING "")
 
-message("MY_GIT_TAG=${MY_GIT_TAG}")
 
 find_package(Git QUIET)
 

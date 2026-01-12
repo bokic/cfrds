@@ -5,7 +5,7 @@ SET(MY_GIT_TAG CACHE STRING "")
 
 find_package(Git QUIET)
 
-set(GIT_DIR_PATH "${CMAKE_SOURCE_DIR}/.git")
+set(GIT_DIR_PATH "${CMAKE_CURRENT_SOURCE_DIR}/.git")
 if(EXISTS ${GIT_DIR_PATH})
     if(Git_FOUND)
         execute_process(
@@ -23,7 +23,7 @@ if(EXISTS ${GIT_DIR_PATH})
             OUTPUT_STRIP_TRAILING_WHITESPACE # Removes trailing newline/whitespace
             RESULT_VARIABLE GIT_REV_LIST_RESULT
             ERROR_QUIET
-        ) 
+        )
         execute_process(
             COMMAND ${GIT_EXECUTABLE} describe --tags --dirty
             WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
@@ -118,7 +118,7 @@ add_library(libcfrds SHARED
 )
 
 configure_file(
-    "${CMAKE_SOURCE_DIR}/pkgconfig/cfrds.pc.in"
+    "${CMAKE_CURRENT_SOURCE_DIR}/pkgconfig/cfrds.pc.in"
     "${CMAKE_BINARY_DIR}/cfrds.pc"
     @ONLY
 )

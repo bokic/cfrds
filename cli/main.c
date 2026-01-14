@@ -252,6 +252,12 @@ int main(int argc, char *argv[])
 {
     int ret = EXIT_SUCCESS;
 
+    if ((argc == 2)&&((strcmp(argv[1], "-v") == 0)||(strcmp(argv[1], "--version") == 0)))
+    {
+        printf("cfrds version: " CFRDS_VERSION "\n");
+        return ret;
+    }
+
 #ifdef _WIN32
     WSADATA wsaData;
     int iResult = WSAStartup(MAKEWORD(2, 2), &wsaData);

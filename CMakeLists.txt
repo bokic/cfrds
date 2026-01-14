@@ -42,6 +42,8 @@ endif()
 
 project(cfrds VERSION ${MY_GIT_TAG} DESCRIPTION "ColdFusion RDS Library" LANGUAGES C)
 
+add_definitions(-DCFRDS_VERSION="${GIT_COMMIT_NAME}")
+
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_C_STANDARD_REQUIRED ON)
 

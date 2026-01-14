@@ -165,7 +165,7 @@ set_target_properties(libcfrds PROPERTIES
 add_custom_command(TARGET libcfrds POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy_if_different
     ${CMAKE_BINARY_DIR}/compile_commands.json
-    ${CMAKE_SOURCE_DIR}/compile_commands.json
+    ${CMAKE_CURRENT_SOURCE_DIR}/compile_commands.json
 )
 
 install(TARGETS libcfrds

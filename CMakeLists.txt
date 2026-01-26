@@ -2,7 +2,6 @@ cmake_minimum_required(VERSION 3.21)
 
 SET(MY_GIT_TAG CACHE STRING "")
 
-
 find_package(Git QUIET)
 
 set(GIT_DIR_PATH "${CMAKE_CURRENT_SOURCE_DIR}/.git")
@@ -110,6 +109,7 @@ if(WIN32)
 endif()
 
 install(TARGETS cfrds_cli
+    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
 )
 ###
 add_library(libcfrds SHARED
@@ -126,29 +126,30 @@ configure_file(
 )
 
 target_include_directories(libcfrds PUBLIC
-    include
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+    $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
 )
 
 if(WIN32)
-set_target_properties(libcfrds
-    PROPERTIES OUTPUT_NAME "cfrds"
-)
-target_sources(libcfrds PRIVATE ${RC_DLL_OUT_FILE})
-target_include_directories(libcfrds PRIVATE
-    ${CMAKE_CURRENT_SOURCE_DIR}/deps/libxml2/include
-)
-target_link_directories(libcfrds PRIVATE
-    ${CMAKE_CURRENT_SOURCE_DIR}/deps/libxml2
-)
-target_link_libraries(libcfrds PRIVATE
-    wsock32
-    ws2_32
-    xml2
-)
+    set_target_properties(libcfrds
+        PROPERTIES OUTPUT_NAME "cfrds"
+    )
+    target_sources(libcfrds PRIVATE ${RC_DLL_OUT_FILE})
+    target_include_directories(libcfrds PRIVATE
+        ${CMAKE_CURRENT_SOURCE_DIR}/deps/libxml2/include
+    )
+    target_link_directories(libcfrds PRIVATE
+        ${CMAKE_CURRENT_SOURCE_DIR}/deps/libxml2
+    )
+    target_link_libraries(libcfrds PRIVATE
+        wsock32
+        ws2_32
+        xml2
+    )
 else()
-find_package(LibXml2 REQUIRED)
-include_directories(${LIBXML2_INCLUDE_DIR})
-target_link_libraries(libcfrds PRIVATE LibXml2::LibXml2)
+    find_package(LibXml2 REQUIRED)
+    target_include_directories(libcfrds PRIVATE ${LIBXML2_INCLUDE_DIR})
+    target_link_libraries(libcfrds PRIVATE LibXml2::LibXml2)
 endif()
 
 set(LIBCFRDS_PUBLIC_HEADERS
@@ -171,7 +172,11 @@ add_custom_command(TARGET libcfrds POST_BUILD
 )
 
 install(TARGETS libcfrds
-    PUBLIC_HEADER
+    EXPORT cfrdsTargets
+    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/cfrds
 )
 
 install(FILES ${CMAKE_BINARY_DIR}/cfrds.pc

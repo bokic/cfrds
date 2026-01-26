@@ -182,3 +182,30 @@ install(TARGETS libcfrds
 install(FILES ${CMAKE_BINARY_DIR}/cfrds.pc
     DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/pkgconfig
 )
+
+# CMake Package Config
+include(CMakePackageConfigHelpers)
+
+write_basic_package_version_file(
+    "${CMAKE_CURRENT_BINARY_DIR}/cfrdsConfigVersion.cmake"
+    VERSION ${MY_GIT_TAG}
+    COMPATIBILITY SameMajorVersion
+)
+
+configure_package_config_file(
+    "${CMAKE_CURRENT_SOURCE_DIR}/cmake/cfrdsConfig.cmake.in"
+    "${CMAKE_CURRENT_BINARY_DIR}/cfrdsConfig.cmake"
+    INSTALL_DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/cfrds"
+)
+
+install(EXPORT cfrdsTargets
+    FILE cfrdsTargets.cmake
+    NAMESPACE cfrds::
+    DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/cfrds"
+)
+
+install(FILES
+    "${CMAKE_CURRENT_BINARY_DIR}/cfrdsConfig.cmake"
+    "${CMAKE_CURRENT_BINARY_DIR}/cfrdsConfigVersion.cmake"
+    DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/cfrds"
+)

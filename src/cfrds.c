@@ -2610,6 +2610,147 @@ enum cfrds_status cfrds_command_debugger_set_scope_filter(cfrds_server *server, 
     return ret;
 }
 
+enum cfrds_status cfrds_command_security_analyzer_scan(cfrds_server *server, const char *pathnames, bool recursevly, int cores)
+{
+    enum cfrds_status ret;
+
+    cfrds_server_int *server_int = NULL;
+    char cores_str[32];
+    char *recursevly_str = NULL;
+
+    cfrds_buffer_defer(response);
+
+    if (server == NULL)
+    {
+        return CFRDS_STATUS_SERVER_IS_NULL;
+    }
+
+    server_int = server;
+
+    if (recursevly)
+        recursevly_str = "true";
+    else
+        recursevly_str = "false";
+
+    sprintf(cores_str, "%d", cores);
+
+    ret = cfrds_send_command(server, &response, "SECURITYANALYZER", (const char *[]){ "scan", pathnames, recursevly_str, cores_str, NULL});
+    if (ret == CFRDS_STATUS_OK)
+    {
+
+    }
+
+    return ret;
+}
+
+enum cfrds_status cfrds_command_security_analyzer_cancel(cfrds_server *server, int command_id)
+{
+    enum cfrds_status ret;
+
+    cfrds_server_int *server_int = NULL;
+    char id_str[32];
+
+    cfrds_buffer_defer(response);
+
+    if (server == NULL)
+    {
+        return CFRDS_STATUS_SERVER_IS_NULL;
+    }
+
+    server_int = server;
+
+    sprintf(id_str, "%d", command_id);
+
+    ret = cfrds_send_command(server, &response, "SECURITYANALYZER", (const char *[]){ "cancel", id_str, NULL});
+    if (ret == CFRDS_STATUS_OK)
+    {
+
+    }
+
+    return ret;
+}
+
+enum cfrds_status cfrds_command_security_analyzer_status(cfrds_server *server, int command_id)
+{
+    enum cfrds_status ret;
+
+    cfrds_server_int *server_int = NULL;
+    char id_str[32];
+
+    cfrds_buffer_defer(response);
+
+    if (server == NULL)
+    {
+        return CFRDS_STATUS_SERVER_IS_NULL;
+    }
+
+    server_int = server;
+
+    sprintf(id_str, "%d", command_id);
+
+    ret = cfrds_send_command(server, &response, "SECURITYANALYZER", (const char *[]){ "status", id_str, NULL});
+    if (ret == CFRDS_STATUS_OK)
+    {
+
+    }
+
+    return ret;
+}
+
+enum cfrds_status cfrds_command_security_analyzer_result(cfrds_server *server, int command_id)
+{
+    enum cfrds_status ret;
+
+    cfrds_server_int *server_int = NULL;
+    char id_str[32];
+
+    cfrds_buffer_defer(response);
+
+    if (server == NULL)
+    {
+        return CFRDS_STATUS_SERVER_IS_NULL;
+    }
+
+    server_int = server;
+
+    sprintf(id_str, "%d", command_id);
+
+    ret = cfrds_send_command(server, &response, "SECURITYANALYZER", (const char *[]){ "result", id_str, NULL});
+    if (ret == CFRDS_STATUS_OK)
+    {
+
+    }
+
+    return ret;
+}
+
+enum cfrds_status cfrds_command_security_analyzer_clean(cfrds_server *server, int command_id)
+{
+    enum cfrds_status ret;
+
+    cfrds_server_int *server_int = NULL;
+    char id_str[32];
+
+    cfrds_buffer_defer(response);
+
+    if (server == NULL)
+    {
+        return CFRDS_STATUS_SERVER_IS_NULL;
+    }
+
+    server_int = server;
+
+    sprintf(id_str, "%d", command_id);
+
+    ret = cfrds_send_command(server, &response, "SECURITYANALYZER", (const char *[]){ "clean", id_str, NULL});
+    if (ret == CFRDS_STATUS_OK)
+    {
+
+    }
+
+    return ret;
+}
+
 enum cfrds_status cfrds_command_ide_default(cfrds_server *server, int version, int *num1, char **server_version, char **client_version, int *num2, int *num3)
 {
     enum cfrds_status ret;

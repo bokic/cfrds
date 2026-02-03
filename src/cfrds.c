@@ -2632,7 +2632,7 @@ enum cfrds_status cfrds_command_security_analyzer_scan(cfrds_server *server, con
     else
         recursevly_str = "false";
 
-    sprintf(cores_str, "%d", cores);
+    snprintf(cores_str, sizeof(cores_str), "%d", cores);
 
     ret = cfrds_send_command(server, &response, "SECURITYANALYZER", (const char *[]){ "scan", pathnames, recursevly_str, cores_str, NULL});
     if (ret == CFRDS_STATUS_OK)
@@ -2659,7 +2659,7 @@ enum cfrds_status cfrds_command_security_analyzer_cancel(cfrds_server *server, i
 
     server_int = server;
 
-    sprintf(id_str, "%d", command_id);
+    snprintf(id_str, sizeof(id_str), "%d", command_id);
 
     ret = cfrds_send_command(server, &response, "SECURITYANALYZER", (const char *[]){ "cancel", id_str, NULL});
     if (ret == CFRDS_STATUS_OK)
@@ -2686,7 +2686,7 @@ enum cfrds_status cfrds_command_security_analyzer_status(cfrds_server *server, i
 
     server_int = server;
 
-    sprintf(id_str, "%d", command_id);
+    snprintf(id_str, sizeof(id_str), "%d", command_id);
 
     ret = cfrds_send_command(server, &response, "SECURITYANALYZER", (const char *[]){ "status", id_str, NULL});
     if (ret == CFRDS_STATUS_OK)
@@ -2713,7 +2713,7 @@ enum cfrds_status cfrds_command_security_analyzer_result(cfrds_server *server, i
 
     server_int = server;
 
-    sprintf(id_str, "%d", command_id);
+    snprintf(id_str, sizeof(id_str), "%d", command_id);
 
     ret = cfrds_send_command(server, &response, "SECURITYANALYZER", (const char *[]){ "result", id_str, NULL});
     if (ret == CFRDS_STATUS_OK)
@@ -2740,7 +2740,7 @@ enum cfrds_status cfrds_command_security_analyzer_clean(cfrds_server *server, in
 
     server_int = server;
 
-    sprintf(id_str, "%d", command_id);
+    snprintf(id_str, sizeof(id_str), "%d", command_id);
 
     ret = cfrds_send_command(server, &response, "SECURITYANALYZER", (const char *[]){ "clean", id_str, NULL});
     if (ret == CFRDS_STATUS_OK)
@@ -2767,7 +2767,7 @@ enum cfrds_status cfrds_command_ide_default(cfrds_server *server, int version, i
 
     server_int = server;
 
-    sprintf(param, "%d,", version);
+    snprintf(param, sizeof(param), "%d,", version);
 
     ret = cfrds_send_command(server, &response, "IDE_DEFAULT", (const char *[]){ "", param, NULL});
     if (ret == CFRDS_STATUS_OK)

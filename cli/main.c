@@ -143,6 +143,9 @@ static void usage()
            "\n"
            "  - 'dbg_set_scope_filter' - Get ColdFusion debugger set scope filter.\n"
            "         example: `cfrds dbg_set_scope_filter rds://username:password@host` {session_id} {filter}\n"*/
+           "\n"
+           "  - 'ide_default' - Get ColdFusion server information.\n"
+           "         example: `cfrds ide_default rds://username:password@host` {version}\n"
            );
 }
 
@@ -1143,6 +1146,26 @@ int main(int argc, char *argv[])
         cfrds_command_debugger_watch_variables(cfrds_server *server, const char *session_id, const char *variables);
         cfrds_command_debugger_get_output(cfrds_server *server, const char *session_id, const char *thread_name);
         cfrds_command_debugger_set_scope_filter(cfrds_server *server, const char *session_id, const char *filter);*/
+    } else if (strcmp(command, "ide_default") == 0) {
+        int num1, num2, num3;
+
+        cfrds_str_defer(server_version);
+        cfrds_str_defer(client_version);
+
+        int version = atoi(argv[2]);
+
+        res = cfrds_command_ide_default(server, version, &num1, &server_version, &client_version, &num2, &num3);
+        if (res != CFRDS_STATUS_OK)
+        {
+            fprintf(stderr, "ide_default FAILED with error: %s\n", cfrds_server_get_error(server));
+            return EXIT_FAILURE;
+        }
+
+        printf("num1: %d\n", num1);
+        printf("server_version: %s\n", server_version);
+        printf("client_version: %s\n", client_version);
+        printf("num2: %d\n", num2);
+        printf("num3: %d\n", num3);
     } else {
         fprintf(stderr, "Unknown command %s\n", command);
         return EXIT_FAILURE;

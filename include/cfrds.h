@@ -295,6 +295,8 @@ EXPORT_CFRDS enum cfrds_status cfrds_command_debugger_watch_variables(cfrds_serv
 EXPORT_CFRDS enum cfrds_status cfrds_command_debugger_get_output(cfrds_server *server, const char *session_id, const char *thread_name);
 EXPORT_CFRDS enum cfrds_status cfrds_command_debugger_set_scope_filter(cfrds_server *server, const char *session_id, const char *filter);
 
+EXPORT_CFRDS enum cfrds_status cfrds_command_ide_default(cfrds_server *server, int version, int *num1, char **server_version, char **client_version, int *num2, int *num3);
+
 #ifdef __cplusplus
 }
 #endif

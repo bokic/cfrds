@@ -16,6 +16,7 @@ Some of the features RDS protocol supports:
 * Remote ColdFusion server file system access.
 * Remote ColdFusion server database access.
 * Remote ColdFusion server debugger.
+* Remove ColdFusion server info.
 
 ## TODO
 * Remote ColdFusion server adminapi settings.
@@ -46,6 +47,7 @@ Some of the features RDS protocol supports:
 * Execute ColdFusion data source name SQL - `cfrds sql <rds://{username{:password}@}host{:port}/dsn> '<SQL>'`
 * Get ColdFusion data source name SQL metadata - `cfrds sqlmetadata <rds://{username{:password}@}host{:port}/dsn> '<SQL>'`
 * Get ColdFusion data source name database info - `cfrds dbdescription <rds://{username{:password}@}host{:port}/dsn>`
+* Get ColdFusion server info - `cfrds ide_default <rds://{username{:password}@}host{:port}> <version 0-15>`
 
 ## Build
 > git clone https://github.com/bokic/cfrds.git

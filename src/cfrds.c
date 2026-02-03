@@ -2609,3 +2609,93 @@ enum cfrds_status cfrds_command_debugger_set_scope_filter(cfrds_server *server, 
 
     return ret;
 }
+
+EXPORT_CFRDS enum cfrds_status cfrds_command_ide_default(cfrds_server *server, int version, int *num1, char **server_version, char **client_version, int *num2, int *num3)
+{
+    enum cfrds_status ret;
+
+    cfrds_server_int *server_int = NULL;
+    char param[32];
+
+    cfrds_buffer_defer(response);
+
+    if (server == NULL)
+    {
+        return CFRDS_STATUS_SERVER_IS_NULL;
+    }
+
+    sprintf(param, "%d,", version);
+
+    ret = cfrds_send_command(server, &response, "IDE_DEFAULT", (const char *[]){ "", param, NULL});
+
+    if (ret == CFRDS_STATUS_OK)
+    {
+        cfrds_str_defer(_num1);
+        cfrds_str_defer(_server_version);
+        cfrds_str_defer(_client_version);
+        cfrds_str_defer(_num2);
+        cfrds_str_defer(_num3);
+
+        const char *response_data = cfrds_buffer_data(response);
+        size_t response_size = cfrds_buffer_data_size(response);
+
+        int64_t count = 0;
+        if (!cfrds_buffer_parse_number(&response_data, &response_size, &count))
+        {
+            server_int->error_code = -1;
+            return CFRDS_STATUS_RESPONSE_ERROR;
+        }
+
+        if (count != 5)
+        {
+            server_int->error_code = -1;
+            return CFRDS_STATUS_RESPONSE_ERROR;
+        }
+
+        if (!cfrds_buffer_parse_string(&response_data, &response_size, &_num1))
+        {
+            server_int->error_code = -1;
+            return CFRDS_STATUS_RESPONSE_ERROR;
+        }
+
+        if (!cfrds_buffer_parse_string(&response_data, &response_size, &_server_version))
+        {
+            server_int->error_code = -1;
+            return CFRDS_STATUS_RESPONSE_ERROR;
+        }
+
+        if (!cfrds_buffer_parse_string(&response_data, &response_size, &_client_version))
+        {
+            server_int->error_code = -1;
+            return CFRDS_STATUS_RESPONSE_ERROR;
+        }
+
+        if (!cfrds_buffer_parse_string(&response_data, &response_size, &_num2))
+        {
+            server_int->error_code = -1;
+            return CFRDS_STATUS_RESPONSE_ERROR;
+        }
+
+        if (!cfrds_buffer_parse_string(&response_data, &response_size, &_num3))
+        {
+            server_int->error_code = -1;
+            return CFRDS_STATUS_RESPONSE_ERROR;
+        }
+
+        if (response_size != 0)
+        {
+            server_int->error_code = -1;
+            return CFRDS_STATUS_RESPONSE_ERROR;
+        }
+
+        *num1 = atoi(_num1);
+
+        *server_version = _server_version; _server_version = NULL;
+        *client_version = _client_version; _client_version = NULL;
+
+        *num2 = atoi(_num2);
+        *num3 = atoi(_num3);
+    }
+
+    return ret;
+}

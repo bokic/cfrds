@@ -2610,7 +2610,7 @@ enum cfrds_status cfrds_command_debugger_set_scope_filter(cfrds_server *server, 
     return ret;
 }
 
-EXPORT_CFRDS enum cfrds_status cfrds_command_ide_default(cfrds_server *server, int version, int *num1, char **server_version, char **client_version, int *num2, int *num3)
+enum cfrds_status cfrds_command_ide_default(cfrds_server *server, int version, int *num1, char **server_version, char **client_version, int *num2, int *num3)
 {
     enum cfrds_status ret;
 
@@ -2624,10 +2624,11 @@ EXPORT_CFRDS enum cfrds_status cfrds_command_ide_default(cfrds_server *server, i
         return CFRDS_STATUS_SERVER_IS_NULL;
     }
 
+    server_int = server;
+
     sprintf(param, "%d,", version);
 
     ret = cfrds_send_command(server, &response, "IDE_DEFAULT", (const char *[]){ "", param, NULL});
-
     if (ret == CFRDS_STATUS_OK)
     {
         cfrds_str_defer(_num1);

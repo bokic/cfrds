@@ -298,7 +298,7 @@ EXPORT_CFRDS enum cfrds_status cfrds_command_debugger_set_scope_filter(cfrds_ser
 
 EXPORT_CFRDS enum cfrds_status cfrds_command_security_analyzer_scan(cfrds_server *server, const char *pathnames, bool recursively, int cores, int *command_id);
 EXPORT_CFRDS enum cfrds_status cfrds_command_security_analyzer_cancel(cfrds_server *server, int command_id);
-EXPORT_CFRDS enum cfrds_status cfrds_command_security_analyzer_status(cfrds_server *server, int command_id, int *totalfiles, int *filesvisitedcount, int *percentage, int *lastupdated);
+EXPORT_CFRDS enum cfrds_status cfrds_command_security_analyzer_status(cfrds_server *server, int command_id, int *totalfiles, int *filesvisitedcount, int *percentage, int64_t *lastupdated);
 EXPORT_CFRDS enum cfrds_status cfrds_command_security_analyzer_result(cfrds_server *server, int command_id, cfrds_security_analyzer_result **result);
 EXPORT_CFRDS enum cfrds_status cfrds_command_security_analyzer_clean(cfrds_server *server, int command_id);
 

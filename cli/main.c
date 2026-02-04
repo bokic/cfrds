@@ -1161,7 +1161,7 @@ int main(int argc, char *argv[])
             int totalfiles = 0;
             int filesvisitedcount = 0;
             int percentage = 0;
-            int lastupdated = 0;
+            int64_t lastupdated = 0;
 
             res = cfrds_command_security_analyzer_status(server, command_id, &totalfiles, &filesvisitedcount, &percentage, &lastupdated);
             if (res != CFRDS_STATUS_OK)

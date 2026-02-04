@@ -2800,7 +2800,7 @@ enum cfrds_status cfrds_command_security_analyzer_cancel(cfrds_server *server, i
     return ret;
 }
 
-enum cfrds_status cfrds_command_security_analyzer_status(cfrds_server *server, int command_id, int *totalfiles, int *filesvisitedcount, int *percentage, int *lastupdated)
+enum cfrds_status cfrds_command_security_analyzer_status(cfrds_server *server, int command_id, int *totalfiles, int *filesvisitedcount, int *percentage, int64_t *lastupdated)
 {
     enum cfrds_status ret;
 
@@ -2936,8 +2936,7 @@ enum cfrds_status cfrds_command_security_analyzer_status(cfrds_server *server, i
             return CFRDS_STATUS_RESPONSE_ERROR;
         }
 
-        *lastupdated = json_object_get_int(lastupdated_obj);
-
+        *lastupdated = json_object_get_int64(lastupdated_obj);
     }
 
     return ret;

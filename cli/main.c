@@ -144,6 +144,9 @@ static void usage()
            "  - 'dbg_set_scope_filter' - Get ColdFusion debugger set scope filter.\n"
            "         example: `cfrds dbg_set_scope_filter rds://username:password@host` {session_id} {filter}\n"*/
            "\n"
+           "  - 'security_analyzer' - Get ColdFusion server information.\n"
+           "         example: `cfrds security_analyzer rds://username:password@host/{path}`\n"
+           "\n"
            "  - 'ide_default' - Get ColdFusion server information.\n"
            "         example: `cfrds ide_default rds://username:password@host` {version}\n"
            );
@@ -253,12 +256,10 @@ static bool init_server_from_uri(const char *uri, char **hostname, uint16_t *por
 
 int main(int argc, char *argv[])
 {
-    int ret = EXIT_SUCCESS;
-
     if ((argc == 2)&&((strcmp(argv[1], "-v") == 0)||(strcmp(argv[1], "--version") == 0)))
     {
         printf("cfrds version: " CFRDS_VERSION "\n");
-        return ret;
+        return EXIT_SUCCESS;
     }
 
 #ifdef _WIN32
@@ -1146,6 +1147,45 @@ int main(int argc, char *argv[])
         cfrds_command_debugger_watch_variables(cfrds_server *server, const char *session_id, const char *variables);
         cfrds_command_debugger_get_output(cfrds_server *server, const char *session_id, const char *thread_name);
         cfrds_command_debugger_set_scope_filter(cfrds_server *server, const char *session_id, const char *filter);*/
+    } else if (strcmp(command, "security_analyzer") == 0) {
+        int command_id = 0;
+        res = cfrds_command_security_analyzer_scan(server, path, true, 0, &command_id);
+        if (res != CFRDS_STATUS_OK)
+        {
+            fprintf(stderr, "cfrds_command_security_analyzer_scan FAILED with error: %s\n", cfrds_server_get_error(server));
+            return EXIT_FAILURE;
+        }
+
+        while(1)
+        {
+            int totalfiles = 0;
+            int filesvisitedcount = 0;
+            int percentage = 0;
+            int lastupdated = 0;
+
+            res = cfrds_command_security_analyzer_status(server, command_id, &totalfiles, &filesvisitedcount, &percentage, &lastupdated);
+            if (res != CFRDS_STATUS_OK)
+            {
+                fprintf(stderr, "cfrds_command_security_analyzer_status FAILED with error: %s\n", cfrds_server_get_error(server));
+                return EXIT_FAILURE;
+            }
+
+            if (percentage >= 100)
+                break;
+
+            printf("progress: %d\r", percentage);
+            fflush(stdout);
+
+            usleep(250000); // 250ms
+        }
+
+        res = cfrds_command_security_analyzer_clean(server, command_id);
+        if (res != CFRDS_STATUS_OK)
+        {
+            fprintf(stderr, "cfrds_command_security_analyzer_clean FAILED with error: %s\n", cfrds_server_get_error(server));
+            return EXIT_FAILURE;
+        }
+
     } else if (strcmp(command, "ide_default") == 0) {
         int num1, num2, num3;
 
@@ -1171,5 +1211,5 @@ int main(int argc, char *argv[])
         return EXIT_FAILURE;
     }
 
-    return ret;
+    return EXIT_SUCCESS;
 }

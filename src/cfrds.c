@@ -3,6 +3,8 @@
 #include <cfrds.h>
 #include <wddx.h>
 
+#include <json.h>
+
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -18,6 +20,16 @@ static void explicit_bzero(void *s, size_t n) {
     }
 }
 #endif
+
+#define json_object_defer(var) struct json_object * var __attribute__((cleanup(json_object_cleanup))) = NULL
+static void json_object_cleanup(struct json_object **handle)
+{
+    if (handle)
+    {
+        json_object_put(*handle);
+        *handle = NULL;
+    }
+}
 
 void cfrds_server_cleanup(cfrds_server **server)
 {
@@ -2610,13 +2622,13 @@ enum cfrds_status cfrds_command_debugger_set_scope_filter(cfrds_server *server, 
     return ret;
 }
 
-enum cfrds_status cfrds_command_security_analyzer_scan(cfrds_server *server, const char *pathnames, bool recursevly, int cores)
+enum cfrds_status cfrds_command_security_analyzer_scan(cfrds_server *server, const char *pathnames, bool recursively, int cores, int *command_id)
 {
     enum cfrds_status ret;
 
     cfrds_server_int *server_int = NULL;
     char cores_str[32];
-    char *recursevly_str = NULL;
+    char *recursively_str = NULL;
 
     cfrds_buffer_defer(response);
 
@@ -2627,17 +2639,84 @@ enum cfrds_status cfrds_command_security_analyzer_scan(cfrds_server *server, con
 
     server_int = server;
 
-    if (recursevly)
-        recursevly_str = "true";
+    if (recursively)
+        recursively_str = "true";
     else
-        recursevly_str = "false";
+        recursively_str = "false";
 
     snprintf(cores_str, sizeof(cores_str), "%d", cores);
 
-    ret = cfrds_send_command(server, &response, "SECURITYANALYZER", (const char *[]){ "scan", pathnames, recursevly_str, cores_str, NULL});
+    ret = cfrds_send_command(server, &response, "SECURITYANALYZER", (const char *[]){ "scan", pathnames, recursively_str, cores_str, NULL});
     if (ret == CFRDS_STATUS_OK)
     {
+        const char *response_data = cfrds_buffer_data(response);
+        size_t response_size = cfrds_buffer_data_size(response);
+        int64_t rows = 0;
 
+        cfrds_buffer_parse_number(&response_data, &response_size, &rows);
+        if (rows != 1)
+        {
+            cfrds_server_set_error(server, CFRDS_STATUS_RESPONSE_ERROR, "rows != 1");
+            return CFRDS_STATUS_RESPONSE_ERROR;
+        }
+
+        cfrds_str_defer(json);
+        cfrds_buffer_parse_string(&response_data, &response_size, &json);
+        if (json == NULL)
+        {
+            cfrds_server_set_error(server, CFRDS_STATUS_RESPONSE_ERROR, "json == NULL");
+            return CFRDS_STATUS_RESPONSE_ERROR;
+        }
+
+        if (response_size != 0)
+        {
+            cfrds_server_set_error(server, CFRDS_STATUS_RESPONSE_ERROR, "response_size != 0");
+            return CFRDS_STATUS_RESPONSE_ERROR;
+        }
+
+        json_object_defer(json_obj);
+        json_obj = json_tokener_parse(json);
+        if (json_obj == NULL)
+        {
+            cfrds_server_set_error(server, CFRDS_STATUS_RESPONSE_ERROR, "json_obj == NULL");
+            return CFRDS_STATUS_RESPONSE_ERROR;
+        }
+
+        struct json_object *status = NULL;
+        json_object_object_get_ex(json_obj, "status", &status);
+        if (status == NULL)
+        {
+            cfrds_server_set_error(server, CFRDS_STATUS_RESPONSE_ERROR, "status == NULL");
+            return CFRDS_STATUS_RESPONSE_ERROR;
+        }
+
+        if (json_object_get_type(status) != json_type_string)
+        {
+            cfrds_server_set_error(server, CFRDS_STATUS_RESPONSE_ERROR, "json_object_get_type(status) != json_type_string");
+            return CFRDS_STATUS_RESPONSE_ERROR;
+        }
+
+        if (strcmp(json_object_get_string(status), "success") != 0)
+        {
+            cfrds_server_set_error(server, CFRDS_STATUS_RESPONSE_ERROR, "strcmp(json_object_get_string(status), \"success\") != 0");
+            return CFRDS_STATUS_RESPONSE_ERROR;
+        }
+
+        struct json_object *value = NULL;
+        json_object_object_get_ex(json_obj, "id", &value);
+        if (value == NULL)
+        {
+            cfrds_server_set_error(server, CFRDS_STATUS_RESPONSE_ERROR, "value == NULL");
+            return CFRDS_STATUS_RESPONSE_ERROR;
+        }
+
+        if (json_object_get_type(value) != json_type_int)
+        {
+            cfrds_server_set_error(server, CFRDS_STATUS_RESPONSE_ERROR, "json_object_get_type(value) != json_type_int");
+            return CFRDS_STATUS_RESPONSE_ERROR;
+        }
+
+        *command_id = json_object_get_int(value);
     }
 
     return ret;
@@ -2664,13 +2743,64 @@ enum cfrds_status cfrds_command_security_analyzer_cancel(cfrds_server *server, i
     ret = cfrds_send_command(server, &response, "SECURITYANALYZER", (const char *[]){ "cancel", id_str, NULL});
     if (ret == CFRDS_STATUS_OK)
     {
+        const char *response_data = cfrds_buffer_data(response);
+        size_t response_size = cfrds_buffer_data_size(response);
+        int64_t rows = 0;
 
+        cfrds_buffer_parse_number(&response_data, &response_size, &rows);
+        if (rows != 1)
+        {
+            cfrds_server_set_error(server, CFRDS_STATUS_RESPONSE_ERROR, "rows != 1");
+            return CFRDS_STATUS_RESPONSE_ERROR;
+        }
+
+        cfrds_str_defer(json);
+        cfrds_buffer_parse_string(&response_data, &response_size, &json);
+        if (json == NULL)
+        {
+            cfrds_server_set_error(server, CFRDS_STATUS_RESPONSE_ERROR, "json == NULL");
+            return CFRDS_STATUS_RESPONSE_ERROR;
+        }
+
+        if (response_size != 0)
+        {
+            cfrds_server_set_error(server, CFRDS_STATUS_RESPONSE_ERROR, "response_size != 0");
+            return CFRDS_STATUS_RESPONSE_ERROR;
+        }
+
+        json_object_defer(json_obj);
+        json_obj = json_tokener_parse(json);
+        if (json_obj == NULL)
+        {
+            cfrds_server_set_error(server, CFRDS_STATUS_RESPONSE_ERROR, "json_obj == NULL");
+            return CFRDS_STATUS_RESPONSE_ERROR;
+        }
+
+        struct json_object *status = NULL;
+        json_object_object_get_ex(json_obj, "status", &status);
+        if (status == NULL)
+        {
+            cfrds_server_set_error(server, CFRDS_STATUS_RESPONSE_ERROR, "status == NULL");
+            return CFRDS_STATUS_RESPONSE_ERROR;
+        }
+
+        if (json_object_get_type(status) != json_type_string)
+        {
+            cfrds_server_set_error(server, CFRDS_STATUS_RESPONSE_ERROR, "json_object_get_type(status) != json_type_string");
+            return CFRDS_STATUS_RESPONSE_ERROR;
+        }
+
+        if (strcmp(json_object_get_string(status), "success") != 0)
+        {
+            cfrds_server_set_error(server, CFRDS_STATUS_RESPONSE_ERROR, "strcmp(json_object_get_string(status), \"success\") != 0");
+            return CFRDS_STATUS_RESPONSE_ERROR;
+        }
     }
 
     return ret;
 }
 
-enum cfrds_status cfrds_command_security_analyzer_status(cfrds_server *server, int command_id)
+enum cfrds_status cfrds_command_security_analyzer_status(cfrds_server *server, int command_id, int *totalfiles, int *filesvisitedcount, int *percentage, int *lastupdated)
 {
     enum cfrds_status ret;
 
@@ -2691,13 +2821,129 @@ enum cfrds_status cfrds_command_security_analyzer_status(cfrds_server *server, i
     ret = cfrds_send_command(server, &response, "SECURITYANALYZER", (const char *[]){ "status", id_str, NULL});
     if (ret == CFRDS_STATUS_OK)
     {
+        const char *response_data = cfrds_buffer_data(response);
+        size_t response_size = cfrds_buffer_data_size(response);
+        int64_t rows = 0;
+
+        cfrds_buffer_parse_number(&response_data, &response_size, &rows);
+        if (rows != 1)
+        {
+            cfrds_server_set_error(server, CFRDS_STATUS_RESPONSE_ERROR, "rows != 1");
+            return CFRDS_STATUS_RESPONSE_ERROR;
+        }
+
+        cfrds_str_defer(json);
+        cfrds_buffer_parse_string(&response_data, &response_size, &json);
+        if (json == NULL)
+        {
+            cfrds_server_set_error(server, CFRDS_STATUS_RESPONSE_ERROR, "json == NULL");
+            return CFRDS_STATUS_RESPONSE_ERROR;
+        }
+
+        if (response_size != 0)
+        {
+            cfrds_server_set_error(server, CFRDS_STATUS_RESPONSE_ERROR, "response_size != 0");
+            return CFRDS_STATUS_RESPONSE_ERROR;
+        }
+
+        json_object_defer(json_obj);
+        json_obj = json_tokener_parse(json);
+        if (json_obj == NULL)
+        {
+            cfrds_server_set_error(server, CFRDS_STATUS_RESPONSE_ERROR, "json_obj == NULL");
+            return CFRDS_STATUS_RESPONSE_ERROR;
+        }
+
+        struct json_object *status = NULL;
+        json_object_object_get_ex(json_obj, "status", &status);
+        if (status == NULL)
+        {
+            cfrds_server_set_error(server, CFRDS_STATUS_RESPONSE_ERROR, "status == NULL");
+            return CFRDS_STATUS_RESPONSE_ERROR;
+        }
+
+        if (json_object_get_type(status) != json_type_string)
+        {
+            cfrds_server_set_error(server, CFRDS_STATUS_RESPONSE_ERROR, "json_object_get_type(status) != json_type_string");
+            return CFRDS_STATUS_RESPONSE_ERROR;
+        }
+
+        if (strcmp(json_object_get_string(status), "success") != 0)
+        {
+            cfrds_server_set_error(server, CFRDS_STATUS_RESPONSE_ERROR, "strcmp(json_object_get_string(status), \"success\") != 0");
+            return CFRDS_STATUS_RESPONSE_ERROR;
+        }
+
+        struct json_object *totalfiles_obj = NULL;
+        json_object_object_get_ex(json_obj, "totalfiles", &totalfiles_obj);
+        if (totalfiles_obj == NULL)
+        {
+            cfrds_server_set_error(server, CFRDS_STATUS_RESPONSE_ERROR, "totalfiles_obj == NULL");
+            return CFRDS_STATUS_RESPONSE_ERROR;
+        }
+
+        if (json_object_get_type(totalfiles_obj) != json_type_int)
+        {
+            cfrds_server_set_error(server, CFRDS_STATUS_RESPONSE_ERROR, "json_object_get_type(totalfiles_obj) != json_type_int");
+            return CFRDS_STATUS_RESPONSE_ERROR;
+        }
+
+        *totalfiles = json_object_get_int(totalfiles_obj);
+
+        struct json_object *filesvisitedcount_obj = NULL;
+        json_object_object_get_ex(json_obj, "filesvisitedcount", &filesvisitedcount_obj);
+        if (filesvisitedcount_obj == NULL)
+        {
+            cfrds_server_set_error(server, CFRDS_STATUS_RESPONSE_ERROR, "filesvisitedcount_obj == NULL");
+            return CFRDS_STATUS_RESPONSE_ERROR;
+        }
+
+        if (json_object_get_type(filesvisitedcount_obj) != json_type_int)
+        {
+            cfrds_server_set_error(server, CFRDS_STATUS_RESPONSE_ERROR, "json_object_get_type(filesvisitedcount_obj) != json_type_int");
+            return CFRDS_STATUS_RESPONSE_ERROR;
+        }
+
+        *filesvisitedcount = json_object_get_int(filesvisitedcount_obj);
+
+        struct json_object *percentage_obj = NULL;
+        json_object_object_get_ex(json_obj, "percentage", &percentage_obj);
+        if (percentage_obj == NULL)
+        {
+            cfrds_server_set_error(server, CFRDS_STATUS_RESPONSE_ERROR, "percentage_obj == NULL");
+            return CFRDS_STATUS_RESPONSE_ERROR;
+        }
+
+        if (json_object_get_type(percentage_obj) != json_type_int)
+        {
+            cfrds_server_set_error(server, CFRDS_STATUS_RESPONSE_ERROR, "json_object_get_type(percentage_obj) != json_type_int");
+            return CFRDS_STATUS_RESPONSE_ERROR;
+        }
+
+        *percentage = json_object_get_int(percentage_obj);
+
+        struct json_object *lastupdated_obj = NULL;
+        json_object_object_get_ex(json_obj, "lastupdated", &lastupdated_obj);
+        if (lastupdated_obj == NULL)
+        {
+            cfrds_server_set_error(server, CFRDS_STATUS_RESPONSE_ERROR, "lastupdated_obj == NULL");
+            return CFRDS_STATUS_RESPONSE_ERROR;
+        }
+
+        if (json_object_get_type(lastupdated_obj) != json_type_int)
+        {
+            cfrds_server_set_error(server, CFRDS_STATUS_RESPONSE_ERROR, "json_object_get_type(lastupdated_obj) != json_type_int");
+            return CFRDS_STATUS_RESPONSE_ERROR;
+        }
+
+        *lastupdated = json_object_get_int(lastupdated_obj);
 
     }
 
     return ret;
 }
 
-enum cfrds_status cfrds_command_security_analyzer_result(cfrds_server *server, int command_id)
+enum cfrds_status cfrds_command_security_analyzer_result(cfrds_server *server, int command_id, cfrds_security_analyzer_result **result)
 {
     enum cfrds_status ret;
 
@@ -2745,7 +2991,67 @@ enum cfrds_status cfrds_command_security_analyzer_clean(cfrds_server *server, in
     ret = cfrds_send_command(server, &response, "SECURITYANALYZER", (const char *[]){ "clean", id_str, NULL});
     if (ret == CFRDS_STATUS_OK)
     {
+        const char *response_data = cfrds_buffer_data(response);
+        size_t response_size = cfrds_buffer_data_size(response);
+        int64_t rows = 0;
 
+        cfrds_buffer_parse_number(&response_data, &response_size, &rows);
+        if (rows != 1)
+        {
+            cfrds_server_set_error(server, CFRDS_STATUS_RESPONSE_ERROR, "rows != 1");
+            return CFRDS_STATUS_RESPONSE_ERROR;
+        }
+
+        cfrds_str_defer(json);
+        cfrds_buffer_parse_string(&response_data, &response_size, &json);
+        if (json == NULL)
+        {
+            cfrds_server_set_error(server, CFRDS_STATUS_RESPONSE_ERROR, "json == NULL");
+            return CFRDS_STATUS_RESPONSE_ERROR;
+        }
+
+        if (response_size != 0)
+        {
+            cfrds_server_set_error(server, CFRDS_STATUS_RESPONSE_ERROR, "response_size != 0");
+            return CFRDS_STATUS_RESPONSE_ERROR;
+        }
+
+        json_object_defer(json_obj);
+        json_obj = json_tokener_parse(json);
+        if (json_obj == NULL)
+        {
+            cfrds_server_set_error(server, CFRDS_STATUS_RESPONSE_ERROR, "json_obj == NULL");
+            return CFRDS_STATUS_RESPONSE_ERROR;
+        }
+
+        struct json_object *status = NULL;
+        json_object_object_get_ex(json_obj, "status", &status);
+        if (status == NULL)
+        {
+            cfrds_server_set_error(server, CFRDS_STATUS_RESPONSE_ERROR, "status == NULL");
+            return CFRDS_STATUS_RESPONSE_ERROR;
+        }
+
+        if (json_object_get_type(status) != json_type_string)
+        {
+            cfrds_server_set_error(server, CFRDS_STATUS_RESPONSE_ERROR, "json_object_get_type(status) != json_type_string");
+            return CFRDS_STATUS_RESPONSE_ERROR;
+        }
+
+        if (strcmp(json_object_get_string(status), "success") != 0)
+        {
+            struct json_object *errormessage = NULL;
+            json_object_object_get_ex(json_obj, "errormessage", &errormessage);
+            if ((errormessage == NULL)||(json_object_get_type(errormessage) != json_type_string))
+            {
+                cfrds_server_set_error(server, CFRDS_STATUS_RESPONSE_ERROR, "strcmp(json_object_get_string(status), \"success\") != 0");
+            }
+            else
+            {
+                cfrds_server_set_error(server, CFRDS_STATUS_RESPONSE_ERROR, json_object_get_string(errormessage));
+            }
+            return CFRDS_STATUS_RESPONSE_ERROR;
+        }
     }
 
     return ret;

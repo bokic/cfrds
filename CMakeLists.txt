@@ -147,8 +147,9 @@ if(WIN32)
     )
 else()
     find_package(LibXml2 REQUIRED)
-    target_include_directories(libcfrds PRIVATE ${LIBXML2_INCLUDE_DIR})
-    target_link_libraries(libcfrds PRIVATE LibXml2::LibXml2)
+    find_package(json-c REQUIRED)
+    target_include_directories(libcfrds PRIVATE ${LIBXML2_INCLUDE_DIR} ${JSONC_INCLUDE_DIR})
+    target_link_libraries(libcfrds PRIVATE LibXml2::LibXml2 json-c::json-c)
 endif()
 
 set(LIBCFRDS_PUBLIC_HEADERS

@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.21)
 
-SET(TEXTPARSER_GIT_TAG CACHE STRING "")
+SET(CFRDS_GIT_TAG CACHE STRING "")
 
 find_package(Git QUIET)
 
@@ -10,15 +10,15 @@ if(EXISTS ${GIT_DIR_PATH})
         execute_process(
             COMMAND ${GIT_EXECUTABLE} describe --tags --abbrev=0
             WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-            OUTPUT_VARIABLE TEXTPARSER_GIT_TAG
+            OUTPUT_VARIABLE CFRDS_GIT_TAG
             OUTPUT_STRIP_TRAILING_WHITESPACE # Removes trailing newline/whitespace
             RESULT_VARIABLE GIT_DESCRIBE_RESULT
             ERROR_QUIET
         )
         execute_process(
-            COMMAND ${GIT_EXECUTABLE} rev-list ${TEXTPARSER_GIT_TAG}..HEAD --count
+            COMMAND ${GIT_EXECUTABLE} rev-list ${CFRDS_GIT_TAG}..HEAD --count
             WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-            OUTPUT_VARIABLE TEXTPARSER_GIT_REVISION
+            OUTPUT_VARIABLE CFRDS_GIT_REVISION
             OUTPUT_STRIP_TRAILING_WHITESPACE # Removes trailing newline/whitespace
             RESULT_VARIABLE GIT_REV_LIST_RESULT
             ERROR_QUIET
@@ -34,11 +34,11 @@ if(EXISTS ${GIT_DIR_PATH})
     endif()
 endif()
 
-if(NOT TEXTPARSER_GIT_TAG MATCHES "^[0-9]+\\.[0-9]+\\.[0-9]+$")
-    message(FATAL_ERROR "Git last tag '${TEXTPARSER_GIT_TAG}' is not in format X.Y.Z")
+if(NOT CFRDS_GIT_TAG MATCHES "^[0-9]+\\.[0-9]+\\.[0-9]+$")
+    message(FATAL_ERROR "Git last tag '${CFRDS_GIT_TAG}' is not in format X.Y.Z")
 endif()
 
-project(cfrds VERSION ${TEXTPARSER_GIT_TAG} DESCRIPTION "ColdFusion RDS Library" LANGUAGES C)
+project(cfrds VERSION ${CFRDS_GIT_TAG} DESCRIPTION "ColdFusion RDS Library" LANGUAGES C)
 
 add_definitions(-DCFRDS_VERSION="${GIT_COMMIT_NAME}")
 
@@ -162,7 +162,7 @@ set_target_properties(libcfrds PROPERTIES
     INTERPROCEDURAL_OPTIMIZATION TRUE
     C_VISIBILITY_PRESET hidden
     OUTPUT_NAME "cfrds"
-    VERSION ${TEXTPARSER_GIT_TAG}
+    VERSION ${CFRDS_GIT_TAG}
 )
 
 add_custom_command(TARGET libcfrds POST_BUILD
@@ -188,7 +188,7 @@ include(CMakePackageConfigHelpers)
 
 write_basic_package_version_file(
     "${CMAKE_CURRENT_BINARY_DIR}/cfrdsConfigVersion.cmake"
-    VERSION ${TEXTPARSER_GIT_TAG}
+    VERSION ${CFRDS_GIT_TAG}
     COMPATIBILITY SameMajorVersion
 )
 

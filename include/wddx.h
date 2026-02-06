@@ -49,6 +49,7 @@ EXPORT_WDDX const char *wddx_node_string(const WDDX_NODE *value);
 EXPORT_WDDX int wddx_node_array_size(const WDDX_NODE *value);
 EXPORT_WDDX const WDDX_NODE *wddx_node_array_at(const WDDX_NODE *value, int cnt);
 EXPORT_WDDX int wddx_node_struct_size(const WDDX_NODE *value);
+EXPORT_WDDX const WDDX_NODE *wddx_node_struct_at(const WDDX_NODE *value, int cnt, const char **name);
 
 EXPORT_WDDX bool wddx_get_bool(const WDDX *src, const char *path, bool *ok);
 EXPORT_WDDX double wddx_get_number(const WDDX *src, const char *path, bool *ok);

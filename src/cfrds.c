@@ -3146,3 +3146,289 @@ enum cfrds_status cfrds_command_ide_default(cfrds_server *server, int version, i
 
     return ret;
 }
+
+enum cfrds_status cfrds_command_adminapi_debugging_getlogproperty(cfrds_server *server, const char *logdirectory, char **result)
+{
+    enum cfrds_status ret;
+
+    cfrds_buffer_defer(response);
+
+    if (server == NULL)
+    {
+        return CFRDS_STATUS_SERVER_IS_NULL;
+    }
+
+    ret = cfrds_send_command(server, &response, "ADMINAPI", (const char *[]){ "cfide.adminapi.debugging", "getlogproperty", logdirectory, NULL});
+    if (ret == CFRDS_STATUS_OK)
+    {
+        cfrds_server_int *server_int = NULL;
+
+        cfrds_str_defer(xml);
+
+        server_int = server;
+
+        const char *response_data = cfrds_buffer_data(response);
+        size_t response_size = cfrds_buffer_data_size(response);
+
+        int64_t count = 0;
+        if (!cfrds_buffer_parse_number(&response_data, &response_size, &count))
+        {
+            server_int->error_code = -1;
+            return CFRDS_STATUS_RESPONSE_ERROR;
+        }
+
+        if (count != 1)
+        {
+            server_int->error_code = -1;
+            return CFRDS_STATUS_RESPONSE_ERROR;
+        }
+
+        if (!cfrds_buffer_parse_string(&response_data, &response_size, &xml))
+        {
+            server_int->error_code = -1;
+            return CFRDS_STATUS_RESPONSE_ERROR;
+        }
+
+        if (response_size != 0)
+        {
+            server_int->error_code = -1;
+            return CFRDS_STATUS_RESPONSE_ERROR;
+        }
+
+        if (strlen(xml) > 0)
+        {
+            WDDX_defer(wddx);
+            wddx = wddx_from_xml(xml);
+
+            const WDDX_NODE *data = wddx_data(wddx);
+            if (wddx_node_type(data) != WDDX_STRING)
+            {
+                cfrds_server_set_error(server, CFRDS_STATUS_RESPONSE_ERROR, "wddx_node_type(data) != WDDX_STRING");
+                return CFRDS_STATUS_RESPONSE_ERROR;
+            }
+
+            *result = strdup(wddx_node_string(data));
+        }
+    }
+
+    return ret;
+}
+
+enum cfrds_status cfrds_command_adminapi_extensions_getcustomtagpaths(cfrds_server *server, WDDX **result)
+{
+    enum cfrds_status ret;
+
+    cfrds_buffer_defer(response);
+
+    if (server == NULL)
+    {
+        return CFRDS_STATUS_SERVER_IS_NULL;
+    }
+
+    ret = cfrds_send_command(server, &response, "ADMINAPI", (const char *[]){ "cfide.adminapi.extensions", "getcustomtagpaths", NULL});
+    if (ret == CFRDS_STATUS_OK)
+    {
+        cfrds_server_int *server_int = NULL;
+
+        cfrds_str_defer(xml);
+
+        server_int = server;
+
+        const char *response_data = cfrds_buffer_data(response);
+        size_t response_size = cfrds_buffer_data_size(response);
+
+        int64_t count = 0;
+        if (!cfrds_buffer_parse_number(&response_data, &response_size, &count))
+        {
+            server_int->error_code = -1;
+            return CFRDS_STATUS_RESPONSE_ERROR;
+        }
+
+        if (count != 1)
+        {
+            server_int->error_code = -1;
+            return CFRDS_STATUS_RESPONSE_ERROR;
+        }
+
+        if (!cfrds_buffer_parse_string(&response_data, &response_size, &xml))
+        {
+            server_int->error_code = -1;
+            return CFRDS_STATUS_RESPONSE_ERROR;
+        }
+
+        if (response_size != 0)
+        {
+            server_int->error_code = -1;
+            return CFRDS_STATUS_RESPONSE_ERROR;
+        }
+
+        *result = wddx_from_xml(xml);
+    }
+
+    return ret;
+}
+
+enum cfrds_status cfrds_command_adminapi_extensions_setmapping(cfrds_server *server, const char *name, const char *path)
+{
+    enum cfrds_status ret;
+
+    cfrds_buffer_defer(response);
+    cfrds_buffer_defer(arg);
+
+    if (server == NULL)
+    {
+        return CFRDS_STATUS_SERVER_IS_NULL;
+    }
+
+    cfrds_buffer_create(&arg);
+    cfrds_buffer_append(arg, "name:");
+    cfrds_buffer_append(arg, name);
+    cfrds_buffer_append(arg, ";path:");
+    cfrds_buffer_append(arg, path);
+
+    ret = cfrds_send_command(server, &response, "ADMINAPI", (const char *[]){ "cfide.adminapi.extensions", "setmappings", cfrds_buffer_data(arg), NULL});
+    if (ret == CFRDS_STATUS_OK)
+    {
+        cfrds_server_int *server_int = NULL;
+
+        cfrds_str_defer(xml);
+
+        server_int = server;
+
+        const char *response_data = cfrds_buffer_data(response);
+        size_t response_size = cfrds_buffer_data_size(response);
+
+        int64_t count = 0;
+        if (!cfrds_buffer_parse_number(&response_data, &response_size, &count))
+        {
+            server_int->error_code = -1;
+            return CFRDS_STATUS_RESPONSE_ERROR;
+        }
+
+        if (count != 1)
+        {
+            server_int->error_code = -1;
+            return CFRDS_STATUS_RESPONSE_ERROR;
+        }
+
+        if (!cfrds_buffer_parse_string(&response_data, &response_size, &xml))
+        {
+            server_int->error_code = -1;
+            return CFRDS_STATUS_RESPONSE_ERROR;
+        }
+
+        if (strlen(xml) > 0)
+        {
+            cfrds_server_set_error(server, CFRDS_STATUS_RESPONSE_ERROR, xml);
+            return CFRDS_STATUS_RESPONSE_ERROR;
+        }
+    }
+
+    return ret;
+}
+
+enum cfrds_status cfrds_command_adminapi_extensions_deletemappings(cfrds_server *server, const char *mapping)
+{
+    enum cfrds_status ret;
+
+    cfrds_buffer_defer(response);
+
+    if (server == NULL)
+    {
+        return CFRDS_STATUS_SERVER_IS_NULL;
+    }
+
+    ret = cfrds_send_command(server, &response, "ADMINAPI", (const char *[]){ "cfide.adminapi.extensions", "deleltemappings", mapping, NULL});
+    if (ret == CFRDS_STATUS_OK)
+    {
+        cfrds_server_int *server_int = NULL;
+
+        cfrds_str_defer(xml);
+
+        server_int = server;
+
+        const char *response_data = cfrds_buffer_data(response);
+        size_t response_size = cfrds_buffer_data_size(response);
+
+        int64_t count = 0;
+        if (!cfrds_buffer_parse_number(&response_data, &response_size, &count))
+        {
+            server_int->error_code = -1;
+            return CFRDS_STATUS_RESPONSE_ERROR;
+        }
+
+        if (count != 1)
+        {
+            server_int->error_code = -1;
+            return CFRDS_STATUS_RESPONSE_ERROR;
+        }
+
+        if (!cfrds_buffer_parse_string(&response_data, &response_size, &xml))
+        {
+            server_int->error_code = -1;
+            return CFRDS_STATUS_RESPONSE_ERROR;
+        }
+
+        if (strlen(xml) > 0)
+        {
+            cfrds_server_set_error(server, CFRDS_STATUS_RESPONSE_ERROR, xml);
+            return CFRDS_STATUS_RESPONSE_ERROR;
+        }
+    }
+
+    return ret;
+}
+
+enum cfrds_status cfrds_command_adminapi_extensions_getmappings(cfrds_server *server, WDDX **result)
+{
+    enum cfrds_status ret;
+
+    cfrds_buffer_defer(response);
+
+    if (server == NULL)
+    {
+        return CFRDS_STATUS_SERVER_IS_NULL;
+    }
+
+    ret = cfrds_send_command(server, &response, "ADMINAPI", (const char *[]){ "cfide.adminapi.extensions", "getmappings", NULL});
+    if (ret == CFRDS_STATUS_OK)
+    {
+        cfrds_server_int *server_int = NULL;
+
+        cfrds_str_defer(xml);
+
+        server_int = server;
+
+        const char *response_data = cfrds_buffer_data(response);
+        size_t response_size = cfrds_buffer_data_size(response);
+
+        int64_t count = 0;
+        if (!cfrds_buffer_parse_number(&response_data, &response_size, &count))
+        {
+            server_int->error_code = -1;
+            return CFRDS_STATUS_RESPONSE_ERROR;
+        }
+
+        if (count != 1)
+        {
+            server_int->error_code = -1;
+            return CFRDS_STATUS_RESPONSE_ERROR;
+        }
+
+        if (!cfrds_buffer_parse_string(&response_data, &response_size, &xml))
+        {
+            server_int->error_code = -1;
+            return CFRDS_STATUS_RESPONSE_ERROR;
+        }
+
+        if (response_size != 0)
+        {
+            server_int->error_code = -1;
+            return CFRDS_STATUS_RESPONSE_ERROR;
+        }
+
+        *result = wddx_from_xml(xml);
+    }
+
+    return ret;
+}

@@ -304,6 +304,12 @@ EXPORT_CFRDS enum cfrds_status cfrds_command_security_analyzer_clean(cfrds_serve
 
 EXPORT_CFRDS enum cfrds_status cfrds_command_ide_default(cfrds_server *server, int version, int *num1, char **server_version, char **client_version, int *num2, int *num3);
 
+EXPORT_CFRDS enum cfrds_status cfrds_command_adminapi_debugging_getlogproperty(cfrds_server *server, const char *logdirectory, char **result);
+EXPORT_CFRDS enum cfrds_status cfrds_command_adminapi_extensions_getcustomtagpaths(cfrds_server *server, WDDX **result);
+EXPORT_CFRDS enum cfrds_status cfrds_command_adminapi_extensions_setmapping(cfrds_server *server, const char *name, const char *path);
+EXPORT_CFRDS enum cfrds_status cfrds_command_adminapi_extensions_deletemappings(cfrds_server *server, const char *mapping);
+EXPORT_CFRDS enum cfrds_status cfrds_command_adminapi_extensions_getmappings(cfrds_server *server, WDDX **result);
+
 #ifdef __cplusplus
 }
 #endif

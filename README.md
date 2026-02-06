@@ -16,10 +16,10 @@ Some of the features RDS protocol supports:
 * Remote ColdFusion server file system access.
 * Remote ColdFusion server database access.
 * Remote ColdFusion server debugger.
-* Remove ColdFusion server info.
+* Remote ColdFusion server info.
+* Remote ColdFusion server adminapi settings.
 
 ## TODO
-* Remote ColdFusion server adminapi settings.
 * Remote ColdFusion server graph(chart).
 * Remote ColdFusion server webapp security analyzer service.
 * Code cleanup.
@@ -48,6 +48,11 @@ Some of the features RDS protocol supports:
 * Get ColdFusion data source name SQL metadata - `cfrds sqlmetadata <rds://{username{:password}@}host{:port}/dsn> '<SQL>'`
 * Get ColdFusion data source name database info - `cfrds dbdescription <rds://{username{:password}@}host{:port}/dsn>`
 * Get ColdFusion server info - `cfrds ide_default <rds://{username{:password}@}host{:port}> <version 0-15>`
+* Get ColdFusion server debugging log property - `cfrds adminapi <rds://{username{:password}@}host{:port}> debugging_getlogproperty <logdirectory>`
+* Get ColdFusion server extensions custom tag paths - `cfrds adminapi <rds://{username{:password}@}host{:port}> extensions_getcustomtagpaths`
+* Get ColdFusion server extensions mappings - `cfrds adminapi <rds://{username{:password}@}host{:port}> extensions_getmappings`
+* Set ColdFusion server extensions mapping - `cfrds adminapi <rds://{username{:password}@}host{:port}> extensions_setmapping <mapping name> <mapping path>`
+* Delete ColdFusion server extensions mapping - `cfrds adminapi <rds://{username{:password}@}host{:port}> extensions_deletemapping <mapping name>`
 
 ## Build
 > git clone https://github.com/bokic/cfrds.git

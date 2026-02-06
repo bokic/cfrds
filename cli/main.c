@@ -1,4 +1,5 @@
 #include <cfrds.h>
+#include <wddx.h>
 #include "os.h"
 
 #ifdef _WIN32
@@ -149,6 +150,15 @@ static void usage()
            "\n"
            "  - 'ide_default' - Get ColdFusion server information.\n"
            "         example: `cfrds ide_default rds://username:password@host` {version}\n"
+           "\n"
+           "  - 'adminapi' - Get ColdFusion server information.\n"
+           "         examples:\n"
+           "           `cfrds adminapi rds://username:password@host` debugging_getlogproperty {logdirectory}\n"
+           "           `cfrds adminapi rds://username:password@host` extensions_getcustomtagpaths\n"
+           "           `cfrds adminapi rds://username:password@host` extensions_setmapping {mapping name} {mapping path}\n"
+           "           `cfrds adminapi rds://username:password@host` extensions_deletemapping {mapping name}\n"
+           "           `cfrds adminapi rds://username:password@host` extensions_getmappings\n"
+           "\n"
            );
 }
 
@@ -1206,6 +1216,146 @@ int main(int argc, char *argv[])
         printf("client_version: %s\n", client_version);
         printf("num2: %d\n", num2);
         printf("num3: %d\n", num3);
+    } else if (strcmp(command, "adminapi") == 0) {
+        if (argc < 4)
+        {
+            fprintf(stderr, "Not enough arguments\n");
+            return EXIT_FAILURE;
+        }
+
+        const char *subcommand = argv[3];
+
+        if (strcmp(subcommand, "debugging_getlogproperty") == 0)
+        {
+
+            if (argc < 5)
+            {
+                fprintf(stderr, "Not enough arguments\n");
+                return EXIT_FAILURE;
+            }
+
+            const char *logdirectory = argv[4];
+            char *logproperty = NULL;
+            res = cfrds_command_adminapi_debugging_getlogproperty(server, logdirectory, &logproperty);
+            if (res != CFRDS_STATUS_OK)
+            {
+                fprintf(stderr, "cfrds_command_adminapi_debugging_getlogproperty FAILED with error: %s\n", cfrds_server_get_error(server));
+                return EXIT_FAILURE;
+            }
+
+            printf("logproperty: %s\n", logproperty);
+        } else if (strcmp(subcommand, "extensions_getcustomtagpaths") == 0)
+        {
+            WDDX_defer(result);
+            res = cfrds_command_adminapi_extensions_getcustomtagpaths(server, &result);
+            if (res != CFRDS_STATUS_OK)
+            {
+                fprintf(stderr, "cfrds_command_adminapi_extensions_getcustomtagpaths FAILED with error: %s\n", cfrds_server_get_error(server));
+                return EXIT_FAILURE;
+            }
+
+            const WDDX_NODE *data = wddx_data(result);
+            if (wddx_node_type(data) != WDDX_ARRAY)
+            {
+                fprintf(stderr, "wddx_node_type(data) != WDDX_ARRAY\n");
+                return EXIT_FAILURE;
+            }
+
+            printf("custom tag paths:\n");
+
+            int size = wddx_node_array_size(data);
+            for(int c = 0; c < size; c++)
+            {
+                const char *value = NULL;
+                const WDDX_NODE *child = NULL;
+
+                child = wddx_node_array_at(data, c);
+                if (wddx_node_type(child) != WDDX_STRING)
+                {
+                    fprintf(stderr, "wddx_node_type(child) != WDDX_STRING\n");
+                    return EXIT_FAILURE;
+                }
+
+                value = wddx_node_string(child);
+
+                printf("%s\n", value);
+            }
+        } else if (strcmp(subcommand, "extensions_setmapping") == 0)
+        {
+            char **result = NULL;
+
+            if (argc < 6)
+            {
+                fprintf(stderr, "Not enough arguments\n");
+                return EXIT_FAILURE;
+            }
+
+            const char *mapping_name = argv[4];
+            const char *mapping_path = argv[5];
+            res = cfrds_command_adminapi_extensions_setmapping(server, mapping_name, mapping_path);
+            if (res != CFRDS_STATUS_OK)
+            {
+                fprintf(stderr, "cfrds_command_adminapi_extensions_setmappings FAILED with error: %s\n", cfrds_server_get_error(server));
+                return EXIT_FAILURE;
+            }
+        } else if (strcmp(subcommand, "extensions_deletemapping") == 0)
+        {
+            char **result = NULL;
+
+            if (argc < 5)
+            {
+                fprintf(stderr, "Not enough arguments\n");
+                return EXIT_FAILURE;
+            }
+
+            const char *arg = argv[4];
+            res = cfrds_command_adminapi_extensions_deletemappings(server, arg);
+            if (res != CFRDS_STATUS_OK)
+            {
+                fprintf(stderr, "cfrds_command_adminapi_extensions_deletemappings FAILED with error: %s\n", cfrds_server_get_error(server));
+                return EXIT_FAILURE;
+            }
+        } else if (strcmp(subcommand, "extensions_getmappings") == 0)
+        {
+            WDDX_defer(result);
+            res = cfrds_command_adminapi_extensions_getmappings(server, &result);
+            if (res != CFRDS_STATUS_OK)
+            {
+                fprintf(stderr, "cfrds_command_adminapi_extensions_getmappings FAILED with error: %s\n", cfrds_server_get_error(server));
+                return EXIT_FAILURE;
+            }
+
+            const WDDX_NODE *data = wddx_data(result);
+            if (wddx_node_type(data) != WDDX_STRUCT)
+            {
+                fprintf(stderr, "wddx_node_type(data) != WDDX_STRUCT\n");
+                return EXIT_FAILURE;
+            }
+
+            printf("mappings:\n");
+
+            int size = wddx_node_struct_size(data);
+            for(int c = 0; c < size; c++)
+            {
+                const char *key = NULL;
+                const char *value = NULL;
+                const WDDX_NODE *child = NULL;
+
+                child = wddx_node_struct_at(data, c , &key);
+                if (wddx_node_type(child) != WDDX_STRING)
+                {
+                    fprintf(stderr, "wddx_node_type(child) != WDDX_STRING\n");
+                    return EXIT_FAILURE;
+                }
+
+                value = wddx_node_string(child);
+
+                printf("%s => %s\n", key, value);
+            }
+        } else {
+            fprintf(stderr, "Unknown adminapi subcommand %s\n", subcommand);
+            return EXIT_FAILURE;
+        }
     } else {
         fprintf(stderr, "Unknown command %s\n", command);
         return EXIT_FAILURE;

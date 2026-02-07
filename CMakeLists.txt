@@ -1,6 +1,7 @@
 cmake_minimum_required(VERSION 3.21)
 
 SET(CFRDS_GIT_TAG CACHE STRING "")
+SET(CFRDS_GIT_REVISION CACHE STRING "0")
 
 find_package(Git QUIET)
 
@@ -37,6 +38,8 @@ endif()
 if(NOT CFRDS_GIT_TAG MATCHES "^[0-9]+\\.[0-9]+\\.[0-9]+$")
     message(FATAL_ERROR "Git last tag '${CFRDS_GIT_TAG}' is not in format X.Y.Z")
 endif()
+
+SET(GIT_COMMIT_NAME CACHE STRING "${CFRDS_GIT_TAG}")
 
 project(cfrds VERSION ${CFRDS_GIT_TAG} DESCRIPTION "ColdFusion RDS Library" LANGUAGES C)
 
@@ -180,7 +183,7 @@ install(TARGETS libcfrds
 )
 
 install(FILES ${CMAKE_BINARY_DIR}/cfrds.pc
-    DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/pkgconfig
+    DESTINATION ${CMAKE_INSTALL_LIBDIR}/pkgconfig
 )
 
 # CMake Package Config

@@ -1186,7 +1186,11 @@ int main(int argc, char *argv[])
             printf("progress: %d\r", percentage);
             fflush(stdout);
 
+#ifdef _WIN32
+            Sleep(250);
+#else
             usleep(250000); // 250ms
+#endif
         }
 
         res = cfrds_command_security_analyzer_clean(server, command_id);

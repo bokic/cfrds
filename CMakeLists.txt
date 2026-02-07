@@ -139,13 +139,16 @@ if(WIN32)
     target_sources(libcfrds PRIVATE ${RC_DLL_OUT_FILE})
     target_include_directories(libcfrds PRIVATE
         ${CMAKE_CURRENT_SOURCE_DIR}/deps/libxml2/include
+        ${CMAKE_CURRENT_SOURCE_DIR}/deps/json-c/include
     )
     target_link_directories(libcfrds PRIVATE
         ${CMAKE_CURRENT_SOURCE_DIR}/deps/libxml2
+        ${CMAKE_CURRENT_SOURCE_DIR}/deps/json-c
     )
     target_link_libraries(libcfrds PRIVATE
         wsock32
         ws2_32
+        json-c
         xml2
     )
 else()

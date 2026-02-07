@@ -29,4 +29,5 @@ Name: "{app}";
 [Files]
 Source: "..\bin\cfrds.exe"; DestDir: "{app}";
 Source: "..\bin\cfrds.dll"; DestDir: "{app}";
+Source: "..\bin\json-c.dll"; DestDir: "{app}";
 Source: "..\bin\libxml2.dll"; DestDir: "{app}";

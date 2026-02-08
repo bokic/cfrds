@@ -1,8 +1,5 @@
 cmake_minimum_required(VERSION 3.21)
 
-SET(CFRDS_GIT_TAG CACHE STRING "")
-SET(CFRDS_GIT_REVISION CACHE STRING "0")
-
 find_package(Git QUIET)
 
 set(GIT_DIR_PATH "${CMAKE_CURRENT_SOURCE_DIR}/.git")
@@ -33,13 +30,17 @@ if(EXISTS ${GIT_DIR_PATH})
             ERROR_QUIET
         )
     endif()
+else()
+    if( CFRDS_GIT_TAG STREQUAL "")
+        message(FATAL_ERROR "Git tag is not set!")
+    endif()
+    set(CFRDS_GIT_REVISION "0")
+    set(GIT_COMMIT_NAME "${CFRDS_GIT_TAG}")
 endif()
 
 if(NOT CFRDS_GIT_TAG MATCHES "^[0-9]+\\.[0-9]+\\.[0-9]+$")
     message(FATAL_ERROR "Git last tag '${CFRDS_GIT_TAG}' is not in format X.Y.Z")
 endif()
-
-SET(GIT_COMMIT_NAME CACHE STRING "${CFRDS_GIT_TAG}")
 
 project(cfrds VERSION ${CFRDS_GIT_TAG} DESCRIPTION "ColdFusion RDS Library" LANGUAGES C)
 

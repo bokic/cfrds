@@ -13,7 +13,7 @@ curl -L --output json-c.zip https://github.com/json-c/json-c/archive/refs/tags/j
 tar -xf json-c.zip
 del json-c.zip
 
-cmake.exe -S json-c-json-c-%JSON_C_VERSION% -B build -DCMAKE_BUILD_TYPE=Release -DBUILD_STATIC_LIBS=OFF
+cmake.exe -S json-c-json-c-%JSON_C_VERSION% -B build -DCMAKE_BUILD_TYPE=Release -DBUILD_STATIC_LIBS=OFF -DBUILD_TESTING=OFF -DBUILD_APPS=OFF
 cmake.exe --build build --config Release
 
 mkdir ..\deps\json-c\include

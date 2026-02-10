@@ -42,12 +42,21 @@ if(NOT CFRDS_GIT_TAG MATCHES "^[0-9]+\\.[0-9]+\\.[0-9]+$")
     message(FATAL_ERROR "Git last tag '${CFRDS_GIT_TAG}' is not in format X.Y.Z")
 endif()
 
-project(cfrds VERSION ${CFRDS_GIT_TAG} DESCRIPTION "ColdFusion RDS Library" LANGUAGES C)
+project(cfrds VERSION ${CFRDS_GIT_TAG} DESCRIPTION "ColdFusion RDS Library" LANGUAGES C CXX)
 
 add_definitions(-DCFRDS_VERSION="${GIT_COMMIT_NAME}")
 
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_C_STANDARD_REQUIRED ON)
+
+set(CMAKE_CXX_STANDARD 23)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+# set c++ not rtti
+set(CMAKE_CXX_NO_RTTI ON)
+
+# set c++ not exceptions
+set(CMAKE_CXX_NO_EXCEPTIONS ON)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
@@ -116,10 +125,10 @@ install(TARGETS cfrds_cli
 )
 ###
 add_library(libcfrds SHARED
-    src/cfrds.c        include/cfrds.h
-    src/wddx.c         include/wddx.h
-    src/cfrds_buffer.c include/internal/cfrds_buffer.h
-    src/cfrds_http.c   include/internal/cfrds_http.h
+    src/cfrds.cpp        include/cfrds.h
+    src/wddx.cpp         include/wddx.h
+    src/cfrds_buffer.cpp include/internal/cfrds_buffer.h
+    src/cfrds_http.cpp   include/internal/cfrds_http.h
 )
 
 configure_file(

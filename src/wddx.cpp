@@ -81,7 +81,7 @@ static WDDX_NODE_int *wddx_recursively_put(WDDX_NODE_int *node, const char *path
         size_t value_len = strlen(value);
 
         size_t size = offsetof(WDDX_NODE_int, string) + value_len + 1;
-        new_node = malloc(size);
+        new_node = (WDDX_NODE_int*)malloc(size);
         if (new_node == NULL) return NULL;
 
         new_node->type = type;
@@ -143,7 +143,7 @@ static WDDX_NODE_int *wddx_recursively_put(WDDX_NODE_int *node, const char *path
                 node->cnt = idx;
             }
 
-            node->items[idx - 1] = wddx_recursively_put(node->items[idx - 1], path, value, type);
+            node->items[idx - 1] = (WDDX_NODE_int*)wddx_recursively_put((WDDX_NODE_int*)node->items[idx - 1], path, value, type);
             return node;
         }
         case WDDX_STRUCT:
@@ -215,7 +215,7 @@ static WDDX_NODE_int *wddx_recursively_put(WDDX_NODE_int *node, const char *path
 
 WDDX *wddx_create()
 {
-    WDDX_int *ret = malloc(sizeof(WDDX_int));
+    WDDX_int *ret = (WDDX_int*)malloc(sizeof(WDDX_int));
     if (ret)
     {
         explicit_bzero(ret, sizeof(WDDX_int));
@@ -289,7 +289,7 @@ static void wddx_to_xml_node(xmlNode *xml_node, const WDDX_NODE_int *node)
 
         for(int c = 0; c < node->cnt; c++)
         {
-            wddx_to_xml_node(child_node, ((const WDDX_NODE_int *)node)->items[c]);
+            wddx_to_xml_node(child_node, (const WDDX_NODE_int *)node->items[c]);
         }
         break;
     case WDDX_STRUCT:
@@ -361,7 +361,7 @@ static WDDX_NODE_int *wddx_from_xml_element(xmlNodePtr xml_node)
         if (xml_node->children->content == NULL) return NULL;
 
         malloc_size = sizeof(WDDX_NODE_int);
-        ret = malloc(malloc_size);
+        ret = (WDDX_NODE_int*)malloc(malloc_size);
         if (ret == NULL) return NULL;
 
         explicit_bzero(ret, malloc_size);
@@ -379,7 +379,7 @@ static WDDX_NODE_int *wddx_from_xml_element(xmlNodePtr xml_node)
         if (xml_node->children->content == NULL) return NULL;
 
         malloc_size = sizeof(WDDX_NODE_int);
-        ret = malloc(malloc_size);
+        ret = (WDDX_NODE_int*)malloc(malloc_size);
         if (ret == NULL) return NULL;
 
         explicit_bzero(ret, malloc_size);
@@ -395,7 +395,7 @@ static WDDX_NODE_int *wddx_from_xml_element(xmlNodePtr xml_node)
             str_size = strlen((const char *)xml_node->children->content);
 
         malloc_size = offsetof(WDDX_NODE_int, string) + str_size + 1;
-        ret = malloc(malloc_size);
+        ret = (WDDX_NODE_int*)malloc(malloc_size);
         if (ret == NULL) return NULL;
 
         explicit_bzero(ret, malloc_size);
@@ -415,7 +415,7 @@ static WDDX_NODE_int *wddx_from_xml_element(xmlNodePtr xml_node)
         if (length <= 0) return NULL;
 
         malloc_size = offsetof(WDDX_NODE_int, items) + length * sizeof(void *);
-        ret = malloc(malloc_size);
+        ret = (WDDX_NODE_int*)malloc(malloc_size);
         if (ret == NULL) return NULL;
 
         explicit_bzero(ret, malloc_size);
@@ -445,7 +445,7 @@ static WDDX_NODE_int *wddx_from_xml_element(xmlNodePtr xml_node)
         }
 
         malloc_size = offsetof(WDDX_NODE_int, items) + length * sizeof(void *);
-        ret = malloc(malloc_size);
+        ret = (WDDX_NODE_int*)malloc(malloc_size);
         if (ret == NULL) return NULL;
 
         explicit_bzero(ret, malloc_size);
@@ -472,7 +472,7 @@ static WDDX_NODE_int *wddx_from_xml_element(xmlNodePtr xml_node)
             }
 
             malloc_size = sizeof(WDDX_STRUCT_NODE_int);
-            WDDX_STRUCT_NODE_int *item = malloc(malloc_size);
+            WDDX_STRUCT_NODE_int *item = (WDDX_STRUCT_NODE_int*)malloc(malloc_size);
             if (item == NULL)
             {
                 WDDX_NODE_int_free(ret);
@@ -512,7 +512,7 @@ WDDX *wddx_from_xml(const char *xml)
     if (dataEl->type != XML_ELEMENT_NODE) return NULL;
     if (strcmp((const char *)dataEl->name, "data") != 0) return NULL;
 
-    WDDX_int *ret = wddx_create();
+    WDDX_int *ret = (WDDX_int*)wddx_create();
     if (ret == NULL) return NULL;
 
     if (headerEl->children) ret->header = wddx_from_xml_element(headerEl->children);
@@ -539,7 +539,7 @@ static const WDDX_NODE_int *wddx_recursively_get(const WDDX_NODE_int *node, cons
 
             if (node->cnt <= idx) return NULL;
 
-            return node->items[idx];
+            return (WDDX_NODE_int*)node->items[idx];
         }
         else
         {
@@ -568,7 +568,7 @@ static const WDDX_NODE_int *wddx_recursively_get(const WDDX_NODE_int *node, cons
 
             if (node->cnt <= idx) return NULL;
 
-            return wddx_recursively_get(node->items[idx], next + 1);
+            return (WDDX_NODE_int*)wddx_recursively_get((WDDX_NODE_int*)node->items[idx], next + 1);
         }
         else
         {
@@ -794,7 +794,7 @@ static void wddx_node_recursively(xmlNodePtr xml, const WDDX_NODE_int *wddx)
         xmlNewProp(new_node, BAD_CAST "length", BAD_CAST number);
         for(int c = 0; c < wddx->cnt; c++)
         {
-            wddx_node_recursively(new_node, wddx->items[c]);
+            wddx_node_recursively(new_node, (const WDDX_NODE_int*)wddx->items[c]);
         }
         xmlAddChild(xml, new_node);
         break;

@@ -36,7 +36,7 @@ void cfrds_server_cleanup(cfrds_server **server)
     if (*server == NULL)
         return;
 
-    cfrds_server_int *server_int = *server;
+    cfrds_server_int *server_int = (cfrds_server_int*)*server;
 
     server_int->_errno = 0;
     server_int->error_code = 1;
@@ -76,7 +76,7 @@ void cfrds_server_cleanup(cfrds_server **server)
 
 void cfrds_server_clear_error(cfrds_server *server)
 {
-    cfrds_server_int *server_int = server;
+    cfrds_server_int *server_int = (cfrds_server_int*)server;
     if (server_int == NULL)
         return;
 
@@ -92,7 +92,7 @@ void cfrds_server_clear_error(cfrds_server *server)
 
 void cfrds_server_shutdown_socket(cfrds_server *server)
 {
-    cfrds_server_int *server_int = server;
+    cfrds_server_int *server_int = (cfrds_server_int*)server;
     if (server_int == NULL)
         return;
 
@@ -112,7 +112,7 @@ static char *cfrds_server_encode_password(const char *password)
 
     size_t len = strlen(password);
 
-    ret = malloc((len * 2) + 1);
+    ret = (char*)malloc((len * 2) + 1);
     if (ret == NULL)
         return NULL;
 
@@ -181,7 +181,7 @@ void cfrds_server_free(cfrds_server *server)
 
     cfrds_server_clear_error(server);
 
-    server_int = server;
+    server_int = (cfrds_server_int*)server;
 
     if (server_int->host) free(server_int->host);
     if (server_int->username) free(server_int->username);
@@ -198,7 +198,7 @@ void cfrds_server_set_error(cfrds_server *server, int64_t error_code, const char
     if (server == NULL)
         return;
 
-    server_int = server;
+    server_int = (cfrds_server_int*)server;
 
     server_int->error_code = error_code;
 
@@ -215,7 +215,7 @@ const char *cfrds_server_get_error(const cfrds_server *server)
     if (server == NULL)
         return NULL;
 
-    server_int = server;
+    server_int = (cfrds_server_int*)server;
 
     return server_int->error;
 }
@@ -227,7 +227,7 @@ const char *cfrds_server_get_host(const cfrds_server *server)
     if (server == NULL)
         return NULL;
 
-    server_int = server;
+    server_int = (cfrds_server_int*)server;
 
     return server_int->host;
 }
@@ -239,7 +239,7 @@ uint16_t cfrds_server_get_port(const cfrds_server *server)
     if (server == NULL)
         return 0;
 
-    server_int = server;
+    server_int = (cfrds_server_int*)server;
 
     return server_int->port;
 }
@@ -251,7 +251,7 @@ const char *cfrds_server_get_username(const cfrds_server *server)
     if (server == NULL)
         return 0;
 
-    server_int = server;
+    server_int = (cfrds_server_int*)server;
 
     return server_int->username;
 }
@@ -263,7 +263,7 @@ const char *cfrds_server_get_password(const cfrds_server *server)
     if (server == NULL)
         return 0;
 
-    server_int = server;
+    server_int = (cfrds_server_int*)server;
 
     return server_int->orig_password;
 }
@@ -281,7 +281,7 @@ static enum cfrds_status cfrds_send_command(cfrds_server *server, cfrds_buffer *
     if (server == NULL)
         return CFRDS_STATUS_SERVER_IS_NULL;
 
-    server_int = server;
+    server_int = (cfrds_server_int*)server;
 
     server_int->_errno = 0;
 
@@ -312,7 +312,7 @@ static enum cfrds_status cfrds_send_command(cfrds_server *server, cfrds_buffer *
     if (server_int->username) cfrds_buffer_append_rds_string(post, server_int->username);
     if (server_int->password) cfrds_buffer_append_rds_string(post, server_int->password);
 
-    ret = cfrds_http_post(server, command, post, response);
+    ret = cfrds_http_post((cfrds_server_int*)server_int, command, post, response);
 
     return ret;
 }
@@ -368,7 +368,7 @@ enum cfrds_status cfrds_command_file_write(cfrds_server *server, const char *pat
         return CFRDS_STATUS_PARAM_IS_NULL;
     }
 
-    server_int = server;
+    server_int = (cfrds_server_int*)server;
 
     server_int->_errno = 0;
 
@@ -389,7 +389,7 @@ enum cfrds_status cfrds_command_file_write(cfrds_server *server, const char *pat
     if (server_int->username) cfrds_buffer_append_rds_string(post, server_int->username);
     if (server_int->password) cfrds_buffer_append_rds_string(post, server_int->password);
 
-    ret = cfrds_http_post(server, "FILEIO", post, NULL);
+    ret = cfrds_http_post((cfrds_server_int*)server_int, "FILEIO", post, NULL);
 
     return ret;
 }
@@ -447,7 +447,7 @@ enum cfrds_status cfrds_command_file_exists(cfrds_server *server, const char *pa
     {
         *out = true;
     } else {
-        server_int = server;
+        server_int = (cfrds_server_int*)server;
         if ((server_int->error_code == -1)&&(server_int->error)&&(strncmp(server_int->error, response_file_not_found_start, strlen(response_file_not_found_start)) == 0))
         {
             server_int->error_code = 1;
@@ -491,7 +491,7 @@ enum cfrds_status cfrds_command_file_get_root_dir(cfrds_server *server, char **o
         const char *response_data = cfrds_buffer_data(response);
         size_t response_size = cfrds_buffer_data_size(response);
 
-        server_int = server;
+        server_int = (cfrds_server_int*)server;
 
         if (!cfrds_buffer_parse_number(&response_data, &response_size, &server_int->error_code))
         {
@@ -527,7 +527,7 @@ enum cfrds_status cfrds_command_sql_dsninfo(cfrds_server *server, cfrds_sql_dsni
         *dsninfo = cfrds_buffer_to_sql_dsninfo(response);
         if (*dsninfo == NULL)
         {
-            server_int = server;
+            server_int = (cfrds_server_int*)server;
             server_int->error_code = -1;
             return CFRDS_STATUS_RESPONSE_ERROR;
         }
@@ -554,7 +554,7 @@ enum cfrds_status cfrds_command_sql_tableinfo(cfrds_server *server, const char *
         *tableinfo = cfrds_buffer_to_sql_tableinfo(response);
         if (*tableinfo == NULL)
         {
-            server_int = server;
+            server_int = (cfrds_server_int*)server;
             server_int->error_code = -1;
             return CFRDS_STATUS_RESPONSE_ERROR;
         }
@@ -581,7 +581,7 @@ enum cfrds_status cfrds_command_sql_columninfo(cfrds_server *server, const char 
         *columninfo = cfrds_buffer_to_sql_columninfo(response);
         if (*columninfo == NULL)
         {
-            server_int = server;
+            server_int = (cfrds_server_int*)server;
             server_int->error_code = -1;
             return CFRDS_STATUS_RESPONSE_ERROR;
         }
@@ -608,7 +608,7 @@ enum cfrds_status cfrds_command_sql_primarykeys(cfrds_server *server, const char
         *primarykeys = cfrds_buffer_to_sql_primarykeys(response);
         if (*primarykeys == NULL)
         {
-            server_int = server;
+            server_int = (cfrds_server_int*)server;
             server_int->error_code = -1;
             return CFRDS_STATUS_RESPONSE_ERROR;
         }
@@ -635,7 +635,7 @@ enum cfrds_status cfrds_command_sql_foreignkeys(cfrds_server *server, const char
         *foreignkeys = cfrds_buffer_to_sql_foreignkeys(response);
         if (*foreignkeys == NULL)
         {
-            server_int = server;
+            server_int = (cfrds_server_int*)server;
             server_int->error_code = -1;
             return CFRDS_STATUS_RESPONSE_ERROR;
         }
@@ -662,7 +662,7 @@ enum cfrds_status cfrds_command_sql_importedkeys(cfrds_server *server, const cha
         *importedkeys = cfrds_buffer_to_sql_importedkeys(response);
         if (*importedkeys == NULL)
         {
-            server_int = server;
+            server_int = (cfrds_server_int*)server;
             server_int->error_code = -1;
             return CFRDS_STATUS_RESPONSE_ERROR;
         }
@@ -689,7 +689,7 @@ enum cfrds_status cfrds_command_sql_exportedkeys(cfrds_server *server, const cha
         *exportedkeys = cfrds_buffer_to_sql_exportedkeys(response);
         if (*exportedkeys == NULL)
         {
-            server_int = server;
+            server_int = (cfrds_server_int*)server;
             server_int->error_code = -1;
             return CFRDS_STATUS_RESPONSE_ERROR;
         }
@@ -716,7 +716,7 @@ enum cfrds_status cfrds_command_sql_sqlstmnt(cfrds_server *server, const char *c
         *resultset = cfrds_buffer_to_sql_sqlstmnt(response);
         if (*resultset == NULL)
         {
-            server_int = server;
+            server_int = (cfrds_server_int*)server;
             server_int->error_code = -1;
             return CFRDS_STATUS_RESPONSE_ERROR;
         }
@@ -743,7 +743,7 @@ enum cfrds_status cfrds_command_sql_sqlmetadata(cfrds_server *server, const char
         *metadata = cfrds_buffer_to_sql_metadata(response);
         if (*metadata == NULL)
         {
-            server_int = server;
+            server_int = (cfrds_server_int*)server;
             server_int->error_code = -1;
             return CFRDS_STATUS_RESPONSE_ERROR;
         }
@@ -770,7 +770,7 @@ enum cfrds_status cfrds_command_sql_getsupportedcommands(cfrds_server *server, c
         *supportedcommands = cfrds_buffer_to_sql_supportedcommands(response);
         if (*supportedcommands == NULL)
         {
-            server_int = server;
+            server_int = (cfrds_server_int*)server;
             server_int->error_code = -1;
             return CFRDS_STATUS_RESPONSE_ERROR;
         }
@@ -797,7 +797,7 @@ enum cfrds_status cfrds_command_sql_dbdescription(cfrds_server *server, const ch
         *description = cfrds_buffer_to_sql_dbdescription(response);
         if (*description == NULL)
         {
-            server_int = server;
+            server_int = (cfrds_server_int*)server;
             server_int->error_code = -1;
             return CFRDS_STATUS_RESPONSE_ERROR;
         }
@@ -2046,7 +2046,7 @@ enum cfrds_status cfrds_command_debugger_start(cfrds_server *server, char **sess
         *session_id = cfrds_buffer_to_debugger_start(response);
         if (*session_id == NULL)
         {
-            server_int = server;
+            server_int = (cfrds_server_int*)server;
             server_int->error_code = -1;
             return CFRDS_STATUS_RESPONSE_ERROR;
         }
@@ -2077,7 +2077,7 @@ enum cfrds_status cfrds_command_debugger_stop(cfrds_server *server, const char *
     {
         if (cfrds_buffer_to_debugger_stop(response) == false)
         {
-            server_int = server;
+            server_int = (cfrds_server_int*)server;
             server_int->error_code = -1;
             return CFRDS_STATUS_RESPONSE_ERROR;
         }
@@ -2109,7 +2109,7 @@ enum cfrds_status cfrds_command_debugger_get_server_info(cfrds_server *server, c
         int val = cfrds_buffer_to_debugger_info(response);
         if (val == -1)
         {
-            server_int = server;
+            server_int = (cfrds_server_int*)server;
             server_int->error_code = -1;
             return CFRDS_STATUS_RESPONSE_ERROR;
         }
@@ -2148,7 +2148,7 @@ enum cfrds_status cfrds_command_debugger_breakpoint_on_exception(cfrds_server *s
         int val = cfrds_buffer_to_debugger_info(response);
         if (val == -1)
         {
-            server_int = server;
+            server_int = (cfrds_server_int*)server;
             server_int->error_code = -1;
             return CFRDS_STATUS_RESPONSE_ERROR;
         }
@@ -2548,7 +2548,7 @@ enum cfrds_status cfrds_command_debugger_watch_variables(cfrds_server *server, c
                 variables++;
                 continue;
             }
-            variable = malloc(len + 1);
+            variable = (char*)malloc(len + 1);
             if (variable == NULL) return CFRDS_STATUS_MEMORY_ERROR;
             memcpy(variable, variables, len);
             variable[len] = '\0';
@@ -2637,7 +2637,7 @@ enum cfrds_status cfrds_command_security_analyzer_scan(cfrds_server *server, con
         return CFRDS_STATUS_SERVER_IS_NULL;
     }
 
-    server_int = server;
+    server_int = (cfrds_server_int*)server;
 
     if (recursively)
         recursively_str = "true";
@@ -2736,7 +2736,7 @@ enum cfrds_status cfrds_command_security_analyzer_cancel(cfrds_server *server, i
         return CFRDS_STATUS_SERVER_IS_NULL;
     }
 
-    server_int = server;
+    server_int = (cfrds_server_int*)server;
 
     snprintf(id_str, sizeof(id_str), "%d", command_id);
 
@@ -2814,7 +2814,7 @@ enum cfrds_status cfrds_command_security_analyzer_status(cfrds_server *server, i
         return CFRDS_STATUS_SERVER_IS_NULL;
     }
 
-    server_int = server;
+    server_int = (cfrds_server_int*)server;
 
     snprintf(id_str, sizeof(id_str), "%d", command_id);
 
@@ -2956,7 +2956,7 @@ enum cfrds_status cfrds_command_security_analyzer_result(cfrds_server *server, i
         return CFRDS_STATUS_SERVER_IS_NULL;
     }
 
-    server_int = server;
+    server_int = (cfrds_server_int*)server;
 
     snprintf(id_str, sizeof(id_str), "%d", command_id);
 
@@ -2983,7 +2983,7 @@ enum cfrds_status cfrds_command_security_analyzer_clean(cfrds_server *server, in
         return CFRDS_STATUS_SERVER_IS_NULL;
     }
 
-    server_int = server;
+    server_int = (cfrds_server_int*)server;
 
     snprintf(id_str, sizeof(id_str), "%d", command_id);
 
@@ -3070,7 +3070,7 @@ enum cfrds_status cfrds_command_ide_default(cfrds_server *server, int version, i
         return CFRDS_STATUS_SERVER_IS_NULL;
     }
 
-    server_int = server;
+    server_int = (cfrds_server_int*)server;
 
     snprintf(param, sizeof(param), "%d,", version);
 
@@ -3165,7 +3165,7 @@ enum cfrds_status cfrds_command_adminapi_debugging_getlogproperty(cfrds_server *
 
         cfrds_str_defer(xml);
 
-        server_int = server;
+        server_int = (cfrds_server_int*)server;
 
         const char *response_data = cfrds_buffer_data(response);
         size_t response_size = cfrds_buffer_data_size(response);
@@ -3232,7 +3232,7 @@ enum cfrds_status cfrds_command_adminapi_extensions_getcustomtagpaths(cfrds_serv
 
         cfrds_str_defer(xml);
 
-        server_int = server;
+        server_int = (cfrds_server_int*)server;
 
         const char *response_data = cfrds_buffer_data(response);
         size_t response_size = cfrds_buffer_data_size(response);
@@ -3293,7 +3293,7 @@ enum cfrds_status cfrds_command_adminapi_extensions_setmapping(cfrds_server *ser
 
         cfrds_str_defer(xml);
 
-        server_int = server;
+        server_int = (cfrds_server_int*)server;
 
         const char *response_data = cfrds_buffer_data(response);
         size_t response_size = cfrds_buffer_data_size(response);
@@ -3345,7 +3345,7 @@ enum cfrds_status cfrds_command_adminapi_extensions_deletemappings(cfrds_server 
 
         cfrds_str_defer(xml);
 
-        server_int = server;
+        server_int = (cfrds_server_int*)server;
 
         const char *response_data = cfrds_buffer_data(response);
         size_t response_size = cfrds_buffer_data_size(response);
@@ -3397,7 +3397,7 @@ enum cfrds_status cfrds_command_adminapi_extensions_getmappings(cfrds_server *se
 
         cfrds_str_defer(xml);
 
-        server_int = server;
+        server_int = (cfrds_server_int*)server;
 
         const char *response_data = cfrds_buffer_data(response);
         size_t response_size = cfrds_buffer_data_size(response);

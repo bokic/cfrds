@@ -116,6 +116,8 @@ enum cfrds_status cfrds_http_post(cfrds_server_int *server, const char *command,
         return CFRDS_STATUS_CONNECTION_TO_SERVER_FAILED;
     }
 
+//fprintf(stderr, "sending: %s\n", cfrds_buffer_data(send_buf));
+
     sock_written = send(sockfd, cfrds_buffer_data(send_buf), cfrds_buffer_data_size(send_buf), 0);
     if ((sock_written < 0)||((unsigned)sock_written != cfrds_buffer_data_size(send_buf))) {
         if (sock_written == -1)
@@ -153,6 +155,8 @@ enum cfrds_status cfrds_http_post(cfrds_server_int *server, const char *command,
 
     const char *response_data = cfrds_buffer_data(tmp_response);
     size_t response_size = cfrds_buffer_data_size(tmp_response);
+
+//fprintf(stderr, "recieved: %s\n", cfrds_buffer_data(tmp_response));
 
     static const char *good_response_http1_1 = "HTTP/1.1 200 ";
 

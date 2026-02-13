@@ -403,7 +403,7 @@ static WDDX_NODE_int *wddx_from_xml_element(xmlNodePtr xml_node)
         ret->type = WDDX_STRING;
 
         if (str_size > 0)
-            strcpy(ret->string, (const char *)xml_node->children->content);
+            strncpy(ret->string, (const char *)xml_node->children->content, str_size);
     }
     else if (strcmp(name, "array") == 0)
     {

@@ -1182,7 +1182,7 @@ int main(int argc, char *argv[])
             if (percentage >= 100)
                 break;
 
-            printf("progress: %d\r", percentage);
+            printf("progress: %d%%\r", percentage);
             fflush(stdout);
 
 #ifdef _WIN32
@@ -1192,6 +1192,76 @@ int main(int argc, char *argv[])
 #endif
         }
 
+        cfrds_security_analyzer_result_defer(analyzer_result);
+
+        res = cfrds_command_security_analyzer_result(server, command_id, &analyzer_result);
+        if (res != CFRDS_STATUS_OK)
+        {
+            fprintf(stderr, "cfrds_command_security_analyzer_result FAILED with error: %s\n", cfrds_server_get_error(server));
+            return EXIT_FAILURE;
+        }
+
+        cfrds_str_defer(status);
+        status = cfrds_security_analyzer_result_status(analyzer_result);
+        if (strcmp(status, "success") != 0)
+        {
+            fprintf(stderr, "cfrds_command_security_analyzer_result has with status: %s\n", status);
+            return EXIT_FAILURE;
+        }
+
+        printf("totalfiles: %d\n", cfrds_security_analyzer_result_totalfiles(analyzer_result));
+        printf("filesvisitedcount: %d\n", cfrds_security_analyzer_result_filesvisitedcount(analyzer_result));
+
+        int total = cfrds_security_analyzer_result_filesnotscanned_count(analyzer_result);
+        if (total > 0)
+        {
+            printf("Files NOT scanned:\n");
+            for(int ndx = 0; ndx < total; ndx++)
+            {
+                cfrds_str_defer(reason);
+                cfrds_str_defer(filename);
+
+                reason = cfrds_security_analyzer_result_filesnotscanned_item_reason(analyzer_result, ndx);
+                filename = cfrds_security_analyzer_result_filesnotscanned_item_filename(analyzer_result, ndx);
+
+                printf("\t%s - %s\n", reason, filename);
+            }
+        }
+
+        printf("Files scanned:\n");
+        total = cfrds_security_analyzer_result_filesscanned_count(analyzer_result);
+        for(int ndx = 0; ndx < total; ndx++)
+        {
+            cfrds_str_defer(result);
+            cfrds_str_defer(filename);
+
+            result = cfrds_security_analyzer_result_filesscanned_item_result(analyzer_result, ndx);
+            filename = cfrds_security_analyzer_result_filesscanned_item_filename(analyzer_result, ndx);
+
+            printf("\t%s - %s\n", result, filename);
+        }
+
+        total = cfrds_security_analyzer_result_errors_count(analyzer_result);
+        if (total > 0)
+        {
+            printf("Issues:\n");
+            for(int ndx = 0; ndx < total; ndx++)
+            {
+                cfrds_str_defer(type);
+                cfrds_str_defer(filename);
+                cfrds_str_defer(error);
+                cfrds_str_defer(errormessage);
+                int line = 0;
+
+                type = cfrds_security_analyzer_result_errors_item_type(analyzer_result, ndx);
+                filename = cfrds_security_analyzer_result_errors_item_filename(analyzer_result, ndx);
+                line = cfrds_security_analyzer_result_errors_item_beginline(analyzer_result, ndx);
+                error = cfrds_security_analyzer_result_errors_item_error(analyzer_result, ndx);
+                errormessage = cfrds_security_analyzer_result_errors_item_errormessage(analyzer_result, ndx);
+
+                printf("\t%s - %s:%d - %s(%s)\n", type, filename, line, error, errormessage);
+            }
+        }
         res = cfrds_command_security_analyzer_clean(server, command_id);
         if (res != CFRDS_STATUS_OK)
         {

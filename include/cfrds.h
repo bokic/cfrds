@@ -85,6 +85,7 @@ enum cfrds_debugger_type {
 #define cfrds_sql_metadata_defer(var) cfrds_sql_resultset* var __attribute__((cleanup(cfrds_sql_metadata_cleanup))) = NULL
 #define cfrds_sql_supportedcommands_defer(var) cfrds_sql_supportedcommands* var __attribute__((cleanup(cfrds_sql_supportedcommands_cleanup))) = NULL
 #define cfrds_debugger_event_defer(var) cfrds_debugger_event* var __attribute__((cleanup(cfrds_debugger_event_cleanup))) = NULL
+#define cfrds_security_analyzer_result_defer(var) cfrds_security_analyzer_result* var __attribute__((cleanup(cfrds_security_analyzer_result_cleanup))) = NULL
 #define cfrds_adminapi_customtagpaths_defer(var) cfrds_adminapi_customtagpaths* var __attribute__((cleanup(cfrds_adminapi_customtagpaths_cleanup))) = NULL
 #define cfrds_adminapi_mappings_defer(var) cfrds_adminapi_mappings* var __attribute__((cleanup(cfrds_adminapi_mappings_cleanup))) = NULL
 
@@ -297,6 +298,40 @@ EXPORT_CFRDS enum cfrds_status cfrds_command_security_analyzer_cancel(cfrds_serv
 EXPORT_CFRDS enum cfrds_status cfrds_command_security_analyzer_status(cfrds_server *server, int command_id, int *totalfiles, int *filesvisitedcount, int *percentage, int64_t *lastupdated);
 EXPORT_CFRDS enum cfrds_status cfrds_command_security_analyzer_result(cfrds_server *server, int command_id, cfrds_security_analyzer_result **result);
 EXPORT_CFRDS enum cfrds_status cfrds_command_security_analyzer_clean(cfrds_server *server, int command_id);
+
+EXPORT_CFRDS void cfrds_security_analyzer_result_cleanup(cfrds_security_analyzer_result **buf);
+EXPORT_CFRDS int cfrds_security_analyzer_result_totalfiles(cfrds_security_analyzer_result *value);
+EXPORT_CFRDS int cfrds_security_analyzer_result_filesvisitedcount(cfrds_security_analyzer_result *value);
+EXPORT_CFRDS int cfrds_security_analyzer_result_errorsdescription_count(cfrds_security_analyzer_result *value);
+EXPORT_CFRDS int cfrds_security_analyzer_result_filesscanned_count(cfrds_security_analyzer_result *value);
+EXPORT_CFRDS char *cfrds_security_analyzer_result_filesscanned_item_result(cfrds_security_analyzer_result *value, int ndx);
+EXPORT_CFRDS char *cfrds_security_analyzer_result_filesscanned_item_filename(cfrds_security_analyzer_result *value, int ndx);
+EXPORT_CFRDS int cfrds_security_analyzer_result_filesnotscanned_count(cfrds_security_analyzer_result *value);
+EXPORT_CFRDS char *cfrds_security_analyzer_result_filesnotscanned_item_reason(cfrds_security_analyzer_result *value, int ndx);
+EXPORT_CFRDS char *cfrds_security_analyzer_result_filesnotscanned_item_filename(cfrds_security_analyzer_result *value, int ndx);
+EXPORT_CFRDS char *cfrds_security_analyzer_result_executorservie(cfrds_security_analyzer_result *value);
+EXPORT_CFRDS int cfrds_security_analyzer_result_percentage(cfrds_security_analyzer_result *value);
+EXPORT_CFRDS int cfrds_security_analyzer_result_files_count(cfrds_security_analyzer_result *value);
+EXPORT_CFRDS char *cfrds_security_analyzer_result_files_value(cfrds_security_analyzer_result *value);
+EXPORT_CFRDS int64_t cfrds_security_analyzer_result_lastupdated(cfrds_security_analyzer_result *value);
+EXPORT_CFRDS int cfrds_security_analyzer_result_filesvisited_count(cfrds_security_analyzer_result *value);
+EXPORT_CFRDS int cfrds_security_analyzer_result_filesnotscannedcount(cfrds_security_analyzer_result *value);
+EXPORT_CFRDS int cfrds_security_analyzer_result_filesscannedcount(cfrds_security_analyzer_result *value);
+EXPORT_CFRDS int cfrds_security_analyzer_result_id(cfrds_security_analyzer_result *value);
+EXPORT_CFRDS int cfrds_security_analyzer_result_errors_count(cfrds_security_analyzer_result *value);
+EXPORT_CFRDS char *cfrds_security_analyzer_result_errors_item_errormessage(cfrds_security_analyzer_result *value, int ndx);
+EXPORT_CFRDS int cfrds_security_analyzer_result_errors_item_endline(cfrds_security_analyzer_result *value, int ndx);
+EXPORT_CFRDS char *cfrds_security_analyzer_result_errors_item_path(cfrds_security_analyzer_result *value, int ndx);
+EXPORT_CFRDS char *cfrds_security_analyzer_result_errors_item_vulnerablecode(cfrds_security_analyzer_result *value, int ndx);
+EXPORT_CFRDS char *cfrds_security_analyzer_result_errors_item_filename(cfrds_security_analyzer_result *value, int ndx);
+EXPORT_CFRDS int cfrds_security_analyzer_result_errors_item_beginline(cfrds_security_analyzer_result *value, int ndx);
+EXPORT_CFRDS int cfrds_security_analyzer_result_errors_item_column(cfrds_security_analyzer_result *value, int ndx);
+EXPORT_CFRDS char *cfrds_security_analyzer_result_errors_item_error(cfrds_security_analyzer_result *value, int ndx);
+EXPORT_CFRDS int cfrds_security_analyzer_result_errors_item_begincolumn(cfrds_security_analyzer_result *value, int ndx);
+EXPORT_CFRDS char *cfrds_security_analyzer_result_errors_item_type(cfrds_security_analyzer_result *value, int ndx);
+EXPORT_CFRDS int cfrds_security_analyzer_result_errors_item_endcolumn(cfrds_security_analyzer_result *value, int ndx);
+EXPORT_CFRDS char *cfrds_security_analyzer_result_errors_item_referencetype(cfrds_security_analyzer_result *value, int ndx);
+EXPORT_CFRDS char *cfrds_security_analyzer_result_status(cfrds_security_analyzer_result *value);
 
 EXPORT_CFRDS enum cfrds_status cfrds_command_ide_default(cfrds_server *server, int version, int *num1, char **server_version, char **client_version, int *num2, int *num3);
 

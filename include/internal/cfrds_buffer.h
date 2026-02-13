@@ -20,10 +20,10 @@
 typedef void cfrds_buffer;
 
 #ifdef _WIN32
-#define cfrds_socket SOCKET
+typedef SOCKET cfrds_socket;
 #define CFRDS_INVALID_SOCKET INVALID_SOCKET
 #else
-#define cfrds_socket int
+typedef int cfrds_socket;
 #define CFRDS_INVALID_SOCKET 0
 #endif
 

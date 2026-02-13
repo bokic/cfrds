@@ -1,6 +1,6 @@
 #include <internal/cfrds_buffer.h>
+#include <internal/wddx.h>
 #include <cfrds.h>
-#include <wddx.h>
 
 #include <string.h>
 #include <stdlib.h>

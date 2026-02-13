@@ -1,7 +1,7 @@
 #include <internal/cfrds_buffer.h>
 #include <internal/cfrds_http.h>
+#include <internal/wddx.h>
 #include <cfrds.h>
-#include <wddx.h>
 
 #include <json.h>
 
@@ -2429,7 +2429,68 @@ int cfrds_buffer_debugger_event_breakpoint_set_get_act_line(const cfrds_debugger
     return wddx_get_number(event, "0,ACTUAL_LINE_NUM", NULL);
 }
 
-const WDDX_NODE *cfrds_buffer_debugger_event_get_scopes(const cfrds_debugger_event *event)
+
+
+
+
+
+int cfrds_buffer_debugger_event_get_scopes_count(const cfrds_debugger_event *event)
+{
+    return wddx_node_array_size(wddx_get_var(event, "0,SCOPES"));
+}
+
+const char *cfrds_buffer_debugger_event_get_scopes_item(const cfrds_debugger_event *event, int ndx)
+{
+    return NULL;
+    //return wddx_get_array_item(event, "0,SCOPES", ndx);
+}
+
+int cfrds_buffer_debugger_event_get_threads_count(const cfrds_debugger_event *event)
+{
+    return wddx_node_array_size(wddx_get_var(event, "0,THREADS"));
+}
+
+const char *cfrds_buffer_debugger_event_get_threads_item(const cfrds_debugger_event *event, int ndx)
+{
+    return NULL;
+}
+
+int cfrds_buffer_debugger_event_get_watch_count(const cfrds_debugger_event *event)
+{
+    return wddx_node_array_size(wddx_get_var(event, "0,WATCH"));
+}
+
+const char *cfrds_buffer_debugger_event_get_watch_item(const cfrds_debugger_event *event, int ndx)
+{
+    return NULL;
+}
+
+int cfrds_buffer_debugger_event_get_cf_trace_count(const cfrds_debugger_event *event)
+{
+    return wddx_node_array_size(wddx_get_var(event, "0,CF_TRACE"));
+}
+
+const char *cfrds_buffer_debugger_event_get_cf_trace_item(const cfrds_debugger_event *event, int ndx)
+{
+    return NULL;
+}
+
+int cfrds_buffer_debugger_event_get_java_trace_count(const cfrds_debugger_event *event)
+{
+    return wddx_node_array_size(wddx_get_var(event, "0,JAVA_TRACE"));
+}
+
+const char *cfrds_buffer_debugger_event_get_java_trace_item(const cfrds_debugger_event *event, int ndx)
+{
+    return NULL;
+}
+
+
+
+
+
+
+/*const WDDX_NODE *cfrds_buffer_debugger_event_get_scopes(const cfrds_debugger_event *event)
 {
     return wddx_get_var(event, "0,SCOPES");
 }
@@ -2452,7 +2513,7 @@ const WDDX_NODE *cfrds_buffer_debugger_event_get_cf_trace(const cfrds_debugger_e
 const WDDX_NODE *cfrds_buffer_debugger_event_get_java_trace(const cfrds_debugger_event *event)
 {
     return wddx_get_var(event, "0,JAVA_TRACE");
-}
+}*/
 
 enum cfrds_status cfrds_command_debugger_watch_expression(cfrds_server *server, const char *session_id, const char *thread_name, const char *variable)
 {
@@ -3214,7 +3275,7 @@ enum cfrds_status cfrds_command_adminapi_debugging_getlogproperty(cfrds_server *
     return ret;
 }
 
-enum cfrds_status cfrds_command_adminapi_extensions_getcustomtagpaths(cfrds_server *server, WDDX **result)
+enum cfrds_status cfrds_command_adminapi_extensions_getcustomtagpaths(cfrds_server *server, cfrds_adminapi_customtagpaths **result)
 {
     enum cfrds_status ret;
 
@@ -3266,6 +3327,35 @@ enum cfrds_status cfrds_command_adminapi_extensions_getcustomtagpaths(cfrds_serv
     }
 
     return ret;
+}
+
+void cfrds_adminapi_customtagpaths_cleanup(cfrds_adminapi_customtagpaths **buf)
+{
+    wddx_cleanup(buf);
+}
+
+int cfrds_adminapi_customtagpaths_count(cfrds_adminapi_customtagpaths *buf)
+{
+    if (buf == NULL)
+        return 0;
+
+    if (wddx_node_type(buf) != WDDX_ARRAY)
+        return 0;
+
+    return wddx_node_array_size(buf);
+}
+
+const char *cfrds_adminapi_customtagpaths_at(cfrds_adminapi_customtagpaths *buf, int ndx)
+{
+    if (buf == NULL)
+        return NULL;
+
+    const WDDX_NODE *item = wddx_node_array_at(buf, ndx);
+
+    if (wddx_node_type(item) != WDDX_STRING)
+        return NULL;
+
+    return wddx_node_string(item);
 }
 
 enum cfrds_status cfrds_command_adminapi_extensions_setmapping(cfrds_server *server, const char *name, const char *path)
@@ -3379,7 +3469,7 @@ enum cfrds_status cfrds_command_adminapi_extensions_deletemappings(cfrds_server 
     return ret;
 }
 
-enum cfrds_status cfrds_command_adminapi_extensions_getmappings(cfrds_server *server, WDDX **result)
+enum cfrds_status cfrds_command_adminapi_extensions_getmappings(cfrds_server *server, cfrds_adminapi_mappings **result)
 {
     enum cfrds_status ret;
 
@@ -3431,4 +3521,51 @@ enum cfrds_status cfrds_command_adminapi_extensions_getmappings(cfrds_server *se
     }
 
     return ret;
+}
+
+void cfrds_adminapi_mappings_cleanup(cfrds_adminapi_mappings **buf)
+{
+    wddx_cleanup(buf);
+}
+
+int cfrds_adminapi_mappings_count(cfrds_adminapi_mappings *buf)
+{
+    if (buf == NULL)
+        return 0;
+
+    if (wddx_node_type(buf) != WDDX_STRUCT)
+        return 0;
+
+    return wddx_node_struct_size(buf);
+}
+
+const char *cfrds_adminapi_mappings_key(cfrds_adminapi_mappings *buf, int ndx)
+{
+    const char *ret = NULL;
+
+    if (buf == NULL)
+        return NULL;
+
+    if (wddx_node_type(buf) != WDDX_STRUCT)
+        return NULL;
+
+    wddx_node_struct_at(buf, ndx, &ret);
+
+    return ret;
+}
+
+const char *cfrds_adminapi_mappings_value(cfrds_adminapi_mappings *buf, int ndx)
+{
+    if (buf == NULL)
+        return NULL;
+
+    if (wddx_node_type(buf) != WDDX_STRUCT)
+        return NULL;
+
+    const WDDX_NODE *val = wddx_node_struct_at(buf, ndx, NULL);
+    
+    if (wddx_node_type(val) != WDDX_STRING)
+        return NULL;
+
+    return wddx_node_string(val);
 }

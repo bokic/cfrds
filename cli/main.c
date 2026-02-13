@@ -1,5 +1,4 @@
 #include <cfrds.h>
-#include <wddx.h>
 #include "os.h"
 
 #ifdef _WIN32
@@ -1250,7 +1249,7 @@ int main(int argc, char *argv[])
             printf("logproperty: %s\n", logproperty);
         } else if (strcmp(subcommand, "extensions_getcustomtagpaths") == 0)
         {
-            WDDX_defer(result);
+            cfrds_adminapi_customtagpaths_defer(result);
             res = cfrds_command_adminapi_extensions_getcustomtagpaths(server, &result);
             if (res != CFRDS_STATUS_OK)
             {
@@ -1258,30 +1257,12 @@ int main(int argc, char *argv[])
                 return EXIT_FAILURE;
             }
 
-            const WDDX_NODE *data = wddx_data(result);
-            if (wddx_node_type(data) != WDDX_ARRAY)
-            {
-                fprintf(stderr, "wddx_node_type(data) != WDDX_ARRAY\n");
-                return EXIT_FAILURE;
-            }
-
             printf("custom tag paths:\n");
 
-            int size = wddx_node_array_size(data);
+            int size = cfrds_adminapi_customtagpaths_count(result);
             for(int c = 0; c < size; c++)
             {
-                const char *value = NULL;
-                const WDDX_NODE *child = NULL;
-
-                child = wddx_node_array_at(data, c);
-                if (wddx_node_type(child) != WDDX_STRING)
-                {
-                    fprintf(stderr, "wddx_node_type(child) != WDDX_STRING\n");
-                    return EXIT_FAILURE;
-                }
-
-                value = wddx_node_string(child);
-
+                const char *value = cfrds_adminapi_customtagpaths_at(result, c);
                 printf("%s\n", value);
             }
         } else if (strcmp(subcommand, "extensions_setmapping") == 0)
@@ -1321,7 +1302,8 @@ int main(int argc, char *argv[])
             }
         } else if (strcmp(subcommand, "extensions_getmappings") == 0)
         {
-            WDDX_defer(result);
+            cfrds_adminapi_mappings_defer(result);
+
             res = cfrds_command_adminapi_extensions_getmappings(server, &result);
             if (res != CFRDS_STATUS_OK)
             {
@@ -1329,31 +1311,13 @@ int main(int argc, char *argv[])
                 return EXIT_FAILURE;
             }
 
-            const WDDX_NODE *data = wddx_data(result);
-            if (wddx_node_type(data) != WDDX_STRUCT)
-            {
-                fprintf(stderr, "wddx_node_type(data) != WDDX_STRUCT\n");
-                return EXIT_FAILURE;
-            }
-
             printf("mappings:\n");
 
-            int size = wddx_node_struct_size(data);
+            int size = cfrds_adminapi_mappings_count(result);
             for(int c = 0; c < size; c++)
             {
-                const char *key = NULL;
-                const char *value = NULL;
-                const WDDX_NODE *child = NULL;
-
-                child = wddx_node_struct_at(data, c , &key);
-                if (wddx_node_type(child) != WDDX_STRING)
-                {
-                    fprintf(stderr, "wddx_node_type(child) != WDDX_STRING\n");
-                    return EXIT_FAILURE;
-                }
-
-                value = wddx_node_string(child);
-
+                const char *key = cfrds_adminapi_mappings_key(result, c);
+                const char *value = cfrds_adminapi_mappings_value(result, c);
                 printf("%s => %s\n", key, value);
             }
         } else {

@@ -10,6 +10,14 @@
 
 typedef void cfrds_buffer;
 
+#ifdef _WIN32
+#define cfrds_socket SOCKET
+#define CFRDS_INVALID_SOCKET INVALID_SOCKET
+#else
+#define cfrds_socket int
+#define CFRDS_INVALID_SOCKET 0
+#endif
+
 typedef struct {
     char *host;
     uint16_t port;
@@ -169,6 +177,22 @@ typedef struct {
     size_t cnt;
     char *commands[];
 } cfrds_sql_supportedcommands_int;
+
+typedef struct {
+    int id;
+    int total_files;
+    int files_visited_count;
+    void *errors_description;
+    void *files_scanned;
+    void *files_not_scanned;
+    char *executorservie;
+    int percentage;
+    char *files;
+    int64_t last_updated;
+    int files_scanned_count;
+    int files_not_scanned_count;
+    void *errors;
+} cfrds_security_analyzer_result_int;
 
 #ifdef __cplusplus
 extern "C"

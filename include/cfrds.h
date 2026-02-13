@@ -1,19 +1,9 @@
 #pragma once
 
-#include "wddx.h"
-
 #include <stdbool.h>
 #include <stdint.h>
 #include <stddef.h>
 
-#ifdef _WIN32
-#include <WinSock2.h>
-#include <ws2tcpip.h>
-#else
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
-#endif
 
 #ifdef _WIN32
 #include <BaseTsd.h>
@@ -22,7 +12,6 @@ typedef LONG_PTR SSIZE_T;
 typedef SIZE_T size_t;
 typedef SSIZE_T ssize_t;
 #endif
-
 
 #ifdef libcfrds_EXPORTS
  #if defined(_MSC_VER)
@@ -34,17 +23,9 @@ typedef SSIZE_T ssize_t;
  #define EXPORT_CFRDS
 #endif
 
-#ifdef _WIN32
-#define cfrds_socket SOCKET
-#define CFRDS_INVALID_SOCKET INVALID_SOCKET
-#else
-#define cfrds_socket int
-#define CFRDS_INVALID_SOCKET 0
-#endif
-
-typedef void cfrds_server;
 typedef void cfrds_buffer;
 typedef void cfrds_file_content;
+typedef void cfrds_server;
 typedef void cfrds_browse_dir;
 typedef void cfrds_sql_dsninfo;
 typedef void cfrds_sql_tableinfo;
@@ -58,6 +39,8 @@ typedef void cfrds_sql_metadata;
 typedef void cfrds_sql_supportedcommands;
 typedef void cfrds_debugger_event;
 typedef void cfrds_security_analyzer_result;
+typedef void cfrds_adminapi_customtagpaths;
+typedef void cfrds_adminapi_mappings;
 
 enum cfrds_status {
     CFRDS_STATUS_OK,
@@ -85,9 +68,11 @@ enum cfrds_debugger_type {
     CFRDS_DEBUGGER_EVENT_UNKNOWN,
 };
 
-#define cfrds_server_defer(var) cfrds_server* var __attribute__((cleanup(cfrds_server_cleanup))) = NULL
 #define cfrds_buffer_defer(var) cfrds_buffer* var __attribute__((cleanup(cfrds_buffer_cleanup))) = NULL
 #define cfrds_file_content_defer(var) cfrds_file_content* var __attribute__((cleanup(cfrds_file_content_cleanup))) = NULL
+#define cfrds_str_defer(var) char* var __attribute__((cleanup(cfrds_str_cleanup))) = NULL
+
+#define cfrds_server_defer(var) cfrds_server* var __attribute__((cleanup(cfrds_server_cleanup))) = NULL
 #define cfrds_browse_dir_defer(var) cfrds_browse_dir* var __attribute__((cleanup(cfrds_browse_dir_cleanup))) = NULL
 #define cfrds_sql_dsninfo_defer(var) cfrds_sql_dsninfo* var __attribute__((cleanup(cfrds_sql_dsninfo_cleanup))) = NULL
 #define cfrds_sql_tableinfo_defer(var) cfrds_sql_tableinfo* var __attribute__((cleanup(cfrds_sql_tableinfo_cleanup))) = NULL
@@ -100,9 +85,8 @@ enum cfrds_debugger_type {
 #define cfrds_sql_metadata_defer(var) cfrds_sql_resultset* var __attribute__((cleanup(cfrds_sql_metadata_cleanup))) = NULL
 #define cfrds_sql_supportedcommands_defer(var) cfrds_sql_supportedcommands* var __attribute__((cleanup(cfrds_sql_supportedcommands_cleanup))) = NULL
 #define cfrds_debugger_event_defer(var) cfrds_debugger_event* var __attribute__((cleanup(cfrds_debugger_event_cleanup))) = NULL
-
-#define cfrds_str_defer(var) char* var __attribute__((cleanup(cfrds_str_cleanup))) = NULL
-#define cfrds_fd_defer(var) int var __attribute__((cleanup(cfrds_fd_cleanup))) = -1
+#define cfrds_adminapi_customtagpaths_defer(var) cfrds_adminapi_customtagpaths* var __attribute__((cleanup(cfrds_adminapi_customtagpaths_cleanup))) = NULL
+#define cfrds_adminapi_mappings_defer(var) cfrds_adminapi_mappings* var __attribute__((cleanup(cfrds_adminapi_mappings_cleanup))) = NULL
 
 #ifdef __cplusplus
 extern "C"
@@ -280,11 +264,23 @@ EXPORT_CFRDS const char *cfrds_buffer_debugger_event_breakpoint_get_thread_name(
 EXPORT_CFRDS const char *cfrds_buffer_debugger_event_breakpoint_set_get_pathname(const cfrds_debugger_event *event);
 EXPORT_CFRDS int cfrds_buffer_debugger_event_breakpoint_set_get_req_line(const cfrds_debugger_event *event);
 EXPORT_CFRDS int cfrds_buffer_debugger_event_breakpoint_set_get_act_line(const cfrds_debugger_event *event);
-EXPORT_CFRDS const WDDX_NODE *cfrds_buffer_debugger_event_get_scopes(const cfrds_debugger_event *event);
+
+EXPORT_CFRDS int cfrds_buffer_debugger_event_get_scopes_count(const cfrds_debugger_event *event);
+EXPORT_CFRDS const char *cfrds_buffer_debugger_event_get_scopes_item(const cfrds_debugger_event *event, int ndx);
+EXPORT_CFRDS int cfrds_buffer_debugger_event_get_threads_count(const cfrds_debugger_event *event);
+EXPORT_CFRDS const char *cfrds_buffer_debugger_event_get_threads_item(const cfrds_debugger_event *event, int ndx);
+EXPORT_CFRDS int cfrds_buffer_debugger_event_get_watch_count(const cfrds_debugger_event *event);
+EXPORT_CFRDS const char *cfrds_buffer_debugger_event_get_watch_item(const cfrds_debugger_event *event, int ndx);
+EXPORT_CFRDS int cfrds_buffer_debugger_event_get_cf_trace_count(const cfrds_debugger_event *event);
+EXPORT_CFRDS const char *cfrds_buffer_debugger_event_get_cf_trace_item(const cfrds_debugger_event *event, int ndx);
+EXPORT_CFRDS int cfrds_buffer_debugger_event_get_java_trace_count(const cfrds_debugger_event *event);
+EXPORT_CFRDS const char *cfrds_buffer_debugger_event_get_java_trace_item(const cfrds_debugger_event *event, int ndx);
+
+/*EXPORT_CFRDS const WDDX_NODE *cfrds_buffer_debugger_event_get_scopes(const cfrds_debugger_event *event);
 EXPORT_CFRDS const WDDX_NODE *cfrds_buffer_debugger_event_get_threads(const cfrds_debugger_event *event);
 EXPORT_CFRDS const WDDX_NODE *cfrds_buffer_debugger_event_get_watch(const cfrds_debugger_event *event);
 EXPORT_CFRDS const WDDX_NODE *cfrds_buffer_debugger_event_get_cf_trace(const cfrds_debugger_event *event);
-EXPORT_CFRDS const WDDX_NODE *cfrds_buffer_debugger_event_get_java_trace(const cfrds_debugger_event *event);
+EXPORT_CFRDS const WDDX_NODE *cfrds_buffer_debugger_event_get_java_trace(const cfrds_debugger_event *event);*/
 
 EXPORT_CFRDS enum cfrds_status cfrds_command_debugger_step_in(cfrds_server *server, const char *session_id, const char *thread_name);
 EXPORT_CFRDS enum cfrds_status cfrds_command_debugger_step_over(cfrds_server *server, const char *session_id, const char *thread_name);
@@ -305,10 +301,17 @@ EXPORT_CFRDS enum cfrds_status cfrds_command_security_analyzer_clean(cfrds_serve
 EXPORT_CFRDS enum cfrds_status cfrds_command_ide_default(cfrds_server *server, int version, int *num1, char **server_version, char **client_version, int *num2, int *num3);
 
 EXPORT_CFRDS enum cfrds_status cfrds_command_adminapi_debugging_getlogproperty(cfrds_server *server, const char *logdirectory, char **result);
-EXPORT_CFRDS enum cfrds_status cfrds_command_adminapi_extensions_getcustomtagpaths(cfrds_server *server, WDDX **result);
+EXPORT_CFRDS enum cfrds_status cfrds_command_adminapi_extensions_getcustomtagpaths(cfrds_server *server, cfrds_adminapi_customtagpaths **result);
+EXPORT_CFRDS void cfrds_adminapi_customtagpaths_cleanup(cfrds_adminapi_customtagpaths **buf);
+EXPORT_CFRDS int cfrds_adminapi_customtagpaths_count(cfrds_adminapi_customtagpaths *buf);
+EXPORT_CFRDS const char *cfrds_adminapi_customtagpaths_at(cfrds_adminapi_customtagpaths *buf, int ndx);
 EXPORT_CFRDS enum cfrds_status cfrds_command_adminapi_extensions_setmapping(cfrds_server *server, const char *name, const char *path);
 EXPORT_CFRDS enum cfrds_status cfrds_command_adminapi_extensions_deletemappings(cfrds_server *server, const char *mapping);
-EXPORT_CFRDS enum cfrds_status cfrds_command_adminapi_extensions_getmappings(cfrds_server *server, WDDX **result);
+EXPORT_CFRDS enum cfrds_status cfrds_command_adminapi_extensions_getmappings(cfrds_server *server, cfrds_adminapi_mappings **result);
+EXPORT_CFRDS void cfrds_adminapi_mappings_cleanup(cfrds_adminapi_mappings **buf);
+EXPORT_CFRDS int cfrds_adminapi_mappings_count(cfrds_adminapi_mappings *buf);
+EXPORT_CFRDS const char *cfrds_adminapi_mappings_key(cfrds_adminapi_mappings *buf, int ndx);
+EXPORT_CFRDS const char *cfrds_adminapi_mappings_value(cfrds_adminapi_mappings *buf, int ndx);
 
 #ifdef __cplusplus
 }

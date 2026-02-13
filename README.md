@@ -79,4 +79,5 @@ Some of the features RDS protocol supports:
 * Windows
     > See project [releases](https://github.com/bokic/cfrds/releases) page.
 * MacOS
-  * homebrew - Work in progress.
+  * homebrew
+    > `brew install --build-from-source ./MacOS/cfrds.rb`

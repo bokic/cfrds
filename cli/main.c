@@ -195,7 +195,7 @@ static bool init_server_from_uri(const char *uri, char **hostname, uint16_t *por
     const char *login_start = strchr(uri, '@');
     if (login_start) {
         const char *pass_start = strchr(uri, ':');
-        if ((pass_start)&&(pass_start < login_start)) {
+        if ((pass_start != NULL)&&(pass_start < login_start)) {
             size_t user_strlen = pass_start - uri;
             size_t pass_strlen = login_start - pass_start - 1;
 

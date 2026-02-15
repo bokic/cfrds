@@ -1,9 +1,9 @@
-# cfrds - ColdFusion RDS protocol library with python bindings and CLI interface.
+# cfrds - ColdFusion RDS protocol library with python bindings and CLI application.
 
 ## Project description
-cfrds is a library and cli executable designed to communicate to ColdFusion server via Adobe RDS protocol. More info regarding the protocol at https://helpx.adobe.com/coldfusion/coldfusion-builder-extension-for-visual-studio-code/rds-support.html.
+cfrds is a shared library and CLI application designed to communicate to ColdFusion server via Adobe RDS protocol. More info regarding the protocol at [Adobe RDS protocol](https://helpx.adobe.com/coldfusion/coldfusion-builder-extension-for-visual-studio-code/rds-support.html).
 
-Project is written in C. It's portable and can be compiled for Windows, Linux, and MacOS, Intel and ARM 32/64bit targets.
+Written in C, it's portable and can be compiled for Windows/Linux/MacOS, x86/ARM, 32/64-bit targets.
 
 Some of the features RDS protocol supports:
 * Server side file access(list dir, upload, download file).
@@ -60,15 +60,15 @@ Some of the features RDS protocol supports:
 * Delete ColdFusion server extensions mapping - `cfrds adminapi <rds://[username[:password]@]host[:port]> extensions_deletemapping <mapping_name>`
 
 ## Build
-> git clone https://github.com/bokic/cfrds.git
+> `git clone https://github.com/bokic/cfrds.git`
 > 
-> cd cfrds
+> `cd cfrds`
 > 
-> cmake -B build
+> `cmake -B build`
 > 
-> cmake --build build
+> `cmake --build build`
 > 
-> bin/cfrds
+> `bin/cfrds`
 
 ## Installation
 * Linux
@@ -84,4 +84,8 @@ Some of the features RDS protocol supports:
     > See project [releases](https://github.com/bokic/cfrds/releases) page.
 * MacOS
   * homebrew
+    > `git clone https://github.com/bokic/cfrds.git`
+    > 
+    > `cd cfrds`
+    > 
     > `brew install --build-from-source ./MacOS/cfrds.rb`

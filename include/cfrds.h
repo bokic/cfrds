@@ -277,12 +277,6 @@ EXPORT_CFRDS const char *cfrds_buffer_debugger_event_get_cf_trace_item(const cfr
 EXPORT_CFRDS int cfrds_buffer_debugger_event_get_java_trace_count(const cfrds_debugger_event *event);
 EXPORT_CFRDS const char *cfrds_buffer_debugger_event_get_java_trace_item(const cfrds_debugger_event *event, int ndx);
 
-/*EXPORT_CFRDS const WDDX_NODE *cfrds_buffer_debugger_event_get_scopes(const cfrds_debugger_event *event);
-EXPORT_CFRDS const WDDX_NODE *cfrds_buffer_debugger_event_get_threads(const cfrds_debugger_event *event);
-EXPORT_CFRDS const WDDX_NODE *cfrds_buffer_debugger_event_get_watch(const cfrds_debugger_event *event);
-EXPORT_CFRDS const WDDX_NODE *cfrds_buffer_debugger_event_get_cf_trace(const cfrds_debugger_event *event);
-EXPORT_CFRDS const WDDX_NODE *cfrds_buffer_debugger_event_get_java_trace(const cfrds_debugger_event *event);*/
-
 EXPORT_CFRDS enum cfrds_status cfrds_command_debugger_step_in(cfrds_server *server, const char *session_id, const char *thread_name);
 EXPORT_CFRDS enum cfrds_status cfrds_command_debugger_step_over(cfrds_server *server, const char *session_id, const char *thread_name);
 EXPORT_CFRDS enum cfrds_status cfrds_command_debugger_step_out(cfrds_server *server, const char *session_id, const char *thread_name);

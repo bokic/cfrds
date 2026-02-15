@@ -2485,36 +2485,6 @@ const char *cfrds_buffer_debugger_event_get_java_trace_item(const cfrds_debugger
     return NULL;
 }
 
-
-
-
-
-
-/*const WDDX_NODE *cfrds_buffer_debugger_event_get_scopes(const cfrds_debugger_event *event)
-{
-    return wddx_get_var(event, "0,SCOPES");
-}
-
-const WDDX_NODE *cfrds_buffer_debugger_event_get_threads(const cfrds_debugger_event *event)
-{
-    return wddx_get_var(event, "0,THREADS");
-}
-
-const WDDX_NODE *cfrds_buffer_debugger_event_get_watch(const cfrds_debugger_event *event)
-{
-    return wddx_get_var(event, "0,WATCH");
-}
-
-const WDDX_NODE *cfrds_buffer_debugger_event_get_cf_trace(const cfrds_debugger_event *event)
-{
-    return wddx_get_var(event, "0,CF_TRACE");
-}
-
-const WDDX_NODE *cfrds_buffer_debugger_event_get_java_trace(const cfrds_debugger_event *event)
-{
-    return wddx_get_var(event, "0,JAVA_TRACE");
-}*/
-
 enum cfrds_status cfrds_command_debugger_watch_expression(cfrds_server *server, const char *session_id, const char *thread_name, const char *variable)
 {
     enum cfrds_status ret;

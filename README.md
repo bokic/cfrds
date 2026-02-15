@@ -7,9 +7,12 @@ Project is written in C. It's portable and can be compiled for Windows, Linux, a
 
 Some of the features RDS protocol supports:
 * Server side file access(list dir, upload, download file).
+* Run security analyzer on CFML application.
 * Enumerating databases connections/tables/table structures(etc)
 * Executing SQL on server side.
 * Remote ColdFusion debugger.
+* Fetch CFML server info.
+* Fetch CFML server adminapi settings.
 * other...
 
 ## Implemented
@@ -18,10 +21,10 @@ Some of the features RDS protocol supports:
 * Remote ColdFusion server debugger.
 * Remote ColdFusion server info.
 * Remote ColdFusion server adminapi settings.
+* Remote ColdFusion server webapp security analyzer service.
 
 ## TODO
 * Remote ColdFusion server graph(chart).
-* Remote ColdFusion server webapp security analyzer service.
 * cfrds cli print all output in json format(--json tail argument).
 * Code cleanup.
 

@@ -26,34 +26,35 @@ Some of the features RDS protocol supports:
 * Code cleanup.
 
 ## CLI test script usage ex:
-> `RDS_HOST=rds://localhost:8500 RDS_DSN={some_coldfusion_dsn} RDS_DSN_TABLE={some_table} ./test.sh`
+> `RDS_HOST=<rds://[username[:password]@]host[:port]> RDS_DSN=<dsn_name> RDS_DSN_TABLE=<table_name> ./test.sh`
 
 ## CLI examples
-* List directory - `cfrds ls <rds://{username{:password}@}host{:port}/pathname>`
-* Print file content - `cfrds cat <rds://{username{:password}@}host{:port}/pathname>`
-* File download - `cfrds download <rds://{username{:password}@}host{:port}/pathname> <destination name/pathname>`
-* File upload - `cfrds upload <source_file> <rds://{username{:password}@}host{:port}/pathname>`
-* File/dir rename - `cfrds mv <rds://{username{:password}@}host{:port}/pathname> <destination name/pathname>`
-* File delete - `cfrds rm <rds://{username{:password}@}host{:port}/pathname>`
-* Create directory - `cfrds mkdir <rds://{username{:password}@}host{:port}/pathname>`
-* Delete directory - `cfrds rmdir <rds://{username{:password}@}host{:port}/pathname>`
-* Get ColdFusion installation directory - `cfrds cfroot <rds://{username{:password}@}host{:port}>`
-* Get ColdFusion data source names info - `cfrds dsninfo <rds://{username{:password}@}host{:port}>`
-* Get ColdFusion data source name tables info - `cfrds tableinfo <rds://{username{:password}@}host{:port}/dsn>`
-* Get ColdFusion data source name table columns info - `cfrds columninfo <rds://{username{:password}@}host{:port}/dsn/table>`
-* Get ColdFusion data source name table primary keys info - `cfrds primarykeys <rds://{username{:password}@}host{:port}/dsn/table>`
-* Get ColdFusion data source name table foreign keys info - `cfrds primarykeys <rds://{username{:password}@}host{:port}/dsn/table>`
-* Get ColdFusion data source name table imported keys info - `cfrds primarykeys <rds://{username{:password}@}host{:port}/dsn/table>`
-* Get ColdFusion data source name table exported keys info - `cfrds primarykeys <rds://{username{:password}@}host{:port}/dsn/table>`
-* Execute ColdFusion data source name SQL - `cfrds sql <rds://{username{:password}@}host{:port}/dsn> '<SQL>'`
-* Get ColdFusion data source name SQL metadata - `cfrds sqlmetadata <rds://{username{:password}@}host{:port}/dsn> '<SQL>'`
-* Get ColdFusion data source name database info - `cfrds dbdescription <rds://{username{:password}@}host{:port}/dsn>`
-* Get ColdFusion server info - `cfrds ide_default <rds://{username{:password}@}host{:port}> <version 0-15>`
-* Get ColdFusion server debugging log property - `cfrds adminapi <rds://{username{:password}@}host{:port}> debugging_getlogproperty <logdirectory>`
-* Get ColdFusion server extensions custom tag paths - `cfrds adminapi <rds://{username{:password}@}host{:port}> extensions_getcustomtagpaths`
-* Get ColdFusion server extensions mappings - `cfrds adminapi <rds://{username{:password}@}host{:port}> extensions_getmappings`
-* Set ColdFusion server extensions mapping - `cfrds adminapi <rds://{username{:password}@}host{:port}> extensions_setmapping <mapping name> <mapping path>`
-* Delete ColdFusion server extensions mapping - `cfrds adminapi <rds://{username{:password}@}host{:port}> extensions_deletemapping <mapping name>`
+* List directory - `cfrds ls <rds://[username[:password]@]host[:port]/[path]>`
+* Print file content - `cfrds cat <rds://[username[:password]@]host[:port]</pathname>>`
+* File download - `cfrds download <rds://[username[:password]@]host[:port]</pathname>> <local_pathname>`
+* File upload - `cfrds upload <local_pathname> <rds://[username[:password]@]host[:port]</pathname>>`
+* File/dir rename - `cfrds mv <rds://[username[:password]@]host[:port]</pathname>> <new_pathname>`
+* File delete - `cfrds rm <rds://[username[:password]@]host[:port]</pathname>>`
+* Create directory - `cfrds mkdir <rds://[username[:password]@]host[:port]</path>>`
+* Delete directory - `cfrds rmdir <rds://[username[:password]@]host[:port]</path>>`
+* Get ColdFusion installation directory - `cfrds cfroot <rds://[username[:password]@]host[:port]>`
+* Get ColdFusion data source names info - `cfrds dsninfo <rds://[username[:password]@]host[:port]>`
+* Get ColdFusion data source name tables info - `cfrds tableinfo <rds://[username[:password]@]host[:port]/<dsn_name>>`
+* Get ColdFusion data source name table columns info - `cfrds columninfo <rds://[username[:password]@]host[:port]/<dsn_name>/<table_name>>`
+* Get ColdFusion data source name table primary keys info - `cfrds primarykeys <rds://[username[:password]@]host[:port]/<dsn_name>/<table_name>>`
+* Get ColdFusion data source name table foreign keys info - `cfrds foreignkeys <rds://[username[:password]@]host[:port]/<dsn_name>/<table_name>>`
+* Get ColdFusion data source name table imported keys info - `cfrds importedkeys <rds://[username[:password]@]host[:port]/<dsn_name>/<table_name>>`
+* Get ColdFusion data source name table exported keys info - `cfrds exportedkeys <rds://[username[:password]@]host[:port]/<dsn_name>/<table_name>>`
+* Execute ColdFusion data source name SQL - `cfrds sql <rds://[username[:password]@]host[:port]/<dsn_name>> "<sql_statement>"`
+* Get ColdFusion data source name SQL metadata - `cfrds sqlmetadata <rds://[username[:password]@]host[:port]/<dsn_name>> "<sql_statement>"`
+* Get ColdFusion data source supported SQL commands - `cfrds sqlsupportedcommands <rds://[username[:password]@]host[:port]/<dsn_name>>`
+* Get ColdFusion data source name database info - `cfrds dbdescription <rds://[username[:password]@]host[:port]/<dsn_name>>`
+* Get ColdFusion server info - `cfrds ide_default <rds://[username[:password]@]host[:port]> <version>`
+* Get ColdFusion server debugging log property - `cfrds adminapi <rds://[username[:password]@]host[:port]> debugging_getlogproperty <log_directory>`
+* Get ColdFusion server extensions custom tag paths - `cfrds adminapi <rds://[username[:password]@]host[:port]> extensions_getcustomtagpaths`
+* Get ColdFusion server extensions mappings - `cfrds adminapi <rds://[username[:password]@]host[:port]> extensions_getmappings`
+* Set ColdFusion server extensions mapping - `cfrds adminapi <rds://[username[:password]@]host[:port]> extensions_setmapping <mapping_name> <mapping_path>`
+* Delete ColdFusion server extensions mapping - `cfrds adminapi <rds://[username[:password]@]host[:port]> extensions_deletemapping <mapping_name>`
 
 ## Build
 > git clone https://github.com/bokic/cfrds.git

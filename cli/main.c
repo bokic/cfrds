@@ -295,14 +295,14 @@ int main(int argc, char *argv[])
             return EXIT_FAILURE;
         }
 
-        size_t cnt = cfrds_buffer_browse_dir_count(dir);
+        size_t cnt = cfrds_browse_dir_count(dir);
         for (size_t c = 0; c < cnt; c++)
         {
-            char kind = cfrds_buffer_browse_dir_item_get_kind(dir, c);
-            const char *name = cfrds_buffer_browse_dir_item_get_name(dir, c);
-            uint8_t permissions = cfrds_buffer_browse_dir_item_get_permissions(dir, c);
-            size_t size = cfrds_buffer_browse_dir_item_get_size(dir, c);
-            uint64_t modified = cfrds_buffer_browse_dir_item_get_modified(dir, c);
+            char kind = cfrds_browse_dir_item_get_kind(dir, c);
+            const char *name = cfrds_browse_dir_item_get_name(dir, c);
+            uint8_t permissions = cfrds_browse_dir_item_get_permissions(dir, c);
+            size_t size = cfrds_browse_dir_item_get_size(dir, c);
+            uint64_t modified = cfrds_browse_dir_item_get_modified(dir, c);
 
             char permissions_str[] = "-----";
             if (kind == 'D') permissions_str[0] = 'D';
@@ -326,8 +326,8 @@ int main(int argc, char *argv[])
             return EXIT_FAILURE;
         }
 
-        int to_write = cfrds_buffer_file_content_get_size(content);
-        ssize_t written = os_write_to_terminal(cfrds_buffer_file_content_get_data(content), to_write);
+        int to_write = cfrds_file_content_get_size(content);
+        ssize_t written = os_write_to_terminal(cfrds_file_content_get_data(content), to_write);
         if (written != to_write)
         {
             fprintf(stderr, "write FAILED with error: %s\n", strerror(errno));
@@ -352,8 +352,8 @@ int main(int argc, char *argv[])
             return EXIT_FAILURE;
         }
 
-        int to_write = cfrds_buffer_file_content_get_size(content);
-        ssize_t written = os_write(fd, cfrds_buffer_file_content_get_data(content), to_write);
+        int to_write = cfrds_file_content_get_size(content);
+        ssize_t written = os_write(fd, cfrds_file_content_get_data(content), to_write);
         if (written != to_write)
         {
             fprintf(stderr, "write FAILED with error: %s\n", strerror(errno));
@@ -423,10 +423,10 @@ int main(int argc, char *argv[])
             return EXIT_FAILURE;
         }
 
-        size_t cnt = cfrds_buffer_sql_dsninfo_count(dsninfo);
+        size_t cnt = cfrds_sql_dsninfo_count(dsninfo);
         for(size_t c = 0; c < cnt; c++)
         {
-            const char *item = cfrds_buffer_sql_dsninfo_item_get_name(dsninfo, c);
+            const char *item = cfrds_sql_dsninfo_item_get_name(dsninfo, c);
             puts(item);
         }
     } else if (strcmp(command, "tableinfo") == 0) {
@@ -442,11 +442,11 @@ int main(int argc, char *argv[])
                 return EXIT_FAILURE;
             }
 
-            size_t cnt = cfrds_buffer_sql_tableinfo_count(tableinfo);
+            size_t cnt = cfrds_sql_tableinfo_count(tableinfo);
             for(size_t c = 0; c < cnt; c++)
             {
-                const char *name = cfrds_buffer_sql_tableinfo_get_column_name(tableinfo, c);
-                const char *type = cfrds_buffer_sql_tableinfo_get_column_type(tableinfo, c);
+                const char *name = cfrds_sql_tableinfo_get_column_name(tableinfo, c);
+                const char *type = cfrds_sql_tableinfo_get_column_type(tableinfo, c);
                 printf("%s, %s\n", name, type);
             }
         } else {
@@ -482,11 +482,11 @@ int main(int argc, char *argv[])
                     return EXIT_FAILURE;
                 }
 
-                size_t cnt = cfrds_buffer_sql_columninfo_count(columninfo);
+                size_t cnt = cfrds_sql_columninfo_count(columninfo);
                 for(size_t c = 0; c < cnt; c++)
                 {
-                    const char *name = cfrds_buffer_sql_columninfo_get_name(columninfo, c);
-                    const char *type = cfrds_buffer_sql_columninfo_get_typeStr(columninfo, c);
+                    const char *name = cfrds_sql_columninfo_get_name(columninfo, c);
+                    const char *type = cfrds_sql_columninfo_get_typeStr(columninfo, c);
                     printf("%s, %s\n", name, type);
                 }
             } else {
@@ -526,14 +526,14 @@ int main(int argc, char *argv[])
                     return EXIT_FAILURE;
                 }
 
-                size_t cnt = cfrds_buffer_sql_primarykeys_count(primarykeys);
+                size_t cnt = cfrds_sql_primarykeys_count(primarykeys);
                 for(size_t c = 0; c < cnt; c++)
                 {
-                    const char *col_name = cfrds_buffer_sql_primarykeys_get_catalog(primarykeys, c);
-                    const char *col_owner = cfrds_buffer_sql_primarykeys_get_owner(primarykeys, c);
-                    const char *col_table = cfrds_buffer_sql_primarykeys_get_table(primarykeys, c);
-                    const char *col_column = cfrds_buffer_sql_primarykeys_get_column(primarykeys, c);
-                    int col_key_sequence = cfrds_buffer_sql_primarykeys_get_key_sequence(primarykeys, c);
+                    const char *col_name = cfrds_sql_primarykeys_get_catalog(primarykeys, c);
+                    const char *col_owner = cfrds_sql_primarykeys_get_owner(primarykeys, c);
+                    const char *col_table = cfrds_sql_primarykeys_get_table(primarykeys, c);
+                    const char *col_column = cfrds_sql_primarykeys_get_column(primarykeys, c);
+                    int col_key_sequence = cfrds_sql_primarykeys_get_key_sequence(primarykeys, c);
 
                     printf("name: '%s', owner: '%s', table: '%s', column: '%s', key_sequence: %d\n", col_name, col_owner, col_table, col_column, col_key_sequence);
                 }
@@ -574,20 +574,20 @@ int main(int argc, char *argv[])
                     return EXIT_FAILURE;
                 }
 
-                size_t cnt = cfrds_buffer_sql_foreignkeys_count(foreignkeys);
+                size_t cnt = cfrds_sql_foreignkeys_count(foreignkeys);
                 for(size_t c = 0; c < cnt; c++)
                 {
-                    const char *pk_catalog = cfrds_buffer_sql_foreignkeys_get_pkcatalog(foreignkeys, c);
-                    const char *pk_owner = cfrds_buffer_sql_foreignkeys_get_pkowner(foreignkeys, c);
-                    const char *pk_table = cfrds_buffer_sql_foreignkeys_get_pktable(foreignkeys, c);
-                    const char *pk_column = cfrds_buffer_sql_foreignkeys_get_pkcolumn(foreignkeys, c);
-                    const char *fk_catalog = cfrds_buffer_sql_foreignkeys_get_fkcatalog(foreignkeys, c);
-                    const char *fk_owner = cfrds_buffer_sql_foreignkeys_get_fkowner(foreignkeys, c);
-                    const char *fk_table = cfrds_buffer_sql_foreignkeys_get_fktable(foreignkeys, c);
-                    const char *fk_column = cfrds_buffer_sql_foreignkeys_get_fkcolumn(foreignkeys, c);
-                    int key_sequence = cfrds_buffer_sql_foreignkeys_get_key_sequence(foreignkeys, c);
-                    int updaterule = cfrds_buffer_sql_foreignkeys_get_updaterule(foreignkeys, c);
-                    int deleterule = cfrds_buffer_sql_foreignkeys_get_deleterule(foreignkeys, c);
+                    const char *pk_catalog = cfrds_sql_foreignkeys_get_pkcatalog(foreignkeys, c);
+                    const char *pk_owner = cfrds_sql_foreignkeys_get_pkowner(foreignkeys, c);
+                    const char *pk_table = cfrds_sql_foreignkeys_get_pktable(foreignkeys, c);
+                    const char *pk_column = cfrds_sql_foreignkeys_get_pkcolumn(foreignkeys, c);
+                    const char *fk_catalog = cfrds_sql_foreignkeys_get_fkcatalog(foreignkeys, c);
+                    const char *fk_owner = cfrds_sql_foreignkeys_get_fkowner(foreignkeys, c);
+                    const char *fk_table = cfrds_sql_foreignkeys_get_fktable(foreignkeys, c);
+                    const char *fk_column = cfrds_sql_foreignkeys_get_fkcolumn(foreignkeys, c);
+                    int key_sequence = cfrds_sql_foreignkeys_get_key_sequence(foreignkeys, c);
+                    int updaterule = cfrds_sql_foreignkeys_get_updaterule(foreignkeys, c);
+                    int deleterule = cfrds_sql_foreignkeys_get_deleterule(foreignkeys, c);
 
                     printf("pk_catalog: '%s', pk_owner: '%s', pk_table: '%s', pk_column: '%s', fk_catalog: '%s', fk_owner: '%s', fk_table: '%s', fk_column: '%s', key_sequence: %d, updaterule: %d, deleterule: %d\n",
                         pk_catalog,
@@ -639,20 +639,20 @@ int main(int argc, char *argv[])
                     return EXIT_FAILURE;
                 }
 
-                size_t cnt = cfrds_buffer_sql_importedkeys_count(importedkeys);
+                size_t cnt = cfrds_sql_importedkeys_count(importedkeys);
                 for(size_t c = 0; c < cnt; c++)
                 {
-                    const char *pk_catalog = cfrds_buffer_sql_importedkeys_get_pkcatalog(importedkeys, c);
-                    const char *pk_owner = cfrds_buffer_sql_importedkeys_get_pkowner(importedkeys, c);
-                    const char *pk_table = cfrds_buffer_sql_importedkeys_get_pktable(importedkeys, c);
-                    const char *pk_column = cfrds_buffer_sql_importedkeys_get_pkcolumn(importedkeys, c);
-                    const char *fk_catalog = cfrds_buffer_sql_importedkeys_get_fkcatalog(importedkeys, c);
-                    const char *fk_owner = cfrds_buffer_sql_importedkeys_get_fkowner(importedkeys, c);
-                    const char *fk_table = cfrds_buffer_sql_importedkeys_get_fktable(importedkeys, c);
-                    const char *fk_column = cfrds_buffer_sql_importedkeys_get_fkcolumn(importedkeys, c);
-                    int key_sequence = cfrds_buffer_sql_importedkeys_get_key_sequence(importedkeys, c);
-                    int updaterule = cfrds_buffer_sql_importedkeys_get_updaterule(importedkeys, c);
-                    int deleterule = cfrds_buffer_sql_importedkeys_get_deleterule(importedkeys, c);
+                    const char *pk_catalog = cfrds_sql_importedkeys_get_pkcatalog(importedkeys, c);
+                    const char *pk_owner = cfrds_sql_importedkeys_get_pkowner(importedkeys, c);
+                    const char *pk_table = cfrds_sql_importedkeys_get_pktable(importedkeys, c);
+                    const char *pk_column = cfrds_sql_importedkeys_get_pkcolumn(importedkeys, c);
+                    const char *fk_catalog = cfrds_sql_importedkeys_get_fkcatalog(importedkeys, c);
+                    const char *fk_owner = cfrds_sql_importedkeys_get_fkowner(importedkeys, c);
+                    const char *fk_table = cfrds_sql_importedkeys_get_fktable(importedkeys, c);
+                    const char *fk_column = cfrds_sql_importedkeys_get_fkcolumn(importedkeys, c);
+                    int key_sequence = cfrds_sql_importedkeys_get_key_sequence(importedkeys, c);
+                    int updaterule = cfrds_sql_importedkeys_get_updaterule(importedkeys, c);
+                    int deleterule = cfrds_sql_importedkeys_get_deleterule(importedkeys, c);
 
                     printf("pk_catalog: '%s', pk_owner: '%s', pk_table: '%s', pk_column: '%s', fk_catalog: '%s', fk_owner: '%s', fk_table: '%s', fk_column: '%s', key_sequence: %d, updaterule: %d, deleterule: %d\n",
                         pk_catalog,
@@ -704,20 +704,20 @@ int main(int argc, char *argv[])
                     return EXIT_FAILURE;
                 }
 
-                size_t cnt = cfrds_buffer_sql_exportedkeys_count(exportedkeys);
+                size_t cnt = cfrds_sql_exportedkeys_count(exportedkeys);
                 for(size_t c = 0; c < cnt; c++)
                 {
-                    const char *pk_catalog = cfrds_buffer_sql_exportedkeys_get_pkcatalog(exportedkeys, c);
-                    const char *pk_owner = cfrds_buffer_sql_exportedkeys_get_pkowner(exportedkeys, c);
-                    const char *pk_table = cfrds_buffer_sql_exportedkeys_get_pktable(exportedkeys, c);
-                    const char *pk_column = cfrds_buffer_sql_exportedkeys_get_pkcolumn(exportedkeys, c);
-                    const char *fk_catalog = cfrds_buffer_sql_exportedkeys_get_fkcatalog(exportedkeys, c);
-                    const char *fk_owner = cfrds_buffer_sql_exportedkeys_get_fkowner(exportedkeys, c);
-                    const char *fk_table = cfrds_buffer_sql_exportedkeys_get_fktable(exportedkeys, c);
-                    const char *fk_column = cfrds_buffer_sql_exportedkeys_get_fkcolumn(exportedkeys, c);
-                    int key_sequence = cfrds_buffer_sql_exportedkeys_get_key_sequence(exportedkeys, c);
-                    int updaterule = cfrds_buffer_sql_exportedkeys_get_updaterule(exportedkeys, c);
-                    int deleterule = cfrds_buffer_sql_exportedkeys_get_deleterule(exportedkeys, c);
+                    const char *pk_catalog = cfrds_sql_exportedkeys_get_pkcatalog(exportedkeys, c);
+                    const char *pk_owner = cfrds_sql_exportedkeys_get_pkowner(exportedkeys, c);
+                    const char *pk_table = cfrds_sql_exportedkeys_get_pktable(exportedkeys, c);
+                    const char *pk_column = cfrds_sql_exportedkeys_get_pkcolumn(exportedkeys, c);
+                    const char *fk_catalog = cfrds_sql_exportedkeys_get_fkcatalog(exportedkeys, c);
+                    const char *fk_owner = cfrds_sql_exportedkeys_get_fkowner(exportedkeys, c);
+                    const char *fk_table = cfrds_sql_exportedkeys_get_fktable(exportedkeys, c);
+                    const char *fk_column = cfrds_sql_exportedkeys_get_fkcolumn(exportedkeys, c);
+                    int key_sequence = cfrds_sql_exportedkeys_get_key_sequence(exportedkeys, c);
+                    int updaterule = cfrds_sql_exportedkeys_get_updaterule(exportedkeys, c);
+                    int deleterule = cfrds_sql_exportedkeys_get_deleterule(exportedkeys, c);
 
                     printf("pk_catalog: '%s', pk_owner: '%s', pk_table: '%s', pk_column: '%s', fk_catalog: '%s', fk_owner: '%s', fk_table: '%s', fk_column: '%s', key_sequence: %d, updaterule: %d, deleterule: %d\n",
                         pk_catalog,
@@ -753,7 +753,7 @@ int main(int argc, char *argv[])
                 return EXIT_FAILURE;
             }
 
-            int cols = cfrds_buffer_sql_resultset_columns(resultset);
+            int cols = cfrds_sql_resultset_columns(resultset);
             if (cols == 0)
             {
                 fprintf(stderr, "No columns\n");
@@ -769,16 +769,16 @@ int main(int argc, char *argv[])
 
             for(int c = 0; c < cols; c++)
             {
-                const char *name  = cfrds_buffer_sql_resultset_column_name(resultset, c);
+                const char *name  = cfrds_sql_resultset_column_name(resultset, c);
                 sizes[c] = strlen(name);
             }
 
-            int rows = cfrds_buffer_sql_resultset_rows(resultset);
+            int rows = cfrds_sql_resultset_rows(resultset);
             for (int r = 0; r < rows; r++)
             {
                 for (int c = 0; c < cols; c++)
                 {
-                    const char *value = cfrds_buffer_sql_resultset_value(resultset, r, c);
+                    const char *value = cfrds_sql_resultset_value(resultset, r, c);
                     if (strlen(value) > sizes[c])
                     {
                         sizes[c] = strlen(value);
@@ -812,7 +812,7 @@ int main(int argc, char *argv[])
             {
                 size_t size = sizes[col];
 
-                const char *value = cfrds_buffer_sql_resultset_column_name(resultset, col);
+                const char *value = cfrds_sql_resultset_column_name(resultset, col);
 
                 printf("%s", value);
 
@@ -883,7 +883,7 @@ int main(int argc, char *argv[])
                 {
                     size_t size = sizes[col];
 
-                    const char *value = cfrds_buffer_sql_resultset_value(resultset, row, col);
+                    const char *value = cfrds_sql_resultset_value(resultset, row, col);
 
                     printf("%s", value);
 
@@ -940,12 +940,12 @@ int main(int argc, char *argv[])
                 return EXIT_FAILURE;
             }
 
-            size_t cnt = cfrds_buffer_sql_metadata_count(metadata);
+            size_t cnt = cfrds_sql_metadata_count(metadata);
             for(size_t c = 0; c < cnt; c++)
             {
-                const char *name  = cfrds_buffer_sql_metadata_get_name(metadata, c);
-                const char *type  = cfrds_buffer_sql_metadata_get_type(metadata, c);
-                const char *jtype = cfrds_buffer_sql_metadata_get_jtype(metadata, c);
+                const char *name  = cfrds_sql_metadata_get_name(metadata, c);
+                const char *type  = cfrds_sql_metadata_get_type(metadata, c);
+                const char *jtype = cfrds_sql_metadata_get_jtype(metadata, c);
 
                 printf("name: '%s', type: '%s', jtype: '%s'\n", name, type, jtype);
             }
@@ -962,10 +962,10 @@ int main(int argc, char *argv[])
                 return EXIT_FAILURE;
             }
 
-            size_t cnt = cfrds_buffer_sql_supportedcommands_count(supportedcommands);
+            size_t cnt = cfrds_sql_supportedcommands_count(supportedcommands);
             for(size_t c = 0; c < cnt; c++)
             {
-                const char *supportedcommand = cfrds_buffer_sql_supportedcommands_get(supportedcommands, c);
+                const char *supportedcommand = cfrds_sql_supportedcommands_get(supportedcommands, c);
                 printf("%s\n", supportedcommand);
             }
         }

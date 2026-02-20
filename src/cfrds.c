@@ -806,7 +806,7 @@ cfrds_status cfrds_command_sql_dbdescription(cfrds_server *server, const char *c
     return ret;
 }
 
-void cfrds_buffer_file_content_free(cfrds_file_content *value)
+void cfrds_file_content_free(cfrds_file_content *value)
 {
     if (value == NULL)
         return;
@@ -819,7 +819,7 @@ void cfrds_buffer_file_content_free(cfrds_file_content *value)
     free(_value);
 }
 
-const char *cfrds_buffer_file_content_get_data(const cfrds_file_content *value)
+const char *cfrds_file_content_get_data(const cfrds_file_content *value)
 {
     if (value == NULL)
         return NULL;
@@ -829,7 +829,7 @@ const char *cfrds_buffer_file_content_get_data(const cfrds_file_content *value)
     return _value->data;
 }
 
-int cfrds_buffer_file_content_get_size(const cfrds_file_content *value)
+int cfrds_file_content_get_size(const cfrds_file_content *value)
 {
     if (value == NULL)
         return -1;
@@ -839,7 +839,7 @@ int cfrds_buffer_file_content_get_size(const cfrds_file_content *value)
     return _value->size;
 }
 
-const char *cfrds_buffer_file_content_get_modified(const cfrds_file_content *value)
+const char *cfrds_file_content_get_modified(const cfrds_file_content *value)
 {
     if (value == NULL)
         return NULL;
@@ -849,7 +849,7 @@ const char *cfrds_buffer_file_content_get_modified(const cfrds_file_content *val
     return _value->modified;
 }
 
-const char *cfrds_buffer_file_content_get_permission(const cfrds_file_content *value)
+const char *cfrds_file_content_get_permission(const cfrds_file_content *value)
 {
     if (value == NULL)
         return NULL;
@@ -859,7 +859,7 @@ const char *cfrds_buffer_file_content_get_permission(const cfrds_file_content *v
     return _value->permission;
 }
 
-void cfrds_buffer_browse_dir_free(cfrds_browse_dir *value)
+void cfrds_browse_dir_free(cfrds_browse_dir *value)
 {
     if (value == NULL)
         return;
@@ -874,7 +874,7 @@ void cfrds_buffer_browse_dir_free(cfrds_browse_dir *value)
     free(_value);
 }
 
-size_t cfrds_buffer_browse_dir_count(const cfrds_browse_dir *value)
+size_t cfrds_browse_dir_count(const cfrds_browse_dir *value)
 {
     if (value == NULL)
         return 0;
@@ -884,7 +884,7 @@ size_t cfrds_buffer_browse_dir_count(const cfrds_browse_dir *value)
     return _value->cnt;
 }
 
-char cfrds_buffer_browse_dir_item_get_kind(const cfrds_browse_dir *value, size_t ndx)
+char cfrds_browse_dir_item_get_kind(const cfrds_browse_dir *value, size_t ndx)
 {
     if (value == NULL)
         return 0;
@@ -897,7 +897,7 @@ char cfrds_buffer_browse_dir_item_get_kind(const cfrds_browse_dir *value, size_t
     return _value->items[ndx].kind;
 }
 
-const char *cfrds_buffer_browse_dir_item_get_name(const cfrds_browse_dir *value, size_t ndx)
+const char *cfrds_browse_dir_item_get_name(const cfrds_browse_dir *value, size_t ndx)
 {
     if (value == NULL)
         return NULL;
@@ -910,7 +910,7 @@ const char *cfrds_buffer_browse_dir_item_get_name(const cfrds_browse_dir *value,
     return _value->items[ndx].name;
 }
 
-uint8_t cfrds_buffer_browse_dir_item_get_permissions(const cfrds_browse_dir *value, size_t ndx)
+uint8_t cfrds_browse_dir_item_get_permissions(const cfrds_browse_dir *value, size_t ndx)
 {
     if (value == NULL)
         return 0;
@@ -923,7 +923,7 @@ uint8_t cfrds_buffer_browse_dir_item_get_permissions(const cfrds_browse_dir *val
     return _value->items[ndx].permissions;
 }
 
-size_t cfrds_buffer_browse_dir_item_get_size(const cfrds_browse_dir *value, size_t ndx)
+size_t cfrds_browse_dir_item_get_size(const cfrds_browse_dir *value, size_t ndx)
 {
     if (value == NULL)
         return 0;
@@ -936,7 +936,7 @@ size_t cfrds_buffer_browse_dir_item_get_size(const cfrds_browse_dir *value, size
     return _value->items[ndx].size;
 }
 
-uint64_t cfrds_buffer_browse_dir_item_get_modified(const cfrds_browse_dir *value, size_t ndx)
+uint64_t cfrds_browse_dir_item_get_modified(const cfrds_browse_dir *value, size_t ndx)
 {
     if (value == NULL)
         return 0;
@@ -949,7 +949,7 @@ uint64_t cfrds_buffer_browse_dir_item_get_modified(const cfrds_browse_dir *value
     return _value->items[ndx].modified;
 }
 
-void cfrds_buffer_sql_dsninfo_free(cfrds_sql_dsninfo *value)
+void cfrds_sql_dsninfo_free(cfrds_sql_dsninfo *value)
 {
     if (value == NULL)
         return;
@@ -964,7 +964,7 @@ void cfrds_buffer_sql_dsninfo_free(cfrds_sql_dsninfo *value)
     free(_value);
 }
 
-size_t cfrds_buffer_sql_dsninfo_count(const cfrds_sql_dsninfo *value)
+size_t cfrds_sql_dsninfo_count(const cfrds_sql_dsninfo *value)
 {
     if (value == NULL)
         return 0;
@@ -974,7 +974,7 @@ size_t cfrds_buffer_sql_dsninfo_count(const cfrds_sql_dsninfo *value)
     return _value->cnt;
 }
 
-const char *cfrds_buffer_sql_dsninfo_item_get_name(const cfrds_sql_dsninfo *value, size_t ndx)
+const char *cfrds_sql_dsninfo_item_get_name(const cfrds_sql_dsninfo *value, size_t ndx)
 {
     if (value == NULL)
         return NULL;
@@ -987,7 +987,7 @@ const char *cfrds_buffer_sql_dsninfo_item_get_name(const cfrds_sql_dsninfo *valu
     return _value->names[ndx];
 }
 
-void cfrds_buffer_sql_tableinfo_free(cfrds_sql_tableinfo *value)
+void cfrds_sql_tableinfo_free(cfrds_sql_tableinfo *value)
 {
     if (value == NULL)
         return;
@@ -1005,7 +1005,7 @@ void cfrds_buffer_sql_tableinfo_free(cfrds_sql_tableinfo *value)
     free(_value);
 }
 
-size_t cfrds_buffer_sql_tableinfo_count(const cfrds_sql_tableinfo *value)
+size_t cfrds_sql_tableinfo_count(const cfrds_sql_tableinfo *value)
 {
     if (value == NULL)
         return 0;
@@ -1015,7 +1015,7 @@ size_t cfrds_buffer_sql_tableinfo_count(const cfrds_sql_tableinfo *value)
     return _value->cnt;
 }
 
-const char *cfrds_buffer_sql_tableinfo_get_column_unknown(const cfrds_sql_tableinfo *value, size_t column)
+const char *cfrds_sql_tableinfo_get_column_unknown(const cfrds_sql_tableinfo *value, size_t column)
 {
     if (value == NULL)
         return NULL;
@@ -1028,7 +1028,7 @@ const char *cfrds_buffer_sql_tableinfo_get_column_unknown(const cfrds_sql_tablei
     return _value->items[column].unknown;
 }
 
-const char *cfrds_buffer_sql_tableinfo_get_column_schema(const cfrds_sql_tableinfo *value, size_t column)
+const char *cfrds_sql_tableinfo_get_column_schema(const cfrds_sql_tableinfo *value, size_t column)
 {
     if (value == NULL)
         return NULL;
@@ -1041,7 +1041,7 @@ const char *cfrds_buffer_sql_tableinfo_get_column_schema(const cfrds_sql_tablein
     return _value->items[column].schema;
 }
 
-const char *cfrds_buffer_sql_tableinfo_get_column_name(const cfrds_sql_tableinfo *value, size_t column)
+const char *cfrds_sql_tableinfo_get_column_name(const cfrds_sql_tableinfo *value, size_t column)
 {
     if (value == NULL)
         return NULL;
@@ -1054,7 +1054,7 @@ const char *cfrds_buffer_sql_tableinfo_get_column_name(const cfrds_sql_tableinfo
     return _value->items[column].name;
 }
 
-const char *cfrds_buffer_sql_tableinfo_get_column_type(const cfrds_sql_tableinfo *value, size_t column)
+const char *cfrds_sql_tableinfo_get_column_type(const cfrds_sql_tableinfo *value, size_t column)
 {
     if (value == NULL)
         return NULL;
@@ -1067,7 +1067,7 @@ const char *cfrds_buffer_sql_tableinfo_get_column_type(const cfrds_sql_tableinfo
     return _value->items[column].type;
 }
 
-void cfrds_buffer_sql_columninfo_free(cfrds_sql_columninfo *value)
+void cfrds_sql_columninfo_free(cfrds_sql_columninfo *value)
 {
     if (value == NULL)
         return;
@@ -1086,7 +1086,7 @@ void cfrds_buffer_sql_columninfo_free(cfrds_sql_columninfo *value)
     free(_value);
 }
 
-size_t cfrds_buffer_sql_columninfo_count(const cfrds_sql_columninfo *value)
+size_t cfrds_sql_columninfo_count(const cfrds_sql_columninfo *value)
 {
     if (value == NULL)
         return 0;
@@ -1096,7 +1096,7 @@ size_t cfrds_buffer_sql_columninfo_count(const cfrds_sql_columninfo *value)
     return _value->cnt;
 }
 
-const char *cfrds_buffer_sql_columninfo_get_schema(const cfrds_sql_columninfo *value, size_t column)
+const char *cfrds_sql_columninfo_get_schema(const cfrds_sql_columninfo *value, size_t column)
 {
     if (value == NULL)
         return NULL;
@@ -1109,7 +1109,7 @@ const char *cfrds_buffer_sql_columninfo_get_schema(const cfrds_sql_columninfo *v
     return _value->items[column].schema;
 }
 
-const char *cfrds_buffer_sql_columninfo_get_owner(const cfrds_sql_columninfo *value, size_t column)
+const char *cfrds_sql_columninfo_get_owner(const cfrds_sql_columninfo *value, size_t column)
 {
     if (value == NULL)
         return NULL;
@@ -1122,7 +1122,7 @@ const char *cfrds_buffer_sql_columninfo_get_owner(const cfrds_sql_columninfo *va
     return _value->items[column].owner;
 }
 
-const char *cfrds_buffer_sql_columninfo_get_table(const cfrds_sql_columninfo *value, size_t column)
+const char *cfrds_sql_columninfo_get_table(const cfrds_sql_columninfo *value, size_t column)
 {
     if (value == NULL)
         return NULL;
@@ -1135,7 +1135,7 @@ const char *cfrds_buffer_sql_columninfo_get_table(const cfrds_sql_columninfo *va
     return _value->items[column].table;
 }
 
-const char *cfrds_buffer_sql_columninfo_get_name(const cfrds_sql_columninfo *value, size_t column)
+const char *cfrds_sql_columninfo_get_name(const cfrds_sql_columninfo *value, size_t column)
 {
     if (value == NULL)
         return NULL;
@@ -1148,7 +1148,7 @@ const char *cfrds_buffer_sql_columninfo_get_name(const cfrds_sql_columninfo *val
     return _value->items[column].name;
 }
 
-int cfrds_buffer_sql_columninfo_get_type(const cfrds_sql_columninfo *value, size_t column)
+int cfrds_sql_columninfo_get_type(const cfrds_sql_columninfo *value, size_t column)
 {
     if (value == NULL)
         return -1;
@@ -1161,7 +1161,7 @@ int cfrds_buffer_sql_columninfo_get_type(const cfrds_sql_columninfo *value, size
     return _value->items[column].type;
 }
 
-const char *cfrds_buffer_sql_columninfo_get_typeStr(const cfrds_sql_columninfo *value, size_t column)
+const char *cfrds_sql_columninfo_get_typeStr(const cfrds_sql_columninfo *value, size_t column)
 {
     if (value == NULL)
         return NULL;
@@ -1174,7 +1174,7 @@ const char *cfrds_buffer_sql_columninfo_get_typeStr(const cfrds_sql_columninfo *
     return _value->items[column].typeStr;
 }
 
-int cfrds_buffer_sql_columninfo_get_precision(const cfrds_sql_columninfo *value, size_t column)
+int cfrds_sql_columninfo_get_precision(const cfrds_sql_columninfo *value, size_t column)
 {
     if (value == NULL)
         return -1;
@@ -1187,7 +1187,7 @@ int cfrds_buffer_sql_columninfo_get_precision(const cfrds_sql_columninfo *value,
     return _value->items[column].percision;
 }
 
-int cfrds_buffer_sql_columninfo_get_length(const cfrds_sql_columninfo *value, size_t column)
+int cfrds_sql_columninfo_get_length(const cfrds_sql_columninfo *value, size_t column)
 {
     if (value == NULL)
         return -1;
@@ -1200,7 +1200,7 @@ int cfrds_buffer_sql_columninfo_get_length(const cfrds_sql_columninfo *value, si
     return _value->items[column].length;
 }
 
-int cfrds_buffer_sql_columninfo_get_scale(const cfrds_sql_columninfo *value, size_t column)
+int cfrds_sql_columninfo_get_scale(const cfrds_sql_columninfo *value, size_t column)
 {
     if (value == NULL)
         return -1;
@@ -1213,7 +1213,7 @@ int cfrds_buffer_sql_columninfo_get_scale(const cfrds_sql_columninfo *value, siz
     return _value->items[column].scale;
 }
 
-int cfrds_buffer_sql_columninfo_get_radix(const cfrds_sql_columninfo *value, size_t column)
+int cfrds_sql_columninfo_get_radix(const cfrds_sql_columninfo *value, size_t column)
 {
     if (value == NULL)
         return -1;
@@ -1226,7 +1226,7 @@ int cfrds_buffer_sql_columninfo_get_radix(const cfrds_sql_columninfo *value, siz
     return _value->items[column].radix;
 }
 
-int cfrds_buffer_sql_columninfo_get_nullable(const cfrds_sql_columninfo *value, size_t column)
+int cfrds_sql_columninfo_get_nullable(const cfrds_sql_columninfo *value, size_t column)
 {
     if (value == NULL)
         return -1;
@@ -1239,7 +1239,7 @@ int cfrds_buffer_sql_columninfo_get_nullable(const cfrds_sql_columninfo *value, 
     return _value->items[column].nullable;
 }
 
-void cfrds_buffer_sql_primarykeys_free(cfrds_sql_primarykeys *value)
+void cfrds_sql_primarykeys_free(cfrds_sql_primarykeys *value)
 {
     if (value == NULL)
         return;
@@ -1257,7 +1257,7 @@ void cfrds_buffer_sql_primarykeys_free(cfrds_sql_primarykeys *value)
     free(_value);
 }
 
-size_t cfrds_buffer_sql_primarykeys_count(const cfrds_sql_primarykeys *value)
+size_t cfrds_sql_primarykeys_count(const cfrds_sql_primarykeys *value)
 {
     if (value == NULL)
         return 0;
@@ -1267,7 +1267,7 @@ size_t cfrds_buffer_sql_primarykeys_count(const cfrds_sql_primarykeys *value)
     return _value->cnt;
 }
 
-const char *cfrds_buffer_sql_primarykeys_get_catalog(const cfrds_sql_primarykeys *value, size_t ndx)
+const char *cfrds_sql_primarykeys_get_catalog(const cfrds_sql_primarykeys *value, size_t ndx)
 {
     if (value == NULL)
         return NULL;
@@ -1280,7 +1280,7 @@ const char *cfrds_buffer_sql_primarykeys_get_catalog(const cfrds_sql_primarykeys
     return _value->items[ndx].tableCatalog;
 }
 
-const char *cfrds_buffer_sql_primarykeys_get_owner(const cfrds_sql_primarykeys *value, size_t ndx)
+const char *cfrds_sql_primarykeys_get_owner(const cfrds_sql_primarykeys *value, size_t ndx)
 {
     if (value == NULL)
         return NULL;
@@ -1293,7 +1293,7 @@ const char *cfrds_buffer_sql_primarykeys_get_owner(const cfrds_sql_primarykeys *
     return _value->items[ndx].tableOwner;
 }
 
-const char *cfrds_buffer_sql_primarykeys_get_table(const cfrds_sql_primarykeys *value, size_t ndx)
+const char *cfrds_sql_primarykeys_get_table(const cfrds_sql_primarykeys *value, size_t ndx)
 {
     if (value == NULL)
         return NULL;
@@ -1306,7 +1306,7 @@ const char *cfrds_buffer_sql_primarykeys_get_table(const cfrds_sql_primarykeys *
     return _value->items[ndx].tableName;
 }
 
-const char *cfrds_buffer_sql_primarykeys_get_column(const cfrds_sql_primarykeys *value, size_t ndx)
+const char *cfrds_sql_primarykeys_get_column(const cfrds_sql_primarykeys *value, size_t ndx)
 {
     if (value == NULL)
         return NULL;
@@ -1319,7 +1319,7 @@ const char *cfrds_buffer_sql_primarykeys_get_column(const cfrds_sql_primarykeys 
     return _value->items[ndx].colName;
 }
 
-int cfrds_buffer_sql_primarykeys_get_key_sequence(const cfrds_sql_primarykeys *value, size_t ndx)
+int cfrds_sql_primarykeys_get_key_sequence(const cfrds_sql_primarykeys *value, size_t ndx)
 {
     if (value == NULL)
         return -1;
@@ -1332,7 +1332,7 @@ int cfrds_buffer_sql_primarykeys_get_key_sequence(const cfrds_sql_primarykeys *v
     return _value->items[ndx].keySequence;
 }
 
-void cfrds_buffer_sql_foreignkeys_free(cfrds_sql_foreignkeys *value)
+void cfrds_sql_foreignkeys_free(cfrds_sql_foreignkeys *value)
 {
     if (value == NULL)
         return;
@@ -1354,7 +1354,7 @@ void cfrds_buffer_sql_foreignkeys_free(cfrds_sql_foreignkeys *value)
     free(_value);
 }
 
-size_t cfrds_buffer_sql_foreignkeys_count(const cfrds_sql_foreignkeys *value)
+size_t cfrds_sql_foreignkeys_count(const cfrds_sql_foreignkeys *value)
 {
     if (value == NULL)
         return 0;
@@ -1364,7 +1364,7 @@ size_t cfrds_buffer_sql_foreignkeys_count(const cfrds_sql_foreignkeys *value)
     return _value->cnt;
 }
 
-const char *cfrds_buffer_sql_foreignkeys_get_pkcatalog(const cfrds_sql_foreignkeys *value, size_t ndx)
+const char *cfrds_sql_foreignkeys_get_pkcatalog(const cfrds_sql_foreignkeys *value, size_t ndx)
 {
     if (value == NULL)
         return NULL;
@@ -1377,7 +1377,7 @@ const char *cfrds_buffer_sql_foreignkeys_get_pkcatalog(const cfrds_sql_foreignke
     return _value->items[ndx].pkTableCatalog;
 }
 
-const char *cfrds_buffer_sql_foreignkeys_get_pkowner(const cfrds_sql_foreignkeys *value, size_t ndx)
+const char *cfrds_sql_foreignkeys_get_pkowner(const cfrds_sql_foreignkeys *value, size_t ndx)
 {
     if (value == NULL)
         return NULL;
@@ -1390,7 +1390,7 @@ const char *cfrds_buffer_sql_foreignkeys_get_pkowner(const cfrds_sql_foreignkeys
     return _value->items[ndx].pkTableOwner;
 }
 
-const char *cfrds_buffer_sql_foreignkeys_get_pktable(const cfrds_sql_foreignkeys *value, size_t ndx)
+const char *cfrds_sql_foreignkeys_get_pktable(const cfrds_sql_foreignkeys *value, size_t ndx)
 {
     if (value == NULL)
         return NULL;
@@ -1403,7 +1403,7 @@ const char *cfrds_buffer_sql_foreignkeys_get_pktable(const cfrds_sql_foreignkeys
     return _value->items[ndx].pkTableName;
 }
 
-const char *cfrds_buffer_sql_foreignkeys_get_pkcolumn(const cfrds_sql_foreignkeys *value, size_t ndx)
+const char *cfrds_sql_foreignkeys_get_pkcolumn(const cfrds_sql_foreignkeys *value, size_t ndx)
 {
     if (value == NULL)
         return NULL;
@@ -1416,7 +1416,7 @@ const char *cfrds_buffer_sql_foreignkeys_get_pkcolumn(const cfrds_sql_foreignkey
     return _value->items[ndx].pkColName;
 }
 
-const char *cfrds_buffer_sql_foreignkeys_get_fkcatalog(const cfrds_sql_foreignkeys *value, size_t ndx)
+const char *cfrds_sql_foreignkeys_get_fkcatalog(const cfrds_sql_foreignkeys *value, size_t ndx)
 {
     if (value == NULL)
         return NULL;
@@ -1429,7 +1429,7 @@ const char *cfrds_buffer_sql_foreignkeys_get_fkcatalog(const cfrds_sql_foreignke
     return _value->items[ndx].fkTableCatalog;
 }
 
-const char *cfrds_buffer_sql_foreignkeys_get_fkowner(const cfrds_sql_foreignkeys *value, size_t ndx)
+const char *cfrds_sql_foreignkeys_get_fkowner(const cfrds_sql_foreignkeys *value, size_t ndx)
 {
     if (value == NULL)
         return NULL;
@@ -1442,7 +1442,7 @@ const char *cfrds_buffer_sql_foreignkeys_get_fkowner(const cfrds_sql_foreignkeys
     return _value->items[ndx].fkTableOwner;
 }
 
-const char *cfrds_buffer_sql_foreignkeys_get_fktable(const cfrds_sql_foreignkeys *value, size_t ndx)
+const char *cfrds_sql_foreignkeys_get_fktable(const cfrds_sql_foreignkeys *value, size_t ndx)
 {
     if (value == NULL)
         return NULL;
@@ -1455,7 +1455,7 @@ const char *cfrds_buffer_sql_foreignkeys_get_fktable(const cfrds_sql_foreignkeys
     return _value->items[ndx].fkTableName;
 }
 
-const char *cfrds_buffer_sql_foreignkeys_get_fkcolumn(const cfrds_sql_foreignkeys *value, size_t ndx)
+const char *cfrds_sql_foreignkeys_get_fkcolumn(const cfrds_sql_foreignkeys *value, size_t ndx)
 {
     if (value == NULL)
         return NULL;
@@ -1468,7 +1468,7 @@ const char *cfrds_buffer_sql_foreignkeys_get_fkcolumn(const cfrds_sql_foreignkey
     return _value->items[ndx].fkColName;
 }
 
-int cfrds_buffer_sql_foreignkeys_get_key_sequence(const cfrds_sql_foreignkeys *value, size_t ndx)
+int cfrds_sql_foreignkeys_get_key_sequence(const cfrds_sql_foreignkeys *value, size_t ndx)
 {
     if (value == NULL)
         return -1;
@@ -1481,7 +1481,7 @@ int cfrds_buffer_sql_foreignkeys_get_key_sequence(const cfrds_sql_foreignkeys *v
     return _value->items[ndx].keySequence;
 }
 
-int cfrds_buffer_sql_foreignkeys_get_updaterule(const cfrds_sql_foreignkeys *value, size_t ndx)
+int cfrds_sql_foreignkeys_get_updaterule(const cfrds_sql_foreignkeys *value, size_t ndx)
 {
     if (value == NULL)
         return -1;
@@ -1494,7 +1494,7 @@ int cfrds_buffer_sql_foreignkeys_get_updaterule(const cfrds_sql_foreignkeys *val
     return _value->items[ndx].updateRule;
 }
 
-int cfrds_buffer_sql_foreignkeys_get_deleterule(const cfrds_sql_foreignkeys *value, size_t ndx)
+int cfrds_sql_foreignkeys_get_deleterule(const cfrds_sql_foreignkeys *value, size_t ndx)
 {
     if (value == NULL)
         return -1;
@@ -1507,7 +1507,7 @@ int cfrds_buffer_sql_foreignkeys_get_deleterule(const cfrds_sql_foreignkeys *val
     return _value->items[ndx].deleteRule;
 }
 
-void cfrds_buffer_sql_importedkeys_free(cfrds_sql_importedkeys *value)
+void cfrds_sql_importedkeys_free(cfrds_sql_importedkeys *value)
 {
     if (value == NULL)
         return;
@@ -1529,7 +1529,7 @@ void cfrds_buffer_sql_importedkeys_free(cfrds_sql_importedkeys *value)
     free(_value);
 }
 
-size_t cfrds_buffer_sql_importedkeys_count(const cfrds_sql_importedkeys *value)
+size_t cfrds_sql_importedkeys_count(const cfrds_sql_importedkeys *value)
 {
     if (value == NULL)
         return 0;
@@ -1539,7 +1539,7 @@ size_t cfrds_buffer_sql_importedkeys_count(const cfrds_sql_importedkeys *value)
     return _value->cnt;
 }
 
-const char *cfrds_buffer_sql_importedkeys_get_pkcatalog(const cfrds_sql_importedkeys *value, size_t ndx)
+const char *cfrds_sql_importedkeys_get_pkcatalog(const cfrds_sql_importedkeys *value, size_t ndx)
 {
     if (value == NULL)
         return NULL;
@@ -1552,7 +1552,7 @@ const char *cfrds_buffer_sql_importedkeys_get_pkcatalog(const cfrds_sql_imported
     return _value->items[ndx].pkTableCatalog;
 }
 
-const char *cfrds_buffer_sql_importedkeys_get_pkowner(const cfrds_sql_importedkeys *value, size_t ndx)
+const char *cfrds_sql_importedkeys_get_pkowner(const cfrds_sql_importedkeys *value, size_t ndx)
 {
     if (value == NULL)
         return NULL;
@@ -1565,7 +1565,7 @@ const char *cfrds_buffer_sql_importedkeys_get_pkowner(const cfrds_sql_importedke
     return _value->items[ndx].pkTableOwner;
 }
 
-const char *cfrds_buffer_sql_importedkeys_get_pktable(const cfrds_sql_importedkeys *value, size_t ndx)
+const char *cfrds_sql_importedkeys_get_pktable(const cfrds_sql_importedkeys *value, size_t ndx)
 {
     if (value == NULL)
         return NULL;
@@ -1578,7 +1578,7 @@ const char *cfrds_buffer_sql_importedkeys_get_pktable(const cfrds_sql_importedke
     return _value->items[ndx].pkTableName;
 }
 
-const char *cfrds_buffer_sql_importedkeys_get_pkcolumn(const cfrds_sql_importedkeys *value, size_t ndx)
+const char *cfrds_sql_importedkeys_get_pkcolumn(const cfrds_sql_importedkeys *value, size_t ndx)
 {
     if (value == NULL)
         return NULL;
@@ -1591,7 +1591,7 @@ const char *cfrds_buffer_sql_importedkeys_get_pkcolumn(const cfrds_sql_importedk
     return _value->items[ndx].pkColName;
 }
 
-const char *cfrds_buffer_sql_importedkeys_get_fkcatalog(const cfrds_sql_importedkeys *value, size_t ndx)
+const char *cfrds_sql_importedkeys_get_fkcatalog(const cfrds_sql_importedkeys *value, size_t ndx)
 {
     if (value == NULL)
         return NULL;
@@ -1604,7 +1604,7 @@ const char *cfrds_buffer_sql_importedkeys_get_fkcatalog(const cfrds_sql_imported
     return _value->items[ndx].fkTableCatalog;
 }
 
-const char *cfrds_buffer_sql_importedkeys_get_fkowner(const cfrds_sql_importedkeys *value, size_t ndx)
+const char *cfrds_sql_importedkeys_get_fkowner(const cfrds_sql_importedkeys *value, size_t ndx)
 {
     if (value == NULL)
         return NULL;
@@ -1617,7 +1617,7 @@ const char *cfrds_buffer_sql_importedkeys_get_fkowner(const cfrds_sql_importedke
     return _value->items[ndx].fkTableOwner;
 }
 
-const char *cfrds_buffer_sql_importedkeys_get_fktable(const cfrds_sql_importedkeys *value, size_t ndx)
+const char *cfrds_sql_importedkeys_get_fktable(const cfrds_sql_importedkeys *value, size_t ndx)
 {
     if (value == NULL)
         return NULL;
@@ -1630,7 +1630,7 @@ const char *cfrds_buffer_sql_importedkeys_get_fktable(const cfrds_sql_importedke
     return _value->items[ndx].fkTableName;
 }
 
-const char *cfrds_buffer_sql_importedkeys_get_fkcolumn(const cfrds_sql_importedkeys *value, size_t ndx)
+const char *cfrds_sql_importedkeys_get_fkcolumn(const cfrds_sql_importedkeys *value, size_t ndx)
 {
     if (value == NULL)
         return NULL;
@@ -1643,7 +1643,7 @@ const char *cfrds_buffer_sql_importedkeys_get_fkcolumn(const cfrds_sql_importedk
     return _value->items[ndx].fkColName;
 }
 
-int cfrds_buffer_sql_importedkeys_get_key_sequence(const cfrds_sql_importedkeys *value, size_t ndx)
+int cfrds_sql_importedkeys_get_key_sequence(const cfrds_sql_importedkeys *value, size_t ndx)
 {
     if (value == NULL)
         return -1;
@@ -1656,7 +1656,7 @@ int cfrds_buffer_sql_importedkeys_get_key_sequence(const cfrds_sql_importedkeys 
     return _value->items[ndx].keySequence;
 }
 
-int cfrds_buffer_sql_importedkeys_get_updaterule(const cfrds_sql_importedkeys *value, size_t ndx)
+int cfrds_sql_importedkeys_get_updaterule(const cfrds_sql_importedkeys *value, size_t ndx)
 {
     if (value == NULL)
         return -1;
@@ -1669,7 +1669,7 @@ int cfrds_buffer_sql_importedkeys_get_updaterule(const cfrds_sql_importedkeys *v
     return _value->items[ndx].updateRule;
 }
 
-int cfrds_buffer_sql_importedkeys_get_deleterule(const cfrds_sql_importedkeys *value, size_t ndx)
+int cfrds_sql_importedkeys_get_deleterule(const cfrds_sql_importedkeys *value, size_t ndx)
 {
     if (value == NULL)
         return -1;
@@ -1682,7 +1682,7 @@ int cfrds_buffer_sql_importedkeys_get_deleterule(const cfrds_sql_importedkeys *v
     return _value->items[ndx].deleteRule;
 }
 
-void cfrds_buffer_sql_exportedkeys_free(cfrds_sql_exportedkeys *value)
+void cfrds_sql_exportedkeys_free(cfrds_sql_exportedkeys *value)
 {
     if (value == NULL)
         return;
@@ -1704,7 +1704,7 @@ void cfrds_buffer_sql_exportedkeys_free(cfrds_sql_exportedkeys *value)
     free(_value);
 }
 
-size_t cfrds_buffer_sql_exportedkeys_count(const cfrds_sql_exportedkeys *value)
+size_t cfrds_sql_exportedkeys_count(const cfrds_sql_exportedkeys *value)
 {
     if (value == NULL)
         return 0;
@@ -1714,7 +1714,7 @@ size_t cfrds_buffer_sql_exportedkeys_count(const cfrds_sql_exportedkeys *value)
     return _value->cnt;
 }
 
-const char *cfrds_buffer_sql_exportedkeys_get_pkcatalog(const cfrds_sql_exportedkeys *value, size_t ndx)
+const char *cfrds_sql_exportedkeys_get_pkcatalog(const cfrds_sql_exportedkeys *value, size_t ndx)
 {
     if (value == NULL)
         return NULL;
@@ -1727,7 +1727,7 @@ const char *cfrds_buffer_sql_exportedkeys_get_pkcatalog(const cfrds_sql_exported
     return _value->items[ndx].pkTableCatalog;
 }
 
-const char *cfrds_buffer_sql_exportedkeys_get_pkowner(const cfrds_sql_exportedkeys *value, size_t ndx)
+const char *cfrds_sql_exportedkeys_get_pkowner(const cfrds_sql_exportedkeys *value, size_t ndx)
 {
     if (value == NULL)
         return NULL;
@@ -1740,7 +1740,7 @@ const char *cfrds_buffer_sql_exportedkeys_get_pkowner(const cfrds_sql_exportedke
     return _value->items[ndx].pkTableOwner;
 }
 
-const char *cfrds_buffer_sql_exportedkeys_get_pktable(const cfrds_sql_exportedkeys *value, size_t ndx)
+const char *cfrds_sql_exportedkeys_get_pktable(const cfrds_sql_exportedkeys *value, size_t ndx)
 {
     if (value == NULL)
         return NULL;
@@ -1753,7 +1753,7 @@ const char *cfrds_buffer_sql_exportedkeys_get_pktable(const cfrds_sql_exportedke
     return _value->items[ndx].pkTableName;
 }
 
-const char *cfrds_buffer_sql_exportedkeys_get_pkcolumn(const cfrds_sql_exportedkeys *value, size_t ndx)
+const char *cfrds_sql_exportedkeys_get_pkcolumn(const cfrds_sql_exportedkeys *value, size_t ndx)
 {
     if (value == NULL)
         return NULL;
@@ -1766,7 +1766,7 @@ const char *cfrds_buffer_sql_exportedkeys_get_pkcolumn(const cfrds_sql_exportedk
     return _value->items[ndx].pkColName;
 }
 
-const char *cfrds_buffer_sql_exportedkeys_get_fkcatalog(const cfrds_sql_exportedkeys *value, size_t ndx)
+const char *cfrds_sql_exportedkeys_get_fkcatalog(const cfrds_sql_exportedkeys *value, size_t ndx)
 {
     if (value == NULL)
         return NULL;
@@ -1779,7 +1779,7 @@ const char *cfrds_buffer_sql_exportedkeys_get_fkcatalog(const cfrds_sql_exported
     return _value->items[ndx].fkTableCatalog;
 }
 
-const char *cfrds_buffer_sql_exportedkeys_get_fkowner(const cfrds_sql_exportedkeys *value, size_t ndx)
+const char *cfrds_sql_exportedkeys_get_fkowner(const cfrds_sql_exportedkeys *value, size_t ndx)
 {
     if (value == NULL)
         return NULL;
@@ -1792,7 +1792,7 @@ const char *cfrds_buffer_sql_exportedkeys_get_fkowner(const cfrds_sql_exportedke
     return _value->items[ndx].fkTableOwner;
 }
 
-const char *cfrds_buffer_sql_exportedkeys_get_fktable(const cfrds_sql_exportedkeys *value, size_t ndx)
+const char *cfrds_sql_exportedkeys_get_fktable(const cfrds_sql_exportedkeys *value, size_t ndx)
 {
     if (value == NULL)
         return NULL;
@@ -1805,7 +1805,7 @@ const char *cfrds_buffer_sql_exportedkeys_get_fktable(const cfrds_sql_exportedke
     return _value->items[ndx].fkTableName;
 }
 
-const char *cfrds_buffer_sql_exportedkeys_get_fkcolumn(const cfrds_sql_exportedkeys *value, size_t ndx)
+const char *cfrds_sql_exportedkeys_get_fkcolumn(const cfrds_sql_exportedkeys *value, size_t ndx)
 {
     if (value == NULL)
         return NULL;
@@ -1818,7 +1818,7 @@ const char *cfrds_buffer_sql_exportedkeys_get_fkcolumn(const cfrds_sql_exportedk
     return _value->items[ndx].fkColName;
 }
 
-int cfrds_buffer_sql_exportedkeys_get_key_sequence(const cfrds_sql_exportedkeys *value, size_t ndx)
+int cfrds_sql_exportedkeys_get_key_sequence(const cfrds_sql_exportedkeys *value, size_t ndx)
 {
     if (value == NULL)
         return -1;
@@ -1831,7 +1831,7 @@ int cfrds_buffer_sql_exportedkeys_get_key_sequence(const cfrds_sql_exportedkeys 
     return _value->items[ndx].keySequence;
 }
 
-int cfrds_buffer_sql_exportedkeys_get_updaterule(const cfrds_sql_exportedkeys *value, size_t ndx)
+int cfrds_sql_exportedkeys_get_updaterule(const cfrds_sql_exportedkeys *value, size_t ndx)
 {
     if (value == NULL)
         return -1;
@@ -1844,7 +1844,7 @@ int cfrds_buffer_sql_exportedkeys_get_updaterule(const cfrds_sql_exportedkeys *v
     return _value->items[ndx].updateRule;
 }
 
-int cfrds_buffer_sql_exportedkeys_get_deleterule(const cfrds_sql_exportedkeys *value, size_t ndx)
+int cfrds_sql_exportedkeys_get_deleterule(const cfrds_sql_exportedkeys *value, size_t ndx)
 {
     if (value == NULL)
         return -1;
@@ -1857,7 +1857,7 @@ int cfrds_buffer_sql_exportedkeys_get_deleterule(const cfrds_sql_exportedkeys *v
     return _value->items[ndx].deleteRule;
 }
 
-void cfrds_buffer_sql_resultset_free(cfrds_sql_resultset *value)
+void cfrds_sql_resultset_free(cfrds_sql_resultset *value)
 {
     if (value == NULL)
         return;
@@ -1873,7 +1873,7 @@ void cfrds_buffer_sql_resultset_free(cfrds_sql_resultset *value)
     free(_value);
 }
 
-void cfrds_buffer_sql_metadata_free(cfrds_sql_metadata *value)
+void cfrds_sql_metadata_free(cfrds_sql_metadata *value)
 {
     if (value == NULL)
         return;
@@ -1890,7 +1890,7 @@ void cfrds_buffer_sql_metadata_free(cfrds_sql_metadata *value)
     free(_value);
 }
 
-size_t cfrds_buffer_sql_metadata_count(const cfrds_sql_metadata *value)
+size_t cfrds_sql_metadata_count(const cfrds_sql_metadata *value)
 {
     if (value == NULL)
         return 0;
@@ -1900,7 +1900,7 @@ size_t cfrds_buffer_sql_metadata_count(const cfrds_sql_metadata *value)
     return _value->cnt;
 }
 
-const char *cfrds_buffer_sql_metadata_get_name(const cfrds_sql_metadata *value, size_t ndx)
+const char *cfrds_sql_metadata_get_name(const cfrds_sql_metadata *value, size_t ndx)
 {
     if (value == NULL)
         return NULL;
@@ -1913,7 +1913,7 @@ const char *cfrds_buffer_sql_metadata_get_name(const cfrds_sql_metadata *value, 
     return _value->items[ndx].name;
 }
 
-const char *cfrds_buffer_sql_metadata_get_type(const cfrds_sql_metadata *value, size_t ndx)
+const char *cfrds_sql_metadata_get_type(const cfrds_sql_metadata *value, size_t ndx)
 {
     if (value == NULL)
         return NULL;
@@ -1926,7 +1926,7 @@ const char *cfrds_buffer_sql_metadata_get_type(const cfrds_sql_metadata *value, 
     return _value->items[ndx].type;
 }
 
-const char *cfrds_buffer_sql_metadata_get_jtype(const cfrds_sql_metadata *value, size_t ndx)
+const char *cfrds_sql_metadata_get_jtype(const cfrds_sql_metadata *value, size_t ndx)
 {
     if (value == NULL)
         return NULL;
@@ -1939,7 +1939,7 @@ const char *cfrds_buffer_sql_metadata_get_jtype(const cfrds_sql_metadata *value,
     return _value->items[ndx].jtype;
 }
 
-size_t cfrds_buffer_sql_resultset_columns(const cfrds_sql_resultset *value)
+size_t cfrds_sql_resultset_columns(const cfrds_sql_resultset *value)
 {
     if (value == NULL)
         return -1;
@@ -1949,7 +1949,7 @@ size_t cfrds_buffer_sql_resultset_columns(const cfrds_sql_resultset *value)
     return _value->columns;
 }
 
-size_t cfrds_buffer_sql_resultset_rows(const cfrds_sql_resultset *value)
+size_t cfrds_sql_resultset_rows(const cfrds_sql_resultset *value)
 {
     if (value == NULL)
         return -1;
@@ -1959,7 +1959,7 @@ size_t cfrds_buffer_sql_resultset_rows(const cfrds_sql_resultset *value)
     return _value->rows;
 }
 
-const char *cfrds_buffer_sql_resultset_column_name(const cfrds_sql_resultset *value, size_t column)
+const char *cfrds_sql_resultset_column_name(const cfrds_sql_resultset *value, size_t column)
 {
     if (value == NULL)
         return NULL;
@@ -1972,7 +1972,7 @@ const char *cfrds_buffer_sql_resultset_column_name(const cfrds_sql_resultset *va
     return _value->values[column];
 }
 
-const char *cfrds_buffer_sql_resultset_value(const cfrds_sql_resultset *value, size_t row, size_t column)
+const char *cfrds_sql_resultset_value(const cfrds_sql_resultset *value, size_t row, size_t column)
 {
     if (value == NULL)
         return NULL;
@@ -1985,7 +1985,7 @@ const char *cfrds_buffer_sql_resultset_value(const cfrds_sql_resultset *value, s
     return _value->values[(row + 1) * _value->columns + column];
 }
 
-void cfrds_buffer_sql_supportedcommands_free(cfrds_sql_supportedcommands *value)
+void cfrds_sql_supportedcommands_free(cfrds_sql_supportedcommands *value)
 {
     if (value == NULL)
         return;
@@ -2001,7 +2001,7 @@ void cfrds_buffer_sql_supportedcommands_free(cfrds_sql_supportedcommands *value)
     free(_value);
 }
 
-size_t cfrds_buffer_sql_supportedcommands_count(const cfrds_sql_supportedcommands *value)
+size_t cfrds_sql_supportedcommands_count(const cfrds_sql_supportedcommands *value)
 {
     if (value == NULL)
         return 0;
@@ -2011,7 +2011,7 @@ size_t cfrds_buffer_sql_supportedcommands_count(const cfrds_sql_supportedcommand
     return _value->cnt;
 }
 
-const char *cfrds_buffer_sql_supportedcommands_get(const cfrds_sql_supportedcommands *value, size_t ndx)
+const char *cfrds_sql_supportedcommands_get(const cfrds_sql_supportedcommands *value, size_t ndx)
 {
     if (value == NULL)
         return NULL;
@@ -2387,12 +2387,12 @@ cfrds_status cfrds_command_debugger_continue(cfrds_server *server, const char *s
     return ret;
 }
 
-void cfrds_buffer_debugger_event_free(cfrds_debugger_event *event)
+void cfrds_debugger_event_free(cfrds_debugger_event *event)
 {
     wddx_cleanup(&event);
 }
 
-cfrds_debugger_type cfrds_buffer_debugger_event_get_type(const cfrds_debugger_event *event)
+cfrds_debugger_type cfrds_debugger_event_get_type(const cfrds_debugger_event *event)
 {
     if (event == NULL)
     {
@@ -2411,83 +2411,83 @@ cfrds_debugger_type cfrds_buffer_debugger_event_get_type(const cfrds_debugger_ev
     return CFRDS_DEBUGGER_EVENT_UNKNOWN;
 }
 
-const char *cfrds_buffer_debugger_event_breakpoint_get_source(const cfrds_debugger_event *event)
+const char *cfrds_debugger_event_breakpoint_get_source(const cfrds_debugger_event *event)
 {
     return wddx_get_string(event, "0,GET_SOURCE");
 }
 
-int cfrds_buffer_debugger_event_breakpoint_get_line(const cfrds_debugger_event *event)
+int cfrds_debugger_event_breakpoint_get_line(const cfrds_debugger_event *event)
 {
     return wddx_get_number(event, "0,LINE", NULL);
 }
 
-const char *cfrds_buffer_debugger_event_breakpoint_get_thread_name(const cfrds_debugger_event *event)
+const char *cfrds_debugger_event_breakpoint_get_thread_name(const cfrds_debugger_event *event)
 {
     return wddx_get_string(event, "0,THREAD");
 }
 
-const char *cfrds_buffer_debugger_event_breakpoint_set_get_pathname(const cfrds_debugger_event *event)
+const char *cfrds_debugger_event_breakpoint_set_get_pathname(const cfrds_debugger_event *event)
 {
     return wddx_get_string(event, "0,CFML_PATH");
 }
 
-int cfrds_buffer_debugger_event_breakpoint_set_get_req_line(const cfrds_debugger_event *event)
+int cfrds_debugger_event_breakpoint_set_get_req_line(const cfrds_debugger_event *event)
 {
     return wddx_get_number(event, "0,REQ_LINE_NUM", NULL);
 }
 
-int cfrds_buffer_debugger_event_breakpoint_set_get_act_line(const cfrds_debugger_event *event)
+int cfrds_debugger_event_breakpoint_set_get_act_line(const cfrds_debugger_event *event)
 {
     return wddx_get_number(event, "0,ACTUAL_LINE_NUM", NULL);
 }
 
-int cfrds_buffer_debugger_event_get_scopes_count(const cfrds_debugger_event *event)
+int cfrds_debugger_event_get_scopes_count(const cfrds_debugger_event *event)
 {
     return wddx_node_array_size(wddx_get_var(event, "0,SCOPES"));
 }
 
-const char *cfrds_buffer_debugger_event_get_scopes_item(const cfrds_debugger_event *event, int ndx)
+const char *cfrds_debugger_event_get_scopes_item(const cfrds_debugger_event *event, int ndx)
 {
     return NULL;
     //return wddx_get_array_item(event, "0,SCOPES", ndx);
 }
 
-int cfrds_buffer_debugger_event_get_threads_count(const cfrds_debugger_event *event)
+int cfrds_debugger_event_get_threads_count(const cfrds_debugger_event *event)
 {
     return wddx_node_array_size(wddx_get_var(event, "0,THREADS"));
 }
 
-const char *cfrds_buffer_debugger_event_get_threads_item(const cfrds_debugger_event *event, int ndx)
+const char *cfrds_debugger_event_get_threads_item(const cfrds_debugger_event *event, int ndx)
 {
     return NULL;
 }
 
-int cfrds_buffer_debugger_event_get_watch_count(const cfrds_debugger_event *event)
+int cfrds_debugger_event_get_watch_count(const cfrds_debugger_event *event)
 {
     return wddx_node_array_size(wddx_get_var(event, "0,WATCH"));
 }
 
-const char *cfrds_buffer_debugger_event_get_watch_item(const cfrds_debugger_event *event, int ndx)
+const char *cfrds_debugger_event_get_watch_item(const cfrds_debugger_event *event, int ndx)
 {
     return NULL;
 }
 
-int cfrds_buffer_debugger_event_get_cf_trace_count(const cfrds_debugger_event *event)
+int cfrds_debugger_event_get_cf_trace_count(const cfrds_debugger_event *event)
 {
     return wddx_node_array_size(wddx_get_var(event, "0,CF_TRACE"));
 }
 
-const char *cfrds_buffer_debugger_event_get_cf_trace_item(const cfrds_debugger_event *event, int ndx)
+const char *cfrds_debugger_event_get_cf_trace_item(const cfrds_debugger_event *event, int ndx)
 {
     return NULL;
 }
 
-int cfrds_buffer_debugger_event_get_java_trace_count(const cfrds_debugger_event *event)
+int cfrds_debugger_event_get_java_trace_count(const cfrds_debugger_event *event)
 {
     return wddx_node_array_size(wddx_get_var(event, "0,JAVA_TRACE"));
 }
 
-const char *cfrds_buffer_debugger_event_get_java_trace_item(const cfrds_debugger_event *event, int ndx)
+const char *cfrds_debugger_event_get_java_trace_item(const cfrds_debugger_event *event, int ndx)
 {
     return NULL;
 }

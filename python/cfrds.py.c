@@ -142,15 +142,15 @@ cfrds_server_browse_dir(cfrds_server_Object *self, PyObject *args)
 
     if (dir)
     {
-        for(size_t c = 0; c < cfrds_buffer_browse_dir_count(dir); c++)
+        for(size_t c = 0; c < cfrds_browse_dir_count(dir); c++)
         {
             PyObject *item = PyDict_New();
 
-            char kind = cfrds_buffer_browse_dir_item_get_kind(dir, c);
+            char kind = cfrds_browse_dir_item_get_kind(dir, c);
             PyDict_SetItemString(item, "kind", PyUnicode_FromFormat("%c", kind));
-            PyDict_SetItemString(item, "name", PyUnicode_FromString(cfrds_buffer_browse_dir_item_get_name(dir, c)));
+            PyDict_SetItemString(item, "name", PyUnicode_FromString(cfrds_browse_dir_item_get_name(dir, c)));
 
-            uint8_t permissions = cfrds_buffer_browse_dir_item_get_permissions(dir, c);
+            uint8_t permissions = cfrds_browse_dir_item_get_permissions(dir, c);
             char permissions_str[] = "-----";
             if (kind == 'D') permissions_str[0] = 'D';
             if (permissions & 0x01) permissions_str[1] = 'R';
@@ -159,8 +159,8 @@ cfrds_server_browse_dir(cfrds_server_Object *self, PyObject *args)
             if (permissions & 0x80) permissions_str[4] = 'N';
             PyDict_SetItemString(item, "permissions", PyUnicode_FromString(permissions_str));
 
-            PyDict_SetItemString(item, "size", PyLong_FromSize_t(cfrds_buffer_browse_dir_item_get_size(dir, c)));
-            PyDict_SetItemString(item, "modified", PyLong_FromUnsignedLongLong(cfrds_buffer_browse_dir_item_get_modified(dir, c)));
+            PyDict_SetItemString(item, "size", PyLong_FromSize_t(cfrds_browse_dir_item_get_size(dir, c)));
+            PyDict_SetItemString(item, "modified", PyLong_FromUnsignedLongLong(cfrds_browse_dir_item_get_modified(dir, c)));
 
             PyList_Append(ret, item);
             Py_DECREF(item);
@@ -168,7 +168,7 @@ cfrds_server_browse_dir(cfrds_server_Object *self, PyObject *args)
     }
 
 exit:
-    cfrds_buffer_browse_dir_free(dir);
+    cfrds_browse_dir_free(dir);
 
     return ret;
 } 
@@ -188,10 +188,10 @@ cfrds_server_file_read(cfrds_server_Object *self, PyObject *args)
 
     CHECK_FOR_ERRORS(cfrds_command_file_read(self->server, filepath, &file_content));
 
-    ret = PyByteArray_FromStringAndSize(cfrds_buffer_file_content_get_data(file_content), cfrds_buffer_file_content_get_size(file_content));
+    ret = PyByteArray_FromStringAndSize(cfrds_file_content_get_data(file_content), cfrds_file_content_get_size(file_content));
 
 exit:
-    cfrds_buffer_file_content_free(file_content);
+    cfrds_file_content_free(file_content);
 
     return ret;
 }
@@ -336,15 +336,15 @@ cfrds_server_sql_dsninfo(cfrds_server_Object *self)
     if (!dsninfo)
         goto exit;
 
-    cnt = cfrds_buffer_sql_dsninfo_count(dsninfo);
+    cnt = cfrds_sql_dsninfo_count(dsninfo);
     ret = PyList_New(cnt);
 
     for(size_t c = 0; c < cnt; c++)
     {
-        PyList_SetItem(ret, c, PyUnicode_FromString(cfrds_buffer_sql_dsninfo_item_get_name(dsninfo, c)));
+        PyList_SetItem(ret, c, PyUnicode_FromString(cfrds_sql_dsninfo_item_get_name(dsninfo, c)));
     }
 
-    cfrds_buffer_sql_dsninfo_free(dsninfo);
+    cfrds_sql_dsninfo_free(dsninfo);
 
     return ret;
 
@@ -370,7 +370,7 @@ cfrds_server_sql_tableinfo(cfrds_server_Object *self, PyObject *args)
 
     CHECK_FOR_ERRORS(cfrds_command_sql_tableinfo(self->server, tablename, &tableinfo));
 
-    cnt = cfrds_buffer_sql_tableinfo_count(tableinfo);
+    cnt = cfrds_sql_tableinfo_count(tableinfo);
     ret = PyList_New(cnt);
 
     for(size_t c = 0; c < cnt; c++)
@@ -378,15 +378,15 @@ cfrds_server_sql_tableinfo(cfrds_server_Object *self, PyObject *args)
         PyObject *item = PyDict_New();
         const char *tmp_name = NULL;
 
-        tmp_name = cfrds_buffer_sql_tableinfo_get_unknown(tableinfo, c); if (tmp_name) PyDict_SetItemString(item, "unknown", PyUnicode_FromString(tmp_name)); else PyDict_SetItemString(item, "unknown", Py_None);
-        tmp_name = cfrds_buffer_sql_tableinfo_get_schema(tableinfo, c); if (tmp_name) PyDict_SetItemString(item, "schema", PyUnicode_FromString(tmp_name)); else PyDict_SetItemString(item, "schema", Py_None);
-        tmp_name = cfrds_buffer_sql_tableinfo_get_column_name(tableinfo, c); if (tmp_name) PyDict_SetItemString(item, "name", PyUnicode_FromString(tmp_name)); else PyDict_SetItemString(item, "name", Py_None);
-        tmp_name = cfrds_buffer_sql_tableinfo_get_column_type(tableinfo, c); if (tmp_name) PyDict_SetItemString(item, "type", PyUnicode_FromString(tmp_name)); else PyDict_SetItemString(item, "type", Py_None);
+        tmp_name = cfrds_sql_tableinfo_get_unknown(tableinfo, c); if (tmp_name) PyDict_SetItemString(item, "unknown", PyUnicode_FromString(tmp_name)); else PyDict_SetItemString(item, "unknown", Py_None);
+        tmp_name = cfrds_sql_tableinfo_get_schema(tableinfo, c); if (tmp_name) PyDict_SetItemString(item, "schema", PyUnicode_FromString(tmp_name)); else PyDict_SetItemString(item, "schema", Py_None);
+        tmp_name = cfrds_sql_tableinfo_get_column_name(tableinfo, c); if (tmp_name) PyDict_SetItemString(item, "name", PyUnicode_FromString(tmp_name)); else PyDict_SetItemString(item, "name", Py_None);
+        tmp_name = cfrds_sql_tableinfo_get_column_type(tableinfo, c); if (tmp_name) PyDict_SetItemString(item, "type", PyUnicode_FromString(tmp_name)); else PyDict_SetItemString(item, "type", Py_None);
 
         PyList_SetItem(ret, c, item);
     }
 
-    cfrds_buffer_sql_tableinfo_free(tableinfo);
+    cfrds_sql_tableinfo_free(tableinfo);
 
     return ret;
 
@@ -413,29 +413,29 @@ cfrds_server_sql_columninfo(cfrds_server_Object *self, PyObject *args)
 
     CHECK_FOR_ERRORS(cfrds_command_sql_columninfo(self->server, tablename, columnname, &columninfo));
 
-    cnt = cfrds_buffer_sql_columninfo_count(columninfo);
+    cnt = cfrds_sql_columninfo_count(columninfo);
     ret = PyList_New(cnt);
 
     for(size_t c = 0; c < cnt; c++)
     {
         PyObject *item = PyDict_New();
 
-        PyDict_SetItemString(item, "schema", PyUnicode_FromString(cfrds_buffer_sql_columninfo_get_schema(columninfo, c)));
-        PyDict_SetItemString(item, "owner", PyUnicode_FromString(cfrds_buffer_sql_columninfo_get_owner(columninfo, c)));
-        PyDict_SetItemString(item, "table", PyUnicode_FromString(cfrds_buffer_sql_columninfo_get_table(columninfo, c)));
-        PyDict_SetItemString(item, "name", PyUnicode_FromString(cfrds_buffer_sql_columninfo_get_name(columninfo, c)));
-        PyDict_SetItemString(item, "type", PyLong_FromLong(cfrds_buffer_sql_columninfo_get_type(columninfo, c)));
-        PyDict_SetItemString(item, "typeStr", PyUnicode_FromString(cfrds_buffer_sql_columninfo_get_typeStr(columninfo, c)));
-        PyDict_SetItemString(item, "precision", PyLong_FromLong(cfrds_buffer_sql_columninfo_get_precision(columninfo, c)));
-        PyDict_SetItemString(item, "length", PyLong_FromLong(cfrds_buffer_sql_columninfo_get_length(columninfo, c)));
-        PyDict_SetItemString(item, "scale", PyLong_FromLong(cfrds_buffer_sql_columninfo_get_scale(columninfo, c)));
-        PyDict_SetItemString(item, "radix", PyLong_FromLong(cfrds_buffer_sql_columninfo_get_radix(columninfo, c)));
-        PyDict_SetItemString(item, "nullable", PyLong_FromLong(cfrds_buffer_sql_columninfo_get_nullable(columninfo, c)));
+        PyDict_SetItemString(item, "schema", PyUnicode_FromString(cfrds_sql_columninfo_get_schema(columninfo, c)));
+        PyDict_SetItemString(item, "owner", PyUnicode_FromString(cfrds_sql_columninfo_get_owner(columninfo, c)));
+        PyDict_SetItemString(item, "table", PyUnicode_FromString(cfrds_sql_columninfo_get_table(columninfo, c)));
+        PyDict_SetItemString(item, "name", PyUnicode_FromString(cfrds_sql_columninfo_get_name(columninfo, c)));
+        PyDict_SetItemString(item, "type", PyLong_FromLong(cfrds_sql_columninfo_get_type(columninfo, c)));
+        PyDict_SetItemString(item, "typeStr", PyUnicode_FromString(cfrds_sql_columninfo_get_typeStr(columninfo, c)));
+        PyDict_SetItemString(item, "precision", PyLong_FromLong(cfrds_sql_columninfo_get_precision(columninfo, c)));
+        PyDict_SetItemString(item, "length", PyLong_FromLong(cfrds_sql_columninfo_get_length(columninfo, c)));
+        PyDict_SetItemString(item, "scale", PyLong_FromLong(cfrds_sql_columninfo_get_scale(columninfo, c)));
+        PyDict_SetItemString(item, "radix", PyLong_FromLong(cfrds_sql_columninfo_get_radix(columninfo, c)));
+        PyDict_SetItemString(item, "nullable", PyLong_FromLong(cfrds_sql_columninfo_get_nullable(columninfo, c)));
 
         PyList_SetItem(ret, c, item);
     }
 
-    cfrds_buffer_sql_columninfo_free(columninfo);
+    cfrds_sql_columninfo_free(columninfo);
 
     return ret;
 
@@ -462,7 +462,7 @@ cfrds_server_sql_primarykeys(cfrds_server_Object *self, PyObject *args)
 
     CHECK_FOR_ERRORS(cfrds_command_sql_primarykeys(self->server, tablename, columnname, &primarykeys));
 
-    cnt = cfrds_buffer_sql_primarykeys_count(primarykeys);
+    cnt = cfrds_sql_primarykeys_count(primarykeys);
     ret = PyList_New(cnt);
     if (ret == NULL)
     {
@@ -474,16 +474,16 @@ cfrds_server_sql_primarykeys(cfrds_server_Object *self, PyObject *args)
     {
         PyObject *item = PyDict_New();
 
-        PyDict_SetItemString(item, "catalog", PyUnicode_FromString(cfrds_buffer_sql_primarykeys_get_catalog(primarykeys, c)));
-        PyDict_SetItemString(item, "owner", PyUnicode_FromString(cfrds_buffer_sql_primarykeys_get_owner(primarykeys, c)));
-        PyDict_SetItemString(item, "table", PyUnicode_FromString(cfrds_buffer_sql_primarykeys_get_table(primarykeys, c)));
-        PyDict_SetItemString(item, "column", PyUnicode_FromString(cfrds_buffer_sql_primarykeys_get_column(primarykeys, c)));
-        PyDict_SetItemString(item, "key_sequence", PyLong_FromLong(cfrds_buffer_sql_primarykeys_get_key_sequence(primarykeys, c)));
+        PyDict_SetItemString(item, "catalog", PyUnicode_FromString(cfrds_sql_primarykeys_get_catalog(primarykeys, c)));
+        PyDict_SetItemString(item, "owner", PyUnicode_FromString(cfrds_sql_primarykeys_get_owner(primarykeys, c)));
+        PyDict_SetItemString(item, "table", PyUnicode_FromString(cfrds_sql_primarykeys_get_table(primarykeys, c)));
+        PyDict_SetItemString(item, "column", PyUnicode_FromString(cfrds_sql_primarykeys_get_column(primarykeys, c)));
+        PyDict_SetItemString(item, "key_sequence", PyLong_FromLong(cfrds_sql_primarykeys_get_key_sequence(primarykeys, c)));
 
         PyList_SetItem(ret, c, item);
     }
 
-    cfrds_buffer_sql_primarykeys_free(primarykeys);
+    cfrds_sql_primarykeys_free(primarykeys);
 
 exit:
     return ret;
@@ -508,7 +508,7 @@ cfrds_server_sql_foreignkeys(cfrds_server_Object *self, PyObject *args)
 
     CHECK_FOR_ERRORS(cfrds_command_sql_foreignkeys(self->server, tablename, columnname, &foreignkeys));
 
-    cnt = cfrds_buffer_sql_foreignkeys_count(foreignkeys);
+    cnt = cfrds_sql_foreignkeys_count(foreignkeys);
     ret = PyList_New(cnt);
     if (ret == NULL)
     {
@@ -520,22 +520,22 @@ cfrds_server_sql_foreignkeys(cfrds_server_Object *self, PyObject *args)
     {
         PyObject *item = PyDict_New();
 
-        PyDict_SetItemString(item, "pkcatalog", PyUnicode_FromString(cfrds_buffer_sql_foreignkeys_get_pkcatalog(foreignkeys, c)));
-        PyDict_SetItemString(item, "pkowner", PyUnicode_FromString(cfrds_buffer_sql_foreignkeys_get_pkowner(foreignkeys, c)));
-        PyDict_SetItemString(item, "pktable", PyUnicode_FromString(cfrds_buffer_sql_foreignkeys_get_pktable(foreignkeys, c)));
-        PyDict_SetItemString(item, "pkcolumn", PyUnicode_FromString(cfrds_buffer_sql_foreignkeys_get_pkcolumn(foreignkeys, c)));
-        PyDict_SetItemString(item, "fkcatalog", PyUnicode_FromString(cfrds_buffer_sql_foreignkeys_get_fkcatalog(foreignkeys, c)));
-        PyDict_SetItemString(item, "fkowner", PyUnicode_FromString(cfrds_buffer_sql_foreignkeys_get_fkowner(foreignkeys, c)));
-        PyDict_SetItemString(item, "fktable", PyUnicode_FromString(cfrds_buffer_sql_foreignkeys_get_fktable(foreignkeys, c)));
-        PyDict_SetItemString(item, "fkcolumn", PyUnicode_FromString(cfrds_buffer_sql_foreignkeys_get_fkcolumn(foreignkeys, c)));
-        PyDict_SetItemString(item, "key_sequence", PyLong_FromLong(cfrds_buffer_sql_foreignkeys_get_key_sequence(foreignkeys, c)));
-        PyDict_SetItemString(item, "updaterule", PyLong_FromLong(cfrds_buffer_sql_foreignkeys_get_updaterule(foreignkeys, c)));
-        PyDict_SetItemString(item, "deleterule", PyLong_FromLong(cfrds_buffer_sql_foreignkeys_get_deleterule(foreignkeys, c)));
+        PyDict_SetItemString(item, "pkcatalog", PyUnicode_FromString(cfrds_sql_foreignkeys_get_pkcatalog(foreignkeys, c)));
+        PyDict_SetItemString(item, "pkowner", PyUnicode_FromString(cfrds_sql_foreignkeys_get_pkowner(foreignkeys, c)));
+        PyDict_SetItemString(item, "pktable", PyUnicode_FromString(cfrds_sql_foreignkeys_get_pktable(foreignkeys, c)));
+        PyDict_SetItemString(item, "pkcolumn", PyUnicode_FromString(cfrds_sql_foreignkeys_get_pkcolumn(foreignkeys, c)));
+        PyDict_SetItemString(item, "fkcatalog", PyUnicode_FromString(cfrds_sql_foreignkeys_get_fkcatalog(foreignkeys, c)));
+        PyDict_SetItemString(item, "fkowner", PyUnicode_FromString(cfrds_sql_foreignkeys_get_fkowner(foreignkeys, c)));
+        PyDict_SetItemString(item, "fktable", PyUnicode_FromString(cfrds_sql_foreignkeys_get_fktable(foreignkeys, c)));
+        PyDict_SetItemString(item, "fkcolumn", PyUnicode_FromString(cfrds_sql_foreignkeys_get_fkcolumn(foreignkeys, c)));
+        PyDict_SetItemString(item, "key_sequence", PyLong_FromLong(cfrds_sql_foreignkeys_get_key_sequence(foreignkeys, c)));
+        PyDict_SetItemString(item, "updaterule", PyLong_FromLong(cfrds_sql_foreignkeys_get_updaterule(foreignkeys, c)));
+        PyDict_SetItemString(item, "deleterule", PyLong_FromLong(cfrds_sql_foreignkeys_get_deleterule(foreignkeys, c)));
 
         PyList_SetItem(ret, c, item);
     }
 
-    cfrds_buffer_sql_foreignkeys_free(foreignkeys);
+    cfrds_sql_foreignkeys_free(foreignkeys);
 
 exit:
     return ret;
@@ -560,7 +560,7 @@ cfrds_server_sql_importedkeys(cfrds_server_Object *self, PyObject *args)
 
     CHECK_FOR_ERRORS(cfrds_command_sql_importedkeys(self->server, tablename, columnname, &importedkeys));
 
-    cnt = cfrds_buffer_sql_importedkeys_count(importedkeys);
+    cnt = cfrds_sql_importedkeys_count(importedkeys);
     ret = PyList_New(cnt);
     if (ret == NULL)
     {
@@ -572,22 +572,22 @@ cfrds_server_sql_importedkeys(cfrds_server_Object *self, PyObject *args)
     {
         PyObject *item = PyDict_New();
 
-        PyDict_SetItemString(item, "pkcatalog", PyUnicode_FromString(cfrds_buffer_sql_importedkeys_get_pkcatalog(importedkeys, c)));
-        PyDict_SetItemString(item, "pkowner", PyUnicode_FromString(cfrds_buffer_sql_importedkeys_get_pkowner(importedkeys, c)));
-        PyDict_SetItemString(item, "pktable", PyUnicode_FromString(cfrds_buffer_sql_importedkeys_get_pktable(importedkeys, c)));
-        PyDict_SetItemString(item, "pkcolumn", PyUnicode_FromString(cfrds_buffer_sql_importedkeys_get_pkcolumn(importedkeys, c)));
-        PyDict_SetItemString(item, "fkcatalog", PyUnicode_FromString(cfrds_buffer_sql_importedkeys_get_fkcatalog(importedkeys, c)));
-        PyDict_SetItemString(item, "fkowner", PyUnicode_FromString(cfrds_buffer_sql_importedkeys_get_fkowner(importedkeys, c)));
-        PyDict_SetItemString(item, "fktable", PyUnicode_FromString(cfrds_buffer_sql_importedkeys_get_fktable(importedkeys, c)));
-        PyDict_SetItemString(item, "fkcolumn", PyUnicode_FromString(cfrds_buffer_sql_importedkeys_get_fkcolumn(importedkeys, c)));
-        PyDict_SetItemString(item, "key_sequence", PyLong_FromLong(cfrds_buffer_sql_importedkeys_get_key_sequence(importedkeys, c)));
-        PyDict_SetItemString(item, "updaterule", PyLong_FromLong(cfrds_buffer_sql_importedkeys_get_updaterule(importedkeys, c)));
-        PyDict_SetItemString(item, "deleterule", PyLong_FromLong(cfrds_buffer_sql_importedkeys_get_deleterule(importedkeys, c)));
+        PyDict_SetItemString(item, "pkcatalog", PyUnicode_FromString(cfrds_sql_importedkeys_get_pkcatalog(importedkeys, c)));
+        PyDict_SetItemString(item, "pkowner", PyUnicode_FromString(cfrds_sql_importedkeys_get_pkowner(importedkeys, c)));
+        PyDict_SetItemString(item, "pktable", PyUnicode_FromString(cfrds_sql_importedkeys_get_pktable(importedkeys, c)));
+        PyDict_SetItemString(item, "pkcolumn", PyUnicode_FromString(cfrds_sql_importedkeys_get_pkcolumn(importedkeys, c)));
+        PyDict_SetItemString(item, "fkcatalog", PyUnicode_FromString(cfrds_sql_importedkeys_get_fkcatalog(importedkeys, c)));
+        PyDict_SetItemString(item, "fkowner", PyUnicode_FromString(cfrds_sql_importedkeys_get_fkowner(importedkeys, c)));
+        PyDict_SetItemString(item, "fktable", PyUnicode_FromString(cfrds_sql_importedkeys_get_fktable(importedkeys, c)));
+        PyDict_SetItemString(item, "fkcolumn", PyUnicode_FromString(cfrds_sql_importedkeys_get_fkcolumn(importedkeys, c)));
+        PyDict_SetItemString(item, "key_sequence", PyLong_FromLong(cfrds_sql_importedkeys_get_key_sequence(importedkeys, c)));
+        PyDict_SetItemString(item, "updaterule", PyLong_FromLong(cfrds_sql_importedkeys_get_updaterule(importedkeys, c)));
+        PyDict_SetItemString(item, "deleterule", PyLong_FromLong(cfrds_sql_importedkeys_get_deleterule(importedkeys, c)));
 
         PyList_SetItem(ret, c, item);
     }
 
-    cfrds_buffer_sql_importedkeys_free(importedkeys);
+    cfrds_sql_importedkeys_free(importedkeys);
 
 exit:
     return ret;
@@ -612,7 +612,7 @@ cfrds_server_sql_exportedkeys(cfrds_server_Object *self, PyObject *args)
 
     CHECK_FOR_ERRORS(cfrds_command_sql_exportedkeys(self->server, tablename, columnname, &exportedkeys));
 
-    cnt = cfrds_buffer_sql_exportedkeys_count(exportedkeys);
+    cnt = cfrds_sql_exportedkeys_count(exportedkeys);
     ret = PyList_New(cnt);
     if (ret == NULL)
     {
@@ -624,22 +624,22 @@ cfrds_server_sql_exportedkeys(cfrds_server_Object *self, PyObject *args)
     {
         PyObject *item = PyDict_New();
 
-        PyDict_SetItemString(item, "pkcatalog", PyUnicode_FromString(cfrds_buffer_sql_exportedkeys_get_pkcatalog(exportedkeys, c)));
-        PyDict_SetItemString(item, "pkowner", PyUnicode_FromString(cfrds_buffer_sql_exportedkeys_get_pkowner(exportedkeys, c)));
-        PyDict_SetItemString(item, "pktable", PyUnicode_FromString(cfrds_buffer_sql_exportedkeys_get_pktable(exportedkeys, c)));
-        PyDict_SetItemString(item, "pkcolumn", PyUnicode_FromString(cfrds_buffer_sql_exportedkeys_get_pkcolumn(exportedkeys, c)));
-        PyDict_SetItemString(item, "fkcatalog", PyUnicode_FromString(cfrds_buffer_sql_exportedkeys_get_fkcatalog(exportedkeys, c)));
-        PyDict_SetItemString(item, "fkowner", PyUnicode_FromString(cfrds_buffer_sql_exportedkeys_get_fkowner(exportedkeys, c)));
-        PyDict_SetItemString(item, "fktable", PyUnicode_FromString(cfrds_buffer_sql_exportedkeys_get_fktable(exportedkeys, c)));
-        PyDict_SetItemString(item, "fkcolumn", PyUnicode_FromString(cfrds_buffer_sql_exportedkeys_get_fkcolumn(exportedkeys, c)));
-        PyDict_SetItemString(item, "key_sequence", PyLong_FromLong(cfrds_buffer_sql_exportedkeys_get_key_sequence(exportedkeys, c)));
-        PyDict_SetItemString(item, "updaterule", PyLong_FromLong(cfrds_buffer_sql_exportedkeys_get_updaterule(exportedkeys, c)));
-        PyDict_SetItemString(item, "deleterule", PyLong_FromLong(cfrds_buffer_sql_exportedkeys_get_deleterule(exportedkeys, c)));
+        PyDict_SetItemString(item, "pkcatalog", PyUnicode_FromString(cfrds_sql_exportedkeys_get_pkcatalog(exportedkeys, c)));
+        PyDict_SetItemString(item, "pkowner", PyUnicode_FromString(cfrds_sql_exportedkeys_get_pkowner(exportedkeys, c)));
+        PyDict_SetItemString(item, "pktable", PyUnicode_FromString(cfrds_sql_exportedkeys_get_pktable(exportedkeys, c)));
+        PyDict_SetItemString(item, "pkcolumn", PyUnicode_FromString(cfrds_sql_exportedkeys_get_pkcolumn(exportedkeys, c)));
+        PyDict_SetItemString(item, "fkcatalog", PyUnicode_FromString(cfrds_sql_exportedkeys_get_fkcatalog(exportedkeys, c)));
+        PyDict_SetItemString(item, "fkowner", PyUnicode_FromString(cfrds_sql_exportedkeys_get_fkowner(exportedkeys, c)));
+        PyDict_SetItemString(item, "fktable", PyUnicode_FromString(cfrds_sql_exportedkeys_get_fktable(exportedkeys, c)));
+        PyDict_SetItemString(item, "fkcolumn", PyUnicode_FromString(cfrds_sql_exportedkeys_get_fkcolumn(exportedkeys, c)));
+        PyDict_SetItemString(item, "key_sequence", PyLong_FromLong(cfrds_sql_exportedkeys_get_key_sequence(exportedkeys, c)));
+        PyDict_SetItemString(item, "updaterule", PyLong_FromLong(cfrds_sql_exportedkeys_get_updaterule(exportedkeys, c)));
+        PyDict_SetItemString(item, "deleterule", PyLong_FromLong(cfrds_sql_exportedkeys_get_deleterule(exportedkeys, c)));
 
         PyList_SetItem(ret, c, item);
     }
 
-    cfrds_buffer_sql_exportedkeys_free(exportedkeys);
+    cfrds_sql_exportedkeys_free(exportedkeys);
 
 exit:
     return ret;
@@ -670,8 +670,8 @@ cfrds_server_sql_sqlstmnt(cfrds_server_Object *self, PyObject *args)
         goto exit;
     }
 
-    size_t cols = cfrds_buffer_sql_resultset_columns(resultset);
-    size_t rows = cfrds_buffer_sql_resultset_rows(resultset);
+    size_t cols = cfrds_sql_resultset_columns(resultset);
+    size_t rows = cfrds_sql_resultset_rows(resultset);
 
     PyDict_SetItemString(ret, "columns", PyLong_FromLong(cols));
     PyDict_SetItemString(ret, "rows", PyLong_FromLong(rows));
@@ -679,7 +679,7 @@ cfrds_server_sql_sqlstmnt(cfrds_server_Object *self, PyObject *args)
     PyObject *names = PyList_New(cols);
     for(size_t c = 0; c < cols; c++)
     {
-        PyObject *name = PyUnicode_FromString(cfrds_buffer_sql_resultset_column_name(resultset, c));
+        PyObject *name = PyUnicode_FromString(cfrds_sql_resultset_column_name(resultset, c));
         PyList_SetItem(names, c, name);
     }
     PyDict_SetItemString(ret, "names", names);
@@ -690,7 +690,7 @@ cfrds_server_sql_sqlstmnt(cfrds_server_Object *self, PyObject *args)
         PyObject *row = PyList_New(cols);
         for(size_t c = 0; c < cols; c++)
         {
-            PyObject *value = PyUnicode_FromString(cfrds_buffer_sql_resultset_value(resultset, r, c));
+            PyObject *value = PyUnicode_FromString(cfrds_sql_resultset_value(resultset, r, c));
             PyList_SetItem(row, c, value);
         }
         PyList_SetItem(data, r, row);
@@ -700,7 +700,7 @@ cfrds_server_sql_sqlstmnt(cfrds_server_Object *self, PyObject *args)
 exit:
 
     if (resultset)
-        cfrds_buffer_sql_resultset_free(resultset);
+        cfrds_sql_resultset_free(resultset);
 
     return ret;
 }
@@ -724,7 +724,7 @@ cfrds_server_sql_metadata(cfrds_server_Object *self, PyObject *args)
 
     CHECK_FOR_ERRORS(cfrds_command_sql_sqlmetadata(self->server, tablename, sql, &metadata));
 
-    cols = cfrds_buffer_sql_metadata_count(metadata);
+    cols = cfrds_sql_metadata_count(metadata);
 
     ret = PyList_New(cols);
     if (ret == NULL)
@@ -737,16 +737,16 @@ cfrds_server_sql_metadata(cfrds_server_Object *self, PyObject *args)
     {
         PyObject *item = PyDict_New();
 
-        PyDict_SetItemString(item, "name", PyUnicode_FromString(cfrds_buffer_sql_metadata_get_name(metadata, c)));
-        PyDict_SetItemString(item, "type", PyUnicode_FromString(cfrds_buffer_sql_metadata_get_type(metadata, c)));
-        PyDict_SetItemString(item, "jtype", PyUnicode_FromString(cfrds_buffer_sql_metadata_get_jtype(metadata, c)));
+        PyDict_SetItemString(item, "name", PyUnicode_FromString(cfrds_sql_metadata_get_name(metadata, c)));
+        PyDict_SetItemString(item, "type", PyUnicode_FromString(cfrds_sql_metadata_get_type(metadata, c)));
+        PyDict_SetItemString(item, "jtype", PyUnicode_FromString(cfrds_sql_metadata_get_jtype(metadata, c)));
 
         PyList_SetItem(ret, c, item);
     }
 
 exit:
     if (metadata)
-        cfrds_buffer_sql_metadata_free(metadata);
+        cfrds_sql_metadata_free(metadata);
 
     return ret;
 }
@@ -762,7 +762,7 @@ cfrds_server_sql_getsupportedcommands(cfrds_server_Object *self, PyObject *args)
 
     CHECK_FOR_ERRORS(cfrds_command_sql_getsupportedcommands(self->server, &supportedcommands));
 
-    cols = cfrds_buffer_sql_supportedcommands_count(supportedcommands);
+    cols = cfrds_sql_supportedcommands_count(supportedcommands);
 
     ret = PyList_New(cols);
     if (ret == NULL)
@@ -773,13 +773,13 @@ cfrds_server_sql_getsupportedcommands(cfrds_server_Object *self, PyObject *args)
 
     for(size_t c = 0; c < cols; c++)
     {
-        PyObject *value = PyUnicode_FromString(cfrds_buffer_sql_supportedcommands_get(supportedcommands, c));
+        PyObject *value = PyUnicode_FromString(cfrds_sql_supportedcommands_get(supportedcommands, c));
         PyList_SetItem(ret, c, value);
     }
 
 exit:
     if (supportedcommands)
-        cfrds_buffer_sql_supportedcommands_free(supportedcommands);
+        cfrds_sql_supportedcommands_free(supportedcommands);
 
     return ret;
 }
@@ -915,24 +915,24 @@ exit:
 static PyObject *
 parse_debug_events_response(const cfrds_debugger_event *event)
 {
-    enum cfrds_debugger_type type = cfrds_buffer_debugger_event_get_type(event);
+    enum cfrds_debugger_type type = cfrds_debugger_event_get_type(event);
     switch (type)
     {
         case CFRDS_DEBUGGER_EVENT_TYPE_BREAKPOINT_SET:
         {
             PyObject *ret = PyDict_New();
-            PyDict_SetItemString(ret, "pathname", PyUnicode_FromString(cfrds_buffer_debugger_event_breakpoint_set_get_pathname(event)));
-            PyDict_SetItemString(ret, "req_line", PyLong_FromLong(cfrds_buffer_debugger_event_breakpoint_set_get_req_line(event)));
-            PyDict_SetItemString(ret, "act_line", PyLong_FromLong(cfrds_buffer_debugger_event_breakpoint_set_get_act_line(event)));
+            PyDict_SetItemString(ret, "pathname", PyUnicode_FromString(cfrds_debugger_event_breakpoint_set_get_pathname(event)));
+            PyDict_SetItemString(ret, "req_line", PyLong_FromLong(cfrds_debugger_event_breakpoint_set_get_req_line(event)));
+            PyDict_SetItemString(ret, "act_line", PyLong_FromLong(cfrds_debugger_event_breakpoint_set_get_act_line(event)));
             return ret;
         }
         case CFRDS_DEBUGGER_EVENT_TYPE_BREAKPOINT:
         case CFRDS_DEBUGGER_EVENT_TYPE_STEP:
         {
             PyObject *ret = PyDict_New();
-            PyDict_SetItemString(ret, "source", PyUnicode_FromString(cfrds_buffer_debugger_event_breakpoint_get_source(event)));
-            PyDict_SetItemString(ret, "line", PyLong_FromLong(cfrds_buffer_debugger_event_breakpoint_get_line(event)));
-            PyDict_SetItemString(ret, "thread_name", PyUnicode_FromString(cfrds_buffer_debugger_event_breakpoint_get_thread_name(event)));
+            PyDict_SetItemString(ret, "source", PyUnicode_FromString(cfrds_debugger_event_breakpoint_get_source(event)));
+            PyDict_SetItemString(ret, "line", PyLong_FromLong(cfrds_debugger_event_breakpoint_get_line(event)));
+            PyDict_SetItemString(ret, "thread_name", PyUnicode_FromString(cfrds_debugger_event_breakpoint_get_thread_name(event)));
             return ret;
         }
         default:

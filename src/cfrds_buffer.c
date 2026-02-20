@@ -49,91 +49,91 @@ void cfrds_buffer_cleanup(cfrds_buffer **buf) {
 
 void cfrds_file_content_cleanup(cfrds_file_content **buf) {
     if (*buf) {
-        cfrds_buffer_file_content_free(*buf);
+        cfrds_file_content_free(*buf);
         *buf = NULL;
     }
 }
 
 void cfrds_browse_dir_cleanup(cfrds_browse_dir **buf) {
     if (*buf) {
-        cfrds_buffer_browse_dir_free(*buf);
+        cfrds_browse_dir_free(*buf);
         *buf = NULL;
     }
 }
 
 void cfrds_sql_dsninfo_cleanup(cfrds_sql_dsninfo **buf) {
     if (*buf) {
-        cfrds_buffer_sql_dsninfo_free(*buf);
+        cfrds_sql_dsninfo_free(*buf);
         *buf = NULL;
     }
 }
 
 void cfrds_sql_tableinfo_cleanup(cfrds_sql_tableinfo **buf) {
     if (*buf) {
-        cfrds_buffer_sql_tableinfo_free(*buf);
+        cfrds_sql_tableinfo_free(*buf);
         *buf = NULL;
     }
 }
 
 void cfrds_sql_columninfo_cleanup(cfrds_sql_columninfo **buf) {
     if (*buf) {
-        cfrds_buffer_sql_columninfo_free(*buf);
+        cfrds_sql_columninfo_free(*buf);
         *buf = NULL;
     }
 }
 
 void cfrds_sql_primarykeys_cleanup(cfrds_sql_primarykeys **buf) {
     if (*buf) {
-        cfrds_buffer_sql_primarykeys_free(*buf);
+        cfrds_sql_primarykeys_free(*buf);
         *buf = NULL;
     }
 }
 
 void cfrds_sql_foreignkeys_cleanup(cfrds_sql_foreignkeys **buf) {
     if (*buf) {
-        cfrds_buffer_sql_foreignkeys_free(*buf);
+        cfrds_sql_foreignkeys_free(*buf);
         *buf = NULL;
     }
 }
 
 void cfrds_sql_importedkeys_cleanup(cfrds_sql_importedkeys **buf) {
     if (*buf) {
-        cfrds_buffer_sql_importedkeys_free(*buf);
+        cfrds_sql_importedkeys_free(*buf);
         *buf = NULL;
     }
 }
 
 void cfrds_sql_exportedkeys_cleanup(cfrds_sql_exportedkeys **buf) {
     if (*buf) {
-        cfrds_buffer_sql_exportedkeys_free(*buf);
+        cfrds_sql_exportedkeys_free(*buf);
         *buf = NULL;
     }
 }
 
 void cfrds_sql_resultset_cleanup(cfrds_sql_resultset **buf) {
     if (*buf) {
-        cfrds_buffer_sql_resultset_free(*buf);
+        cfrds_sql_resultset_free(*buf);
         *buf = NULL;
     }
 }
 
 void cfrds_sql_metadata_cleanup(cfrds_sql_metadata **buf) {
     if (*buf) {
-        cfrds_buffer_sql_metadata_free(*buf);
+        cfrds_sql_metadata_free(*buf);
         *buf = NULL;
     }
 }
 
 void cfrds_sql_supportedcommands_cleanup(cfrds_sql_supportedcommands **buf) {
     if (*buf) {
-        cfrds_buffer_sql_supportedcommands_free(*buf);
+        cfrds_sql_supportedcommands_free(*buf);
         *buf = NULL;
     }
 }
 
 void cfrds_debugger_event_cleanup(cfrds_debugger_event **buf) {
     if (*buf) {
-        cfrds_buffer_debugger_event_free(*buf);
+        cfrds_debugger_event_free(*buf);
         *buf = NULL;
     }
 }

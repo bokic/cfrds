@@ -20,24 +20,24 @@
 #endif
 
 typedef char* cfrds_str;
-typedef void cfrds_buffer;
-typedef void cfrds_file_content;
-typedef void cfrds_server;
-typedef void cfrds_browse_dir;
-typedef void cfrds_sql_dsninfo;
-typedef void cfrds_sql_tableinfo;
-typedef void cfrds_sql_columninfo;
-typedef void cfrds_sql_primarykeys;
-typedef void cfrds_sql_foreignkeys;
-typedef void cfrds_sql_importedkeys;
-typedef void cfrds_sql_exportedkeys;
-typedef void cfrds_sql_resultset;
-typedef void cfrds_sql_metadata;
-typedef void cfrds_sql_supportedcommands;
-typedef void cfrds_debugger_event;
-typedef void cfrds_security_analyzer_result;
-typedef void cfrds_adminapi_customtagpaths;
-typedef void cfrds_adminapi_mappings;
+typedef struct cfrds_buffer cfrds_buffer;
+typedef struct cfrds_file_content cfrds_file_content;
+typedef struct cfrds_server cfrds_server;
+typedef struct cfrds_browse_dir cfrds_browse_dir;
+typedef struct cfrds_sql_dsninfo cfrds_sql_dsninfo;
+typedef struct cfrds_sql_tableinfo cfrds_sql_tableinfo;
+typedef struct cfrds_sql_columninfo cfrds_sql_columninfo;
+typedef struct cfrds_sql_primarykeys cfrds_sql_primarykeys;
+typedef struct cfrds_sql_foreignkeys cfrds_sql_foreignkeys;
+typedef struct cfrds_sql_importedkeys cfrds_sql_importedkeys;
+typedef struct cfrds_sql_exportedkeys cfrds_sql_exportedkeys;
+typedef struct cfrds_sql_resultset cfrds_sql_resultset;
+typedef struct cfrds_sql_metadata cfrds_sql_metadata;
+typedef struct cfrds_sql_supportedcommands cfrds_sql_supportedcommands;
+typedef struct cfrds_debugger_event cfrds_debugger_event;
+typedef struct cfrds_security_analyzer_result cfrds_security_analyzer_result;
+typedef struct cfrds_adminapi_customtagpaths cfrds_adminapi_customtagpaths;
+typedef struct cfrds_adminapi_mappings cfrds_adminapi_mappings;
 
 typedef enum {
     CFRDS_STATUS_OK,
@@ -65,10 +65,13 @@ typedef enum {
     CFRDS_DEBUGGER_EVENT_UNKNOWN,
 } cfrds_debugger_type;
 
+#if defined(__GNUC__) || defined(__clang__)
 #define cfrds_buffer_defer(var) cfrds_buffer* var __attribute__((cleanup(cfrds_buffer_cleanup))) = NULL
 #define cfrds_file_content_defer(var) cfrds_file_content* var __attribute__((cleanup(cfrds_file_content_cleanup))) = NULL
 #define cfrds_str_defer(var) cfrds_str var __attribute__((cleanup(cfrds_str_cleanup))) = NULL
+#endif
 
+#if defined(__GNUC__) || defined(__clang__)
 #define cfrds_server_defer(var) cfrds_server* var __attribute__((cleanup(cfrds_server_cleanup))) = NULL
 #define cfrds_browse_dir_defer(var) cfrds_browse_dir* var __attribute__((cleanup(cfrds_browse_dir_cleanup))) = NULL
 #define cfrds_sql_dsninfo_defer(var) cfrds_sql_dsninfo* var __attribute__((cleanup(cfrds_sql_dsninfo_cleanup))) = NULL
@@ -85,6 +88,7 @@ typedef enum {
 #define cfrds_security_analyzer_result_defer(var) cfrds_security_analyzer_result* var __attribute__((cleanup(cfrds_security_analyzer_result_cleanup))) = NULL
 #define cfrds_adminapi_customtagpaths_defer(var) cfrds_adminapi_customtagpaths* var __attribute__((cleanup(cfrds_adminapi_customtagpaths_cleanup))) = NULL
 #define cfrds_adminapi_mappings_defer(var) cfrds_adminapi_mappings* var __attribute__((cleanup(cfrds_adminapi_mappings_cleanup))) = NULL
+#endif
 
 #ifdef __cplusplus
 extern "C"

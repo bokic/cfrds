@@ -378,8 +378,8 @@ cfrds_server_sql_tableinfo(cfrds_server_Object *self, PyObject *args)
         PyObject *item = PyDict_New();
         const char *tmp_name = NULL;
 
-        tmp_name = cfrds_sql_tableinfo_get_unknown(tableinfo, c); if (tmp_name) PyDict_SetItemString(item, "unknown", PyUnicode_FromString(tmp_name)); else PyDict_SetItemString(item, "unknown", Py_None);
-        tmp_name = cfrds_sql_tableinfo_get_schema(tableinfo, c); if (tmp_name) PyDict_SetItemString(item, "schema", PyUnicode_FromString(tmp_name)); else PyDict_SetItemString(item, "schema", Py_None);
+        tmp_name = cfrds_sql_tableinfo_get_column_unknown(tableinfo, c); if (tmp_name) PyDict_SetItemString(item, "unknown", PyUnicode_FromString(tmp_name)); else PyDict_SetItemString(item, "unknown", Py_None);
+        tmp_name = cfrds_sql_tableinfo_get_column_schema(tableinfo, c); if (tmp_name) PyDict_SetItemString(item, "schema", PyUnicode_FromString(tmp_name)); else PyDict_SetItemString(item, "schema", Py_None);
         tmp_name = cfrds_sql_tableinfo_get_column_name(tableinfo, c); if (tmp_name) PyDict_SetItemString(item, "name", PyUnicode_FromString(tmp_name)); else PyDict_SetItemString(item, "name", Py_None);
         tmp_name = cfrds_sql_tableinfo_get_column_type(tableinfo, c); if (tmp_name) PyDict_SetItemString(item, "type", PyUnicode_FromString(tmp_name)); else PyDict_SetItemString(item, "type", Py_None);
 
@@ -915,7 +915,7 @@ exit:
 static PyObject *
 parse_debug_events_response(const cfrds_debugger_event *event)
 {
-    enum cfrds_debugger_type type = cfrds_debugger_event_get_type(event);
+    cfrds_debugger_type type = cfrds_debugger_event_get_type(event);
     switch (type)
     {
         case CFRDS_DEBUGGER_EVENT_TYPE_BREAKPOINT_SET:

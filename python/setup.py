@@ -18,8 +18,8 @@ def main():
                     "../src/cfrds_buffer.c",
                     "../src/cfrds_http.c",
                 ],
-                include_dirs=["../include", "/usr/include/libxml2"],
-                libraries=["xml2"],
+                include_dirs=["../include", "/usr/include/libxml2", "/usr/include/json-c"],
+                libraries=["xml2", "json-c"],
             )
         ],
     )

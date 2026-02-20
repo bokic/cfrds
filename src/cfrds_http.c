@@ -61,12 +61,12 @@ cfrds_status cfrds_http_post(cfrds_server_int *server, const char *command, cfrd
 
     int n = 0;
 
-    port = cfrds_server_get_port(server);
+    port = cfrds_server_get_port((cfrds_server *)server);
 
     n = snprintf(datasize_str, sizeof(datasize_str), "%zu", cfrds_buffer_data_size(payload));
     if (n < 0)
     {
-        cfrds_server_set_error(server, CFRDS_STATUS_MEMORY_ERROR, "snprintf() returned < 0...");
+        cfrds_server_set_error((cfrds_server *)server, CFRDS_STATUS_MEMORY_ERROR, "snprintf() returned < 0...");
         return CFRDS_STATUS_MEMORY_ERROR;
     }
 
@@ -74,7 +74,7 @@ cfrds_status cfrds_http_post(cfrds_server_int *server, const char *command, cfrd
     cfrds_buffer_append(send_buf, "POST /CFIDE/main/ide.cfm?CFSRV=IDE&ACTION=");
     cfrds_buffer_append(send_buf, command);
     cfrds_buffer_append(send_buf, " HTTP/1.0\r\nHost: ");
-    cfrds_buffer_append(send_buf, cfrds_server_get_host(server));
+    cfrds_buffer_append(send_buf, cfrds_server_get_host((cfrds_server *)server));
     if(port != 80)
     {
         char port_str[8] = {0, };
@@ -82,7 +82,7 @@ cfrds_status cfrds_http_post(cfrds_server_int *server, const char *command, cfrd
         n = snprintf(port_str, sizeof(port_str), "%d", port);
         if (n < 0)
         {
-            cfrds_server_set_error(server, CFRDS_STATUS_MEMORY_ERROR, "snprintf() returned < 0...");
+            cfrds_server_set_error((cfrds_server *)server, CFRDS_STATUS_MEMORY_ERROR, "snprintf() returned < 0...");
             return CFRDS_STATUS_MEMORY_ERROR;
         }
         cfrds_buffer_append(send_buf, ":");
@@ -96,7 +96,7 @@ cfrds_status cfrds_http_post(cfrds_server_int *server, const char *command, cfrd
     sockfd = socket(AF_INET, SOCK_STREAM, 0);
     if (sockfd == -1) {
         server->_errno = errno;
-        cfrds_server_set_error(server, CFRDS_STATUS_SOCKET_CREATION_FAILED, "failed to create socket...");
+        cfrds_server_set_error((cfrds_server *)server, CFRDS_STATUS_SOCKET_CREATION_FAILED, "failed to create socket...");
         return CFRDS_STATUS_SOCKET_CREATION_FAILED;
     }
     server->socket = sockfd;
@@ -105,14 +105,14 @@ cfrds_status cfrds_http_post(cfrds_server_int *server, const char *command, cfrd
 
     servaddr.sin_family = AF_INET;
     servaddr.sin_port = htons(port);
-    servaddr.sin_addr.s_addr = inet_addr(cfrds_server_get_host(server));
+    servaddr.sin_addr.s_addr = inet_addr(cfrds_server_get_host((cfrds_server *)server));
     if (servaddr.sin_addr.s_addr == INADDR_NONE) {
         return CFRDS_STATUS_SOCKET_HOST_NOT_FOUND;
     }
 
     if (connect(sockfd, (struct sockaddr *)&servaddr, sizeof(servaddr)) != 0) {
         server->_errno = errno;
-        cfrds_server_set_error(server, CFRDS_STATUS_CONNECTION_TO_SERVER_FAILED, "failed to establish connection to the server...");
+        cfrds_server_set_error((cfrds_server *)server, CFRDS_STATUS_CONNECTION_TO_SERVER_FAILED, "failed to establish connection to the server...");
         return CFRDS_STATUS_CONNECTION_TO_SERVER_FAILED;
     }
 
@@ -121,13 +121,13 @@ cfrds_status cfrds_http_post(cfrds_server_int *server, const char *command, cfrd
         if (sock_written == -1)
         {
             server->_errno = errno;
-            cfrds_server_set_error(server, CFRDS_STATUS_WRITING_TO_SOCKET_FAILED, "failed to write to socket...");
+            cfrds_server_set_error((cfrds_server *)server, CFRDS_STATUS_WRITING_TO_SOCKET_FAILED, "failed to write to socket...");
             return CFRDS_STATUS_WRITING_TO_SOCKET_FAILED;
         }
         else
         {
             server->_errno = errno;
-            cfrds_server_set_error(server, CFRDS_STATUS_PARTIALLY_WRITE_TO_SOCKET, "failed to write to all data socket...");
+            cfrds_server_set_error((cfrds_server *)server, CFRDS_STATUS_PARTIALLY_WRITE_TO_SOCKET, "failed to write to all data socket...");
             return CFRDS_STATUS_PARTIALLY_WRITE_TO_SOCKET;
         }
     }
@@ -142,7 +142,7 @@ cfrds_status cfrds_http_post(cfrds_server_int *server, const char *command, cfrd
         if (readed <= 0) {
             if (readed == -1) {
                 server->_errno = errno;
-                cfrds_server_set_error(server, CFRDS_STATUS_READING_FROM_SOCKET_FAILED, "failed to read from socket...");
+                cfrds_server_set_error((cfrds_server *)server, CFRDS_STATUS_READING_FROM_SOCKET_FAILED, "failed to read from socket...");
                 return CFRDS_STATUS_READING_FROM_SOCKET_FAILED;
             }
             break;
@@ -162,7 +162,7 @@ cfrds_status cfrds_http_post(cfrds_server_int *server, const char *command, cfrd
 
         if (strncmp(response_data, good_response_http1_0, strlen(good_response_http1_0)) != 0)
         {
-            cfrds_server_set_error(server, CFRDS_STATUS_RESPONSE_ERROR, "Invalid server response...");
+            cfrds_server_set_error((cfrds_server *)server, CFRDS_STATUS_RESPONSE_ERROR, "Invalid server response...");
             return CFRDS_STATUS_RESPONSE_ERROR;
         }
     }
@@ -180,13 +180,13 @@ cfrds_status cfrds_http_post(cfrds_server_int *server, const char *command, cfrd
     if (!cfrds_buffer_parse_number(&response_data, &response_size, &server->error_code))
     {
         server->error_code = -1;
-        cfrds_server_set_error(server, CFRDS_STATUS_RESPONSE_ERROR, "cfrds_buffer_parse_number FAILED...");
+        cfrds_server_set_error((cfrds_server *)server, CFRDS_STATUS_RESPONSE_ERROR, "cfrds_buffer_parse_number FAILED...");
         return CFRDS_STATUS_RESPONSE_ERROR;
     }
 
     if (server->error_code < 0)
     {
-        cfrds_server_set_error(server, CFRDS_STATUS_RESPONSE_ERROR, response_data);
+        cfrds_server_set_error((cfrds_server *)server, CFRDS_STATUS_RESPONSE_ERROR, response_data);
         return CFRDS_STATUS_RESPONSE_ERROR;
     }
 

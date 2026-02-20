@@ -36,7 +36,7 @@ void cfrds_server_cleanup(cfrds_server **server)
     if (*server == NULL)
         return;
 
-    cfrds_server_int *server_int = *server;
+    cfrds_server_int *server_int = (cfrds_server_int *)*server;
 
     server_int->_errno = 0;
     server_int->error_code = 1;
@@ -76,7 +76,7 @@ void cfrds_server_cleanup(cfrds_server **server)
 
 void cfrds_server_clear_error(cfrds_server *server)
 {
-    cfrds_server_int *server_int = server;
+    cfrds_server_int *server_int = (cfrds_server_int *)server;
     if (server_int == NULL)
         return;
 
@@ -92,7 +92,7 @@ void cfrds_server_clear_error(cfrds_server *server)
 
 void cfrds_server_shutdown_socket(cfrds_server *server)
 {
-    cfrds_server_int *server_int = server;
+    cfrds_server_int *server_int = (cfrds_server_int *)server;
     if (server_int == NULL)
         return;
 
@@ -181,7 +181,7 @@ void cfrds_server_free(cfrds_server *server)
 
     cfrds_server_clear_error(server);
 
-    server_int = server;
+    server_int = (cfrds_server_int *)server;
 
     if (server_int->host) free(server_int->host);
     if (server_int->username) free(server_int->username);
@@ -198,7 +198,7 @@ void cfrds_server_set_error(cfrds_server *server, int64_t error_code, const char
     if (server == NULL)
         return;
 
-    server_int = server;
+    server_int = (cfrds_server_int *)server;
 
     server_int->error_code = error_code;
 
@@ -215,7 +215,7 @@ const char *cfrds_server_get_error(const cfrds_server *server)
     if (server == NULL)
         return NULL;
 
-    server_int = server;
+    server_int = (cfrds_server_int *)server;
 
     return server_int->error;
 }
@@ -227,7 +227,7 @@ const char *cfrds_server_get_host(const cfrds_server *server)
     if (server == NULL)
         return NULL;
 
-    server_int = server;
+    server_int = (cfrds_server_int *)server;
 
     return server_int->host;
 }
@@ -239,7 +239,7 @@ uint16_t cfrds_server_get_port(const cfrds_server *server)
     if (server == NULL)
         return 0;
 
-    server_int = server;
+    server_int = (cfrds_server_int *)server;
 
     return server_int->port;
 }
@@ -251,7 +251,7 @@ const char *cfrds_server_get_username(const cfrds_server *server)
     if (server == NULL)
         return 0;
 
-    server_int = server;
+    server_int = (cfrds_server_int *)server;
 
     return server_int->username;
 }
@@ -263,7 +263,7 @@ const char *cfrds_server_get_password(const cfrds_server *server)
     if (server == NULL)
         return 0;
 
-    server_int = server;
+    server_int = (cfrds_server_int *)server;
 
     return server_int->orig_password;
 }
@@ -281,7 +281,7 @@ static cfrds_status cfrds_send_command(cfrds_server *server, cfrds_buffer **resp
     if (server == NULL)
         return CFRDS_STATUS_SERVER_IS_NULL;
 
-    server_int = server;
+    server_int = (cfrds_server_int *)server;
 
     server_int->_errno = 0;
 
@@ -299,7 +299,7 @@ static cfrds_status cfrds_send_command(cfrds_server *server, cfrds_buffer **resp
     if (server_int->username) total_cnt++;
     if (server_int->password) total_cnt++;
 
-    cfrds_server_clear_error(server_int);
+    cfrds_server_clear_error(server);
 
     cfrds_buffer_create(&post);
     cfrds_buffer_append_rds_count(post, total_cnt);
@@ -312,7 +312,7 @@ static cfrds_status cfrds_send_command(cfrds_server *server, cfrds_buffer **resp
     if (server_int->username) cfrds_buffer_append_rds_string(post, server_int->username);
     if (server_int->password) cfrds_buffer_append_rds_string(post, server_int->password);
 
-    ret = cfrds_http_post(server, command, post, response);
+    ret = cfrds_http_post((cfrds_server_int *)server, command, post, response);
 
     return ret;
 }
@@ -330,7 +330,7 @@ cfrds_status cfrds_command_browse_dir(cfrds_server *server, const char *path, cf
     ret = cfrds_send_command(server, &response, "BROWSEDIR", (const char *[]){ path, "", NULL});
     if (ret == CFRDS_STATUS_OK)
     {
-        *out = cfrds_buffer_to_browse_dir(response);
+        *out = (cfrds_browse_dir *)cfrds_buffer_to_browse_dir(response);
     }
 
     return ret;
@@ -349,7 +349,7 @@ cfrds_status cfrds_command_file_read(cfrds_server *server, const char *pathname,
     ret = cfrds_send_command(server, &response, "FILEIO", (const char *[]){ pathname, "READ", "", NULL});
     if (ret == CFRDS_STATUS_OK)
     {
-        *out = cfrds_buffer_to_file_content(response);
+        *out = (cfrds_file_content *)cfrds_buffer_to_file_content(response);
     }
 
     return ret;
@@ -368,7 +368,7 @@ cfrds_status cfrds_command_file_write(cfrds_server *server, const char *pathname
         return CFRDS_STATUS_PARAM_IS_NULL;
     }
 
-    server_int = server;
+    server_int = (cfrds_server_int *)server;
 
     server_int->_errno = 0;
 
@@ -377,7 +377,7 @@ cfrds_status cfrds_command_file_write(cfrds_server *server, const char *pathname
     if (server_int->username) total_cnt++;
     if (server_int->password) total_cnt++;
 
-    cfrds_server_clear_error(server_int);
+    cfrds_server_clear_error(server);
 
     cfrds_buffer_create(&post);
     cfrds_buffer_append_rds_count(post, total_cnt);
@@ -389,7 +389,7 @@ cfrds_status cfrds_command_file_write(cfrds_server *server, const char *pathname
     if (server_int->username) cfrds_buffer_append_rds_string(post, server_int->username);
     if (server_int->password) cfrds_buffer_append_rds_string(post, server_int->password);
 
-    ret = cfrds_http_post(server, "FILEIO", post, NULL);
+    ret = cfrds_http_post((cfrds_server_int *)server, "FILEIO", post, NULL);
 
     return ret;
 }
@@ -447,7 +447,7 @@ cfrds_status cfrds_command_file_exists(cfrds_server *server, const char *pathnam
     {
         *out = true;
     } else {
-        server_int = server;
+        server_int = (cfrds_server_int *)server;
         if ((server_int->error_code == -1)&&(server_int->error)&&(strncmp(server_int->error, response_file_not_found_start, strlen(response_file_not_found_start)) == 0))
         {
             server_int->error_code = 1;
@@ -491,7 +491,7 @@ cfrds_status cfrds_command_file_get_root_dir(cfrds_server *server, cfrds_str *ou
         const char *response_data = cfrds_buffer_data(response);
         size_t response_size = cfrds_buffer_data_size(response);
 
-        server_int = server;
+        server_int = (cfrds_server_int *)server;
 
         if (!cfrds_buffer_parse_number(&response_data, &response_size, &server_int->error_code))
         {
@@ -524,10 +524,10 @@ cfrds_status cfrds_command_sql_dsninfo(cfrds_server *server, cfrds_sql_dsninfo *
     ret = cfrds_send_command(server, &response, "DBFUNCS", (const char *[]){ "", "DSNINFO", NULL});
     if (ret == CFRDS_STATUS_OK)
     {
-        *dsninfo = cfrds_buffer_to_sql_dsninfo(response);
+        *dsninfo = (cfrds_sql_dsninfo *)cfrds_buffer_to_sql_dsninfo(response);
         if (*dsninfo == NULL)
         {
-            server_int = server;
+            server_int = (cfrds_server_int *)server;
             server_int->error_code = -1;
             return CFRDS_STATUS_RESPONSE_ERROR;
         }
@@ -551,10 +551,10 @@ cfrds_status cfrds_command_sql_tableinfo(cfrds_server *server, const char *conne
     ret = cfrds_send_command(server, &response, "DBFUNCS", (const char *[]){ connection_name, "TABLEINFO", NULL});
     if (ret == CFRDS_STATUS_OK)
     {
-        *tableinfo = cfrds_buffer_to_sql_tableinfo(response);
+        *tableinfo = (cfrds_sql_tableinfo *)cfrds_buffer_to_sql_tableinfo(response);
         if (*tableinfo == NULL)
         {
-            server_int = server;
+            server_int = (cfrds_server_int *)server;
             server_int->error_code = -1;
             return CFRDS_STATUS_RESPONSE_ERROR;
         }
@@ -578,10 +578,10 @@ cfrds_status cfrds_command_sql_columninfo(cfrds_server *server, const char *conn
     ret = cfrds_send_command(server, &response, "DBFUNCS", (const char *[]){ connection_name, "COLUMNINFO", table_name, NULL});
     if (ret == CFRDS_STATUS_OK)
     {
-        *columninfo = cfrds_buffer_to_sql_columninfo(response);
+        *columninfo = (cfrds_sql_columninfo *)cfrds_buffer_to_sql_columninfo(response);
         if (*columninfo == NULL)
         {
-            server_int = server;
+            server_int = (cfrds_server_int *)server;
             server_int->error_code = -1;
             return CFRDS_STATUS_RESPONSE_ERROR;
         }
@@ -605,10 +605,10 @@ cfrds_status cfrds_command_sql_primarykeys(cfrds_server *server, const char *con
     ret = cfrds_send_command(server, &response, "DBFUNCS", (const char *[]){ connection_name, "PRIMARYKEYS", table_name, NULL});
     if (ret == CFRDS_STATUS_OK)
     {
-        *primarykeys = cfrds_buffer_to_sql_primarykeys(response);
+        *primarykeys = (cfrds_sql_primarykeys *)cfrds_buffer_to_sql_primarykeys(response);
         if (*primarykeys == NULL)
         {
-            server_int = server;
+            server_int = (cfrds_server_int *)server;
             server_int->error_code = -1;
             return CFRDS_STATUS_RESPONSE_ERROR;
         }
@@ -632,10 +632,10 @@ cfrds_status cfrds_command_sql_foreignkeys(cfrds_server *server, const char *con
     ret = cfrds_send_command(server, &response, "DBFUNCS", (const char *[]){ connection_name, "FOREIGNKEYS", table_name, NULL});
     if (ret == CFRDS_STATUS_OK)
     {
-        *foreignkeys = cfrds_buffer_to_sql_foreignkeys(response);
+        *foreignkeys = (cfrds_sql_foreignkeys *)cfrds_buffer_to_sql_foreignkeys(response);
         if (*foreignkeys == NULL)
         {
-            server_int = server;
+            server_int = (cfrds_server_int *)server;
             server_int->error_code = -1;
             return CFRDS_STATUS_RESPONSE_ERROR;
         }
@@ -659,10 +659,10 @@ cfrds_status cfrds_command_sql_importedkeys(cfrds_server *server, const char *co
     ret = cfrds_send_command(server, &response, "DBFUNCS", (const char *[]){ connection_name, "IMPORTEDKEYS", table_name, NULL});
     if (ret == CFRDS_STATUS_OK)
     {
-        *importedkeys = cfrds_buffer_to_sql_importedkeys(response);
+        *importedkeys = (cfrds_sql_importedkeys *)cfrds_buffer_to_sql_importedkeys(response);
         if (*importedkeys == NULL)
         {
-            server_int = server;
+            server_int = (cfrds_server_int *)server;
             server_int->error_code = -1;
             return CFRDS_STATUS_RESPONSE_ERROR;
         }
@@ -686,10 +686,10 @@ cfrds_status cfrds_command_sql_exportedkeys(cfrds_server *server, const char *co
     ret = cfrds_send_command(server, &response, "DBFUNCS", (const char *[]){ connection_name, "EXPORTEDKEYS", table_name, NULL});
     if (ret == CFRDS_STATUS_OK)
     {
-        *exportedkeys = cfrds_buffer_to_sql_exportedkeys(response);
+        *exportedkeys = (cfrds_sql_exportedkeys *)cfrds_buffer_to_sql_exportedkeys(response);
         if (*exportedkeys == NULL)
         {
-            server_int = server;
+            server_int = (cfrds_server_int *)server;
             server_int->error_code = -1;
             return CFRDS_STATUS_RESPONSE_ERROR;
         }
@@ -713,10 +713,10 @@ cfrds_status cfrds_command_sql_sqlstmnt(cfrds_server *server, const char *connec
     ret = cfrds_send_command(server, &response, "DBFUNCS", (const char *[]){ connection_name, "SQLSTMNT", sql, NULL});
     if (ret == CFRDS_STATUS_OK)
     {
-        *resultset = cfrds_buffer_to_sql_sqlstmnt(response);
+        *resultset = (cfrds_sql_resultset *)cfrds_buffer_to_sql_sqlstmnt(response);
         if (*resultset == NULL)
         {
-            server_int = server;
+            server_int = (cfrds_server_int *)server;
             server_int->error_code = -1;
             return CFRDS_STATUS_RESPONSE_ERROR;
         }
@@ -740,10 +740,10 @@ cfrds_status cfrds_command_sql_sqlmetadata(cfrds_server *server, const char *con
     ret = cfrds_send_command(server, &response, "DBFUNCS", (const char *[]){ connection_name, "SQLMETADATA", sql, NULL});
     if (ret == CFRDS_STATUS_OK)
     {
-        *metadata = cfrds_buffer_to_sql_metadata(response);
+        *metadata = (cfrds_sql_metadata *)cfrds_buffer_to_sql_metadata(response);
         if (*metadata == NULL)
         {
-            server_int = server;
+            server_int = (cfrds_server_int *)server;
             server_int->error_code = -1;
             return CFRDS_STATUS_RESPONSE_ERROR;
         }
@@ -767,10 +767,10 @@ cfrds_status cfrds_command_sql_getsupportedcommands(cfrds_server *server, cfrds_
     ret = cfrds_send_command(server, &response, "DBFUNCS", (const char *[]){ "", "SUPPORTEDCOMMANDS", NULL});
     if (ret == CFRDS_STATUS_OK)
     {
-        *supportedcommands = cfrds_buffer_to_sql_supportedcommands(response);
+        *supportedcommands = (cfrds_sql_supportedcommands *)cfrds_buffer_to_sql_supportedcommands(response);
         if (*supportedcommands == NULL)
         {
-            server_int = server;
+            server_int = (cfrds_server_int *)server;
             server_int->error_code = -1;
             return CFRDS_STATUS_RESPONSE_ERROR;
         }
@@ -797,7 +797,7 @@ cfrds_status cfrds_command_sql_dbdescription(cfrds_server *server, const char *c
         *description = cfrds_buffer_to_sql_dbdescription(response);
         if (*description == NULL)
         {
-            server_int = server;
+            server_int = (cfrds_server_int *)server;
             server_int->error_code = -1;
             return CFRDS_STATUS_RESPONSE_ERROR;
         }
@@ -2046,7 +2046,7 @@ cfrds_status cfrds_command_debugger_start(cfrds_server *server, cfrds_str *sessi
         *session_id = cfrds_buffer_to_debugger_start(response);
         if (*session_id == NULL)
         {
-            server_int = server;
+            server_int = (cfrds_server_int *)server;
             server_int->error_code = -1;
             return CFRDS_STATUS_RESPONSE_ERROR;
         }
@@ -2077,7 +2077,7 @@ cfrds_status cfrds_command_debugger_stop(cfrds_server *server, const char *sessi
     {
         if (cfrds_buffer_to_debugger_stop(response) == false)
         {
-            server_int = server;
+            server_int = (cfrds_server_int *)server;
             server_int->error_code = -1;
             return CFRDS_STATUS_RESPONSE_ERROR;
         }
@@ -2109,7 +2109,7 @@ cfrds_status cfrds_command_debugger_get_server_info(cfrds_server *server, const 
         int val = cfrds_buffer_to_debugger_info(response);
         if (val == -1)
         {
-            server_int = server;
+            server_int = (cfrds_server_int *)server;
             server_int->error_code = -1;
             return CFRDS_STATUS_RESPONSE_ERROR;
         }
@@ -2148,7 +2148,7 @@ cfrds_status cfrds_command_debugger_breakpoint_on_exception(cfrds_server *server
         int val = cfrds_buffer_to_debugger_info(response);
         if (val == -1)
         {
-            server_int = server;
+            server_int = (cfrds_server_int *)server;
             server_int->error_code = -1;
             return CFRDS_STATUS_RESPONSE_ERROR;
         }
@@ -2389,7 +2389,7 @@ cfrds_status cfrds_command_debugger_continue(cfrds_server *server, const char *s
 
 void cfrds_debugger_event_free(cfrds_debugger_event *event)
 {
-    wddx_cleanup(&event);
+    wddx_cleanup((WDDX **)&event);
 }
 
 cfrds_debugger_type cfrds_debugger_event_get_type(const cfrds_debugger_event *event)
@@ -2675,7 +2675,7 @@ cfrds_status cfrds_command_security_analyzer_scan(cfrds_server *server, const ch
         return CFRDS_STATUS_SERVER_IS_NULL;
     }
 
-    server_int = server;
+    server_int = (cfrds_server_int *)server;
 
     if (recursively)
         recursively_str = "true";
@@ -2774,7 +2774,7 @@ cfrds_status cfrds_command_security_analyzer_cancel(cfrds_server *server, int co
         return CFRDS_STATUS_SERVER_IS_NULL;
     }
 
-    server_int = server;
+    server_int = (cfrds_server_int *)server;
 
     snprintf(id_str, sizeof(id_str), "%d", command_id);
 
@@ -2852,7 +2852,7 @@ cfrds_status cfrds_command_security_analyzer_status(cfrds_server *server, int co
         return CFRDS_STATUS_SERVER_IS_NULL;
     }
 
-    server_int = server;
+    server_int = (cfrds_server_int *)server;
 
     snprintf(id_str, sizeof(id_str), "%d", command_id);
 
@@ -2994,7 +2994,7 @@ cfrds_status cfrds_command_security_analyzer_result(cfrds_server *server, int co
         return CFRDS_STATUS_SERVER_IS_NULL;
     }
 
-    server_int = server;
+    server_int = (cfrds_server_int *)server;
 
     snprintf(id_str, sizeof(id_str), "%d", command_id);
 
@@ -3023,7 +3023,7 @@ cfrds_status cfrds_command_security_analyzer_result(cfrds_server *server, int co
             return CFRDS_STATUS_RESPONSE_ERROR;
         }
 
-        *result = json;
+        *result = (cfrds_security_analyzer_result *)json;
     }
 
     return ret;
@@ -3043,7 +3043,7 @@ cfrds_status cfrds_command_security_analyzer_clean(cfrds_server *server, int com
         return CFRDS_STATUS_SERVER_IS_NULL;
     }
 
-    server_int = server;
+    server_int = (cfrds_server_int *)server;
 
     snprintf(id_str, sizeof(id_str), "%d", command_id);
 
@@ -3136,7 +3136,7 @@ void cfrds_security_analyzer_result_cleanup(cfrds_security_analyzer_result **buf
 int cfrds_security_analyzer_result_totalfiles(cfrds_security_analyzer_result *value)
 {
     json_object_defer(json_obj);
-    json_obj = json_tokener_parse(value);
+    json_obj = json_tokener_parse((const char *)value);
     if (json_obj == NULL)
         goto exit;
 
@@ -3157,7 +3157,7 @@ exit:
 int cfrds_security_analyzer_result_filesvisitedcount(cfrds_security_analyzer_result *value)
 {
     json_object_defer(json_obj);
-    json_obj = json_tokener_parse(value);
+    json_obj = json_tokener_parse((const char *)value);
     if (json_obj == NULL)
         goto exit;
 
@@ -3178,7 +3178,7 @@ exit:
 int cfrds_security_analyzer_result_errorsdescription_count(cfrds_security_analyzer_result *value)
 {
     json_object_defer(json_obj);
-    json_obj = json_tokener_parse(value);
+    json_obj = json_tokener_parse((const char *)value);
     if (json_obj == NULL)
         goto exit;
 
@@ -3199,7 +3199,7 @@ exit:
 int cfrds_security_analyzer_result_filesscanned_count(cfrds_security_analyzer_result *value)
 {
     json_object_defer(json_obj);
-    json_obj = json_tokener_parse(value);
+    json_obj = json_tokener_parse((const char *)value);
     if (json_obj == NULL)
         goto exit;
 
@@ -3221,7 +3221,7 @@ cfrds_str cfrds_security_analyzer_result_filesscanned_item_result(cfrds_security
 {
     json_object_defer(json_obj);
 
-    json_obj = json_tokener_parse(value);
+    json_obj = json_tokener_parse((const char *)value);
     if (json_obj == NULL)
         goto exit;
 
@@ -3258,7 +3258,7 @@ cfrds_str cfrds_security_analyzer_result_filesscanned_item_filename(cfrds_securi
 {
     json_object_defer(json_obj);
 
-    json_obj = json_tokener_parse(value);
+    json_obj = json_tokener_parse((const char *)value);
     if (json_obj == NULL)
         goto exit;
 
@@ -3294,7 +3294,7 @@ exit:
 int cfrds_security_analyzer_result_filesnotscanned_count(cfrds_security_analyzer_result *value)
 {
     json_object_defer(json_obj);
-    json_obj = json_tokener_parse(value);
+    json_obj = json_tokener_parse((const char *)value);
     if (json_obj == NULL)
         goto exit;
 
@@ -3316,7 +3316,7 @@ cfrds_str cfrds_security_analyzer_result_filesnotscanned_item_reason(cfrds_secur
 {
     json_object_defer(json_obj);
 
-    json_obj = json_tokener_parse(value);
+    json_obj = json_tokener_parse((const char *)value);
     if (json_obj == NULL)
         goto exit;
 
@@ -3353,7 +3353,7 @@ cfrds_str cfrds_security_analyzer_result_filesnotscanned_item_filename(cfrds_sec
 {
     json_object_defer(json_obj);
 
-    json_obj = json_tokener_parse(value);
+    json_obj = json_tokener_parse((const char *)value);
     if (json_obj == NULL)
         goto exit;
 
@@ -3389,7 +3389,7 @@ exit:
 cfrds_str cfrds_security_analyzer_result_executorservice(cfrds_security_analyzer_result *value)
 {
     json_object_defer(json_obj);
-    json_obj = json_tokener_parse(value);
+    json_obj = json_tokener_parse((const char *)value);
     if (json_obj == NULL)
         goto exit;
 
@@ -3410,7 +3410,7 @@ exit:
 int cfrds_security_analyzer_result_percentage(cfrds_security_analyzer_result *value)
 {
     json_object_defer(json_obj);
-    json_obj = json_tokener_parse(value);
+    json_obj = json_tokener_parse((const char *)value);
     if (json_obj == NULL)
         goto exit;
 
@@ -3431,7 +3431,7 @@ exit:
 int cfrds_security_analyzer_result_files_count(cfrds_security_analyzer_result *value)
 {
     json_object_defer(json_obj);
-    json_obj = json_tokener_parse(value);
+    json_obj = json_tokener_parse((const char *)value);
     if (json_obj == NULL)
         goto exit;
 
@@ -3459,7 +3459,7 @@ cfrds_str cfrds_security_analyzer_result_files_value(cfrds_security_analyzer_res
 int64_t cfrds_security_analyzer_result_lastupdated(cfrds_security_analyzer_result *value)
 {
     json_object_defer(json_obj);
-    json_obj = json_tokener_parse(value);
+    json_obj = json_tokener_parse((const char *)value);
     if (json_obj == NULL)
         goto exit;
 
@@ -3480,7 +3480,7 @@ exit:
 int cfrds_security_analyzer_result_filesvisited_count(cfrds_security_analyzer_result *value)
 {
     json_object_defer(json_obj);
-    json_obj = json_tokener_parse(value);
+    json_obj = json_tokener_parse((const char *)value);
     if (json_obj == NULL)
         goto exit;
 
@@ -3501,7 +3501,7 @@ exit:
 int cfrds_security_analyzer_result_filesnotscannedcount(cfrds_security_analyzer_result *value)
 {
     json_object_defer(json_obj);
-    json_obj = json_tokener_parse(value);
+    json_obj = json_tokener_parse((const char *)value);
     if (json_obj == NULL)
         goto exit;
 
@@ -3522,7 +3522,7 @@ exit:
 int cfrds_security_analyzer_result_filesscannedcount(cfrds_security_analyzer_result *value)
 {
     json_object_defer(json_obj);
-    json_obj = json_tokener_parse(value);
+    json_obj = json_tokener_parse((const char *)value);
     if (json_obj == NULL)
         goto exit;
 
@@ -3543,7 +3543,7 @@ exit:
 int cfrds_security_analyzer_result_id(cfrds_security_analyzer_result *value)
 {
     json_object_defer(json_obj);
-    json_obj = json_tokener_parse(value);
+    json_obj = json_tokener_parse((const char *)value);
     if (json_obj == NULL)
         goto exit;
 
@@ -3564,7 +3564,7 @@ exit:
 int cfrds_security_analyzer_result_errors_count(cfrds_security_analyzer_result *value)
 {
     json_object_defer(json_obj);
-    json_obj = json_tokener_parse(value);
+    json_obj = json_tokener_parse((const char *)value);
     if (json_obj == NULL)
         goto exit;
 
@@ -3586,7 +3586,7 @@ exit:
 cfrds_str cfrds_security_analyzer_result_errors_item_errormessage(cfrds_security_analyzer_result *value, int ndx)
 {
     json_object_defer(json_obj);
-    json_obj = json_tokener_parse(value);
+    json_obj = json_tokener_parse((const char *)value);
     if (json_obj == NULL)
         goto exit;
 
@@ -3627,7 +3627,7 @@ int cfrds_security_analyzer_result_errors_item_endline(cfrds_security_analyzer_r
 cfrds_str cfrds_security_analyzer_result_errors_item_path(cfrds_security_analyzer_result *value, int ndx)
 {
     json_object_defer(json_obj);
-    json_obj = json_tokener_parse(value);
+    json_obj = json_tokener_parse((const char *)value);
     if (json_obj == NULL)
         goto exit;
 
@@ -3663,7 +3663,7 @@ exit:
 cfrds_str cfrds_security_analyzer_result_errors_item_vulnerablecode(cfrds_security_analyzer_result *value, int ndx)
 {
     json_object_defer(json_obj);
-    json_obj = json_tokener_parse(value);
+    json_obj = json_tokener_parse((const char *)value);
     if (json_obj == NULL)
         goto exit;
 
@@ -3699,7 +3699,7 @@ exit:
 cfrds_str cfrds_security_analyzer_result_errors_item_filename(cfrds_security_analyzer_result *value, int ndx)
 {
     json_object_defer(json_obj);
-    json_obj = json_tokener_parse(value);
+    json_obj = json_tokener_parse((const char *)value);
     if (json_obj == NULL)
         goto exit;
 
@@ -3735,7 +3735,7 @@ exit:
 int cfrds_security_analyzer_result_errors_item_beginline(cfrds_security_analyzer_result *value, int ndx)
 {
     json_object_defer(json_obj);
-    json_obj = json_tokener_parse(value);
+    json_obj = json_tokener_parse((const char *)value);
     if (json_obj == NULL)
         goto exit;
 
@@ -3771,7 +3771,7 @@ exit:
 int cfrds_security_analyzer_result_errors_item_column(cfrds_security_analyzer_result *value, int ndx)
 {
     json_object_defer(json_obj);
-    json_obj = json_tokener_parse(value);
+    json_obj = json_tokener_parse((const char *)value);
     if (json_obj == NULL)
         goto exit;
 
@@ -3807,7 +3807,7 @@ exit:
 cfrds_str cfrds_security_analyzer_result_errors_item_error(cfrds_security_analyzer_result *value, int ndx)
 {
     json_object_defer(json_obj);
-    json_obj = json_tokener_parse(value);
+    json_obj = json_tokener_parse((const char *)value);
     if (json_obj == NULL)
         goto exit;
 
@@ -3843,7 +3843,7 @@ exit:
 int cfrds_security_analyzer_result_errors_item_begincolumn(cfrds_security_analyzer_result *value, int ndx)
 {
     json_object_defer(json_obj);
-    json_obj = json_tokener_parse(value);
+    json_obj = json_tokener_parse((const char *)value);
     if (json_obj == NULL)
         goto exit;
 
@@ -3879,7 +3879,7 @@ exit:
 cfrds_str cfrds_security_analyzer_result_errors_item_type(cfrds_security_analyzer_result *value, int ndx)
 {
     json_object_defer(json_obj);
-    json_obj = json_tokener_parse(value);
+    json_obj = json_tokener_parse((const char *)value);
     if (json_obj == NULL)
         goto exit;
 
@@ -3915,7 +3915,7 @@ exit:
 int cfrds_security_analyzer_result_errors_item_endcolumn(cfrds_security_analyzer_result *value, int ndx)
 {
     json_object_defer(json_obj);
-    json_obj = json_tokener_parse(value);
+    json_obj = json_tokener_parse((const char *)value);
     if (json_obj == NULL)
         goto exit;
 
@@ -3951,7 +3951,7 @@ exit:
 cfrds_str cfrds_security_analyzer_result_errors_item_referencetype(cfrds_security_analyzer_result *value, int ndx)
 {
     json_object_defer(json_obj);
-    json_obj = json_tokener_parse(value);
+    json_obj = json_tokener_parse((const char *)value);
     if (json_obj == NULL)
         goto exit;
 
@@ -3988,7 +3988,7 @@ exit:
 cfrds_str cfrds_security_analyzer_result_status(cfrds_security_analyzer_result *value)
 {
     json_object_defer(json_obj);
-    json_obj = json_tokener_parse(value);
+    json_obj = json_tokener_parse((const char *)value);
     if (json_obj == NULL)
         goto exit;
 
@@ -4022,7 +4022,7 @@ cfrds_status cfrds_command_ide_default(cfrds_server *server, int version, int *n
         return CFRDS_STATUS_SERVER_IS_NULL;
     }
 
-    server_int = server;
+    server_int = (cfrds_server_int *)server;
 
     snprintf(param, sizeof(param), "%d,", version);
 
@@ -4117,7 +4117,7 @@ cfrds_status cfrds_command_adminapi_debugging_getlogproperty(cfrds_server *serve
 
         cfrds_str_defer(xml);
 
-        server_int = server;
+        server_int = (cfrds_server_int *)server;
 
         const char *response_data = cfrds_buffer_data(response);
         size_t response_size = cfrds_buffer_data_size(response);
@@ -4184,7 +4184,7 @@ cfrds_status cfrds_command_adminapi_extensions_getcustomtagpaths(cfrds_server *s
 
         cfrds_str_defer(xml);
 
-        server_int = server;
+        server_int = (cfrds_server_int *)server;
 
         const char *response_data = cfrds_buffer_data(response);
         size_t response_size = cfrds_buffer_data_size(response);
@@ -4224,7 +4224,7 @@ void cfrds_adminapi_customtagpaths_free(cfrds_adminapi_customtagpaths *buf)
 {
     if (buf)
     {
-        wddx_cleanup(buf);
+        wddx_cleanup((WDDX **)&buf);
     }
 }
 
@@ -4286,7 +4286,7 @@ cfrds_status cfrds_command_adminapi_extensions_setmapping(cfrds_server *server, 
 
         cfrds_str_defer(xml);
 
-        server_int = server;
+        server_int = (cfrds_server_int *)server;
 
         const char *response_data = cfrds_buffer_data(response);
         size_t response_size = cfrds_buffer_data_size(response);
@@ -4338,7 +4338,7 @@ cfrds_status cfrds_command_adminapi_extensions_deletemapping(cfrds_server *serve
 
         cfrds_str_defer(xml);
 
-        server_int = server;
+        server_int = (cfrds_server_int *)server;
 
         const char *response_data = cfrds_buffer_data(response);
         size_t response_size = cfrds_buffer_data_size(response);
@@ -4390,7 +4390,7 @@ cfrds_status cfrds_command_adminapi_extensions_getmappings(cfrds_server *server,
 
         cfrds_str_defer(xml);
 
-        server_int = server;
+        server_int = (cfrds_server_int *)server;
 
         const char *response_data = cfrds_buffer_data(response);
         size_t response_size = cfrds_buffer_data_size(response);
@@ -4430,7 +4430,7 @@ void cfrds_adminapi_mappings_free(cfrds_adminapi_mappings *buf)
 {
     if (buf)
     {
-        wddx_cleanup(buf);
+        wddx_cleanup((WDDX **)&buf);
     }
 }
 

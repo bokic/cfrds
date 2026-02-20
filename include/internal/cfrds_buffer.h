@@ -17,7 +17,7 @@
 #endif
 
 
-typedef void cfrds_buffer;
+typedef struct cfrds_buffer cfrds_buffer;
 
 #ifdef _WIN32
 typedef SOCKET cfrds_socket;

@@ -6,7 +6,7 @@
 
 #define CHECK_FOR_ERRORS(function_call)                                                          \
     {                                                                                            \
-    enum cfrds_status res = function_call;                                                       \
+    cfrds_status res = function_call;                                                       \
         if (res != CFRDS_STATUS_OK)                                                              \
         {                                                                                        \
             switch(res)                                                                          \
@@ -171,7 +171,7 @@ exit:
     cfrds_buffer_browse_dir_free(dir);
 
     return ret;
-}
+} 
 
 static PyObject *
 cfrds_server_file_read(cfrds_server_Object *self, PyObject *args)
@@ -380,8 +380,8 @@ cfrds_server_sql_tableinfo(cfrds_server_Object *self, PyObject *args)
 
         tmp_name = cfrds_buffer_sql_tableinfo_get_unknown(tableinfo, c); if (tmp_name) PyDict_SetItemString(item, "unknown", PyUnicode_FromString(tmp_name)); else PyDict_SetItemString(item, "unknown", Py_None);
         tmp_name = cfrds_buffer_sql_tableinfo_get_schema(tableinfo, c); if (tmp_name) PyDict_SetItemString(item, "schema", PyUnicode_FromString(tmp_name)); else PyDict_SetItemString(item, "schema", Py_None);
-        tmp_name = cfrds_buffer_sql_tableinfo_get_name(tableinfo, c); if (tmp_name) PyDict_SetItemString(item, "name", PyUnicode_FromString(tmp_name)); else PyDict_SetItemString(item, "name", Py_None);
-        tmp_name = cfrds_buffer_sql_tableinfo_get_type(tableinfo, c); if (tmp_name) PyDict_SetItemString(item, "type", PyUnicode_FromString(tmp_name)); else PyDict_SetItemString(item, "type", Py_None);
+        tmp_name = cfrds_buffer_sql_tableinfo_get_column_name(tableinfo, c); if (tmp_name) PyDict_SetItemString(item, "name", PyUnicode_FromString(tmp_name)); else PyDict_SetItemString(item, "name", Py_None);
+        tmp_name = cfrds_buffer_sql_tableinfo_get_column_type(tableinfo, c); if (tmp_name) PyDict_SetItemString(item, "type", PyUnicode_FromString(tmp_name)); else PyDict_SetItemString(item, "type", Py_None);
 
         PyList_SetItem(ret, c, item);
     }
@@ -843,7 +843,7 @@ static PyObject *
 cfrds_server_debugger_get_server_info(cfrds_server_Object *self, PyObject *args)
 {
     cfrds_str_defer(session_name);
-    enum cfrds_status res = CFRDS_STATUS_OK;
+    cfrds_status res = CFRDS_STATUS_OK;
     uint16_t port = 0;
 
     CHECK_FOR_ERRORS(cfrds_command_debugger_start(self->server, &session_name));

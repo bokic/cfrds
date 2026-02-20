@@ -194,7 +194,7 @@ typedef struct {
     void *errors_description;
     void *files_scanned;
     void *files_not_scanned;
-    char *executorservie;
+    char *executorservice;
     int percentage;
     char *files;
     int64_t last_updated;

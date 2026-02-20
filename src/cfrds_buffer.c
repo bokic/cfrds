@@ -33,7 +33,7 @@ typedef struct {
 } cfrds_buffer_int;
 
 
-void cfrds_str_cleanup(char **str) {
+void cfrds_str_cleanup(cfrds_str *str) {
     if (*str) {
         free(*str);
         *str = NULL;

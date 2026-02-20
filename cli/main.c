@@ -229,7 +229,7 @@ int main(int argc, char *argv[])
 #endif
     cfrds_server_defer(server);
     cfrds_file_content *content = NULL;
-    enum cfrds_status res;
+    cfrds_status res;
 
     const char *uri = NULL;
     cfrds_str_defer(hostname);
@@ -445,8 +445,8 @@ int main(int argc, char *argv[])
             size_t cnt = cfrds_buffer_sql_tableinfo_count(tableinfo);
             for(size_t c = 0; c < cnt; c++)
             {
-                const char *name = cfrds_buffer_sql_tableinfo_get_name(tableinfo, c);
-                const char *type = cfrds_buffer_sql_tableinfo_get_type(tableinfo, c);
+                const char *name = cfrds_buffer_sql_tableinfo_get_column_name(tableinfo, c);
+                const char *type = cfrds_buffer_sql_tableinfo_get_column_type(tableinfo, c);
                 printf("%s, %s\n", name, type);
             }
         } else {
@@ -1192,10 +1192,10 @@ int main(int argc, char *argv[])
             }
 
             const char *arg = argv[4];
-            res = cfrds_command_adminapi_extensions_deletemappings(server, arg);
+            res = cfrds_command_adminapi_extensions_deletemapping(server, arg);
             if (res != CFRDS_STATUS_OK)
             {
-                fprintf(stderr, "cfrds_command_adminapi_extensions_deletemappings FAILED with error: %s\n", cfrds_server_get_error(server));
+                fprintf(stderr, "cfrds_command_adminapi_extensions_deletemapping FAILED with error: %s\n", cfrds_server_get_error(server));
                 return EXIT_FAILURE;
             }
         } else if (strcmp(subcommand, "extensions_getmappings") == 0)

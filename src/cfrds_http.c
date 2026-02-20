@@ -47,7 +47,7 @@ static bool cfrds_buffer_skip_httpheader(const char **data, size_t *remaining)
     return true;
 }
 
-enum cfrds_status cfrds_http_post(cfrds_server_int *server, const char *command, cfrds_buffer *payload, cfrds_buffer **response)
+cfrds_status cfrds_http_post(cfrds_server_int *server, const char *command, cfrds_buffer *payload, cfrds_buffer **response)
 {
     struct sockaddr_in servaddr;
 

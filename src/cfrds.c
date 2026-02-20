@@ -268,9 +268,9 @@ const char *cfrds_server_get_password(const cfrds_server *server)
     return server_int->orig_password;
 }
 
-static enum cfrds_status cfrds_send_command(cfrds_server *server, cfrds_buffer **response, const char *command, const char *list[])
+static cfrds_status cfrds_send_command(cfrds_server *server, cfrds_buffer **response, const char *command, const char *list[])
 {
-    enum cfrds_status ret = CFRDS_STATUS_OK;
+    cfrds_status ret = CFRDS_STATUS_OK;
 
     cfrds_server_int *server_int = NULL;
 
@@ -317,9 +317,9 @@ static enum cfrds_status cfrds_send_command(cfrds_server *server, cfrds_buffer *
     return ret;
 }
 
-enum cfrds_status cfrds_command_browse_dir(cfrds_server *server, const char *path, cfrds_browse_dir **out)
+cfrds_status cfrds_command_browse_dir(cfrds_server *server, const char *path, cfrds_browse_dir **out)
 {
-    enum cfrds_status ret;
+    cfrds_status ret;
     cfrds_buffer_defer(response);
 
     if ((server == NULL)||(path == NULL)||(out == NULL))
@@ -336,9 +336,9 @@ enum cfrds_status cfrds_command_browse_dir(cfrds_server *server, const char *pat
     return ret;
 }
 
-enum cfrds_status cfrds_command_file_read(cfrds_server *server, const char *pathname, cfrds_file_content **out)
+cfrds_status cfrds_command_file_read(cfrds_server *server, const char *pathname, cfrds_file_content **out)
 {
-    enum cfrds_status ret;
+    cfrds_status ret;
     cfrds_buffer_defer(response);
 
     if ((server == NULL)||(pathname == NULL)||(out == NULL))
@@ -355,9 +355,9 @@ enum cfrds_status cfrds_command_file_read(cfrds_server *server, const char *path
     return ret;
 }
 
-enum cfrds_status cfrds_command_file_write(cfrds_server *server, const char *pathname, const void *data, size_t length)
+cfrds_status cfrds_command_file_write(cfrds_server *server, const char *pathname, const void *data, size_t length)
 {
-    enum cfrds_status ret = CFRDS_STATUS_OK;
+    cfrds_status ret = CFRDS_STATUS_OK;
 
     cfrds_server_int *server_int = NULL;
     cfrds_buffer_defer(post);
@@ -394,7 +394,7 @@ enum cfrds_status cfrds_command_file_write(cfrds_server *server, const char *pat
     return ret;
 }
 
-enum cfrds_status cfrds_command_file_rename(cfrds_server *server, const char *current_pathname, const char *new_pathname)
+cfrds_status cfrds_command_file_rename(cfrds_server *server, const char *current_pathname, const char *new_pathname)
 {
     if ((server == NULL)||(current_pathname == NULL)||(new_pathname == NULL))
     {
@@ -404,7 +404,7 @@ enum cfrds_status cfrds_command_file_rename(cfrds_server *server, const char *cu
     return cfrds_send_command(server, NULL, "FILEIO", (const char *[]){ current_pathname, "RENAME", "", new_pathname, NULL});
 }
 
-enum cfrds_status cfrds_command_file_remove_file(cfrds_server *server, const char *pathname)
+cfrds_status cfrds_command_file_remove_file(cfrds_server *server, const char *pathname)
 {
     if ((server == NULL)||(pathname == NULL))
     {
@@ -414,7 +414,7 @@ enum cfrds_status cfrds_command_file_remove_file(cfrds_server *server, const cha
     return cfrds_send_command(server, NULL, "FILEIO", (const char *[]){ pathname, "REMOVE", "", "F", NULL});
 }
 
-enum cfrds_status cfrds_command_file_remove_dir(cfrds_server *server, const char *path)
+cfrds_status cfrds_command_file_remove_dir(cfrds_server *server, const char *path)
 {
     if ((server == NULL)||(path == NULL))
     {
@@ -424,9 +424,9 @@ enum cfrds_status cfrds_command_file_remove_dir(cfrds_server *server, const char
     return cfrds_send_command(server, NULL, "FILEIO", (const char *[]){ path, "REMOVE", "", "D", NULL});
 }
 
-enum cfrds_status cfrds_command_file_exists(cfrds_server *server, const char *pathname, bool *out)
+cfrds_status cfrds_command_file_exists(cfrds_server *server, const char *pathname, bool *out)
 {
-    enum cfrds_status ret;
+    cfrds_status ret;
 
     if ((pathname == NULL)||(out == NULL))
     {
@@ -463,7 +463,7 @@ enum cfrds_status cfrds_command_file_exists(cfrds_server *server, const char *pa
     return ret;
 }
 
-enum cfrds_status cfrds_command_file_create_dir(cfrds_server *server, const char *path)
+cfrds_status cfrds_command_file_create_dir(cfrds_server *server, const char *path)
 {
     if ((server == NULL)||(path == NULL))
     {
@@ -473,9 +473,9 @@ enum cfrds_status cfrds_command_file_create_dir(cfrds_server *server, const char
     return cfrds_send_command(server, NULL, "FILEIO", (const char *[]){ path, "CREATE", "", "", NULL});
 }
 
-enum cfrds_status cfrds_command_file_get_root_dir(cfrds_server *server, char **out)
+cfrds_status cfrds_command_file_get_root_dir(cfrds_server *server, cfrds_str *out)
 {
-    enum cfrds_status ret;
+    cfrds_status ret;
 
     cfrds_server_int *server_int = NULL;
     cfrds_buffer_defer(response);
@@ -509,9 +509,9 @@ enum cfrds_status cfrds_command_file_get_root_dir(cfrds_server *server, char **o
     return ret;
 }
 
-enum cfrds_status cfrds_command_sql_dsninfo(cfrds_server *server, cfrds_sql_dsninfo **dsninfo)
+cfrds_status cfrds_command_sql_dsninfo(cfrds_server *server, cfrds_sql_dsninfo **dsninfo)
 {
-    enum cfrds_status ret;
+    cfrds_status ret;
 
     cfrds_server_int *server_int = NULL;
     cfrds_buffer_defer(response);
@@ -536,9 +536,9 @@ enum cfrds_status cfrds_command_sql_dsninfo(cfrds_server *server, cfrds_sql_dsni
     return ret;
 }
 
-enum cfrds_status cfrds_command_sql_tableinfo(cfrds_server *server, const char *connection_name, cfrds_sql_tableinfo **tableinfo)
+cfrds_status cfrds_command_sql_tableinfo(cfrds_server *server, const char *connection_name, cfrds_sql_tableinfo **tableinfo)
 {
-    enum cfrds_status ret;
+    cfrds_status ret;
 
     cfrds_server_int *server_int = NULL;
     cfrds_buffer_defer(response);
@@ -563,9 +563,9 @@ enum cfrds_status cfrds_command_sql_tableinfo(cfrds_server *server, const char *
     return ret;
 }
 
-enum cfrds_status cfrds_command_sql_columninfo(cfrds_server *server, const char *connection_name, const char *table_name, cfrds_sql_columninfo **columninfo)
+cfrds_status cfrds_command_sql_columninfo(cfrds_server *server, const char *connection_name, const char *table_name, cfrds_sql_columninfo **columninfo)
 {
-    enum cfrds_status ret;
+    cfrds_status ret;
 
     cfrds_server_int *server_int = NULL;
     cfrds_buffer_defer(response);
@@ -590,9 +590,9 @@ enum cfrds_status cfrds_command_sql_columninfo(cfrds_server *server, const char 
     return ret;
 }
 
-enum cfrds_status cfrds_command_sql_primarykeys(cfrds_server *server, const char *connection_name, const char *table_name, cfrds_sql_primarykeys **primarykeys)
+cfrds_status cfrds_command_sql_primarykeys(cfrds_server *server, const char *connection_name, const char *table_name, cfrds_sql_primarykeys **primarykeys)
 {
-    enum cfrds_status ret;
+    cfrds_status ret;
 
     cfrds_server_int *server_int = NULL;
     cfrds_buffer_defer(response);
@@ -617,9 +617,9 @@ enum cfrds_status cfrds_command_sql_primarykeys(cfrds_server *server, const char
     return ret;
 }
 
-enum cfrds_status cfrds_command_sql_foreignkeys(cfrds_server *server, const char *connection_name, const char *table_name, cfrds_sql_foreignkeys **foreignkeys)
+cfrds_status cfrds_command_sql_foreignkeys(cfrds_server *server, const char *connection_name, const char *table_name, cfrds_sql_foreignkeys **foreignkeys)
 {
-    enum cfrds_status ret;
+    cfrds_status ret;
 
     cfrds_server_int *server_int = NULL;
     cfrds_buffer_defer(response);
@@ -644,9 +644,9 @@ enum cfrds_status cfrds_command_sql_foreignkeys(cfrds_server *server, const char
     return ret;
 }
 
-enum cfrds_status cfrds_command_sql_importedkeys(cfrds_server *server, const char *connection_name, const char *table_name, cfrds_sql_importedkeys **importedkeys)
+cfrds_status cfrds_command_sql_importedkeys(cfrds_server *server, const char *connection_name, const char *table_name, cfrds_sql_importedkeys **importedkeys)
 {
-    enum cfrds_status ret;
+    cfrds_status ret;
 
     cfrds_server_int *server_int = NULL;
     cfrds_buffer_defer(response);
@@ -671,9 +671,9 @@ enum cfrds_status cfrds_command_sql_importedkeys(cfrds_server *server, const cha
     return ret;
 }
 
-enum cfrds_status cfrds_command_sql_exportedkeys(cfrds_server *server, const char *connection_name, const char *table_name, cfrds_sql_exportedkeys **exportedkeys)
+cfrds_status cfrds_command_sql_exportedkeys(cfrds_server *server, const char *connection_name, const char *table_name, cfrds_sql_exportedkeys **exportedkeys)
 {
-    enum cfrds_status ret;
+    cfrds_status ret;
 
     cfrds_server_int *server_int = NULL;
     cfrds_buffer_defer(response);
@@ -698,9 +698,9 @@ enum cfrds_status cfrds_command_sql_exportedkeys(cfrds_server *server, const cha
     return ret;
 }
 
-enum cfrds_status cfrds_command_sql_sqlstmnt(cfrds_server *server, const char *connection_name, const char *sql, cfrds_sql_resultset **resultset)
+cfrds_status cfrds_command_sql_sqlstmnt(cfrds_server *server, const char *connection_name, const char *sql, cfrds_sql_resultset **resultset)
 {
-    enum cfrds_status ret;
+    cfrds_status ret;
 
     cfrds_server_int *server_int = NULL;
     cfrds_buffer_defer(response);
@@ -725,9 +725,9 @@ enum cfrds_status cfrds_command_sql_sqlstmnt(cfrds_server *server, const char *c
     return ret;
 }
 
-enum cfrds_status cfrds_command_sql_sqlmetadata(cfrds_server *server, const char *connection_name, const char *sql, cfrds_sql_metadata **metadata)
+cfrds_status cfrds_command_sql_sqlmetadata(cfrds_server *server, const char *connection_name, const char *sql, cfrds_sql_metadata **metadata)
 {
-    enum cfrds_status ret;
+    cfrds_status ret;
 
     cfrds_server_int *server_int = NULL;
     cfrds_buffer_defer(response);
@@ -752,9 +752,9 @@ enum cfrds_status cfrds_command_sql_sqlmetadata(cfrds_server *server, const char
     return ret;
 }
 
-enum cfrds_status cfrds_command_sql_getsupportedcommands(cfrds_server *server, cfrds_sql_supportedcommands **supportedcommands)
+cfrds_status cfrds_command_sql_getsupportedcommands(cfrds_server *server, cfrds_sql_supportedcommands **supportedcommands)
 {
-    enum cfrds_status ret;
+    cfrds_status ret;
 
     cfrds_server_int *server_int = NULL;
     cfrds_buffer_defer(response);
@@ -779,9 +779,9 @@ enum cfrds_status cfrds_command_sql_getsupportedcommands(cfrds_server *server, c
     return ret;
 }
 
-enum cfrds_status cfrds_command_sql_dbdescription(cfrds_server *server, const char *connection_name, char **description)
+cfrds_status cfrds_command_sql_dbdescription(cfrds_server *server, const char *connection_name, cfrds_str *description)
 {
-    enum cfrds_status ret;
+    cfrds_status ret;
 
     cfrds_server_int *server_int = NULL;
     cfrds_buffer_defer(response);
@@ -1015,7 +1015,7 @@ size_t cfrds_buffer_sql_tableinfo_count(const cfrds_sql_tableinfo *value)
     return _value->cnt;
 }
 
-const char *cfrds_buffer_sql_tableinfo_get_unknown(const cfrds_sql_tableinfo *value, size_t column)
+const char *cfrds_buffer_sql_tableinfo_get_column_unknown(const cfrds_sql_tableinfo *value, size_t column)
 {
     if (value == NULL)
         return NULL;
@@ -1028,7 +1028,7 @@ const char *cfrds_buffer_sql_tableinfo_get_unknown(const cfrds_sql_tableinfo *va
     return _value->items[column].unknown;
 }
 
-const char *cfrds_buffer_sql_tableinfo_get_schema(const cfrds_sql_tableinfo *value, size_t column)
+const char *cfrds_buffer_sql_tableinfo_get_column_schema(const cfrds_sql_tableinfo *value, size_t column)
 {
     if (value == NULL)
         return NULL;
@@ -1041,7 +1041,7 @@ const char *cfrds_buffer_sql_tableinfo_get_schema(const cfrds_sql_tableinfo *val
     return _value->items[column].schema;
 }
 
-const char *cfrds_buffer_sql_tableinfo_get_name(const cfrds_sql_tableinfo *value, size_t column)
+const char *cfrds_buffer_sql_tableinfo_get_column_name(const cfrds_sql_tableinfo *value, size_t column)
 {
     if (value == NULL)
         return NULL;
@@ -1054,7 +1054,7 @@ const char *cfrds_buffer_sql_tableinfo_get_name(const cfrds_sql_tableinfo *value
     return _value->items[column].name;
 }
 
-const char *cfrds_buffer_sql_tableinfo_get_type(const cfrds_sql_tableinfo *value, size_t column)
+const char *cfrds_buffer_sql_tableinfo_get_column_type(const cfrds_sql_tableinfo *value, size_t column)
 {
     if (value == NULL)
         return NULL;
@@ -2024,9 +2024,9 @@ const char *cfrds_buffer_sql_supportedcommands_get(const cfrds_sql_supportedcomm
     return _value->commands[ndx];
 }
 
-enum cfrds_status cfrds_command_debugger_start(cfrds_server *server, char **session_id)
+cfrds_status cfrds_command_debugger_start(cfrds_server *server, cfrds_str *session_id)
 {
-    enum cfrds_status ret;
+    cfrds_status ret;
 
     cfrds_server_int *server_int = NULL;
     cfrds_buffer_defer(response);
@@ -2055,9 +2055,9 @@ enum cfrds_status cfrds_command_debugger_start(cfrds_server *server, char **sess
     return ret;
 }
 
-enum cfrds_status cfrds_command_debugger_stop(cfrds_server *server, const char *session_id)
+cfrds_status cfrds_command_debugger_stop(cfrds_server *server, const char *session_id)
 {
-    enum cfrds_status ret;
+    cfrds_status ret;
 
     cfrds_server_int *server_int = NULL;
     cfrds_buffer_defer(response);
@@ -2086,9 +2086,9 @@ enum cfrds_status cfrds_command_debugger_stop(cfrds_server *server, const char *
     return ret;
 }
 
-enum cfrds_status cfrds_command_debugger_get_server_info(cfrds_server *server, const char *session_id, uint16_t *port)
+cfrds_status cfrds_command_debugger_get_server_info(cfrds_server *server, const char *session_id, uint16_t *port)
 {
-    enum cfrds_status ret;
+    cfrds_status ret;
 
     cfrds_server_int *server_int = NULL;
     cfrds_buffer_defer(response);
@@ -2120,9 +2120,9 @@ enum cfrds_status cfrds_command_debugger_get_server_info(cfrds_server *server, c
     return ret;
 }
 
-enum cfrds_status cfrds_command_debugger_breakpoint_on_exception(cfrds_server *server, const char *session_id, bool value)
+cfrds_status cfrds_command_debugger_breakpoint_on_exception(cfrds_server *server, const char *session_id, bool value)
 {
-    enum cfrds_status ret;
+    cfrds_status ret;
 
     cfrds_server_int *server_int = NULL;
     cfrds_buffer_defer(response);
@@ -2157,9 +2157,9 @@ enum cfrds_status cfrds_command_debugger_breakpoint_on_exception(cfrds_server *s
     return ret;
 }
 
-enum cfrds_status cfrds_command_debugger_breakpoint(cfrds_server *server, const char *session_id, const char *filepath, int line, bool enable)
+cfrds_status cfrds_command_debugger_breakpoint(cfrds_server *server, const char *session_id, const char *filepath, int line, bool enable)
 {
-    enum cfrds_status ret;
+    cfrds_status ret;
 
     cfrds_buffer_defer(response);
 
@@ -2185,12 +2185,14 @@ enum cfrds_status cfrds_command_debugger_breakpoint(cfrds_server *server, const 
 
     ret = cfrds_send_command(server, &response, "DBGREQUEST", (const char *[]){ "DBG_REQUEST", session_id, wddx_to_xml(wddx), NULL});
 
+    // TODO: Check the response variable.
+
     return ret;
 }
 
-enum cfrds_status cfrds_command_debugger_clear_all_breakpoints(cfrds_server *server, const char *session_id)
+cfrds_status cfrds_command_debugger_clear_all_breakpoints(cfrds_server *server, const char *session_id)
 {
-    enum cfrds_status ret;
+    cfrds_status ret;
 
     cfrds_buffer_defer(response);
 
@@ -2210,12 +2212,14 @@ enum cfrds_status cfrds_command_debugger_clear_all_breakpoints(cfrds_server *ser
 
     ret = cfrds_send_command(server, &response, "DBGREQUEST", (const char *[]){ "DBG_REQUEST", session_id, wddx_to_xml(wddx), NULL});
 
+    // TODO: Check the response variable.
+
     return ret;
 }
 
-enum cfrds_status cfrds_command_debugger_get_debug_events(cfrds_server *server, const char *session_id, cfrds_debugger_event **event)
+cfrds_status cfrds_command_debugger_get_debug_events(cfrds_server *server, const char *session_id, cfrds_debugger_event **event)
 {
-    enum cfrds_status ret;
+    cfrds_status ret;
 
     cfrds_buffer_defer(response);
 
@@ -2238,9 +2242,9 @@ enum cfrds_status cfrds_command_debugger_get_debug_events(cfrds_server *server, 
     return ret;
 }
 
-enum cfrds_status cfrds_command_debugger_all_fetch_flags_enabled(cfrds_server *server, const char *session_id, bool threads, bool watch, bool scopes, bool cf_trace, bool java_trace, cfrds_debugger_event **event)
+cfrds_status cfrds_command_debugger_all_fetch_flags_enabled(cfrds_server *server, const char *session_id, bool threads, bool watch, bool scopes, bool cf_trace, bool java_trace, cfrds_debugger_event **event)
 {
-    enum cfrds_status ret;
+    cfrds_status ret;
 
     cfrds_buffer_defer(response);
 
@@ -2271,9 +2275,9 @@ enum cfrds_status cfrds_command_debugger_all_fetch_flags_enabled(cfrds_server *s
     return ret;
 }
 
-enum cfrds_status cfrds_command_debugger_step_in(cfrds_server *server, const char *session_id, const char *thread_name)
+cfrds_status cfrds_command_debugger_step_in(cfrds_server *server, const char *session_id, const char *thread_name)
 {
-    enum cfrds_status ret;
+    cfrds_status ret;
 
     cfrds_buffer_defer(response);
 
@@ -2294,12 +2298,14 @@ enum cfrds_status cfrds_command_debugger_step_in(cfrds_server *server, const cha
 
     ret = cfrds_send_command(server, &response, "DBGREQUEST", (const char *[]){ "DBG_REQUEST", session_id, wddx_to_xml(wddx), NULL});
 
+    // TODO: Check the response variable.
+
     return ret;
 }
 
-enum cfrds_status cfrds_command_debugger_step_over(cfrds_server *server, const char *session_id, const char *thread_name)
+cfrds_status cfrds_command_debugger_step_over(cfrds_server *server, const char *session_id, const char *thread_name)
 {
-    enum cfrds_status ret;
+    cfrds_status ret;
 
     cfrds_buffer_defer(response);
 
@@ -2320,12 +2326,14 @@ enum cfrds_status cfrds_command_debugger_step_over(cfrds_server *server, const c
 
     ret = cfrds_send_command(server, &response, "DBGREQUEST", (const char *[]){ "DBG_REQUEST", session_id, wddx_to_xml(wddx), NULL});
 
+    // TODO: Check the response variable.
+
     return ret;
 }
 
-enum cfrds_status cfrds_command_debugger_step_out(cfrds_server *server, const char *session_id, const char *thread_name)
+cfrds_status cfrds_command_debugger_step_out(cfrds_server *server, const char *session_id, const char *thread_name)
 {
-    enum cfrds_status ret;
+    cfrds_status ret;
 
     cfrds_buffer_defer(response);
 
@@ -2346,12 +2354,14 @@ enum cfrds_status cfrds_command_debugger_step_out(cfrds_server *server, const ch
 
     ret = cfrds_send_command(server, &response, "DBGREQUEST", (const char *[]){ "DBG_REQUEST", session_id, wddx_to_xml(wddx), NULL});
 
+    // TODO: Check the response variable.
+
     return ret;
 }
 
-enum cfrds_status cfrds_command_debugger_continue(cfrds_server *server, const char *session_id, const char *thread_name)
+cfrds_status cfrds_command_debugger_continue(cfrds_server *server, const char *session_id, const char *thread_name)
 {
-    enum cfrds_status ret;
+    cfrds_status ret;
 
     cfrds_buffer_defer(response);
 
@@ -2372,6 +2382,8 @@ enum cfrds_status cfrds_command_debugger_continue(cfrds_server *server, const ch
 
     ret = cfrds_send_command(server, &response, "DBGREQUEST", (const char *[]){ "DBG_REQUEST", session_id, wddx_to_xml(wddx), NULL});
 
+    // TODO: Check the response variable.
+
     return ret;
 }
 
@@ -2380,7 +2392,7 @@ void cfrds_buffer_debugger_event_free(cfrds_debugger_event *event)
     wddx_cleanup(&event);
 }
 
-enum cfrds_debugger_type cfrds_buffer_debugger_event_get_type(const cfrds_debugger_event *event)
+cfrds_debugger_type cfrds_buffer_debugger_event_get_type(const cfrds_debugger_event *event)
 {
     if (event == NULL)
     {
@@ -2428,11 +2440,6 @@ int cfrds_buffer_debugger_event_breakpoint_set_get_act_line(const cfrds_debugger
 {
     return wddx_get_number(event, "0,ACTUAL_LINE_NUM", NULL);
 }
-
-
-
-
-
 
 int cfrds_buffer_debugger_event_get_scopes_count(const cfrds_debugger_event *event)
 {
@@ -2485,9 +2492,9 @@ const char *cfrds_buffer_debugger_event_get_java_trace_item(const cfrds_debugger
     return NULL;
 }
 
-enum cfrds_status cfrds_command_debugger_watch_expression(cfrds_server *server, const char *session_id, const char *thread_name, const char *variable)
+cfrds_status cfrds_command_debugger_watch_expression(cfrds_server *server, const char *session_id, const char *thread_name, const char *variable)
 {
-    enum cfrds_status ret;
+    cfrds_status ret;
 
     cfrds_buffer_defer(response);
 
@@ -2512,9 +2519,9 @@ enum cfrds_status cfrds_command_debugger_watch_expression(cfrds_server *server, 
     return ret;
 }
 
-enum cfrds_status cfrds_command_debugger_set_variable(cfrds_server *server, const char *session_id, const char *thread_name, const char *variable, const char *value)
+cfrds_status cfrds_command_debugger_set_variable(cfrds_server *server, const char *session_id, const char *thread_name, const char *variable, const char *value)
 {
-    enum cfrds_status ret;
+    cfrds_status ret;
 
     cfrds_buffer_defer(response);
 
@@ -2540,9 +2547,9 @@ enum cfrds_status cfrds_command_debugger_set_variable(cfrds_server *server, cons
     return ret;
 }
 
-enum cfrds_status cfrds_command_debugger_watch_variables(cfrds_server *server, const char *session_id, const char *variables)
+cfrds_status cfrds_command_debugger_watch_variables(cfrds_server *server, const char *session_id, const char *variables)
 {
-    enum cfrds_status ret;
+    cfrds_status ret;
     char command[32];
     size_t index = 0;
 
@@ -2601,9 +2608,9 @@ enum cfrds_status cfrds_command_debugger_watch_variables(cfrds_server *server, c
     return ret;
 }
 
-enum cfrds_status cfrds_command_debugger_get_output(cfrds_server *server, const char *session_id, const char *thread_name)
+cfrds_status cfrds_command_debugger_get_output(cfrds_server *server, const char *session_id, const char *thread_name)
 {
-    enum cfrds_status ret;
+    cfrds_status ret;
 
     cfrds_buffer_defer(response);
 
@@ -2627,9 +2634,9 @@ enum cfrds_status cfrds_command_debugger_get_output(cfrds_server *server, const 
     return ret;
 }
 
-enum cfrds_status cfrds_command_debugger_set_scope_filter(cfrds_server *server, const char *session_id, const char *filter)
+cfrds_status cfrds_command_debugger_set_scope_filter(cfrds_server *server, const char *session_id, const char *filter)
 {
-    enum cfrds_status ret;
+    cfrds_status ret;
 
     cfrds_buffer_defer(response);
 
@@ -2653,9 +2660,9 @@ enum cfrds_status cfrds_command_debugger_set_scope_filter(cfrds_server *server, 
     return ret;
 }
 
-enum cfrds_status cfrds_command_security_analyzer_scan(cfrds_server *server, const char *pathnames, bool recursively, int cores, int *command_id)
+cfrds_status cfrds_command_security_analyzer_scan(cfrds_server *server, const char *pathnames, bool recursively, int cores, int *command_id)
 {
-    enum cfrds_status ret;
+    cfrds_status ret;
 
     cfrds_server_int *server_int = NULL;
     char cores_str[32];
@@ -2753,9 +2760,9 @@ enum cfrds_status cfrds_command_security_analyzer_scan(cfrds_server *server, con
     return ret;
 }
 
-enum cfrds_status cfrds_command_security_analyzer_cancel(cfrds_server *server, int command_id)
+cfrds_status cfrds_command_security_analyzer_cancel(cfrds_server *server, int command_id)
 {
-    enum cfrds_status ret;
+    cfrds_status ret;
 
     cfrds_server_int *server_int = NULL;
     char id_str[32];
@@ -2831,9 +2838,9 @@ enum cfrds_status cfrds_command_security_analyzer_cancel(cfrds_server *server, i
     return ret;
 }
 
-enum cfrds_status cfrds_command_security_analyzer_status(cfrds_server *server, int command_id, int *totalfiles, int *filesvisitedcount, int *percentage, int64_t *lastupdated)
+cfrds_status cfrds_command_security_analyzer_status(cfrds_server *server, int command_id, int *totalfiles, int *filesvisitedcount, int *percentage, int64_t *lastupdated)
 {
-    enum cfrds_status ret;
+    cfrds_status ret;
 
     cfrds_server_int *server_int = NULL;
     char id_str[32];
@@ -2973,9 +2980,9 @@ enum cfrds_status cfrds_command_security_analyzer_status(cfrds_server *server, i
     return ret;
 }
 
-enum cfrds_status cfrds_command_security_analyzer_result(cfrds_server *server, int command_id, cfrds_security_analyzer_result **result)
+cfrds_status cfrds_command_security_analyzer_result(cfrds_server *server, int command_id, cfrds_security_analyzer_result **result)
 {
-    enum cfrds_status ret;
+    cfrds_status ret;
 
     cfrds_server_int *server_int = NULL;
     char id_str[32];
@@ -3022,9 +3029,9 @@ enum cfrds_status cfrds_command_security_analyzer_result(cfrds_server *server, i
     return ret;
 }
 
-enum cfrds_status cfrds_command_security_analyzer_clean(cfrds_server *server, int command_id)
+cfrds_status cfrds_command_security_analyzer_clean(cfrds_server *server, int command_id)
 {
-    enum cfrds_status ret;
+    cfrds_status ret;
 
     cfrds_server_int *server_int = NULL;
     char id_str[32];
@@ -3109,15 +3116,20 @@ enum cfrds_status cfrds_command_security_analyzer_clean(cfrds_server *server, in
     return ret;
 }
 
+void cfrds_security_analyzer_result_free(cfrds_security_analyzer_result *buf)
+{
+    if (buf)
+    {
+        free(buf);
+    }
+}
+
 void cfrds_security_analyzer_result_cleanup(cfrds_security_analyzer_result **buf)
 {
     if (buf)
     {
-        if (*buf)
-        {
-            free(*buf);
-            *buf = NULL;
-        }
+        cfrds_security_analyzer_result_free(*buf);
+        *buf = NULL;
     }
 }
 
@@ -3205,7 +3217,7 @@ exit:
     return -1;
 }
 
-char *cfrds_security_analyzer_result_filesscanned_item_result(cfrds_security_analyzer_result *value, int ndx)
+cfrds_str cfrds_security_analyzer_result_filesscanned_item_result(cfrds_security_analyzer_result *value, int ndx)
 {
     json_object_defer(json_obj);
 
@@ -3242,7 +3254,7 @@ exit:
     return NULL;
 }
 
-char *cfrds_security_analyzer_result_filesscanned_item_filename(cfrds_security_analyzer_result *value, int ndx)
+cfrds_str cfrds_security_analyzer_result_filesscanned_item_filename(cfrds_security_analyzer_result *value, int ndx)
 {
     json_object_defer(json_obj);
 
@@ -3300,7 +3312,7 @@ exit:
     return -1;
 }
 
-char *cfrds_security_analyzer_result_filesnotscanned_item_reason(cfrds_security_analyzer_result *value, int ndx)
+cfrds_str cfrds_security_analyzer_result_filesnotscanned_item_reason(cfrds_security_analyzer_result *value, int ndx)
 {
     json_object_defer(json_obj);
 
@@ -3337,7 +3349,7 @@ exit:
     return NULL;
 }
 
-char *cfrds_security_analyzer_result_filesnotscanned_item_filename(cfrds_security_analyzer_result *value, int ndx)
+cfrds_str cfrds_security_analyzer_result_filesnotscanned_item_filename(cfrds_security_analyzer_result *value, int ndx)
 {
     json_object_defer(json_obj);
 
@@ -3374,22 +3386,22 @@ exit:
     return NULL;
 }
 
-char *cfrds_security_analyzer_result_executorservie(cfrds_security_analyzer_result *value)
+cfrds_str cfrds_security_analyzer_result_executorservice(cfrds_security_analyzer_result *value)
 {
     json_object_defer(json_obj);
     json_obj = json_tokener_parse(value);
     if (json_obj == NULL)
         goto exit;
 
-    struct json_object *executorservie = NULL;
-    json_object_object_get_ex(json_obj, "executorservie", &executorservie);
-    if (executorservie == NULL)
+    struct json_object *executorservice = NULL;
+    json_object_object_get_ex(json_obj, "executorservice", &executorservice);
+    if (executorservice == NULL)
         goto exit;
 
-    if (json_object_get_type(executorservie) != json_type_string)
+    if (json_object_get_type(executorservice) != json_type_string)
         goto exit;
 
-    return strdup(json_object_get_string(executorservie));
+    return strdup(json_object_get_string(executorservice));
 
 exit:
     return NULL;
@@ -3437,8 +3449,10 @@ exit:
     return -1;
 }
 
-char *cfrds_security_analyzer_result_files_value(cfrds_security_analyzer_result *value)
+cfrds_str cfrds_security_analyzer_result_files_value(cfrds_security_analyzer_result *value)
 {
+    //TODO: Implement me!
+
     return NULL;
 }
 
@@ -3569,7 +3583,7 @@ exit:
 }
 
 
-char *cfrds_security_analyzer_result_errors_item_errormessage(cfrds_security_analyzer_result *value, int ndx)
+cfrds_str cfrds_security_analyzer_result_errors_item_errormessage(cfrds_security_analyzer_result *value, int ndx)
 {
     json_object_defer(json_obj);
     json_obj = json_tokener_parse(value);
@@ -3610,7 +3624,7 @@ int cfrds_security_analyzer_result_errors_item_endline(cfrds_security_analyzer_r
     return -1;
 }
 
-char *cfrds_security_analyzer_result_errors_item_path(cfrds_security_analyzer_result *value, int ndx)
+cfrds_str cfrds_security_analyzer_result_errors_item_path(cfrds_security_analyzer_result *value, int ndx)
 {
     json_object_defer(json_obj);
     json_obj = json_tokener_parse(value);
@@ -3646,7 +3660,7 @@ exit:
     return NULL;
 }
 
-char *cfrds_security_analyzer_result_errors_item_vulnerablecode(cfrds_security_analyzer_result *value, int ndx)
+cfrds_str cfrds_security_analyzer_result_errors_item_vulnerablecode(cfrds_security_analyzer_result *value, int ndx)
 {
     json_object_defer(json_obj);
     json_obj = json_tokener_parse(value);
@@ -3682,7 +3696,7 @@ exit:
     return NULL;
 }
 
-char *cfrds_security_analyzer_result_errors_item_filename(cfrds_security_analyzer_result *value, int ndx)
+cfrds_str cfrds_security_analyzer_result_errors_item_filename(cfrds_security_analyzer_result *value, int ndx)
 {
     json_object_defer(json_obj);
     json_obj = json_tokener_parse(value);
@@ -3790,7 +3804,7 @@ exit:
     return -1;
 }
 
-char *cfrds_security_analyzer_result_errors_item_error(cfrds_security_analyzer_result *value, int ndx)
+cfrds_str cfrds_security_analyzer_result_errors_item_error(cfrds_security_analyzer_result *value, int ndx)
 {
     json_object_defer(json_obj);
     json_obj = json_tokener_parse(value);
@@ -3862,7 +3876,7 @@ exit:
     return -1;
 }
 
-char *cfrds_security_analyzer_result_errors_item_type(cfrds_security_analyzer_result *value, int ndx)
+cfrds_str cfrds_security_analyzer_result_errors_item_type(cfrds_security_analyzer_result *value, int ndx)
 {
     json_object_defer(json_obj);
     json_obj = json_tokener_parse(value);
@@ -3934,7 +3948,7 @@ exit:
     return -1;
 }
 
-char *cfrds_security_analyzer_result_errors_item_referencetype(cfrds_security_analyzer_result *value, int ndx)
+cfrds_str cfrds_security_analyzer_result_errors_item_referencetype(cfrds_security_analyzer_result *value, int ndx)
 {
     json_object_defer(json_obj);
     json_obj = json_tokener_parse(value);
@@ -3971,7 +3985,7 @@ exit:
 }
 
 
-char *cfrds_security_analyzer_result_status(cfrds_security_analyzer_result *value)
+cfrds_str cfrds_security_analyzer_result_status(cfrds_security_analyzer_result *value)
 {
     json_object_defer(json_obj);
     json_obj = json_tokener_parse(value);
@@ -3994,9 +4008,9 @@ exit:
 
 
 
-enum cfrds_status cfrds_command_ide_default(cfrds_server *server, int version, int *num1, char **server_version, char **client_version, int *num2, int *num3)
+cfrds_status cfrds_command_ide_default(cfrds_server *server, int version, int *num1, cfrds_str *server_version, cfrds_str *client_version, int *num2, int *num3)
 {
-    enum cfrds_status ret;
+    cfrds_status ret;
 
     cfrds_server_int *server_int = NULL;
     char param[32];
@@ -4085,9 +4099,9 @@ enum cfrds_status cfrds_command_ide_default(cfrds_server *server, int version, i
     return ret;
 }
 
-enum cfrds_status cfrds_command_adminapi_debugging_getlogproperty(cfrds_server *server, const char *logdirectory, char **result)
+cfrds_status cfrds_command_adminapi_debugging_getlogproperty(cfrds_server *server, const char *logdirectory, cfrds_str *result)
 {
-    enum cfrds_status ret;
+    cfrds_status ret;
 
     cfrds_buffer_defer(response);
 
@@ -4152,9 +4166,9 @@ enum cfrds_status cfrds_command_adminapi_debugging_getlogproperty(cfrds_server *
     return ret;
 }
 
-enum cfrds_status cfrds_command_adminapi_extensions_getcustomtagpaths(cfrds_server *server, cfrds_adminapi_customtagpaths **result)
+cfrds_status cfrds_command_adminapi_extensions_getcustomtagpaths(cfrds_server *server, cfrds_adminapi_customtagpaths **result)
 {
-    enum cfrds_status ret;
+    cfrds_status ret;
 
     cfrds_buffer_defer(response);
 
@@ -4206,9 +4220,21 @@ enum cfrds_status cfrds_command_adminapi_extensions_getcustomtagpaths(cfrds_serv
     return ret;
 }
 
+void cfrds_adminapi_customtagpaths_free(cfrds_adminapi_customtagpaths *buf)
+{
+    if (buf)
+    {
+        wddx_cleanup(buf);
+    }
+}
+
 void cfrds_adminapi_customtagpaths_cleanup(cfrds_adminapi_customtagpaths **buf)
 {
-    wddx_cleanup(buf);
+    if (buf)
+    {
+        cfrds_adminapi_customtagpaths_free(*buf);
+        *buf = NULL;
+    }
 }
 
 int cfrds_adminapi_customtagpaths_count(cfrds_adminapi_customtagpaths *buf)
@@ -4235,9 +4261,9 @@ const char *cfrds_adminapi_customtagpaths_at(cfrds_adminapi_customtagpaths *buf,
     return wddx_node_string(item);
 }
 
-enum cfrds_status cfrds_command_adminapi_extensions_setmapping(cfrds_server *server, const char *name, const char *path)
+cfrds_status cfrds_command_adminapi_extensions_setmapping(cfrds_server *server, const char *name, const char *path)
 {
-    enum cfrds_status ret;
+    cfrds_status ret;
 
     cfrds_buffer_defer(response);
     cfrds_buffer_defer(arg);
@@ -4294,9 +4320,9 @@ enum cfrds_status cfrds_command_adminapi_extensions_setmapping(cfrds_server *ser
     return ret;
 }
 
-enum cfrds_status cfrds_command_adminapi_extensions_deletemappings(cfrds_server *server, const char *mapping)
+cfrds_status cfrds_command_adminapi_extensions_deletemapping(cfrds_server *server, const char *mapping)
 {
-    enum cfrds_status ret;
+    cfrds_status ret;
 
     cfrds_buffer_defer(response);
 
@@ -4346,9 +4372,9 @@ enum cfrds_status cfrds_command_adminapi_extensions_deletemappings(cfrds_server 
     return ret;
 }
 
-enum cfrds_status cfrds_command_adminapi_extensions_getmappings(cfrds_server *server, cfrds_adminapi_mappings **result)
+cfrds_status cfrds_command_adminapi_extensions_getmappings(cfrds_server *server, cfrds_adminapi_mappings **result)
 {
-    enum cfrds_status ret;
+    cfrds_status ret;
 
     cfrds_buffer_defer(response);
 
@@ -4400,9 +4426,21 @@ enum cfrds_status cfrds_command_adminapi_extensions_getmappings(cfrds_server *se
     return ret;
 }
 
+void cfrds_adminapi_mappings_free(cfrds_adminapi_mappings *buf)
+{
+    if (buf)
+    {
+        wddx_cleanup(buf);
+    }
+}
+
 void cfrds_adminapi_mappings_cleanup(cfrds_adminapi_mappings **buf)
 {
-    wddx_cleanup(buf);
+    if (buf)
+    {
+        cfrds_adminapi_mappings_free(*buf);
+        *buf = NULL;
+    }
 }
 
 int cfrds_adminapi_mappings_count(cfrds_adminapi_mappings *buf)

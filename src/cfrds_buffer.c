@@ -5,7 +5,6 @@
 
 #include <string.h>
 #include <stdlib.h>
-#include <string.h>
 #include <stddef.h>
 
 #ifdef _WIN32
@@ -428,7 +427,7 @@ bool cfrds_buffer_parse_number(const char **data, size_t *remaining, int64_t *ou
         return false;
 
     errno = 0;
-    *out = strtol(*data, NULL, 10);
+    *out = strtoll(*data, NULL, 10);
     if (errno == ERANGE)
         return false;
 

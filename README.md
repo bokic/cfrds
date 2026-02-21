@@ -3,7 +3,7 @@
 ## Project description
 cfrds is a shared library and CLI application designed to communicate to ColdFusion server via Adobe RDS protocol. More info regarding the protocol at [Adobe RDS protocol](https://helpx.adobe.com/coldfusion/coldfusion-builder-extension-for-visual-studio-code/rds-support.html).
 
-Written in C, it's portable and can be compiled for Windows/Linux/MacOS, x86/ARM, 32/64-bit targets.
+Written in C, it's portable and can be compiled with GCC or Clang for Windows/Linux/MacOS, x86/ARM, 32/64-bit targets.
 
 Some of the features RDS protocol supports:
 * Server side file access(list dir, upload, download file).

@@ -1,4 +1,5 @@
 #include <internal/wddx.h>
+#include <internal/explicit_bzero.h>
 
 #include <libxml/tree.h>
 
@@ -7,15 +8,6 @@
 #include <stddef.h>
 #include <ctype.h>
 
-
-#if defined(__APPLE__) || defined(_WIN32)
-static void explicit_bzero(void *s, size_t n) {
-    volatile unsigned char *ptr = (volatile unsigned char *)s;
-    while (n--) {
-        *ptr++ = 0;
-    }
-}
-#endif
 
 #define xmlDoc_defer(var) xmlDoc* var __attribute__((cleanup(xmlDoc_cleanup))) = NULL
 

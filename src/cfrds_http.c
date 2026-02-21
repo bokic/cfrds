@@ -1,4 +1,5 @@
 #include <cfrds.h>
+#include <internal/explicit_bzero.h>
 #include <internal/cfrds_int.h>
 #include <internal/cfrds_buffer.h>
 #include <internal/cfrds_http.h>
@@ -19,15 +20,6 @@
 #include <stdio.h>
 #include <errno.h>
 
-
-#if defined(__APPLE__) || defined(_WIN32)
-static void explicit_bzero(void *s, size_t n) {
-    volatile unsigned char *ptr = (volatile unsigned char *)s;
-    while (n--) {
-        *ptr++ = 0;
-    }
-}
-#endif
 
 void cfrds_sock_cleanup(cfrds_socket* sock);
 #define cfrds_sock_defer(var) cfrds_socket var __attribute__((cleanup(cfrds_sock_cleanup))) = CFRDS_INVALID_SOCKET

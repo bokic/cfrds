@@ -1,3 +1,4 @@
+#include <internal/explicit_bzero.h>
 #include <internal/cfrds_buffer.h>
 #include <internal/wddx.h>
 #include <cfrds.h>
@@ -15,15 +16,6 @@
 
 #include <stdio.h>
 
-
-#if defined(__APPLE__) || defined(_WIN32)
-static void explicit_bzero(void *s, size_t n) {
-    volatile unsigned char *ptr = (volatile unsigned char *)s;
-    while (n--) {
-        *ptr++ = 0;
-    }
-}
-#endif
 
 typedef struct {
     size_t allocated;

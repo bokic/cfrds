@@ -1,3 +1,4 @@
+#include <internal/explicit_bzero.h>
 #include <internal/cfrds_buffer.h>
 #include <internal/cfrds_http.h>
 #include <internal/wddx.h>
@@ -11,15 +12,6 @@
 #include <stdbool.h>
 #include <stdint.h>
 
-
-#if defined(__APPLE__) || defined(_WIN32)
-static void explicit_bzero(void *s, size_t n) {
-    volatile unsigned char *ptr = (volatile unsigned char *)s;
-    while (n--) {
-        *ptr++ = 0;
-    }
-}
-#endif
 
 #define json_object_defer(var) struct json_object * var __attribute__((cleanup(json_object_cleanup))) = NULL
 static void json_object_cleanup(struct json_object **handle)

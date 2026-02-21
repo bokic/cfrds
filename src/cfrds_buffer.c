@@ -377,8 +377,11 @@ bool cfrds_buffer_expand(cfrds_buffer *buffer, size_t size)
 
     cfrds_buffer_int *buffer_int = (cfrds_buffer_int *)buffer;
 
-    if (size <= buffer_int->allocated)
-        cfrds_buffer_reserve_above_size(buffer, size);
+    if (buffer_int->allocated <= size)
+    {
+        if (cfrds_buffer_reserve_above_size(buffer, size) == false)
+            return false;
+    }
 
     buffer_int->size += size;
 

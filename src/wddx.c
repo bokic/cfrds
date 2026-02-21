@@ -566,12 +566,11 @@ static const WDDX_NODE_int *wddx_recursively_get(const WDDX_NODE_int *node, cons
         {
             if (node->type != WDDX_STRUCT) return NULL;
 
-            const WDDX_STRUCT_NODE_int *items = (WDDX_STRUCT_NODE_int *)node->items;
-
             for(int c = 0; c < node->cnt; c++)
             {
-                if (strcmp(items[c].name, tmp_path) == 0)
-                    return wddx_recursively_get(items[c].value, next + 1);
+                WDDX_STRUCT_NODE_int *item = (WDDX_STRUCT_NODE_int *)node->items[c];
+                if (strcmp(item->name, tmp_path) == 0)
+                    return wddx_recursively_get(item->value, next + 1);
             }
 
             return NULL;

@@ -88,7 +88,7 @@ typedef struct {
     char *name;
     int type;
     char *typeStr;
-    int percision;
+    int precision;
     int length;
     int scale;
     int radix;

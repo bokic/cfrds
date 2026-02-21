@@ -1176,7 +1176,7 @@ int cfrds_sql_columninfo_get_precision(const cfrds_sql_columninfo *value, size_t
     if (column >= _value->cnt)
         return -1;
 
-    return _value->items[column].percision;
+    return _value->items[column].precision;
 }
 
 int cfrds_sql_columninfo_get_length(const cfrds_sql_columninfo *value, size_t column)

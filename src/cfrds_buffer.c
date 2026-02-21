@@ -958,7 +958,7 @@ cfrds_sql_columninfo_int *cfrds_buffer_to_sql_columninfo(cfrds_buffer *buffer)
         ret->items[column].name      = field4; field4 = NULL;
         ret->items[column].type      = atoi(field5);
         ret->items[column].typeStr   = field6; field6 = NULL;
-        ret->items[column].percision = atoi(field7);
+        ret->items[column].precision = atoi(field7);
         ret->items[column].length    = atoi(field8);
         ret->items[column].scale     = atoi(field9);
         ret->items[column].radix     = atoi(field10);

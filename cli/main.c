@@ -228,7 +228,7 @@ int main(int argc, char *argv[])
     }
 #endif
     cfrds_server_defer(server);
-    cfrds_file_content *content = NULL;
+    cfrds_file_content_defer(content);
     cfrds_status res;
 
     const char *uri = NULL;

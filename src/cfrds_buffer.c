@@ -183,10 +183,12 @@ char *cfrds_buffer_data(cfrds_buffer *buffer)
 
     ret = (cfrds_buffer_int *)buffer;
 
-    if (cfrds_buffer_realloc_if_needed(ret, ret->size + 1) == false)
+    size_t size = ret->size;
+
+    if (cfrds_buffer_realloc_if_needed(ret, size + 1) == false)
         return NULL;
 
-    ret->data[ret->size] = 0;
+    ret->data[size] = 0;
 
     return (char *)ret->data;
 }

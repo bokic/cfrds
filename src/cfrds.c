@@ -25,45 +25,10 @@ static void json_object_cleanup(struct json_object **handle)
 
 void cfrds_server_cleanup(cfrds_server **server)
 {
-    if (*server == NULL)
-        return;
-
-    cfrds_server_int *server_int = (cfrds_server_int *)*server;
-
-    server_int->_errno = 0;
-    server_int->error_code = 1;
-
-    if (server_int->host)
-    {
-        free(server_int->host);
-        server_int->host = NULL;
+    if (*server) {
+        cfrds_server_free(*server);
+        *server = NULL;
     }
-
-    if (server_int->username)
-    {
-        free(server_int->username);
-        server_int->username = NULL;
-    }
-
-    if (server_int->orig_password)
-    {
-        free(server_int->orig_password);
-        server_int->orig_password = NULL;
-    }
-
-    if (server_int->password)
-    {
-        free(server_int->password);
-        server_int->password = NULL;
-    }
-
-    if (server_int->error)
-    {
-        free(server_int->error);
-        server_int->error = NULL;
-    }
-
-    free(server_int);
 }
 
 void cfrds_server_clear_error(cfrds_server *server)

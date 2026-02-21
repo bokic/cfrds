@@ -12,6 +12,7 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <unistd.h>
+#include <netdb.h>
 #endif
 
 #include <string.h>
@@ -41,7 +42,6 @@ static bool cfrds_buffer_skip_httpheader(const char **data, size_t *remaining)
 
 cfrds_status cfrds_http_post(cfrds_server_int *server, const char *command, cfrds_buffer *payload, cfrds_buffer **response)
 {
-    struct sockaddr_in servaddr;
 
     cfrds_buffer_defer(tmp_response);
     cfrds_buffer_defer(swap_buf);
@@ -85,27 +85,41 @@ cfrds_status cfrds_http_post(cfrds_server_int *server, const char *command, cfrd
     cfrds_buffer_append(send_buf, "\r\n\r\n");
     cfrds_buffer_append_buffer(send_buf, payload);
 
-    sockfd = socket(AF_INET, SOCK_STREAM, 0);
-    if (sockfd == -1) {
-        server->_errno = errno;
-        cfrds_server_set_error((cfrds_server *)server, CFRDS_STATUS_SOCKET_CREATION_FAILED, "failed to create socket...");
-        return CFRDS_STATUS_SOCKET_CREATION_FAILED;
-    }
-    server->socket = sockfd;
+    {
+        struct addrinfo hints;
+        struct addrinfo *result = NULL;
+        char port_str[8] = {0, };
 
-    explicit_bzero(&servaddr, sizeof(servaddr));
+        explicit_bzero(&hints, sizeof(hints));
+        hints.ai_family = AF_INET;
+        hints.ai_socktype = SOCK_STREAM;
+        hints.ai_protocol = IPPROTO_TCP;
 
-    servaddr.sin_family = AF_INET;
-    servaddr.sin_port = htons(port);
-    servaddr.sin_addr.s_addr = inet_addr(cfrds_server_get_host((cfrds_server *)server));
-    if (servaddr.sin_addr.s_addr == INADDR_NONE) {
-        return CFRDS_STATUS_SOCKET_HOST_NOT_FOUND;
-    }
+        snprintf(port_str, sizeof(port_str), "%u", port);
 
-    if (connect(sockfd, (struct sockaddr *)&servaddr, sizeof(servaddr)) != 0) {
-        server->_errno = errno;
-        cfrds_server_set_error((cfrds_server *)server, CFRDS_STATUS_CONNECTION_TO_SERVER_FAILED, "failed to establish connection to the server...");
-        return CFRDS_STATUS_CONNECTION_TO_SERVER_FAILED;
+        int gai_err = getaddrinfo(cfrds_server_get_host((cfrds_server *)server), port_str, &hints, &result);
+        if (gai_err != 0) {
+            cfrds_server_set_error((cfrds_server *)server, CFRDS_STATUS_SOCKET_HOST_NOT_FOUND, "failed to resolve hostname...");
+            return CFRDS_STATUS_SOCKET_HOST_NOT_FOUND;
+        }
+
+        sockfd = socket(result->ai_family, result->ai_socktype, result->ai_protocol);
+        if (sockfd == -1) {
+            freeaddrinfo(result);
+            server->_errno = errno;
+            cfrds_server_set_error((cfrds_server *)server, CFRDS_STATUS_SOCKET_CREATION_FAILED, "failed to create socket...");
+            return CFRDS_STATUS_SOCKET_CREATION_FAILED;
+        }
+        server->socket = sockfd;
+
+        if (connect(sockfd, result->ai_addr, result->ai_addrlen) != 0) {
+            freeaddrinfo(result);
+            server->_errno = errno;
+            cfrds_server_set_error((cfrds_server *)server, CFRDS_STATUS_CONNECTION_TO_SERVER_FAILED, "failed to establish connection to the server...");
+            return CFRDS_STATUS_CONNECTION_TO_SERVER_FAILED;
+        }
+
+        freeaddrinfo(result);
     }
 
     sock_written = send(sockfd, cfrds_buffer_data(send_buf), cfrds_buffer_data_size(send_buf), 0);

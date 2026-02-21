@@ -348,6 +348,9 @@ bool cfrds_buffer_append_char(cfrds_buffer *buffer, const char ch)
 {
     cfrds_buffer_int *buffer_int = (cfrds_buffer_int *)buffer;
 
+    if (buffer_int == NULL)
+        return false;
+
     if (cfrds_buffer_realloc_if_needed(buffer_int, 1) == false)
     {
         return false;
@@ -363,6 +366,9 @@ bool cfrds_buffer_reserve_above_size(cfrds_buffer *buffer, size_t size)
 {
     cfrds_buffer_int *buffer_int = (cfrds_buffer_int *)buffer;
     void *tmp = NULL;
+
+    if (buffer_int == NULL)
+        return false;
 
     if (buffer_int->allocated - buffer_int->size < size)
     {

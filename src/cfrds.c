@@ -249,7 +249,7 @@ const char *cfrds_server_get_username(const cfrds_server *server)
     const cfrds_server_int *server_int = NULL;
 
     if (server == NULL)
-        return 0;
+        return NULL;
 
     server_int = (cfrds_server_int *)server;
 
@@ -261,7 +261,7 @@ const char *cfrds_server_get_password(const cfrds_server *server)
     const cfrds_server_int *server_int = NULL;
 
     if (server == NULL)
-        return 0;
+        return NULL;
 
     server_int = (cfrds_server_int *)server;
 
@@ -1942,7 +1942,7 @@ const char *cfrds_sql_metadata_get_jtype(const cfrds_sql_metadata *value, size_t
 size_t cfrds_sql_resultset_columns(const cfrds_sql_resultset *value)
 {
     if (value == NULL)
-        return -1;
+        return 0;
 
     const cfrds_sql_resultset_int *_value = (const cfrds_sql_resultset_int *)value;
 
@@ -1952,7 +1952,7 @@ size_t cfrds_sql_resultset_columns(const cfrds_sql_resultset *value)
 size_t cfrds_sql_resultset_rows(const cfrds_sql_resultset *value)
 {
     if (value == NULL)
-        return -1;
+        return 0;
 
     const cfrds_sql_resultset_int *_value = (const cfrds_sql_resultset_int *)value;
 

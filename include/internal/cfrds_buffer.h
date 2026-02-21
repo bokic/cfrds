@@ -29,7 +29,7 @@ typedef SOCKET cfrds_socket;
 #define CFRDS_INVALID_SOCKET INVALID_SOCKET
 #else
 typedef int cfrds_socket;
-#define CFRDS_INVALID_SOCKET 0
+#define CFRDS_INVALID_SOCKET (-1)
 #endif
 
 typedef struct {

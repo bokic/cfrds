@@ -658,6 +658,8 @@ cfrds_file_content_int *cfrds_buffer_to_file_content(cfrds_buffer *buffer)
     if (ret == NULL)
         return NULL;
 
+    explicit_bzero(ret, sizeof(cfrds_file_content_int));
+
     cfrds_buffer_parse_bytearray(&data, &size, &ret->data, &ret->size);
     cfrds_buffer_parse_string(&data, &size, &ret->modified);
     cfrds_buffer_parse_string(&data, &size, &ret->permission);

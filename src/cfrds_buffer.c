@@ -332,6 +332,9 @@ bool cfrds_buffer_append_rds_bytes(cfrds_buffer *buffer, const void *data, size_
     char str_len[16] = {0, };
     int n = 0;
 
+    if ((buffer == NULL)||(data == NULL))
+        return false;
+
     n = snprintf(str_len, sizeof(str_len), "%zu", length);
     if (n > 0)
     {

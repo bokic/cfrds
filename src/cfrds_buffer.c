@@ -15,6 +15,7 @@
 #endif
 
 #include <stdio.h>
+#include <errno.h>
 
 
 typedef struct {
@@ -417,7 +418,10 @@ bool cfrds_buffer_parse_number(const char **data, size_t *remaining, int64_t *ou
     if ((end == NULL)||((unsigned)(end - *data) > *remaining))
         return false;
 
-    *out = atol(*data);
+    errno = 0;
+    *out = strtol(*data, NULL, 10);
+    if (errno == ERANGE)
+        return false;
 
     *remaining -= end - *data + 1;
     *data = end + 1;

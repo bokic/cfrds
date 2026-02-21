@@ -91,7 +91,7 @@ cfrds_status cfrds_http_post(cfrds_server_int *server, const char *command, cfrd
         char port_str[8] = {0, };
 
         explicit_bzero(&hints, sizeof(hints));
-        hints.ai_family = AF_INET;
+        hints.ai_family = AF_UNSPEC;
         hints.ai_socktype = SOCK_STREAM;
         hints.ai_protocol = IPPROTO_TCP;
 
@@ -103,23 +103,28 @@ cfrds_status cfrds_http_post(cfrds_server_int *server, const char *command, cfrd
             return CFRDS_STATUS_SOCKET_HOST_NOT_FOUND;
         }
 
-        sockfd = socket(result->ai_family, result->ai_socktype, result->ai_protocol);
-        if (sockfd == -1) {
-            freeaddrinfo(result);
-            server->_errno = errno;
-            cfrds_server_set_error((cfrds_server *)server, CFRDS_STATUS_SOCKET_CREATION_FAILED, "failed to create socket...");
-            return CFRDS_STATUS_SOCKET_CREATION_FAILED;
-        }
-        server->socket = sockfd;
+        for (struct addrinfo *rp = result; rp != NULL; rp = rp->ai_next)
+        {
+            cfrds_socket fd = socket(rp->ai_family, rp->ai_socktype, rp->ai_protocol);
+            if (fd == CFRDS_INVALID_SOCKET)
+                continue;
 
-        if (connect(sockfd, result->ai_addr, result->ai_addrlen) != 0) {
-            freeaddrinfo(result);
+            if (connect(fd, rp->ai_addr, rp->ai_addrlen) == 0) {
+                sockfd = fd;
+                server->socket = sockfd;
+                break;
+            }
+
+            cfrds_sock_cleanup(&fd);
+        }
+
+        freeaddrinfo(result);
+
+        if (sockfd == CFRDS_INVALID_SOCKET) {
             server->_errno = errno;
             cfrds_server_set_error((cfrds_server *)server, CFRDS_STATUS_CONNECTION_TO_SERVER_FAILED, "failed to establish connection to the server...");
             return CFRDS_STATUS_CONNECTION_TO_SERVER_FAILED;
         }
-
-        freeaddrinfo(result);
     }
 
     sock_written = send(sockfd, cfrds_buffer_data(send_buf), cfrds_buffer_data_size(send_buf), 0);
@@ -230,7 +235,9 @@ void cfrds_sock_cleanup(int* sock)
 
 void cfrds_sock_shutdown(cfrds_socket sock)
 {
+#ifdef _WIN32
     if (sock)
+#endif
     {
         if (sock != CFRDS_INVALID_SOCKET)
         {

@@ -140,13 +140,14 @@ static bool cfrds_buffer_realloc_if_needed(cfrds_buffer_int *buffer, size_t len)
         size_t newsize = buffer_int->size + len;
         newsize = (((newsize + 512) / 1024) + 1) * 1024;
 
-        tmp = realloc(buffer_int->data, newsize);
+        /* +1: always keep a null sentinel byte past the data */
+        tmp = realloc(buffer_int->data, newsize + 1);
         if (tmp == NULL)
             return false;
 
         size_t oldsize = buffer_int->allocated;
         buffer_int->data = tmp;
-        explicit_bzero(buffer_int->data + oldsize, newsize - oldsize);
+        explicit_bzero(buffer_int->data + oldsize, newsize + 1 - oldsize);
         buffer_int->allocated = newsize;
     }
 
@@ -176,21 +177,10 @@ bool cfrds_buffer_create(cfrds_buffer **buffer)
 
 char *cfrds_buffer_data(cfrds_buffer *buffer)
 {
-    cfrds_buffer_int *ret = NULL;
-
     if (buffer == NULL)
         return NULL;
 
-    ret = (cfrds_buffer_int *)buffer;
-
-    size_t size = ret->size;
-
-    if (cfrds_buffer_realloc_if_needed(ret, size + 1) == false)
-        return NULL;
-
-    ret->data[size] = 0;
-
-    return (char *)ret->data;
+    return (char *)((cfrds_buffer_int *)buffer)->data;
 }
 
 size_t cfrds_buffer_data_size(cfrds_buffer *buffer)

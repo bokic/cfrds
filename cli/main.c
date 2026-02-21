@@ -760,7 +760,7 @@ int main(int argc, char *argv[])
                 return EXIT_FAILURE;
             }
 
-            size_t *sizes = malloc(cols * sizeof(size_t));
+            size_t *sizes = malloc(cols * sizeof(size_t)); // TODO: Will leak.
             if (sizes == NULL)
             {
                 fprintf(stderr, "No memory\n");

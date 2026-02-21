@@ -714,7 +714,7 @@ cfrds_sql_dsninfo_int *cfrds_buffer_to_sql_dsninfo(cfrds_buffer *buffer)
 
                       char *tmp = malloc(len + 1);
                       if (tmp == NULL)
-                          return NULL;
+                          return NULL; // TODO: Will leak ret.
 
                       memcpy(tmp, pos1 + 1, len);
                       tmp[len] = '\0';
@@ -777,7 +777,7 @@ cfrds_sql_tableinfo_int *cfrds_buffer_to_sql_tableinfo(cfrds_buffer *buffer)
             current_item++;
             end_item = strchr(current_item, '"');
             if (!end_item)
-                return NULL;
+                return NULL; // TODO: Will leak ret.
             if (end_item >= current_item) {
                 size_t size = end_item - current_item;
 
@@ -904,7 +904,7 @@ cfrds_sql_columninfo_int *cfrds_buffer_to_sql_columninfo(cfrds_buffer *buffer)
         cfrds_str_defer(row_buf);
 
         if (!cfrds_buffer_parse_string(&data, &size, &row_buf))
-            return NULL;
+            return NULL; // TODO: Will leak ret.
 
         const char *column_buf = row_buf;
 
@@ -924,34 +924,34 @@ cfrds_sql_columninfo_int *cfrds_buffer_to_sql_columninfo(cfrds_buffer *buffer)
         cfrds_str_defer(field12);
 
         if (!cfrds_buffer_parse_string_list_item(&column_buf, &list_remaining, &field1))
-            return NULL;
+            return NULL; // TODO: Will leak ret.
         if (!cfrds_buffer_parse_string_list_item(&column_buf, &list_remaining, &field2))
-            return NULL;
+            return NULL; // TODO: Will leak ret.
         if (!cfrds_buffer_parse_string_list_item(&column_buf, &list_remaining, &field3))
-            return NULL;
+            return NULL; // TODO: Will leak ret.
         if (!cfrds_buffer_parse_string_list_item(&column_buf, &list_remaining, &field4))
-            return NULL;
+            return NULL; // TODO: Will leak ret.
         if (!cfrds_buffer_parse_string_list_item(&column_buf, &list_remaining, &field5))
-            return NULL;
+            return NULL; // TODO: Will leak ret.
         if (!cfrds_buffer_parse_string_list_item(&column_buf, &list_remaining, &field6))
-            return NULL;
+            return NULL; // TODO: Will leak ret.
         if (!cfrds_buffer_parse_string_list_item(&column_buf, &list_remaining, &field7))
-            return NULL;
+            return NULL; // TODO: Will leak ret.
         if (!cfrds_buffer_parse_string_list_item(&column_buf, &list_remaining, &field8))
-            return NULL;
+            return NULL; // TODO: Will leak ret.
         if (!cfrds_buffer_parse_string_list_item(&column_buf, &list_remaining, &field9))
-            return NULL;
+            return NULL; // TODO: Will leak ret.
         if (!cfrds_buffer_parse_string_list_item(&column_buf, &list_remaining, &field10))
-            return NULL;
+            return NULL; // TODO: Will leak ret.
         if (!cfrds_buffer_parse_string_list_item(&column_buf, &list_remaining, &field11))
-            return NULL;
+            return NULL; // TODO: Will leak ret.
         if (list_remaining > 0)
         {
             if (!cfrds_buffer_parse_string_list_item(&column_buf, &list_remaining, &field12))
-                return NULL;
+                return NULL; // TODO: Will leak ret.
         }
         if (list_remaining != 0)
-            return NULL;
+            return NULL; // TODO: Will leak ret.
 
         ret->items[column].schema    = field1; field1 = NULL;
         ret->items[column].owner     = field2; field2 = NULL;
@@ -999,7 +999,7 @@ cfrds_sql_primarykeys_int *cfrds_buffer_to_sql_primarykeys(cfrds_buffer *buffer)
 
         cfrds_buffer_parse_string(&data, &size, &item);
         if (item == NULL)
-            return NULL;
+            return NULL; // TODO: Will leak tmp.
 
         const char *column_buf = item;
 

@@ -689,6 +689,8 @@ cfrds_sql_dsninfo_int *cfrds_buffer_to_sql_dsninfo(cfrds_buffer *buffer)
 {
     cfrds_sql_dsninfo_int *ret = NULL;
 
+    cfrds_sql_dsninfo_defer(tmp);
+
     const char *response_data = cfrds_buffer_data(buffer);
     size_t response_size = cfrds_buffer_data_size(buffer);
 
@@ -702,11 +704,11 @@ cfrds_sql_dsninfo_int *cfrds_buffer_to_sql_dsninfo(cfrds_buffer *buffer)
       if (cnt > 10000)
           return NULL;
 
-      ret = malloc(offsetof(cfrds_sql_dsninfo_int, names) + sizeof(char *) * cnt);
-      if (ret == NULL)
+      tmp = malloc(offsetof(cfrds_sql_dsninfo_int, names) + sizeof(char *) * cnt);
+      if (tmp == NULL)
           return NULL;
 
-      ret->cnt = cnt;
+      ((cfrds_sql_dsninfo_int *)tmp)->cnt = cnt;
 
       for(int c = 0; c < cnt; c++)
       {
@@ -724,20 +726,22 @@ cfrds_sql_dsninfo_int *cfrds_buffer_to_sql_dsninfo(cfrds_buffer *buffer)
                   {
                       size_t len = pos2 - pos1 - 1;
 
-                      char *tmp = malloc(len + 1);
-                      if (tmp == NULL)
-                          return NULL; // TODO: Will leak ret.
+                      char *str_tmp = malloc(len + 1);
+                      if (str_tmp == NULL)
+                          return NULL;
 
-                      memcpy(tmp, pos1 + 1, len);
-                      tmp[len] = '\0';
+                      memcpy(str_tmp, pos1 + 1, len);
+                      str_tmp[len] = '\0';
                       free(item);
-                      item = tmp;
+                      item = str_tmp;
                   }
               }
 
-              ret->names[c] = item; item = NULL;
+              ((cfrds_sql_dsninfo_int *)tmp)->names[c] = item; item = NULL;
           }
       }
+
+    ret = (void *)tmp; tmp = NULL;
 
     return ret;
 }
@@ -745,6 +749,8 @@ cfrds_sql_dsninfo_int *cfrds_buffer_to_sql_dsninfo(cfrds_buffer *buffer)
 cfrds_sql_tableinfo_int *cfrds_buffer_to_sql_tableinfo(cfrds_buffer *buffer)
 {
     cfrds_sql_tableinfo_int *ret = NULL;
+
+    cfrds_sql_tableinfo_defer(tmp);
 
     const char *response_data = cfrds_buffer_data(buffer);
     size_t response_size = cfrds_buffer_data_size(buffer);
@@ -761,13 +767,14 @@ cfrds_sql_tableinfo_int *cfrds_buffer_to_sql_tableinfo(cfrds_buffer *buffer)
 
     size_t malloc_size = offsetof(cfrds_sql_tableinfo_int, items) + sizeof(cfrds_sql_tableinfoitem_int) * cnt;
 
-    ret = malloc(malloc_size);
-    if (ret == NULL)
+    tmp = malloc(malloc_size);
+    if (tmp == NULL)
         return NULL;
 
-    explicit_bzero(ret, malloc_size);
+    explicit_bzero(tmp, malloc_size);
 
-    ret->cnt = 0;
+    cfrds_sql_tableinfo_int *tmp_int = (cfrds_sql_tableinfo_int *)tmp;
+    tmp_int->cnt = 0;
 
     for(int c = 0; c < cnt; c++)
     {
@@ -789,7 +796,7 @@ cfrds_sql_tableinfo_int *cfrds_buffer_to_sql_tableinfo(cfrds_buffer *buffer)
             current_item++;
             end_item = strchr(current_item, '"');
             if (!end_item)
-                return NULL; // TODO: Will leak ret.
+                return NULL;
             if (end_item >= current_item) {
                 size_t size = end_item - current_item;
 
@@ -873,13 +880,15 @@ cfrds_sql_tableinfo_int *cfrds_buffer_to_sql_tableinfo(cfrds_buffer *buffer)
                 field4[size] = '\0';
             }
 
-            ret->items[ret->cnt].unknown = field1; field1 = NULL;
-            ret->items[ret->cnt].schema  = field2; field2 = NULL;
-            ret->items[ret->cnt].name    = field3; field3 = NULL;
-            ret->items[ret->cnt].type    = field4; field4 = NULL;
-            ret->cnt++;
+            tmp_int->items[tmp_int->cnt].unknown = field1; field1 = NULL;
+            tmp_int->items[tmp_int->cnt].schema  = field2; field2 = NULL;
+            tmp_int->items[tmp_int->cnt].name    = field3; field3 = NULL;
+            tmp_int->items[tmp_int->cnt].type    = field4; field4 = NULL;
+            tmp_int->cnt++;
         }
     }
+
+    ret = (void *)tmp; tmp = NULL;
 
     return ret;
 }
@@ -887,6 +896,8 @@ cfrds_sql_tableinfo_int *cfrds_buffer_to_sql_tableinfo(cfrds_buffer *buffer)
 cfrds_sql_columninfo_int *cfrds_buffer_to_sql_columninfo(cfrds_buffer *buffer)
 {
     cfrds_sql_columninfo_int *ret = NULL;
+
+    cfrds_sql_columninfo_defer(tmp);
 
     cfrds_buffer_int *buffer_int = (cfrds_buffer_int *)buffer;
 
@@ -904,19 +915,20 @@ cfrds_sql_columninfo_int *cfrds_buffer_to_sql_columninfo(cfrds_buffer *buffer)
     if (columns < 0)
         return NULL;
 
-    ret = malloc(offsetof(cfrds_sql_columninfo_int, items) + sizeof(cfrds_sql_columninfoitem_int) * columns);
-    if (ret == NULL)
+    tmp = malloc(offsetof(cfrds_sql_columninfo_int, items) + sizeof(cfrds_sql_columninfoitem_int) * columns);
+    if (tmp == NULL)
         return NULL;
 
-    explicit_bzero(ret, offsetof(cfrds_sql_columninfo_int, items) + sizeof(cfrds_sql_columninfoitem_int) * columns);
-    ret->cnt = columns;
+    explicit_bzero(tmp, offsetof(cfrds_sql_columninfo_int, items) + sizeof(cfrds_sql_columninfoitem_int) * columns);
+    cfrds_sql_columninfo_int *tmp_int = (cfrds_sql_columninfo_int *)tmp;
+    tmp_int->cnt = columns;
 
     for(int64_t column = 0; column < columns; column++)
     {
         cfrds_str_defer(row_buf);
 
         if (!cfrds_buffer_parse_string(&data, &size, &row_buf))
-            return NULL; // TODO: Will leak ret.
+            return NULL;
 
         const char *column_buf = row_buf;
 
@@ -936,47 +948,49 @@ cfrds_sql_columninfo_int *cfrds_buffer_to_sql_columninfo(cfrds_buffer *buffer)
         cfrds_str_defer(field12);
 
         if (!cfrds_buffer_parse_string_list_item(&column_buf, &list_remaining, &field1))
-            return NULL; // TODO: Will leak ret.
+            return NULL;
         if (!cfrds_buffer_parse_string_list_item(&column_buf, &list_remaining, &field2))
-            return NULL; // TODO: Will leak ret.
+            return NULL;
         if (!cfrds_buffer_parse_string_list_item(&column_buf, &list_remaining, &field3))
-            return NULL; // TODO: Will leak ret.
+            return NULL;
         if (!cfrds_buffer_parse_string_list_item(&column_buf, &list_remaining, &field4))
-            return NULL; // TODO: Will leak ret.
+            return NULL;
         if (!cfrds_buffer_parse_string_list_item(&column_buf, &list_remaining, &field5))
-            return NULL; // TODO: Will leak ret.
+            return NULL;
         if (!cfrds_buffer_parse_string_list_item(&column_buf, &list_remaining, &field6))
-            return NULL; // TODO: Will leak ret.
+            return NULL;
         if (!cfrds_buffer_parse_string_list_item(&column_buf, &list_remaining, &field7))
-            return NULL; // TODO: Will leak ret.
+            return NULL;
         if (!cfrds_buffer_parse_string_list_item(&column_buf, &list_remaining, &field8))
-            return NULL; // TODO: Will leak ret.
+            return NULL;
         if (!cfrds_buffer_parse_string_list_item(&column_buf, &list_remaining, &field9))
-            return NULL; // TODO: Will leak ret.
+            return NULL;
         if (!cfrds_buffer_parse_string_list_item(&column_buf, &list_remaining, &field10))
-            return NULL; // TODO: Will leak ret.
+            return NULL;
         if (!cfrds_buffer_parse_string_list_item(&column_buf, &list_remaining, &field11))
-            return NULL; // TODO: Will leak ret.
+            return NULL;
         if (list_remaining > 0)
         {
             if (!cfrds_buffer_parse_string_list_item(&column_buf, &list_remaining, &field12))
-                return NULL; // TODO: Will leak ret.
+                return NULL;
         }
         if (list_remaining != 0)
-            return NULL; // TODO: Will leak ret.
+            return NULL;
 
-        ret->items[column].schema    = field1; field1 = NULL;
-        ret->items[column].owner     = field2; field2 = NULL;
-        ret->items[column].table     = field3; field3 = NULL;
-        ret->items[column].name      = field4; field4 = NULL;
-        ret->items[column].type      = atoi(field5);
-        ret->items[column].typeStr   = field6; field6 = NULL;
-        ret->items[column].precision = atoi(field7);
-        ret->items[column].length    = atoi(field8);
-        ret->items[column].scale     = atoi(field9);
-        ret->items[column].radix     = atoi(field10);
-        ret->items[column].nullable  = atoi(field11);
+        tmp_int->items[column].schema    = field1; field1 = NULL;
+        tmp_int->items[column].owner     = field2; field2 = NULL;
+        tmp_int->items[column].table     = field3; field3 = NULL;
+        tmp_int->items[column].name      = field4; field4 = NULL;
+        tmp_int->items[column].type      = atoi(field5);
+        tmp_int->items[column].typeStr   = field6; field6 = NULL;
+        tmp_int->items[column].precision = atoi(field7);
+        tmp_int->items[column].length    = atoi(field8);
+        tmp_int->items[column].scale     = atoi(field9);
+        tmp_int->items[column].radix     = atoi(field10);
+        tmp_int->items[column].nullable  = atoi(field11);
     }
+
+    ret = (void *)tmp; tmp = NULL;
 
     return ret;
 }
@@ -1011,7 +1025,7 @@ cfrds_sql_primarykeys_int *cfrds_buffer_to_sql_primarykeys(cfrds_buffer *buffer)
 
         cfrds_buffer_parse_string(&data, &size, &item);
         if (item == NULL)
-            return NULL; // TODO: Will leak tmp.
+            return NULL;
 
         const char *column_buf = item;
 

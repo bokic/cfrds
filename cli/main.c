@@ -760,7 +760,7 @@ int main(int argc, char *argv[])
                 return EXIT_FAILURE;
             }
 
-            size_t *sizes = malloc(cols * sizeof(size_t)); // TODO: Will leak.
+            size_t *sizes = malloc(cols * sizeof(size_t));
             if (sizes == NULL)
             {
                 fprintf(stderr, "No memory\n");
@@ -924,6 +924,8 @@ int main(int argc, char *argv[])
                 }
                 putchar('\n');
             }
+
+            free(sizes);
         }
     } else if (strcmp(command, "sqlmetadata") == 0) {
         if ((path != NULL)&&(strlen(path) > 1))

@@ -362,7 +362,7 @@ bool cfrds_buffer_reserve_above_size(cfrds_buffer *buffer, size_t size)
             return false;
 
         buffer_int->data = tmp;
-        int oldsize = buffer_int->allocated;
+        size_t oldsize = buffer_int->allocated;
         explicit_bzero(buffer_int->data + oldsize, newsize- oldsize);
         buffer_int->allocated = newsize;
     }

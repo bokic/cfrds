@@ -1,5 +1,7 @@
 #pragma once
 
+#include <cassert>
+
 #ifdef __cplusplus
 
 extern "C" {
@@ -63,7 +65,7 @@ public:
     T* get() const { return _ptr; }
     
     T** ptr_ref() { 
-        free_internal(); 
+        assert(_ptr == nullptr && "ptr_ref() called on non-null AutoFree; must be empty");
         return &_ptr; 
     }
 

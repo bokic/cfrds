@@ -98,30 +98,32 @@ bool cfrds_server_init(cfrds_server **server, const char *host, uint16_t port, c
 
     explicit_bzero(ret, sizeof(cfrds_server_int));
 
-    ((cfrds_server_int *)ret)->host = strdup(host);
-    if (((cfrds_server_int *)ret)->host == NULL)
+    cfrds_server_int *ret_int = (cfrds_server_int *)ret;
+
+    ret_int->host = strdup(host);
+    if (ret_int->host == NULL)
         return false;
 
-    ((cfrds_server_int *)ret)->port = port;
+    ret_int->port = port;
 
-    ((cfrds_server_int *)ret)->username = strdup(username);
-    if (((cfrds_server_int *)ret)->username == NULL)
+    ret_int->username = strdup(username);
+    if (ret_int->username == NULL)
         return false;
 
-    ((cfrds_server_int *)ret)->orig_password = strdup(password);
-    if (((cfrds_server_int *)ret)->orig_password == NULL)
+    ret_int->orig_password = strdup(password);
+    if (ret_int->orig_password == NULL)
         return false;
 
-    if (strlen(((cfrds_server_int *)ret)->orig_password) > 0)
+    if (strlen(ret_int->orig_password) > 0)
     {
-        ((cfrds_server_int *)ret)->password = cfrds_server_encode_password(password);
-        if (((cfrds_server_int *)ret)->password == NULL)
+        ret_int->password = cfrds_server_encode_password(password);
+        if (ret_int->password == NULL)
             return false;
     }
 
-    ((cfrds_server_int *)ret)->_errno = 0;
-    ((cfrds_server_int *)ret)->error_code = 1;
-    ((cfrds_server_int *)ret)->error = NULL;
+    ret_int->_errno = 0;
+    ret_int->error_code = 1;
+    ret_int->error = NULL;
 
     *server = ret;
     ret = NULL;

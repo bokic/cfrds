@@ -44,6 +44,10 @@ endif()
 
 project(cfrds VERSION ${CFRDS_GIT_TAG} DESCRIPTION "ColdFusion RDS Library" LANGUAGES C)
 
+if(MSVC)
+    message(FATAL_ERROR "Unsupported compiler")
+endif()
+
 add_definitions(-DCFRDS_VERSION="${GIT_COMMIT_NAME}")
 
 set(CMAKE_C_STANDARD 11)

@@ -491,16 +491,38 @@ WDDX *wddx_from_xml(const char *xml)
 
     xmlNodePtr rootEl = xmlDocGetRootElement(doc);
     if (rootEl == NULL) return NULL;
+
+    while(rootEl->type == XML_TEXT_NODE)
+    {
+        if (rootEl->next == NULL) return NULL;
+        rootEl = rootEl->next;
+    }
+
     if (rootEl->type != XML_ELEMENT_NODE) return NULL;
+
     if (strcmp((const char *)rootEl->name, "wddxPacket") != 0) return NULL;
 
     xmlNodePtr headerEl = rootEl->children;
     if (headerEl == NULL) return NULL;
+
+    while(headerEl->type == XML_TEXT_NODE)
+    {
+        if (headerEl->next == NULL) return NULL;
+        headerEl = headerEl->next;
+    }
+
     if (headerEl->type != XML_ELEMENT_NODE) return NULL;
     if (strcmp((const char *)headerEl->name, "header") != 0) return NULL;
 
     xmlNodePtr dataEl = headerEl->next;
     if (dataEl == NULL) return NULL;
+
+    while(dataEl->type == XML_TEXT_NODE)
+    {
+        if (dataEl->next == NULL) return NULL;
+        dataEl = dataEl->next;
+    }
+
     if (dataEl->type != XML_ELEMENT_NODE) return NULL;
     if (strcmp((const char *)dataEl->name, "data") != 0) return NULL;
 

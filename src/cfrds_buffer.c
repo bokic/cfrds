@@ -236,6 +236,9 @@ bool cfrds_buffer_append_int(cfrds_buffer *buffer, int number)
 {
     char str[16];
 
+    if (buffer == NULL)
+        return false;
+
     snprintf(str, sizeof(str), "%d", number);
 
     if (cfrds_buffer_append(buffer, str) == false) return false;
@@ -265,6 +268,9 @@ bool cfrds_buffer_append_bytes(cfrds_buffer *buffer, const void *data, size_t le
 
 bool cfrds_buffer_append_buffer(cfrds_buffer *buffer, cfrds_buffer *new)
 {
+    if ((buffer == NULL)||(new == NULL))
+        return false;
+
     cfrds_buffer_int *buffer_int = (cfrds_buffer_int *)buffer;
     const cfrds_buffer_int *new_int = (const cfrds_buffer_int *)new;
     size_t len = new_int->size;
@@ -284,6 +290,9 @@ bool cfrds_buffer_append_rds_count(cfrds_buffer *buffer, size_t cnt)
 {
     char str[16] = {0, };
     int n = 0;
+
+    if (buffer == NULL)
+        return false;
 
     n = snprintf(str, sizeof(str), "%zu", cnt);
     if (n > 0)

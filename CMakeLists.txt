@@ -165,6 +165,7 @@ endif()
 
 set(LIBCFRDS_PUBLIC_HEADERS
     "include/cfrds.h"
+    "include/cfrds.hpp"
 )
 
 set_target_properties(libcfrds PROPERTIES

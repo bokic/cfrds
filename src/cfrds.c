@@ -3438,12 +3438,35 @@ exit:
     return -1;
 }
 
-cfrds_str cfrds_security_analyzer_result_files_value(const cfrds_security_analyzer_result *value)
+cfrds_str cfrds_security_analyzer_result_files_value(const cfrds_security_analyzer_result *value, int ndx)
 {
-    //TODO: Implement cfrds_security_analyzer_result_files_value()!
+    json_object_defer(json_obj);
+    json_obj = json_tokener_parse((const char *)value);
+    if (json_obj == NULL)
+        goto exit;
 
-    printf("Implement cfrds_security_analyzer_result_files_value()\n");
+    struct json_object *files = NULL;
+    json_object_object_get_ex(json_obj, "files", &files);
+    if (files == NULL)
+        goto exit;
 
+    if (json_object_get_type(files) != json_type_array)
+        goto exit;
+
+    int len = json_object_array_length(files);
+    if (ndx >= len)
+        goto exit;
+
+    json_object *item = json_object_array_get_idx(files, ndx);
+    if (item == NULL)
+        goto exit;
+
+    if (json_object_get_type(item) != json_type_string)
+        goto exit;
+
+    return strdup(json_object_get_string(item));
+
+exit:
     return NULL;
 }
 
@@ -3612,10 +3635,40 @@ exit:
 
 int cfrds_security_analyzer_result_errors_item_endline(const cfrds_security_analyzer_result *value, int ndx)
 {
-    //TODO: Implement cfrds_security_analyzer_result_errors_item_endline()!
+    json_object_defer(json_obj);
+    json_obj = json_tokener_parse((const char *)value);
+    if (json_obj == NULL)
+        goto exit;
 
-    printf("Implement cfrds_security_analyzer_result_errors_item_endline()\n");
+    struct json_object *errors = NULL;
+    json_object_object_get_ex(json_obj, "errors", &errors);
+    if (errors == NULL)
+        goto exit;
 
+    if (json_object_get_type(errors) != json_type_array)
+        goto exit;
+
+    int len = json_object_array_length(errors);
+    if (ndx >= len)
+        goto exit;
+
+    struct json_object *error = json_object_array_get_idx(errors, ndx);
+    if (error == NULL)
+        goto exit;
+
+    if (json_object_get_type(error) != json_type_object)
+        goto exit;
+
+    struct json_object *endline = json_object_object_get(error, "endline");
+    if (endline == NULL)
+        goto exit;
+
+    if (json_object_get_type(endline) != json_type_int)
+        goto exit;
+
+    return json_object_get_int(endline);
+
+exit:
     return -1;
 }
 

@@ -753,7 +753,7 @@ int main(int argc, char *argv[])
                 return EXIT_FAILURE;
             }
 
-            int cols = cfrds_sql_resultset_columns(resultset);
+            size_t cols = cfrds_sql_resultset_columns(resultset);
             if (cols == 0)
             {
                 fprintf(stderr, "No columns\n");
@@ -767,7 +767,7 @@ int main(int argc, char *argv[])
                 return EXIT_FAILURE;
             }
 
-            for(int c = 0; c < cols; c++)
+            for(size_t c = 0; c < cols; c++)
             {
                 const char *name  = cfrds_sql_resultset_column_name(resultset, c);
                 sizes[c] = strlen(name);
@@ -776,7 +776,7 @@ int main(int argc, char *argv[])
             int rows = cfrds_sql_resultset_rows(resultset);
             for (int r = 0; r < rows; r++)
             {
-                for (int c = 0; c < cols; c++)
+                for (size_t c = 0; c < cols; c++)
                 {
                     const char *value = cfrds_sql_resultset_value(resultset, r, c);
                     if (strlen(value) > sizes[c])
@@ -787,7 +787,7 @@ int main(int argc, char *argv[])
             }
 
             printf((const char*)u8"\u250F");
-            for(int col = 0; col < cols; col++)
+            for(size_t col = 0; col < cols; col++)
             {
                 size_t size = sizes[col];
 
@@ -808,7 +808,7 @@ int main(int argc, char *argv[])
             putchar('\n');
 
             printf((const char*)u8"\u2503");
-            for(int col = 0; col < cols; col++)
+            for(size_t col = 0; col < cols; col++)
             {
                 size_t size = sizes[col];
 
@@ -835,7 +835,7 @@ int main(int argc, char *argv[])
             if (rows == 0)
             {
                 printf((const char*)u8"\u2517");
-                for(int col = 0; col < cols; col++)
+                for(size_t col = 0; col < cols; col++)
                 {
                     size_t size = sizes[col];
 
@@ -855,7 +855,7 @@ int main(int argc, char *argv[])
                 }
             } else {
                 printf((const char*)u8"\u2520");
-                for(int col = 0; col < cols; col++)
+                for(size_t col = 0; col < cols; col++)
                 {
                     size_t size = sizes[col];
 
@@ -879,7 +879,7 @@ int main(int argc, char *argv[])
             for (int row = 0; row < rows; row++)
             {
                 printf((const char*)u8"\u2503");
-                for(int col = 0; col < cols; col++)
+                for(size_t col = 0; col < cols; col++)
                 {
                     size_t size = sizes[col];
 
@@ -1167,8 +1167,6 @@ int main(int argc, char *argv[])
             }
         } else if (strcmp(subcommand, "extensions_setmapping") == 0)
         {
-            char **result = NULL;
-
             if (argc < 6)
             {
                 fprintf(stderr, "Not enough arguments\n");
@@ -1185,8 +1183,6 @@ int main(int argc, char *argv[])
             }
         } else if (strcmp(subcommand, "extensions_deletemapping") == 0)
         {
-            char **result = NULL;
-
             if (argc < 5)
             {
                 fprintf(stderr, "Not enough arguments\n");

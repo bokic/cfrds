@@ -2639,7 +2639,6 @@ cfrds_status cfrds_command_security_analyzer_scan(cfrds_server *server, const ch
 {
     cfrds_status ret;
 
-    cfrds_server_int *server_int = NULL;
     char cores_str[32];
     char *recursively_str = NULL;
 
@@ -2649,8 +2648,6 @@ cfrds_status cfrds_command_security_analyzer_scan(cfrds_server *server, const ch
     {
         return CFRDS_STATUS_SERVER_IS_NULL;
     }
-
-    server_int = (cfrds_server_int *)server;
 
     if (recursively)
         recursively_str = "true";
@@ -2739,7 +2736,6 @@ cfrds_status cfrds_command_security_analyzer_cancel(cfrds_server *server, int co
 {
     cfrds_status ret;
 
-    cfrds_server_int *server_int = NULL;
     char id_str[32];
 
     cfrds_buffer_defer(response);
@@ -2748,8 +2744,6 @@ cfrds_status cfrds_command_security_analyzer_cancel(cfrds_server *server, int co
     {
         return CFRDS_STATUS_SERVER_IS_NULL;
     }
-
-    server_int = (cfrds_server_int *)server;
 
     snprintf(id_str, sizeof(id_str), "%d", command_id);
 
@@ -2817,7 +2811,6 @@ cfrds_status cfrds_command_security_analyzer_status(cfrds_server *server, int co
 {
     cfrds_status ret;
 
-    cfrds_server_int *server_int = NULL;
     char id_str[32];
 
     cfrds_buffer_defer(response);
@@ -2826,8 +2819,6 @@ cfrds_status cfrds_command_security_analyzer_status(cfrds_server *server, int co
     {
         return CFRDS_STATUS_SERVER_IS_NULL;
     }
-
-    server_int = (cfrds_server_int *)server;
 
     snprintf(id_str, sizeof(id_str), "%d", command_id);
 
@@ -3008,7 +2999,6 @@ cfrds_status cfrds_command_security_analyzer_clean(cfrds_server *server, int com
 {
     cfrds_status ret;
 
-    cfrds_server_int *server_int = NULL;
     char id_str[32];
 
     cfrds_buffer_defer(response);
@@ -3017,8 +3007,6 @@ cfrds_status cfrds_command_security_analyzer_clean(cfrds_server *server, int com
     {
         return CFRDS_STATUS_SERVER_IS_NULL;
     }
-
-    server_int = (cfrds_server_int *)server;
 
     snprintf(id_str, sizeof(id_str), "%d", command_id);
 

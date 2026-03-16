@@ -1220,6 +1220,46 @@ int main(int argc, char *argv[])
             fprintf(stderr, "Unknown adminapi subcommand %s\n", subcommand);
             return EXIT_FAILURE;
         }
+    } else if (strcmp(command, "test_debugger") == 0)
+    {
+        cfrds_str_defer(debugger_session_id);
+        res = cfrds_command_debugger_start(server, &debugger_session_id);
+        if (res != CFRDS_STATUS_OK)
+        {
+            fprintf(stderr, "cfrds_command_debugger_start FAILED with error: %s\n", cfrds_server_get_error(server));
+            return EXIT_FAILURE;
+        }
+
+        printf("debugger_session_id: %s\n", debugger_session_id);
+
+        res = cfrds_command_debugger_clear_all_breakpoints(server, debugger_session_id);
+        if (res != CFRDS_STATUS_OK)
+        {
+            fprintf(stderr, "cfrds_command_debugger_clear_all_breakpoints FAILED with error: %s\n", cfrds_server_get_error(server));
+            return EXIT_FAILURE;
+        }
+
+        res = cfrds_command_debugger_breakpoint(server, debugger_session_id, "/app/test.cfm", 3, true);
+        if (res != CFRDS_STATUS_OK)
+        {
+            fprintf(stderr, "cfrds_command_debugger_breakpoint FAILED with error: %s\n", cfrds_server_get_error(server));
+            return EXIT_FAILURE;
+        }
+
+        res = cfrds_command_debugger_breakpoint(server, debugger_session_id, "/app/test.cfm", 3, false);
+        if (res != CFRDS_STATUS_OK)
+        {
+            fprintf(stderr, "cfrds_command_debugger_breakpoint FAILED with error: %s\n", cfrds_server_get_error(server));
+            return EXIT_FAILURE;
+        }
+
+        res = cfrds_command_debugger_stop(server, debugger_session_id);
+        if (res != CFRDS_STATUS_OK)
+        {
+            fprintf(stderr, "cfrds_command_debugger_stop FAILED with error: %s\n", cfrds_server_get_error(server));
+            return EXIT_FAILURE;
+        }
+
     } else {
         fprintf(stderr, "Unknown command %s\n", command);
         return EXIT_FAILURE;

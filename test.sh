@@ -89,4 +89,8 @@ echo "Fetching dbdescription..."
 bin/cfrds dbdescription $RDS_HOST/$RDS_DSN
 echo "Fetched dbdescription"
 
+echo "Testing debugger..."
+bin/cfrds test_debugger $RDS_HOST
+echo "Tested debugger"
+
 echo "Done..."

@@ -2472,11 +2472,22 @@ int cfrds_debugger_event_get_cf_trace_count(const cfrds_debugger_event *event)
 
 const char *cfrds_debugger_event_get_cf_trace_item(const cfrds_debugger_event *event, int ndx)
 {
-    // TODO: Implement cfrds_debugger_event_get_cf_trace_item()
-    
-    printf("Implement cfrds_debugger_event_get_cf_trace_item()\n");
+    char key[32];
+    int n;
 
-    return NULL;
+    if ((event == NULL)||(ndx < 0))
+        return NULL;
+
+    n = snprintf(key, sizeof(key), "0,CF_TRACE,%d", ndx);
+    if (n < 0)
+        return NULL;
+
+    const WDDX_NODE *node = wddx_get_var(event, key);
+
+    if (wddx_node_type(node) != WDDX_STRING)
+        return NULL;
+    
+    return wddx_node_string(node);
 }
 
 int cfrds_debugger_event_get_java_trace_count(const cfrds_debugger_event *event)

@@ -26,88 +26,86 @@
 
 static void usage()
 {
-    printf("Usage: cfrds <command> [options] <url> [options]\n"
-           "commands:\n"
-           "  - 'ls', 'dir' - List a server directory.\n"
-           "         example: `cfrds ls <rds://[username[:password]@]host[:port]/[path]>`\n"
-           "            or    `cfrds dir <rds://[username[:password]@]host[:port]/[path]>`\n"
-           "\n"
-           "  - 'cat' - Print server file content to stdout.\n"
-           "         example: `cfrds cat <rds://[username[:password]@]host[:port]</pathname>>`\n"
-           "\n"
-           "  - 'get', 'download' - Download a file from server.\n"
-           "         example: `cfrds get <rds://[username[:password]@]host[:port]</pathname>> <local_pathname>`\n"
-           "            or    `cfrds download <rds://[username[:password]@]host[:port]</pathname>> <local_pathname>`\n"
-           "\n"
-           "  - 'put', 'upload' - Upload a file to server.\n"
-           "         example: `cfrds put <local_pathname> <rds://[username[:password]@]host[:port]</pathname>>`\n"
-           "            or    `cfrds upload <local_pathname> <rds://[username[:password]@]host[:port]</pathname>>`\n"
-           "\n"
-           "  - 'mv', 'move' - Move/rename file or folder.\n"
-           "         example: `cfrds mv <rds://[username[:password]@]host[:port]</pathname>> <new_pathname>`\n"
-           "            or    `cfrds move <rds://[username[:password]@]host[:port]</pathname>> <new_pathname>`\n"
-           "\n"
-           "  - 'rm', 'delete' - Delete a file from server.\n"
-           "         example: `cfrds rm <rds://[username[:password]@]host[:port]</pathname>>`\n"
-           "            or    `cfrds delete <rds://[username[:password]@]host[:port]</pathname>>`\n"
-           "\n"
-           "  - 'mkdir' - Create a directory on a server.\n"
-           "         example: `cfrds mkdir <rds://[username[:password]@]host[:port]</path>>`\n"
-           "\n"
-           "  - 'rmdir' - Delete a directory from a server.\n"
-           "         example: `cfrds rmdir <rds://[username[:password]@]host[:port]</path>>`\n"
-           "\n"
-           "  - 'cfroot' - Return ColdFusion installation directory.\n"
-           "         example: `cfrds cfroot <rds://[username[:password]@]host[:port]>`\n"
-           "\n"
-           "  - 'dsninfo' - Return ColdFusion data sources.\n"
-           "         example: `cfrds dsninfo <rds://[username[:password]@]host[:port]>`\n"
-           "\n"
-           "  - 'tableinfo' - Return ColdFusion datasource tables info.\n"
-           "         example: `cfrds tableinfo <rds://[username[:password]@]host[:port]/<dsn_name>>`\n"
-           "\n"
-           "  - 'columninfo' - Return ColdFusion datasource table columns info.\n"
-           "         example: `cfrds columninfo <rds://[username[:password]@]host[:port]/<dsn_name>/<table_name>>`\n"
-           "\n"
-           "  - 'primarykeys' - Return ColdFusion datasource table primary keys info.\n"
-           "         example: `cfrds primarykeys <rds://[username[:password]@]host[:port]/<dsn_name>/<table_name>>`\n"
-           "\n"
-           "  - 'foreignkeys' - Return ColdFusion datasource table foreign keys info.\n"
-           "         example: `cfrds foreignkeys <rds://[username[:password]@]host[:port]/<dsn_name>/<table_name>>`\n"
-           "\n"
-           "  - 'importedkeys' - Return ColdFusion datasource table imported keys info.\n"
-           "         example: `cfrds importedkeys <rds://[username[:password]@]host[:port]/<dsn_name>/<table_name>>`\n"
-           "\n"
-           "  - 'exportedkeys' - Return ColdFusion datasource table exported keys info.\n"
-           "         example: `cfrds exportedkeys <rds://[username[:password]@]host[:port]/<dsn_name>/<table_name>>`\n"
-           "\n"
-           "  - 'sql' - Execute SQL statement on ColdFusion data sources.\n"
-           "         example: `cfrds sql <rds://[username[:password]@]host[:port]/<dsn_name>> \"<sql_statement>\"`\n"
-           "\n"
-           "  - 'sqlmetadata' - Return SQL statement metadata on ColdFusion data sources.\n"
-           "         example: `cfrds sqlmetadata <rds://[username[:password]@]host[:port]/<dsn_name>> \"<sql_statement>\"`\n"
-           "\n"
-           "  - 'sqlsupportedcommands' - Return SQL statement supported commands on ColdFusion data sources.\n"
-           "         example: `cfrds sqlsupportedcommands <rds://[username[:password]@]host[:port]/<dsn_name>>`\n"
-           "\n"
-           "  - 'dbdescription' - Return ColdFusion data sources database info.\n"
-           "         example: `cfrds dbdescription <rds://[username[:password]@]host[:port]/<dsn_name>>`\n"
-           "\n"
-           "  - 'security_analyzer' - Get ColdFusion server information.\n"
-           "         example: `cfrds security_analyzer <rds://[username[:password]@]host[:port]</pathname>>`\n"
-           "\n"
-           "  - 'ide_default' - Get ColdFusion server information.\n"
-           "         example: `cfrds ide_default <rds://[username[:password]@]host[:port]> <version>`\n"
-           "\n"
-           "  - 'adminapi' - Get ColdFusion server information.\n"
-           "         examples:\n"
-           "           `cfrds adminapi <rds://[username[:password]@]host[:port]> debugging_getlogproperty <log_directory>`\n"
-           "           `cfrds adminapi <rds://[username[:password]@]host[:port]> extensions_getcustomtagpaths`\n"
-           "           `cfrds adminapi <rds://[username[:password]@]host[:port]> extensions_setmapping <mapping_name> <mapping_path>`\n"
-           "           `cfrds adminapi <rds://[username[:password]@]host[:port]> extensions_deletemapping <mapping_name>`\n"
-           "           `cfrds adminapi <rds://[username[:password]@]host[:port]> extensions_getmappings`\n"
-           "\n"
-           );
+    printf("Usage: cfrds <command> [options] <url> [options]\n");
+    printf("commands:\n");
+    printf("  - 'ls', 'dir' - List a server directory.\n");
+    printf("         example: `cfrds ls <rds://[username[:password]@]host[:port]/[path]>`\n");
+    printf("            or    `cfrds dir <rds://[username[:password]@]host[:port]/[path]>`\n");
+    printf("\n");
+    printf("  - 'cat' - Print server file content to stdout.\n");
+    printf("         example: `cfrds cat <rds://[username[:password]@]host[:port]</pathname>>`\n");
+    printf("\n");
+    printf("  - 'get', 'download' - Download a file from server.\n");
+    printf("         example: `cfrds get <rds://[username[:password]@]host[:port]</pathname>> <local_pathname>`\n");
+    printf("            or    `cfrds download <rds://[username[:password]@]host[:port]</pathname>> <local_pathname>`\n");
+    printf("\n");
+    printf("  - 'put', 'upload' - Upload a file to server.\n");
+    printf("         example: `cfrds put <local_pathname> <rds://[username[:password]@]host[:port]</pathname>>`\n");
+    printf("            or    `cfrds upload <local_pathname> <rds://[username[:password]@]host[:port]</pathname>>`\n");
+    printf("\n");
+    printf("  - 'mv', 'move' - Move/rename file or folder.\n");
+    printf("         example: `cfrds mv <rds://[username[:password]@]host[:port]</pathname>> <new_pathname>`\n");
+    printf("            or    `cfrds move <rds://[username[:password]@]host[:port]</pathname>> <new_pathname>`\n");
+    printf("\n");
+    printf("  - 'rm', 'delete' - Delete a file from server.\n");
+    printf("         example: `cfrds rm <rds://[username[:password]@]host[:port]</pathname>>`\n");
+    printf("            or    `cfrds delete <rds://[username[:password]@]host[:port]</pathname>>`\n");
+    printf("\n");
+    printf("  - 'mkdir' - Create a directory on a server.\n");
+    printf("         example: `cfrds mkdir <rds://[username[:password]@]host[:port]</path>>`\n");
+    printf("\n");
+    printf("  - 'rmdir' - Delete a directory from a server.\n");
+    printf("         example: `cfrds rmdir <rds://[username[:password]@]host[:port]</path>>`\n");
+    printf("\n");
+    printf("  - 'cfroot' - Return ColdFusion installation directory.\n");
+    printf("         example: `cfrds cfroot <rds://[username[:password]@]host[:port]>`\n");
+    printf("\n");
+    printf("  - 'dsninfo' - Return ColdFusion data sources.\n");
+    printf("         example: `cfrds dsninfo <rds://[username[:password]@]host[:port]>`\n");
+    printf("\n");
+    printf("  - 'tableinfo' - Return ColdFusion datasource tables info.\n");
+    printf("         example: `cfrds tableinfo <rds://[username[:password]@]host[:port]/<dsn_name>>`\n");
+    printf("\n");
+    printf("  - 'columninfo' - Return ColdFusion datasource table columns info.\n");
+    printf("         example: `cfrds columninfo <rds://[username[:password]@]host[:port]/<dsn_name>/<table_name>>`\n");
+    printf("\n");
+    printf("  - 'primarykeys' - Return ColdFusion datasource table primary keys info.\n");
+    printf("         example: `cfrds primarykeys <rds://[username[:password]@]host[:port]/<dsn_name>/<table_name>>`\n");
+    printf("\n");
+    printf("  - 'foreignkeys' - Return ColdFusion datasource table foreign keys info.\n");
+    printf("         example: `cfrds foreignkeys <rds://[username[:password]@]host[:port]/<dsn_name>/<table_name>>`\n");
+    printf("\n");
+    printf("  - 'importedkeys' - Return ColdFusion datasource table imported keys info.\n");
+    printf("         example: `cfrds importedkeys <rds://[username[:password]@]host[:port]/<dsn_name>/<table_name>>`\n");
+    printf("\n");
+    printf("  - 'exportedkeys' - Return ColdFusion datasource table exported keys info.\n");
+    printf("         example: `cfrds exportedkeys <rds://[username[:password]@]host[:port]/<dsn_name>/<table_name>>`\n");
+    printf("\n");
+    printf("  - 'sql' - Execute SQL statement on ColdFusion data sources.\n");
+    printf("         example: `cfrds sql <rds://[username[:password]@]host[:port]/<dsn_name>> \"<sql_statement>\"`\n");
+    printf("\n");
+    printf("  - 'sqlmetadata' - Return SQL statement metadata on ColdFusion data sources.\n");
+    printf("         example: `cfrds sqlmetadata <rds://[username[:password]@]host[:port]/<dsn_name>> \"<sql_statement>\"`\n");
+    printf("\n");
+    printf("  - 'sqlsupportedcommands' - Return SQL statement supported commands on ColdFusion data sources.\n");
+    printf("         example: `cfrds sqlsupportedcommands <rds://[username[:password]@]host[:port]/<dsn_name>>`\n");
+    printf("\n");
+    printf("  - 'dbdescription' - Return ColdFusion data sources database info.\n");
+    printf("         example: `cfrds dbdescription <rds://[username[:password]@]host[:port]/<dsn_name>>`\n");
+    printf("\n");
+    printf("  - 'security_analyzer' - Get ColdFusion server information.\n");
+    printf("         example: `cfrds security_analyzer <rds://[username[:password]@]host[:port]</pathname>>`\n");
+    printf("\n");
+    printf("  - 'ide_default' - Get ColdFusion server information.\n");
+    printf("         example: `cfrds ide_default <rds://[username[:password]@]host[:port]> <version>`\n");
+    printf("\n");
+    printf("  - 'adminapi' - Get ColdFusion server information.\n");
+    printf("         examples:\n");
+    printf("           `cfrds adminapi <rds://[username[:password]@]host[:port]> debugging_getlogproperty <log_directory>`\n");
+    printf("           `cfrds adminapi <rds://[username[:password]@]host[:port]> extensions_getcustomtagpaths`\n");
+    printf("           `cfrds adminapi <rds://[username[:password]@]host[:port]> extensions_setmapping <mapping_name> <mapping_path>`\n");
+    printf("           `cfrds adminapi <rds://[username[:password]@]host[:port]> extensions_deletemapping <mapping_name>`\n");
+    printf("           `cfrds adminapi <rds://[username[:password]@]host[:port]> extensions_getmappings`\n");
 }
 
 static bool init_server_from_uri(const char *uri, char **hostname, uint16_t *port, char **username, char **password, char **path)

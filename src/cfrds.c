@@ -2394,7 +2394,7 @@ cfrds_debugger_type cfrds_debugger_event_get_type(const cfrds_debugger_event *ev
 
 const char *cfrds_debugger_event_breakpoint_get_source(const cfrds_debugger_event *event)
 {
-    return wddx_get_string(event, "0,GET_SOURCE");
+    return wddx_get_string(event, "0,SOURCE");
 }
 
 int cfrds_debugger_event_breakpoint_get_line(const cfrds_debugger_event *event)

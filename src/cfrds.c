@@ -2161,6 +2161,7 @@ cfrds_status cfrds_command_debugger_breakpoint(cfrds_server *server, const char 
     ret = cfrds_send_command(server, &response, "DBGREQUEST", (const char *[]){ "DBG_REQUEST", session_id, wddx_to_xml(wddx), NULL});
 
     // TODO: Check the response variable.
+    printf("cfrds_command_debugger_breakpoint - response: [%s]\n", cfrds_buffer_data(response));
 
     return ret;
 }
@@ -2188,6 +2189,7 @@ cfrds_status cfrds_command_debugger_clear_all_breakpoints(cfrds_server *server, 
     ret = cfrds_send_command(server, &response, "DBGREQUEST", (const char *[]){ "DBG_REQUEST", session_id, wddx_to_xml(wddx), NULL});
 
     // TODO: Check the response variable.
+    printf("cfrds_command_debugger_clear_all_breakpoints - response: [%s]\n", cfrds_buffer_data(response));
 
     return ret;
 }
@@ -2274,6 +2276,7 @@ cfrds_status cfrds_command_debugger_step_in(cfrds_server *server, const char *se
     ret = cfrds_send_command(server, &response, "DBGREQUEST", (const char *[]){ "DBG_REQUEST", session_id, wddx_to_xml(wddx), NULL});
 
     // TODO: Check the response variable.
+    printf("cfrds_command_debugger_step_in - response: [%s]\n", cfrds_buffer_data(response));
 
     return ret;
 }
@@ -2302,6 +2305,7 @@ cfrds_status cfrds_command_debugger_step_over(cfrds_server *server, const char *
     ret = cfrds_send_command(server, &response, "DBGREQUEST", (const char *[]){ "DBG_REQUEST", session_id, wddx_to_xml(wddx), NULL});
 
     // TODO: Check the response variable.
+    printf("cfrds_command_debugger_continue - response: [%s]\n", cfrds_buffer_data(response));
 
     return ret;
 }
@@ -2330,6 +2334,7 @@ cfrds_status cfrds_command_debugger_step_out(cfrds_server *server, const char *s
     ret = cfrds_send_command(server, &response, "DBGREQUEST", (const char *[]){ "DBG_REQUEST", session_id, wddx_to_xml(wddx), NULL});
 
     // TODO: Check the response variable.
+    printf("cfrds_command_debugger_step_out - response: [%s]\n", cfrds_buffer_data(response));
 
     return ret;
 }
@@ -2358,6 +2363,7 @@ cfrds_status cfrds_command_debugger_continue(cfrds_server *server, const char *s
     ret = cfrds_send_command(server, &response, "DBGREQUEST", (const char *[]){ "DBG_REQUEST", session_id, wddx_to_xml(wddx), NULL});
 
     // TODO: Check the response variable.
+    printf("cfrds_command_debugger_continue - response: [%s]\n", cfrds_buffer_data(response));
 
     return ret;
 }
@@ -2423,6 +2429,10 @@ int cfrds_debugger_event_get_scopes_count(const cfrds_debugger_event *event)
 
 const char *cfrds_debugger_event_get_scopes_item(const cfrds_debugger_event *event, int ndx)
 {
+    // TODO: Implement cfrds_debugger_event_get_scopes_item()
+    
+    printf("Implement cfrds_debugger_event_get_scopes_item()\n");
+
     return NULL;
     //return wddx_get_array_item(event, "0,SCOPES", ndx);
 }
@@ -2434,6 +2444,10 @@ int cfrds_debugger_event_get_threads_count(const cfrds_debugger_event *event)
 
 const char *cfrds_debugger_event_get_threads_item(const cfrds_debugger_event *event, int ndx)
 {
+    // TODO: Implement cfrds_debugger_event_get_threads_item()
+    
+    printf("Implement cfrds_debugger_event_get_threads_item()\n");
+
     return NULL;
 }
 
@@ -2444,6 +2458,10 @@ int cfrds_debugger_event_get_watch_count(const cfrds_debugger_event *event)
 
 const char *cfrds_debugger_event_get_watch_item(const cfrds_debugger_event *event, int ndx)
 {
+    // TODO: Implement cfrds_debugger_event_get_watch_item()
+    
+    printf("Implement cfrds_debugger_event_get_watch_item()\n");
+
     return NULL;
 }
 
@@ -2454,6 +2472,10 @@ int cfrds_debugger_event_get_cf_trace_count(const cfrds_debugger_event *event)
 
 const char *cfrds_debugger_event_get_cf_trace_item(const cfrds_debugger_event *event, int ndx)
 {
+    // TODO: Implement cfrds_debugger_event_get_cf_trace_item()
+    
+    printf("Implement cfrds_debugger_event_get_cf_trace_item()\n");
+
     return NULL;
 }
 
@@ -2464,6 +2486,10 @@ int cfrds_debugger_event_get_java_trace_count(const cfrds_debugger_event *event)
 
 const char *cfrds_debugger_event_get_java_trace_item(const cfrds_debugger_event *event, int ndx)
 {
+    // TODO: Implement cfrds_debugger_event_get_java_trace_item()
+    
+    printf("Implement cfrds_debugger_event_get_java_trace_item()\n");
+
     return NULL;
 }
 
@@ -3414,7 +3440,9 @@ exit:
 
 cfrds_str cfrds_security_analyzer_result_files_value(const cfrds_security_analyzer_result *value)
 {
-    //TODO: Implement me!
+    //TODO: Implement cfrds_security_analyzer_result_files_value()!
+
+    printf("Implement cfrds_security_analyzer_result_files_value()\n");
 
     return NULL;
 }
@@ -3584,6 +3612,10 @@ exit:
 
 int cfrds_security_analyzer_result_errors_item_endline(const cfrds_security_analyzer_result *value, int ndx)
 {
+    //TODO: Implement cfrds_security_analyzer_result_errors_item_endline()!
+
+    printf("Implement cfrds_security_analyzer_result_errors_item_endline()\n");
+
     return -1;
 }
 

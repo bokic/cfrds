@@ -3,7 +3,7 @@
 cls
 
 SET JSON_C_VERSION=0.18-20240915
-SET LIBXML2_VERSION=2.15.1
+SET LIBXML2_VERSION=2.15.2
 
 rmdir /s /q  json-c pcre2 build deps
 

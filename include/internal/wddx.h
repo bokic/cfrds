@@ -16,7 +16,7 @@ typedef void WDDX_NODE;
 
 #define WDDX_defer(var) WDDX* var __attribute__((cleanup(wddx_cleanup))) = NULL
 
-WDDX *wddx_create();
+WDDX *wddx_create(void);
 bool wddx_put_bool(WDDX *dest, const char *path, bool value);
 bool wddx_put_number(WDDX *dest, const char *path, double value);
 bool wddx_put_string(WDDX *dest, const char *path, const char *value);

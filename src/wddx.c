@@ -205,7 +205,7 @@ static WDDX_NODE_int *wddx_recursively_put(WDDX_NODE_int *node, const char *path
     return NULL;
 }
 
-WDDX *wddx_create()
+WDDX *wddx_create(void)
 {
     WDDX_int *ret = malloc(sizeof(WDDX_int));
     if (ret)

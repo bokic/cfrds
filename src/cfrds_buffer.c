@@ -417,6 +417,7 @@ void cfrds_buffer_free(cfrds_buffer *buffer)
 bool cfrds_buffer_parse_number(const char **data, size_t *remaining, int64_t *out)
 {
     char *end = NULL;
+    char *endptr = NULL;
 
     if (data == NULL)
         return false;
@@ -426,7 +427,9 @@ bool cfrds_buffer_parse_number(const char **data, size_t *remaining, int64_t *ou
         return false;
 
     errno = 0;
-    *out = strtoll(*data, NULL, 10);
+    *out = strtoll(*data, &endptr, 10); 
+    if (endptr != end)
+        return false;
     if (errno == ERANGE)
         return false;
 

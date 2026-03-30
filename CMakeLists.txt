@@ -220,3 +220,7 @@ install(FILES
     "${CMAKE_CURRENT_BINARY_DIR}/cfrdsConfigVersion.cmake"
     DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/cfrds"
 )
+
+if(BUILD_TESTING)
+    add_subdirectory(tests)
+endif()

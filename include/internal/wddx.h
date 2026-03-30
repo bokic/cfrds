@@ -4,6 +4,7 @@
 
 
 enum wddx_type {
+    WDDX_NULL,
     WDDX_BOOLEAN,
     WDDX_NUMBER,
     WDDX_STRING,

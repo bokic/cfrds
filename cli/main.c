@@ -24,7 +24,7 @@
 
 #define ARRAY_SIZE(arr) (sizeof((arr)) / sizeof((arr)[0]))
 
-static void usage()
+static void usage(void)
 {
     printf("Usage: cfrds <command> [options] <url> [options]\n");
     printf("commands:\n");
@@ -1230,6 +1230,20 @@ int main(int argc, char *argv[])
 
         printf("debugger_session_id: %s\n", debugger_session_id);
 
+        res = cfrds_command_debugger_set_scope_filter(server, debugger_session_id, "VARIABLES,SESSION");
+        if (res != CFRDS_STATUS_OK)
+        {
+            fprintf(stderr, "cfrds_command_debugger_set_scope_filter FAILED with error: %s\n", cfrds_server_get_error(server));
+            return EXIT_FAILURE;
+        }
+
+        res = cfrds_command_debugger_watch_variables(server, debugger_session_id, "VARIABLES.A");
+        if (res != CFRDS_STATUS_OK)
+        {
+            fprintf(stderr, "cfrds_command_debugger_watch_variables FAILED with error: %s\n", cfrds_server_get_error(server));
+            return EXIT_FAILURE;
+        }
+
         res = cfrds_command_debugger_clear_all_breakpoints(server, debugger_session_id);
         if (res != CFRDS_STATUS_OK)
         {
@@ -1241,6 +1255,73 @@ int main(int argc, char *argv[])
         if (res != CFRDS_STATUS_OK)
         {
             fprintf(stderr, "cfrds_command_debugger_breakpoint FAILED with error: %s\n", cfrds_server_get_error(server));
+            return EXIT_FAILURE;
+        }
+
+        cfrds_debugger_event_defer(event);
+
+        do {
+            if (event) {
+                cfrds_debugger_event_free(event);
+                event = NULL;
+            }
+
+            //res = cfrds_command_debugger_get_debug_events(server, debugger_session_id, &event);
+            res = cfrds_command_debugger_all_fetch_flags_enabled(server, debugger_session_id, true, true, true, true, true, &event);
+            if (res != CFRDS_STATUS_OK)
+            {
+                fprintf(stderr, "cfrds_command_debugger_get_debug_events FAILED with error: %s\n", cfrds_server_get_error(server));
+                return EXIT_FAILURE;
+            }
+        } while (cfrds_debugger_event_get_type(event) != CFRDS_DEBUGGER_EVENT_TYPE_BREAKPOINT);
+
+        int cf_trace_count = cfrds_debugger_event_get_cf_trace_count(event);
+        printf("cf_trace_count: %d\n", cf_trace_count);
+        for(int c = 0; c < cf_trace_count; c++)
+        {
+            const char *cf_trace = cfrds_debugger_event_get_cf_trace_item(event, c);
+            printf("cf_trace: %s\n", cf_trace);
+        }
+
+        int java_trace_count = cfrds_debugger_event_get_java_trace_count(event);
+        printf("java_trace_count: %d\n", java_trace_count);
+        for(int c = 0; c < java_trace_count; c++)
+        {
+            const char *java_trace = cfrds_debugger_event_get_java_trace_item(event, c);
+            printf("java_trace: %s\n", java_trace);
+        }
+
+        const char *thread_name = cfrds_debugger_event_breakpoint_get_thread_name(event);
+        printf("thread_name: %s\n", thread_name);
+
+        res = cfrds_command_debugger_watch_expression(server, debugger_session_id, thread_name, "arrayNew(1)");
+        if (res != CFRDS_STATUS_OK)
+        {
+            fprintf(stderr, "cfrds_command_debugger_watch_expression FAILED with error: %s\n", cfrds_server_get_error(server));
+            return EXIT_FAILURE;
+        }
+
+        res = cfrds_command_debugger_set_variable(server, debugger_session_id, thread_name, "VARIABLES.A", "200");
+        if (res != CFRDS_STATUS_OK)
+        {
+            fprintf(stderr, "cfrds_command_debugger_set_variable FAILED with error: %s\n", cfrds_server_get_error(server));
+            return EXIT_FAILURE;
+        }
+
+        const char *source = cfrds_debugger_event_breakpoint_get_source(event);
+        printf("source: %s\n", source);
+
+        int line = cfrds_debugger_event_breakpoint_get_line(event);
+        printf("line: %d\n", line);
+
+        //const cfrds_variable *scopes = cfrds_debugger_event_breakpoint_get_scopes(event);
+
+
+
+        res = cfrds_command_debugger_continue(server, debugger_session_id, thread_name);
+        if (res != CFRDS_STATUS_OK)
+        {
+            fprintf(stderr, "cfrds_command_debugger_continue FAILED with error: %s\n", cfrds_server_get_error(server));
             return EXIT_FAILURE;
         }
 

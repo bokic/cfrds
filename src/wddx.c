@@ -7,6 +7,7 @@
 #include <stdlib.h>
 #include <stddef.h>
 #include <ctype.h>
+#include <math.h>
 
 
 #define xmlDoc_defer(var) xmlDoc* var __attribute__((cleanup(xmlDoc_cleanup))) = NULL
@@ -117,6 +118,8 @@ static WDDX_NODE_int *wddx_recursively_put(WDDX_NODE_int *node, const char *path
 
         switch (node->type)
         {
+        case WDDX_NULL:
+            return NULL;
         case WDDX_BOOLEAN:
             return NULL;
         case WDDX_NUMBER:
@@ -159,6 +162,8 @@ static WDDX_NODE_int *wddx_recursively_put(WDDX_NODE_int *node, const char *path
 
         switch (node->type)
         {
+        case WDDX_NULL:
+            return NULL;
         case WDDX_BOOLEAN:
              return NULL;
         case WDDX_NUMBER:
@@ -192,7 +197,12 @@ static WDDX_NODE_int *wddx_recursively_put(WDDX_NODE_int *node, const char *path
                 WDDX_NODE_int_free(node);
                 return NULL;
             }
-            ((WDDX_STRUCT_NODE_int *)node->items[node->cnt])->name = strdup(newkey);
+            char *tstr = strdup(newkey);
+            if (tstr == NULL) {
+                WDDX_NODE_int_free(node);
+                return NULL;
+            }
+            ((WDDX_STRUCT_NODE_int *)node->items[node->cnt])->name = tstr;
             ((WDDX_STRUCT_NODE_int *)node->items[node->cnt])->value = wddx_recursively_put(NULL, path, value, type);
             node->cnt++;
             return node;
@@ -262,6 +272,9 @@ static void wddx_to_xml_node(xmlNode *xml_node, const WDDX_NODE_int *node)
 
     switch(node->type)
     {
+    case WDDX_NULL:
+        xmlNewChild(xml_node, NULL, BAD_CAST "null", NULL);
+        break;
     case WDDX_BOOLEAN:
         child_node = xmlNewChild(xml_node, NULL, BAD_CAST "boolean", NULL);
         xmlNewProp(child_node, BAD_CAST "value", BAD_CAST node->string);
@@ -347,7 +360,17 @@ static WDDX_NODE_int *wddx_from_xml_element(xmlNodePtr xml_node)
     const char *name = (const char *)xml_node->name;
     if (name == NULL) return NULL;
 
-    if (strcmp(name, "boolean") == 0)
+    if (strcmp(name, "null") == 0)
+    {
+        malloc_size = sizeof(WDDX_NODE_int);
+        ret = malloc(malloc_size);
+        if (ret == NULL) return NULL;
+
+        explicit_bzero(ret, malloc_size);
+
+        ret->type = WDDX_NULL;
+    }
+    else if (strcmp(name, "boolean") == 0)
     {
         if (xml_node->children == NULL) return NULL;
         if (xml_node->children->content == NULL) return NULL;
@@ -606,12 +629,18 @@ const WDDX_NODE *wddx_header(const WDDX *src)
 {
     const WDDX_int *src_int = (const WDDX_int *)src;
 
+    if (src_int == NULL)
+        return NULL;
+
     return src_int->header;
 }
 
 const WDDX_NODE *wddx_data(const WDDX *src)
 {
     const WDDX_int *src_int = (const WDDX_int *)src;
+
+    if (src_int == NULL)
+        return NULL;
 
     return src_int->data;
 }
@@ -620,12 +649,18 @@ int wddx_node_type(const WDDX_NODE *value)
 {
     const WDDX_NODE_int *value_int = (const WDDX_NODE_int *)value;
 
+    if (value_int == NULL)
+        return WDDX_NULL;
+
     return value_int->type;
 }
 
 bool wddx_node_bool(const WDDX_NODE *value)
 {
     const WDDX_NODE_int *value_int = (const WDDX_NODE_int *)value;
+
+    if (value_int == NULL)
+        return false;
 
     return value_int->boolean;
 }
@@ -634,12 +669,18 @@ double wddx_node_number(const WDDX_NODE *value)
 {
     const WDDX_NODE_int *value_int = (const WDDX_NODE_int *)value;
 
+    if (value_int == NULL)
+        return NAN;
+
     return value_int->number;
 }
 
 const char *wddx_node_string(const WDDX_NODE *value)
 {
     const WDDX_NODE_int *value_int = (const WDDX_NODE_int *)value;
+
+    if (value_int == NULL)
+        return NULL;
 
     return value_int->string;
 }
@@ -648,12 +689,18 @@ int wddx_node_array_size(const WDDX_NODE *value)
 {
     const WDDX_NODE_int *value_int = (const WDDX_NODE_int *)value;
 
+    if (value_int == NULL)
+        return 0;
+
     return value_int->cnt;
 }
 
 const WDDX_NODE *wddx_node_array_at(const WDDX_NODE *value, int cnt)
 {
     const WDDX_NODE_int *value_int = (const WDDX_NODE_int *)value;
+
+    if (value_int == NULL)
+        return NULL;
 
     return value_int->items[cnt];
 }
@@ -662,12 +709,18 @@ int wddx_node_struct_size(const WDDX_NODE *value)
 {
     const WDDX_NODE_int *value_int = (const WDDX_NODE_int *)value;
 
+    if (value_int == NULL)
+        return 0;
+
     return value_int->cnt;
 }
 
 const WDDX_NODE *wddx_node_struct_at(const WDDX_NODE *value, int cnt, const char **name)
 {
     const WDDX_NODE_int *value_int = (const WDDX_NODE_int *)value;
+
+    if (value_int == NULL)
+        return NULL;
 
     const WDDX_STRUCT_NODE_int *childs = *(const WDDX_STRUCT_NODE_int **)(value_int->items + cnt);
 

@@ -263,9 +263,6 @@ static cfrds_status cfrds_send_command(cfrds_server *server, cfrds_buffer **resp
     if (cfrds_buffer_create(&post) == false)
         return CFRDS_STATUS_MEMORY_ERROR;
 
-    if (post == NULL)
-        return CFRDS_STATUS_MEMORY_ERROR;
-
     if (cfrds_buffer_append_rds_count(post, total_cnt) == false)
         return CFRDS_STATUS_MEMORY_ERROR;
 
@@ -2249,6 +2246,8 @@ cfrds_status cfrds_command_debugger_all_fetch_flags_enabled(cfrds_server *server
         *event = cfrds_buffer_to_debugger_event(response);
     }
 
+    printf("cfrds_command_debugger_all_fetch_flags_enabled - response: [%s]\n", cfrds_buffer_data(response));
+
     return ret;
 }
 
@@ -2402,6 +2401,11 @@ int cfrds_debugger_event_breakpoint_get_line(const cfrds_debugger_event *event)
     return wddx_get_number(event, "0,LINE", NULL);
 }
 
+const cfrds_variable *cfrds_debugger_event_breakpoint_get_scopes(const cfrds_debugger_event *event)
+{
+    return wddx_get_var(event, "0,SCOPES");
+}
+
 const char *cfrds_debugger_event_breakpoint_get_thread_name(const cfrds_debugger_event *event)
 {
     return wddx_get_string(event, "0,THREAD");
@@ -2430,7 +2434,7 @@ int cfrds_debugger_event_get_scopes_count(const cfrds_debugger_event *event)
 const char *cfrds_debugger_event_get_scopes_item(const cfrds_debugger_event *event, int ndx)
 {
     // TODO: Implement cfrds_debugger_event_get_scopes_item()
-    
+
     printf("Implement cfrds_debugger_event_get_scopes_item()\n");
 
     return NULL;
@@ -2445,7 +2449,7 @@ int cfrds_debugger_event_get_threads_count(const cfrds_debugger_event *event)
 const char *cfrds_debugger_event_get_threads_item(const cfrds_debugger_event *event, int ndx)
 {
     // TODO: Implement cfrds_debugger_event_get_threads_item()
-    
+
     printf("Implement cfrds_debugger_event_get_threads_item()\n");
 
     return NULL;
@@ -2459,7 +2463,7 @@ int cfrds_debugger_event_get_watch_count(const cfrds_debugger_event *event)
 const char *cfrds_debugger_event_get_watch_item(const cfrds_debugger_event *event, int ndx)
 {
     // TODO: Implement cfrds_debugger_event_get_watch_item()
-    
+
     printf("Implement cfrds_debugger_event_get_watch_item()\n");
 
     return NULL;
@@ -2486,7 +2490,7 @@ const char *cfrds_debugger_event_get_cf_trace_item(const cfrds_debugger_event *e
 
     if (wddx_node_type(node) != WDDX_STRING)
         return NULL;
-    
+
     return wddx_node_string(node);
 }
 
@@ -2497,11 +2501,22 @@ int cfrds_debugger_event_get_java_trace_count(const cfrds_debugger_event *event)
 
 const char *cfrds_debugger_event_get_java_trace_item(const cfrds_debugger_event *event, int ndx)
 {
-    // TODO: Implement cfrds_debugger_event_get_java_trace_item()
-    
-    printf("Implement cfrds_debugger_event_get_java_trace_item()\n");
+    char key[32];
+    int n;
 
-    return NULL;
+    if ((event == NULL)||(ndx < 0))
+        return NULL;
+
+    n = snprintf(key, sizeof(key), "0,JAVA_TRACE,%d", ndx);
+    if (n < 0)
+        return NULL;
+
+    const WDDX_NODE *node = wddx_get_var(event, key);
+
+    if (wddx_node_type(node) != WDDX_STRING)
+        return NULL;
+
+    return wddx_node_string(node);
 }
 
 cfrds_status cfrds_command_debugger_watch_expression(cfrds_server *server, const char *session_id, const char *thread_name, const char *variable)
@@ -4537,7 +4552,7 @@ const char *cfrds_adminapi_mappings_value(const cfrds_adminapi_mappings *buf, in
         return NULL;
 
     const WDDX_NODE *val = wddx_node_struct_at(buf, ndx, NULL);
-    
+
     if (wddx_node_type(val) != WDDX_STRING)
         return NULL;
 

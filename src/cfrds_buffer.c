@@ -706,6 +706,8 @@ cfrds_sql_dsninfo_int *cfrds_buffer_to_sql_dsninfo(cfrds_buffer *buffer)
       if (tmp == NULL)
           return NULL;
 
+      explicit_bzero(tmp, offsetof(cfrds_sql_dsninfo_int, names) + sizeof(char *) * cnt);
+
       ((cfrds_sql_dsninfo_int *)tmp)->cnt = cnt;
 
       for(int c = 0; c < cnt; c++)

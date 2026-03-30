@@ -367,13 +367,13 @@ bool cfrds_buffer_reserve_above_size(cfrds_buffer *buffer, size_t size)
     {
         size_t newsize = buffer_int->size + size;
 
-        tmp = realloc(buffer_int->data, newsize);
+        tmp = realloc(buffer_int->data, newsize + 1);
         if (tmp == NULL)
             return false;
 
-        buffer_int->data = tmp;
         size_t oldsize = buffer_int->allocated;
-        explicit_bzero(buffer_int->data + oldsize, newsize- oldsize);
+        buffer_int->data = tmp;
+        explicit_bzero(buffer_int->data + oldsize, newsize + 1 - oldsize);
         buffer_int->allocated = newsize;
     }
 
@@ -387,7 +387,7 @@ bool cfrds_buffer_expand(cfrds_buffer *buffer, size_t size)
 
     cfrds_buffer_int *buffer_int = (cfrds_buffer_int *)buffer;
 
-    if (buffer_int->allocated <= size)
+    if (buffer_int->allocated - buffer_int->size < size)
     {
         if (cfrds_buffer_reserve_above_size(buffer, size) == false)
             return false;

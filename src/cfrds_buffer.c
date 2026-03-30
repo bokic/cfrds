@@ -277,7 +277,7 @@ bool cfrds_buffer_append_buffer(cfrds_buffer *buffer, cfrds_buffer *new)
 
 bool cfrds_buffer_append_rds_count(cfrds_buffer *buffer, size_t cnt)
 {
-    char str[16] = {0, };
+    char str[32] = {0, };
     int n = 0;
 
     if (buffer == NULL)
@@ -427,7 +427,7 @@ bool cfrds_buffer_parse_number(const char **data, size_t *remaining, int64_t *ou
         return false;
 
     errno = 0;
-    *out = strtoll(*data, &endptr, 10); 
+    *out = strtoll(*data, &endptr, 10);
     if (endptr != end)
         return false;
     if (errno == ERANGE)
@@ -628,7 +628,7 @@ cfrds_browse_dir_int *cfrds_buffer_to_browse_dir(cfrds_buffer *buffer)
 
         if (str_timestamp)
         {
-            uint32_t num1 = atol(str_timestamp);
+            uint32_t num1 = strtoul(str_timestamp, NULL, 10);
 
             const char *str_num2 = strchr(str_timestamp, ',');
             if (str_num2)

@@ -69,7 +69,7 @@ cfrds_status cfrds_http_post(cfrds_server_int *server, const char *command, cfrd
     cfrds_buffer_append(send_buf, cfrds_server_get_host((cfrds_server *)server));
     if(port != 80)
     {
-        char port_str[8] = {0, };
+        char port_str[16] = {0, };
 
         n = snprintf(port_str, sizeof(port_str), "%d", port);
         if (n < 0)
@@ -88,7 +88,7 @@ cfrds_status cfrds_http_post(cfrds_server_int *server, const char *command, cfrd
     {
         struct addrinfo hints;
         struct addrinfo *result = NULL;
-        char port_str[8] = {0, };
+        char port_str[16] = {0, };
 
         explicit_bzero(&hints, sizeof(hints));
         hints.ai_family = AF_UNSPEC;
@@ -181,7 +181,11 @@ cfrds_status cfrds_http_post(cfrds_server_int *server, const char *command, cfrd
     if (cfrds_buffer_skip_httpheader(&response_data, &response_size) == false)
         return CFRDS_STATUS_HTTP_RESPONSE_NOT_FOUND;
 
-    cfrds_buffer_create(&swap_buf);
+    if (!cfrds_buffer_create(&swap_buf)) {
+        cfrds_buffer_free(tmp_response);
+        return CFRDS_STATUS_MEMORY_ERROR;
+    }
+
     cfrds_buffer_append_bytes(swap_buf, response_data, response_size);
     response_data = cfrds_buffer_data(swap_buf);
     response_size = cfrds_buffer_data_size(swap_buf);

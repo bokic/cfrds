@@ -722,11 +722,14 @@ const WDDX_NODE *wddx_node_struct_at(const WDDX_NODE *value, int cnt, const char
     if (value_int == NULL)
         return NULL;
 
-    const WDDX_STRUCT_NODE_int *childs = *(const WDDX_STRUCT_NODE_int **)(value_int->items + cnt);
+    const WDDX_STRUCT_NODE_int *child = (const WDDX_STRUCT_NODE_int *)value_int->items[cnt];
 
-    *name = childs->name;
+    if (child == NULL)
+        return NULL;
 
-    return childs->value;
+    *name = child->name;
+
+    return child->value;
 }
 
 bool wddx_get_bool(const WDDX *src, const char *path, bool *ok)

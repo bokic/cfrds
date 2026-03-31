@@ -52,7 +52,7 @@ static bool is_string_numeric(const char *str)
 
     size_t len = strlen(str);
 
-    if (len > 10) return false;
+    if (len > 20) return false;
 
     for (size_t i = 0; i < len; i++)
     {
@@ -67,6 +67,7 @@ static WDDX_NODE_int *wddx_recursively_put(WDDX_NODE_int *node, const char *path
 {
     size_t path_len = strlen(path);
     size_t newsize = 0;
+    bool created_node = false;
 
     if (path_len == 0)
     {
@@ -111,6 +112,7 @@ static WDDX_NODE_int *wddx_recursively_put(WDDX_NODE_int *node, const char *path
             {
                 return NULL;
             }
+            created_node = true;
             explicit_bzero(node, newsize);
             node->type = WDDX_ARRAY;
             node->cnt = idx;
@@ -131,8 +133,12 @@ static WDDX_NODE_int *wddx_recursively_put(WDDX_NODE_int *node, const char *path
             if(node->cnt < idx)
             {
                 newsize = offsetof(WDDX_NODE_int, items) + (sizeof(WDDX_NODE_int) * idx);
+                WDDX_NODE_int *pre_realloc_node = node;
                 node = (WDDX_NODE_int *)realloc(node, newsize);
-                if (node == NULL) return NULL;
+                if (node == NULL) {
+                    if (created_node) WDDX_NODE_int_free(pre_realloc_node);
+                    return NULL;
+                }
                 int oldsize = offsetof(WDDX_NODE_int, items) + (sizeof(WDDX_NODE_int) * node->cnt);
                 explicit_bzero((char *)node + oldsize, newsize - oldsize);
                 node->cnt = idx;
@@ -189,17 +195,17 @@ static WDDX_NODE_int *wddx_recursively_put(WDDX_NODE_int *node, const char *path
             WDDX_NODE_int *pre_realloc_node = node;
             node = (WDDX_NODE_int *)realloc(node, newsize);
             if (node == NULL) {
-                WDDX_NODE_int_free(pre_realloc_node);
+                if (created_node) WDDX_NODE_int_free(pre_realloc_node);
                 return NULL;
             }
             node->items[node->cnt] = malloc(sizeof(WDDX_STRUCT_NODE_int));
             if (node->items[node->cnt] == NULL) {
-                WDDX_NODE_int_free(node);
+                if (created_node) WDDX_NODE_int_free(node);
                 return NULL;
             }
             char *tstr = strdup(newkey);
             if (tstr == NULL) {
-                WDDX_NODE_int_free(node);
+                if (created_node) WDDX_NODE_int_free(node);
                 return NULL;
             }
             ((WDDX_STRUCT_NODE_int *)node->items[node->cnt])->name = tstr;
@@ -251,7 +257,7 @@ bool wddx_put_bool(WDDX *dest, const char *path, bool value)
 
 bool wddx_put_number(WDDX *dest, const char *path, double value)
 {
-    char valueStr[32];
+    char valueStr[64];
 
     snprintf(valueStr, sizeof(valueStr), "%.16g", value);
 
@@ -417,8 +423,10 @@ static WDDX_NODE_int *wddx_from_xml_element(xmlNodePtr xml_node)
 
         ret->type = WDDX_STRING;
 
-        if (str_size > 0)
+        if (str_size > 0) {
             strncpy(ret->string, (const char *)xml_node->children->content, str_size);
+            ret->string[str_size] = '\0';
+        }
     }
     else if (strcmp(name, "array") == 0)
     {
@@ -507,9 +515,11 @@ static WDDX_NODE_int *wddx_from_xml_element(xmlNodePtr xml_node)
     return ret;
 }
 
+#ifndef NDEBUG
 static void silentErrorHandler(void *ctx, const char *msg, ...) {
     // Do nothing - silencing output
 }
+#endif
 
 WDDX *wddx_from_xml(const char *xml)
 {
@@ -522,7 +532,9 @@ WDDX *wddx_from_xml(const char *xml)
 
     if (xml_len == 0) return NULL;
 
+#ifndef NDEBUG
     xmlSetGenericErrorFunc(NULL, silentErrorHandler);
+#endif
 
     doc = xmlParseMemory(xml, (int)xml_len);
 
@@ -588,7 +600,7 @@ static const WDDX_NODE_int *wddx_recursively_get(const WDDX_NODE_int *node, cons
             if (node->type != WDDX_ARRAY) return NULL;
             int idx = atoi(path);
 
-            if (node->cnt <= idx) return NULL;
+            if (idx >= node->cnt) return NULL;
 
             return node->items[idx];
         }
@@ -617,7 +629,7 @@ static const WDDX_NODE_int *wddx_recursively_get(const WDDX_NODE_int *node, cons
             if (node->type != WDDX_ARRAY) return NULL;
             int idx = atoi(tmp_path);
 
-            if (node->cnt <= idx) return NULL;
+            if (idx >= node->cnt) return NULL;
 
             return wddx_recursively_get(node->items[idx], next + 1);
         }
@@ -714,6 +726,9 @@ const WDDX_NODE *wddx_node_array_at(const WDDX_NODE *value, int cnt)
     const WDDX_NODE_int *value_int = (const WDDX_NODE_int *)value;
 
     if (value_int == NULL)
+        return NULL;
+
+    if ((cnt < 0) || (cnt >= value_int->cnt))
         return NULL;
 
     return value_int->items[cnt];
@@ -912,6 +927,8 @@ char *wddx_node_to_xml(const WDDX_NODE *node)
     wddx_node_recursively(root_node, src_int);
 
     xmlBuffer *xml_str = xmlBufferCreate();
+
+    if (xml_str == NULL) return NULL;
 
     xmlNodeDump(xml_str, doc, root_node, 0, 0);
 

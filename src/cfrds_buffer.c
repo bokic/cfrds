@@ -582,6 +582,9 @@ cfrds_browse_dir_int *cfrds_buffer_to_browse_dir(cfrds_buffer *buffer)
 
     cnt = total / 5;
 
+    if (cnt > 10000)
+        return NULL;
+
     malloc_size = offsetof(cfrds_browse_dir_int, items) + (cnt * (offsetof(cfrds_browse_dir_int, items[1]) - (offsetof(cfrds_browse_dir_int, items[0]))));
 
     tmp = malloc(malloc_size);

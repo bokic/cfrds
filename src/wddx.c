@@ -589,7 +589,7 @@ static const WDDX_NODE_int *wddx_recursively_get(const WDDX_NODE_int *node, cons
 {
     if (strlen(path) == 0)
     {
-        return NULL;
+        return node;
     }
 
     const char *next = strchr(path, ',');

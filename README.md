@@ -1,4 +1,4 @@
-# cfrds - ColdFusion RDS protocol library with python bindings and CLI application.
+# cfrds - ColdFusion RDS protocol library with python bindings and CLI application. [![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/bokic/cfrds)
 
 ## Project description
 cfrds is a shared library and CLI application designed to communicate to ColdFusion server via Adobe RDS protocol. More info regarding the protocol at [Adobe RDS protocol](https://helpx.adobe.com/coldfusion/coldfusion-builder-extension-for-visual-studio-code/rds-support.html).

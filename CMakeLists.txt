@@ -42,7 +42,11 @@ if(NOT CFRDS_GIT_TAG MATCHES "^[0-9]+\\.[0-9]+\\.[0-9]+$")
     message(FATAL_ERROR "Git last tag '${CFRDS_GIT_TAG}' is not in format X.Y.Z")
 endif()
 
-project(cfrds VERSION ${CFRDS_GIT_TAG} DESCRIPTION "ColdFusion RDS Library" LANGUAGES C)
+project(cfrds VERSION ${CFRDS_GIT_TAG} DESCRIPTION "ColdFusion RDS Library" LANGUAGES C CXX)
+
+if(LINUX)
+    add_subdirectory(tracing)
+endif()
 
 if(MSVC)
     message(FATAL_ERROR "Unsupported compiler")
@@ -113,6 +117,10 @@ if(WIN32)
         wsock32
         ws2_32
     )
+endif()
+
+if(LINUX)
+    target_trace_enable(cfrds_cli)
 endif()
 
 install(TARGETS cfrds_cli
@@ -189,6 +197,10 @@ install(TARGETS libcfrds
     ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
     PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/cfrds
 )
+
+if(LINUX)
+    target_trace_enable(libcfrds)
+endif()
 
 install(FILES ${CMAKE_BINARY_DIR}/cfrds.pc
     DESTINATION ${CMAKE_INSTALL_LIBDIR}/pkgconfig

@@ -200,6 +200,16 @@ install(TARGETS libcfrds
 
 if(LINUX)
     target_trace_enable(libcfrds)
+
+    if(ENABLE_PERFETTO)
+        # Strip DWARF debug sections from the .so to undo the LTO-generated debug
+        # bloat (~3 MB), while keeping .symtab so the ELF symbol resolver in
+        # perfetto_backend.cpp can still resolve static function names.
+        add_custom_command(TARGET libcfrds POST_BUILD
+            COMMAND ${CMAKE_OBJCOPY} --strip-debug $<TARGET_FILE:libcfrds>
+            COMMENT "Stripping DWARF from libcfrds.so (keeping .symtab for tracing)"
+        )
+    endif()
 endif()
 
 install(FILES ${CMAKE_BINARY_DIR}/cfrds.pc

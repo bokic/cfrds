@@ -3,6 +3,7 @@
 #include <internal/cfrds_int.h>
 #include <internal/cfrds_buffer.h>
 #include <internal/cfrds_http.h>
+#include <../tracing/tracing.h>
 
 #ifdef _WIN32
 #include <WinSock2.h>
@@ -97,7 +98,9 @@ cfrds_status cfrds_http_post(cfrds_server_int *server, const char *command, cfrd
 
         snprintf(port_str, sizeof(port_str), "%u", port);
 
+        trace_net_start("getaddrinfo");
         int gai_err = getaddrinfo(cfrds_server_get_host((cfrds_server *)server), port_str, &hints, &result);
+        trace_net_end();
         if (gai_err != 0) {
             cfrds_server_set_error((cfrds_server *)server, CFRDS_STATUS_SOCKET_HOST_NOT_FOUND, "failed to resolve hostname...");
             return CFRDS_STATUS_SOCKET_HOST_NOT_FOUND;
@@ -105,11 +108,16 @@ cfrds_status cfrds_http_post(cfrds_server_int *server, const char *command, cfrd
 
         for (struct addrinfo *rp = result; rp != NULL; rp = rp->ai_next)
         {
+            trace_net_start("socket");
             cfrds_socket fd = socket(rp->ai_family, rp->ai_socktype, rp->ai_protocol);
+            trace_net_end();
             if (fd == CFRDS_INVALID_SOCKET)
                 continue;
 
-            if (connect(fd, rp->ai_addr, rp->ai_addrlen) == 0) {
+            trace_net_start("connect");
+            int res = connect(fd, rp->ai_addr, rp->ai_addrlen);
+            trace_net_end();
+            if (res == 0) {
                 sockfd = fd;
                 server->socket = sockfd;
                 break;
@@ -118,7 +126,9 @@ cfrds_status cfrds_http_post(cfrds_server_int *server, const char *command, cfrd
             cfrds_sock_cleanup(&fd);
         }
 
+        trace_net_start("freeaddrinfo");
         freeaddrinfo(result);
+        trace_net_end();
 
         if (sockfd == CFRDS_INVALID_SOCKET) {
             server->_errno = errno;
@@ -127,7 +137,9 @@ cfrds_status cfrds_http_post(cfrds_server_int *server, const char *command, cfrd
         }
     }
 
+    trace_net_start("send");
     sock_written = send(sockfd, cfrds_buffer_data(send_buf), cfrds_buffer_data_size(send_buf), 0);
+    trace_net_end();
     if ((sock_written < 0)||((unsigned)sock_written != cfrds_buffer_data_size(send_buf))) {
         if (sock_written == -1)
         {
@@ -149,7 +161,9 @@ cfrds_status cfrds_http_post(cfrds_server_int *server, const char *command, cfrd
         if (cfrds_buffer_reserve_above_size(tmp_response, 4096) == false)
             return CFRDS_STATUS_MEMORY_ERROR;
 
+        trace_net_start("recv");
         ssize_t readed = recv(sockfd, cfrds_buffer_data(tmp_response) + cfrds_buffer_data_size(tmp_response), 4096, 0);
+        trace_net_end();
         if (readed <= 0) {
             if (readed == -1) {
                 server->_errno = errno;

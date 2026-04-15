@@ -4,5 +4,5 @@ set -e
 
 rm -rf build
 
-cmake -B build -DENABLE_PERFETTO=ON
-cmake --build build
+cmake -B build -DENABLE_PERFETTO=ON -DCMAKE_BUILD_TYPE=Debug
+cmake --build build  --config Debug

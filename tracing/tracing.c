@@ -1,4 +1,8 @@
+#ifdef __linux__
+#define _GNU_SOURCE
+#endif
 #include "tracing.h"
+
 #include "tracing_backend.h"
 #include <stdatomic.h>
 #include <unistd.h>

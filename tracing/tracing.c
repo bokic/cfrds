@@ -1,7 +1,6 @@
 #define _GNU_SOURCE
 #include "tracing_backend.h"
 #include <stdatomic.h>
-#include <threads.h>
 #include <unistd.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -73,7 +72,13 @@ void perfetto_load(void) {
         char timestamp[64];
         strftime(timestamp, sizeof(timestamp), "%Y.%m.%d_%H.%M.%S", t);
 
+#if defined(__APPLE__)
+        const char* proc_name = getprogname();
+#elif defined(__linux__)
         const char* proc_name = program_invocation_short_name;
+#else
+        const char* proc_name = "unknown";
+#endif
         if (!proc_name) proc_name = "unknown";
 
         snprintf(dynamic_trace_path, sizeof(dynamic_trace_path), "%s_%s.perfetto", proc_name, timestamp);

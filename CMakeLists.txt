@@ -44,7 +44,12 @@ endif()
 
 project(cfrds VERSION ${CFRDS_GIT_TAG} DESCRIPTION "ColdFusion RDS Library" LANGUAGES C CXX)
 
-if(LINUX)
+set(CMAKE_C_STANDARD 11)
+set(CMAKE_C_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+if(NOT WIN32)
     add_subdirectory(tracing)
 endif()
 
@@ -53,9 +58,6 @@ if(MSVC)
 endif()
 
 add_definitions(-DCFRDS_VERSION="${GIT_COMMIT_NAME}")
-
-set(CMAKE_C_STANDARD 11)
-set(CMAKE_C_STANDARD_REQUIRED ON)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
@@ -119,7 +121,7 @@ if(WIN32)
     )
 endif()
 
-if(LINUX)
+if(NOT WIN32)
     target_trace_enable(cfrds_cli)
 endif()
 
@@ -198,10 +200,10 @@ install(TARGETS libcfrds
     PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/cfrds
 )
 
-if(LINUX)
+if(NOT WIN32)
     target_trace_enable(libcfrds)
 
-    if(ENABLE_PERFETTO)
+    if(ENABLE_PERFETTO AND CMAKE_SYSTEM_NAME STREQUAL "Linux")
         # Strip DWARF debug sections from the .so to undo the LTO-generated debug
         # bloat (~3 MB), while keeping .symtab so the ELF symbol resolver in
         # perfetto_backend.cpp can still resolve static function names.

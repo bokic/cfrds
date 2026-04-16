@@ -3,7 +3,12 @@ set(ENABLE_PERFETTO OFF CACHE BOOL "Enable perfetto tracing")
 # Define the function to enable tracing for a specific target
 function(target_trace_enable target)
     if (ENABLE_PERFETTO)
-        target_link_libraries(${target} PRIVATE tracing "-rdynamic")
+        if(APPLE)
+            target_link_libraries(${target} PRIVATE tracing)
+            set_target_properties(${target} PROPERTIES ENABLE_EXPORTS ON)
+        else()
+            target_link_libraries(${target} PRIVATE tracing "-rdynamic")
+        endif()
         target_compile_definitions(${target} PRIVATE ENABLE_PERFETTO)
         
         # Enable instrument-functions for the target source files
@@ -64,9 +69,15 @@ target_compile_options(tracing PRIVATE "-g0")
 # _Thread_local defaults to local-exec TLS model which is incompatible with
 # shared libraries. Force global-dynamic so libtracing.a can be linked into .so.
 # Also need -fPIC since the static archive gets linked into a shared library.
-target_compile_options(tracing PRIVATE
-    $<$<COMPILE_LANGUAGE:C>:-fPIC -ftls-model=global-dynamic>
-)
+if(LINUX)
+    target_compile_options(tracing PRIVATE
+        $<$<COMPILE_LANGUAGE:C>:-fPIC -ftls-model=global-dynamic>
+    )
+else()
+    target_compile_options(tracing PRIVATE
+        $<$<COMPILE_LANGUAGE:C>:-fPIC>
+    )
+endif()
 
 # Allow targets linking to 'tracing' to find the header
 target_include_directories(tracing PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})

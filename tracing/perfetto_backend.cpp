@@ -7,8 +7,10 @@
 #include <cxxabi.h>
 #include <atomic>
 #include <memory>
+#ifdef __linux__
 #include <link.h>
 #include <elf.h>
+#endif
 #include <cstring>
 #include <cstdint>
 #include <sys/mman.h>
@@ -48,6 +50,7 @@ struct DsoCache {
 static std::mutex              g_cache_mutex;
 static std::map<std::string, DsoCache> g_dso_cache; // path → cache
 
+#ifdef __linux__
 static void load_symtab(const char* path, uintptr_t load_bias, DsoCache& cache)
 {
     cache.loaded = true;
@@ -161,10 +164,8 @@ found_dso:;
 
     return 1; // stop iteration
 }
+#endif
 
-// Two-stage symbol resolver:
-//   1. dladdr()         — covers all exported symbols (fast, no file I/O)
-//   2. ELF .symtab scan — covers static/local symbols in debug builds
 static const char* resolve_sym(void* addr)
 {
     // Fast path via dynamic symbol table
@@ -173,6 +174,7 @@ static const char* resolve_sym(void* addr)
         return info.dli_sname;
     }
 
+#ifdef __linux__
     // Slow path: parse on-disk ELF .symtab
     // Use a thread-local buffer to avoid allocations on the hot path.
     static thread_local std::string tl_name;
@@ -187,6 +189,7 @@ static const char* resolve_sym(void* addr)
         tl_name = std::move(ctx.result);
         return tl_name.c_str();
     }
+#endif
     return nullptr;
 }
 

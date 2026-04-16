@@ -1,4 +1,4 @@
-#define _GNU_SOURCE
+#include "tracing.h"
 #include "tracing_backend.h"
 #include <stdatomic.h>
 #include <unistd.h>
@@ -14,10 +14,10 @@ static atomic_bool perfetto_ready = false;
 static char dynamic_trace_path[512];
 
 // Public tracing interface implemented in C
-void trace_delay_start(const char* name) __attribute__((no_instrument_function));
-void trace_delay_end(void) __attribute__((no_instrument_function));
-void trace_net_start(const char* name) __attribute__((no_instrument_function));
-void trace_net_end(void) __attribute__((no_instrument_function));
+__attribute__((visibility("default"), no_instrument_function)) void trace_delay_start(const char* name);
+__attribute__((visibility("default"), no_instrument_function)) void trace_delay_end(void);
+__attribute__((visibility("default"), no_instrument_function)) void trace_net_start(const char* name);
+__attribute__((visibility("default"), no_instrument_function)) void trace_net_end(void);
 
 void trace_delay_start(const char* name) {
     if (!atomic_load(&perfetto_ready)) return;
@@ -61,6 +61,9 @@ void perfetto_load(void) __attribute__((constructor, no_instrument_function));
 void perfetto_unload(void) __attribute__((destructor, no_instrument_function));
 
 void perfetto_load(void) {
+    static atomic_bool initialized = false;
+    if (atomic_exchange(&initialized, true)) return;
+
     const char* trace_path;
     const char* env_path = getenv("PERFETTO_TRACE_FILE");
     
@@ -88,6 +91,10 @@ void perfetto_load(void) {
     perf_backend_init();
     perf_backend_start(trace_path);
     atomic_store(&perfetto_ready, true);
+    
+    // Initial events to force buffer write
+    trace_delay_start("perfetto_initialized");
+    trace_delay_end();
 }
 
 void perfetto_unload(void) {

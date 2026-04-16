@@ -33,7 +33,9 @@ FetchContent_MakeAvailable(perfetto)
 
 # Use the amalgamated SDK files from the cloned repository
 add_library(perfetto SHARED ${perfetto_SOURCE_DIR}/sdk/perfetto.cc)
-target_include_directories(perfetto PUBLIC ${perfetto_SOURCE_DIR}/sdk)
+target_include_directories(perfetto PUBLIC 
+    $<BUILD_INTERFACE:${perfetto_SOURCE_DIR}/sdk>
+)
 target_compile_definitions(perfetto PRIVATE PERFETTO_SHLIB_SDK_IMPLEMENTATION)
 
 find_package(Threads REQUIRED)
@@ -48,8 +50,22 @@ set_target_properties(perfetto PROPERTIES
     POSITION_INDEPENDENT_CODE ON
 )
 
+if(APPLE)
+    set_target_properties(perfetto PROPERTIES
+        INSTALL_RPATH "@loader_path"
+        BUILD_WITH_INSTALL_RPATH ON
+    )
+endif()
+
+install(TARGETS perfetto
+    EXPORT cfrdsTargets
+    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+)
+
 # Internal library for tracing hooks (now mixed C and C++)
-add_library(tracing STATIC 
+add_library(tracing SHARED 
     tracing.c
     perfetto_backend.cpp
 )
@@ -64,6 +80,13 @@ set_target_properties(tracing PROPERTIES
     VISIBILITY_INLINES_HIDDEN ON
     POSITION_INDEPENDENT_CODE ON
 )
+
+if(APPLE)
+    set_target_properties(tracing PROPERTIES
+        INSTALL_RPATH "@loader_path"
+        BUILD_WITH_INSTALL_RPATH ON
+    )
+endif()
 target_compile_options(tracing PRIVATE "-g0")
 
 # _Thread_local defaults to local-exec TLS model which is incompatible with
@@ -80,4 +103,15 @@ else()
 endif()
 
 # Allow targets linking to 'tracing' to find the header
-target_include_directories(tracing PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+target_include_directories(tracing PUBLIC 
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
+    $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/tracing>
+)
+
+install(TARGETS tracing
+    EXPORT cfrdsTargets
+    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/tracing
+)

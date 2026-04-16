@@ -5,7 +5,6 @@
 #include <unistd.h>
 #include <iostream>
 #include <cxxabi.h>
-#include <atomic>
 #include <memory>
 #ifdef __linux__
 #include <link.h>
@@ -27,7 +26,7 @@ PERFETTO_DEFINE_CATEGORIES(
 );
 PERFETTO_TRACK_EVENT_STATIC_STORAGE();
 
-static std::unique_ptr<perfetto::TracingSession> session;
+static perfetto::TracingSession* g_session = nullptr;
 static int trace_fd = -1;
 
 // ---------------------------------------------------------------------------
@@ -209,31 +208,42 @@ void perf_backend_start(const char* filename) {
     ds_cfg->set_name("track_event");
 
     cfg.set_write_into_file(true);
-    cfg.set_file_write_period_ms(250);
-    cfg.set_flush_period_ms(250);
+    cfg.set_file_write_period_ms(50);
+    cfg.set_flush_period_ms(50);
 
-    session = perfetto::Tracing::NewTrace();
+    auto session = perfetto::Tracing::NewTrace();
+    g_session = session.release(); // Keep it alive until we manually destroy it
     trace_fd = open(filename, O_RDWR | O_CREAT | O_TRUNC, 0600);
     if (trace_fd < 0) {
-        std::cerr << "Failed to open trace file: " << filename << std::endl;
+        std::cerr << "Failed to open trace file: " << filename << " (" << strerror(errno) << ")" << std::endl;
         return;
     }
-    session->Setup(cfg, trace_fd);
-    session->StartBlocking();
+    g_session->Setup(cfg, trace_fd);
+    g_session->StartBlocking();
+    std::cerr << "Perfetto tracing started: " << filename << " [fd=" << trace_fd << "]" << std::endl;
 }
 
 void perf_backend_stop() {
-    if (session) {
-        session->FlushBlocking();
-        session->StopBlocking();
-        session.reset();
-        usleep(20000);
+    if (g_session) {
+        std::cerr << "Flushing and stopping Perfetto tracing session..." << std::endl;
+        g_session->FlushBlocking();
+        g_session->StopBlocking();
+        
+        delete g_session;
+        g_session = nullptr;
+    } else {
+        std::cerr << "Warning: perf_backend_stop called but g_session is NULL" << std::endl;
     }
     if (trace_fd >= 0) {
         fsync(trace_fd);
-        close(trace_fd);
+        if (close(trace_fd) == 0) {
+            std::cerr << "Trace file closed [fd=" << trace_fd << "]" << std::endl;
+        } else {
+            std::cerr << "Failed to close trace file [fd=" << trace_fd << "]: " << strerror(errno) << std::endl;
+        }
         trace_fd = -1;
     }
+    std::cerr << "Perfetto tracing stopped." << std::endl;
 }
 
 void perf_backend_on_func_enter(void* this_fn, void* /*call_site*/) {

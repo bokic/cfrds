@@ -1,11 +1,9 @@
 #include "perfetto.h"
 #include "tracing_backend.h"
-#include <dlfcn.h>
 #include <fcntl.h>
 #include <unistd.h>
 #include <iostream>
 #include <cxxabi.h>
-#include <memory>
 #ifdef __linux__
 #include <link.h>
 #include <elf.h>

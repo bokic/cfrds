@@ -5,11 +5,9 @@
 
 #include "tracing_backend.h"
 #include <stdatomic.h>
-#include <unistd.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <time.h>
-#include <errno.h>
 
 static _Thread_local bool in_hook = false;
 static atomic_bool perfetto_ready = false;

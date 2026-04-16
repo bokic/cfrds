@@ -73,7 +73,6 @@ target_link_libraries(tracing PUBLIC perfetto)
 target_compile_definitions(tracing PUBLIC ENABLE_PERFETTO)
 
 # Set default symbol visibility to hidden, and enable -fPIC.
-# -g0: same rationale as perfetto above.
 set_target_properties(tracing PROPERTIES
     C_VISIBILITY_PRESET hidden
     CXX_VISIBILITY_PRESET hidden
@@ -85,20 +84,6 @@ if(APPLE)
     set_target_properties(tracing PROPERTIES
         INSTALL_RPATH "@loader_path"
         BUILD_WITH_INSTALL_RPATH ON
-    )
-endif()
-target_compile_options(tracing PRIVATE "-g0")
-
-# _Thread_local defaults to local-exec TLS model which is incompatible with
-# shared libraries. Force global-dynamic so libtracing.a can be linked into .so.
-# Also need -fPIC since the static archive gets linked into a shared library.
-if(LINUX)
-    target_compile_options(tracing PRIVATE
-        $<$<COMPILE_LANGUAGE:C>:-fPIC -ftls-model=global-dynamic>
-    )
-else()
-    target_compile_options(tracing PRIVATE
-        $<$<COMPILE_LANGUAGE:C>:-fPIC>
     )
 endif()
 

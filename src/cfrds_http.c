@@ -63,7 +63,10 @@ cfrds_status cfrds_http_post(cfrds_server_int *server, const char *command, cfrd
         return CFRDS_STATUS_MEMORY_ERROR;
     }
 
-    cfrds_buffer_create(&send_buf);
+    if (!cfrds_buffer_create(&send_buf)) {
+        cfrds_server_set_error((cfrds_server *)server, CFRDS_STATUS_MEMORY_ERROR, "cfrds_buffer_create failed for send_buf");
+        return CFRDS_STATUS_MEMORY_ERROR;
+    }
     cfrds_buffer_append(send_buf, "POST /CFIDE/main/ide.cfm?CFSRV=IDE&ACTION=");
     cfrds_buffer_append(send_buf, command);
     cfrds_buffer_append(send_buf, " HTTP/1.0\r\nHost: ");
@@ -155,7 +158,10 @@ cfrds_status cfrds_http_post(cfrds_server_int *server, const char *command, cfrd
         }
     }
 
-    cfrds_buffer_create(&tmp_response);
+    if (!cfrds_buffer_create(&tmp_response)) {
+        cfrds_server_set_error((cfrds_server *)server, CFRDS_STATUS_MEMORY_ERROR, "cfrds_buffer_create failed for tmp_response");
+        return CFRDS_STATUS_MEMORY_ERROR;
+    }
     while(1)
     {
         if (cfrds_buffer_reserve_above_size(tmp_response, 4096) == false)

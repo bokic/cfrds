@@ -1388,7 +1388,7 @@ cfrds_sql_metadata_int *cfrds_buffer_to_sql_metadata(cfrds_buffer *buffer)
 
     cfrds_buffer_int *buffer_int = (cfrds_buffer_int *)buffer;
 
-    cfrds_sql_resultset_defer(tmp);
+    cfrds_sql_metadata_defer(tmp);
     int64_t cnt = 0;
     size_t buf_size = 0;
 

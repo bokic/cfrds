@@ -2159,7 +2159,7 @@ cfrds_status cfrds_command_debugger_breakpoint(cfrds_server *server, const char 
 
     ret = cfrds_send_command(server, &response, "DBGREQUEST", (const char *[]){ "DBG_REQUEST", session_id, wddx_to_xml(wddx), NULL});
 
-    // TODO: Check the response variable.
+    // TODO: Should return 1=sucess, 0=pending, -1=failed
     printf("cfrds_command_debugger_breakpoint - response: [%s]\n", cfrds_buffer_data(response));
 
     return ret;
@@ -2187,7 +2187,7 @@ cfrds_status cfrds_command_debugger_clear_all_breakpoints(cfrds_server *server, 
 
     ret = cfrds_send_command(server, &response, "DBGREQUEST", (const char *[]){ "DBG_REQUEST", session_id, wddx_to_xml(wddx), NULL});
 
-    // TODO: Check the response variable.
+    // TODO: Should return null
     printf("cfrds_command_debugger_clear_all_breakpoints - response: [%s]\n", cfrds_buffer_data(response));
 
     return ret;
@@ -2276,7 +2276,7 @@ cfrds_status cfrds_command_debugger_step_in(cfrds_server *server, const char *se
 
     ret = cfrds_send_command(server, &response, "DBGREQUEST", (const char *[]){ "DBG_REQUEST", session_id, wddx_to_xml(wddx), NULL});
 
-    // TODO: Check the response variable.
+    // TODO: Should return null
     printf("cfrds_command_debugger_step_in - response: [%s]\n", cfrds_buffer_data(response));
 
     return ret;
@@ -2305,8 +2305,8 @@ cfrds_status cfrds_command_debugger_step_over(cfrds_server *server, const char *
 
     ret = cfrds_send_command(server, &response, "DBGREQUEST", (const char *[]){ "DBG_REQUEST", session_id, wddx_to_xml(wddx), NULL});
 
-    // TODO: Check the response variable.
-    printf("cfrds_command_debugger_continue - response: [%s]\n", cfrds_buffer_data(response));
+    // TODO: Should return null
+    printf("cfrds_command_debugger_step_over - response: [%s]\n", cfrds_buffer_data(response));
 
     return ret;
 }
@@ -2334,7 +2334,7 @@ cfrds_status cfrds_command_debugger_step_out(cfrds_server *server, const char *s
 
     ret = cfrds_send_command(server, &response, "DBGREQUEST", (const char *[]){ "DBG_REQUEST", session_id, wddx_to_xml(wddx), NULL});
 
-    // TODO: Check the response variable.
+    // TODO: Should return null
     printf("cfrds_command_debugger_step_out - response: [%s]\n", cfrds_buffer_data(response));
 
     return ret;
@@ -2363,7 +2363,7 @@ cfrds_status cfrds_command_debugger_continue(cfrds_server *server, const char *s
 
     ret = cfrds_send_command(server, &response, "DBGREQUEST", (const char *[]){ "DBG_REQUEST", session_id, wddx_to_xml(wddx), NULL});
 
-    // TODO: Check the response variable.
+    // TODO: Should return null
     printf("cfrds_command_debugger_continue - response: [%s]\n", cfrds_buffer_data(response));
 
     return ret;

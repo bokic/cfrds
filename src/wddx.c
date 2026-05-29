@@ -754,6 +754,9 @@ const WDDX_NODE *wddx_node_struct_at(const WDDX_NODE *value, int cnt, const char
     if (value_int == NULL)
         return NULL;
 
+    if ((cnt < 0) || (cnt >= value_int->cnt))
+        return NULL;
+
     const WDDX_STRUCT_NODE_int *child = (const WDDX_STRUCT_NODE_int *)value_int->items[cnt];
 
     if (child == NULL)

@@ -129,10 +129,8 @@ cfrds_status cfrds_http_post(cfrds_server_int *server, const char *command, cfrd
             cfrds_sock_cleanup(&fd);
         }
 
-        trace_net_start("freeaddrinfo");
         int saved_errno = errno;
         freeaddrinfo(result);
-        trace_net_end();
 
         if (sockfd == CFRDS_INVALID_SOCKET) {
             server->_errno = saved_errno;

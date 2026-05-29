@@ -106,7 +106,7 @@ static WDDX_NODE_int *wddx_recursively_put(WDDX_NODE_int *node, const char *path
 
         if (node == NULL)
         {
-            newsize = offsetof(WDDX_NODE_int, items) + (sizeof(WDDX_NODE_int) * idx);
+            newsize = offsetof(WDDX_NODE_int, items) + (sizeof(void *) * idx);
             node = (WDDX_NODE_int *)malloc(newsize);
             if (node == NULL)
             {
@@ -132,7 +132,7 @@ static WDDX_NODE_int *wddx_recursively_put(WDDX_NODE_int *node, const char *path
         {
             if(node->cnt < idx)
             {
-                newsize = offsetof(WDDX_NODE_int, items) + (sizeof(WDDX_NODE_int) * idx);
+                newsize = offsetof(WDDX_NODE_int, items) + (sizeof(void *) * idx);
                 WDDX_NODE_int *pre_realloc_node = node;
                 node = (WDDX_NODE_int *)realloc(node, newsize);
                 if (node == NULL) {

@@ -2116,7 +2116,7 @@ cfrds_status cfrds_command_debugger_breakpoint_on_exception(cfrds_server *server
     wddx_put_bool(wddx, "0,BREAK_ON_EXCEPTION", value);
     wddx_put_string(wddx, "0,COMMAND", "SESSION_BREAK_ON_EXCEPTION");
 
-    ret = cfrds_send_command(server, &response, "DBGREQUEST", (const char *[]){ "DBG_GET_DEBUG_SERVER_INFO", session_id, wddx_to_xml(wddx), NULL});
+    ret = cfrds_send_command(server, &response, "DBGREQUEST", (const char *[]){ "DBG_REQUEST", session_id, wddx_to_xml(wddx), NULL});
     if (ret == CFRDS_STATUS_OK)
     {
         int val = cfrds_buffer_to_debugger_info(response);

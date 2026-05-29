@@ -92,7 +92,7 @@ bool cfrds_server_init(cfrds_server **server, const char *host, uint16_t port, c
     if ((server == NULL)||(host == NULL)||(port == 0)||(username == NULL)||(password == NULL))
         return false;
 
-    ret = malloc(sizeof(cfrds_server_int));
+    ret = (cfrds_server *)malloc(sizeof(cfrds_server_int));
     if (ret == NULL)
         return false;
 

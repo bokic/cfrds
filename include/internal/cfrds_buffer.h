@@ -22,8 +22,6 @@ typedef SSIZE_T ssize_t;
 #endif
 
 
-typedef struct cfrds_buffer cfrds_buffer;
-
 #ifdef _WIN32
 typedef SOCKET cfrds_socket;
 #define CFRDS_INVALID_SOCKET INVALID_SOCKET
@@ -32,7 +30,7 @@ typedef int cfrds_socket;
 #define CFRDS_INVALID_SOCKET (-1)
 #endif
 
-typedef struct {
+struct cfrds_server {
     char *host;
     uint16_t port;
     char *username;
@@ -42,14 +40,14 @@ typedef struct {
     int _errno;
     int64_t error_code;
     char *error;
-} cfrds_server_int;
+};
 
-typedef struct {
+struct cfrds_file_content {
     char *data;
     int size;
     char *modified;
     char *permission;
-} cfrds_file_content_int;
+};
 
 typedef struct {
     char kind;
@@ -57,29 +55,29 @@ typedef struct {
     uint8_t permissions;
     size_t size;
     uint64_t modified;
-} cfrds_browse_dir_item_int;
+} cfrds_browse_dir_item;
 
-typedef struct {
+struct cfrds_browse_dir {
     size_t cnt;
-    cfrds_browse_dir_item_int items[];
-} cfrds_browse_dir_int;
+    cfrds_browse_dir_item items[];
+};
 
-typedef struct {
+struct cfrds_sql_dsninfo {
     size_t cnt;
     char *names[];
-} cfrds_sql_dsninfo_int;
+};
 
 typedef struct {
     char *unknown;
     char *schema;
     char *name;
     char *type;
-} cfrds_sql_tableinfoitem_int;
+} cfrds_sql_tableinfoitem;
 
-typedef struct {
+struct cfrds_sql_tableinfo {
     size_t cnt;
-    cfrds_sql_tableinfoitem_int items[];
-} cfrds_sql_tableinfo_int;
+    cfrds_sql_tableinfoitem items[];
+};
 
 typedef struct {
     char *schema;
@@ -93,12 +91,12 @@ typedef struct {
     int scale;
     int radix;
     int nullable;
-} cfrds_sql_columninfoitem_int;
+} cfrds_sql_columninfoitem;
 
-typedef struct {
+struct cfrds_sql_columninfo {
     size_t cnt;
-    cfrds_sql_columninfoitem_int items[];
-} cfrds_sql_columninfo_int;
+    cfrds_sql_columninfoitem items[];
+};
 
 typedef struct {
     char *tableCatalog;
@@ -106,12 +104,12 @@ typedef struct {
     char *tableName;
     char *colName;
     int keySequence;
-} cfrds_sql_primarykeysitem_int;
+} cfrds_sql_primarykeysitem;
 
-typedef struct {
+struct cfrds_sql_primarykeys {
     size_t cnt;
-    cfrds_sql_primarykeysitem_int items[];
-} cfrds_sql_primarykeys_int;
+    cfrds_sql_primarykeysitem items[];
+};
 
 typedef struct {
     char *pkTableCatalog;
@@ -125,12 +123,12 @@ typedef struct {
     int keySequence;
     int updateRule;
     int deleteRule;
-} cfrds_sql_foreignkeysitem_int;
+} cfrds_sql_foreignkeysitem;
 
-typedef struct {
+struct cfrds_sql_foreignkeys {
     size_t cnt;
-    cfrds_sql_foreignkeysitem_int items[];
-} cfrds_sql_foreignkeys_int;
+    cfrds_sql_foreignkeysitem items[];
+};
 
 typedef struct {
     char *pkTableCatalog;
@@ -144,12 +142,12 @@ typedef struct {
     int keySequence;
     int updateRule;
     int deleteRule;
-} cfrds_sql_importedkeysitem_int;
+} cfrds_sql_importedkeysitem;
 
-typedef struct {
+struct cfrds_sql_importedkeys {
     size_t cnt;
-    cfrds_sql_importedkeysitem_int items[];
-} cfrds_sql_importedkeys_int;
+    cfrds_sql_importedkeysitem items[];
+};
 
 typedef struct {
     char *pkTableCatalog;
@@ -163,36 +161,36 @@ typedef struct {
     int keySequence;
     int updateRule;
     int deleteRule;
-} cfrds_sql_exportedkeysitem_int;
+} cfrds_sql_exportedkeysitem;
 
-typedef struct {
+struct cfrds_sql_exportedkeys {
     size_t cnt;
-    cfrds_sql_exportedkeysitem_int items[];
-} cfrds_sql_exportedkeys_int;
+    cfrds_sql_exportedkeysitem items[];
+};
 
-typedef struct {
+struct cfrds_sql_resultset {
     size_t columns;
     size_t rows;
     char *values[];
-} cfrds_sql_resultset_int;
+};
 
 typedef struct {
     char *name;
     char *type;
     char *jtype;
-} cfrds_sql_metadataitem_int;
+} cfrds_sql_metadataitem;
 
-typedef struct {
+struct cfrds_sql_metadata {
     size_t cnt;
-    cfrds_sql_metadataitem_int items[];
-} cfrds_sql_metadata_int;
+    cfrds_sql_metadataitem items[];
+};
 
-typedef struct {
+struct cfrds_sql_supportedcommands {
     size_t cnt;
     char *commands[];
-} cfrds_sql_supportedcommands_int;
+};
 
-typedef struct {
+struct cfrds_security_analyzer_result {
     int id;
     int total_files;
     int files_visited_count;
@@ -206,7 +204,7 @@ typedef struct {
     int files_scanned_count;
     int files_not_scanned_count;
     void *errors;
-} cfrds_security_analyzer_result_int;
+};
 
 #ifdef __cplusplus
 extern "C"
@@ -237,18 +235,18 @@ bool cfrds_buffer_parse_bytearray(const char **data, size_t *remaining, char **o
 bool cfrds_buffer_parse_string(const char **data, size_t *remaining, char **out);
 bool cfrds_buffer_parse_string_list_item(const char **data, size_t *remaining, char **out);
 
-cfrds_browse_dir_int *cfrds_buffer_to_browse_dir(cfrds_buffer *buffer);
-cfrds_file_content_int *cfrds_buffer_to_file_content(cfrds_buffer *buffer);
-cfrds_sql_dsninfo_int *cfrds_buffer_to_sql_dsninfo(cfrds_buffer *buffer);
-cfrds_sql_tableinfo_int *cfrds_buffer_to_sql_tableinfo(cfrds_buffer *buffer);
-cfrds_sql_columninfo_int *cfrds_buffer_to_sql_columninfo(cfrds_buffer *buffer);
-cfrds_sql_primarykeys_int *cfrds_buffer_to_sql_primarykeys(cfrds_buffer *buffer);
-cfrds_sql_foreignkeys_int *cfrds_buffer_to_sql_foreignkeys(cfrds_buffer *buffer);
-cfrds_sql_importedkeys_int *cfrds_buffer_to_sql_importedkeys(cfrds_buffer *buffer);
-cfrds_sql_exportedkeys_int *cfrds_buffer_to_sql_exportedkeys(cfrds_buffer *buffer);
-cfrds_sql_resultset_int *cfrds_buffer_to_sql_sqlstmnt(cfrds_buffer *buffer);
-cfrds_sql_metadata_int *cfrds_buffer_to_sql_metadata(cfrds_buffer *buffer);
-cfrds_sql_supportedcommands_int *cfrds_buffer_to_sql_supportedcommands(cfrds_buffer *buffer);
+struct cfrds_browse_dir *cfrds_buffer_to_browse_dir(cfrds_buffer *buffer);
+struct cfrds_file_content *cfrds_buffer_to_file_content(cfrds_buffer *buffer);
+struct cfrds_sql_dsninfo *cfrds_buffer_to_sql_dsninfo(cfrds_buffer *buffer);
+struct cfrds_sql_tableinfo *cfrds_buffer_to_sql_tableinfo(cfrds_buffer *buffer);
+struct cfrds_sql_columninfo *cfrds_buffer_to_sql_columninfo(cfrds_buffer *buffer);
+struct cfrds_sql_primarykeys *cfrds_buffer_to_sql_primarykeys(cfrds_buffer *buffer);
+struct cfrds_sql_foreignkeys *cfrds_buffer_to_sql_foreignkeys(cfrds_buffer *buffer);
+struct cfrds_sql_importedkeys *cfrds_buffer_to_sql_importedkeys(cfrds_buffer *buffer);
+struct cfrds_sql_exportedkeys *cfrds_buffer_to_sql_exportedkeys(cfrds_buffer *buffer);
+struct cfrds_sql_resultset *cfrds_buffer_to_sql_sqlstmnt(cfrds_buffer *buffer);
+struct cfrds_sql_metadata *cfrds_buffer_to_sql_metadata(cfrds_buffer *buffer);
+struct cfrds_sql_supportedcommands *cfrds_buffer_to_sql_supportedcommands(cfrds_buffer *buffer);
 char *cfrds_buffer_to_sql_dbdescription(cfrds_buffer *buffer);
 
 char *cfrds_buffer_to_debugger_start(cfrds_buffer *buffer);

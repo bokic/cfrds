@@ -122,7 +122,7 @@ int LLVMFuzzerTestOneInput_rds_browse_dir(const uint8_t *Data, size_t Size) {
         return 0;
     }
 
-    cfrds_browse_dir_int *res = cfrds_buffer_to_browse_dir(buf);
+    cfrds_browse_dir *res = cfrds_buffer_to_browse_dir(buf);
     if (res) {
         // Free items
         for (size_t i = 0; i < res->cnt; i++) {
@@ -146,7 +146,7 @@ int LLVMFuzzerTestOneInput_rds_sql_sqlstmnt(const uint8_t *Data, size_t Size) {
         return 0;
     }
 
-    cfrds_sql_resultset_int *res = cfrds_buffer_to_sql_sqlstmnt(buf);
+    cfrds_sql_resultset *res = cfrds_buffer_to_sql_sqlstmnt(buf);
     if (res) {
         // Free all values
         size_t total = res->columns * (res->rows + 1);
@@ -213,7 +213,7 @@ int LLVMFuzzerTestOneInput(const uint8_t *Data, size_t Size) {
                 cfrds_buffer *buf = NULL;
                 cfrds_buffer_create(&buf);
                 cfrds_buffer_append_bytes(buf, Data + 1, Size - 1);
-                cfrds_browse_dir_int *res = cfrds_buffer_to_browse_dir(buf);
+                cfrds_browse_dir *res = cfrds_buffer_to_browse_dir(buf);
                 if (res) {
                     for (size_t i = 0; i < res->cnt; i++) free(res->items[i].name);
                     free(res);

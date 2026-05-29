@@ -33,27 +33,25 @@ void cfrds_server_cleanup(cfrds_server **server)
 
 void cfrds_server_clear_error(cfrds_server *server)
 {
-    cfrds_server_int *server_int = (cfrds_server_int *)server;
-    if (server_int == NULL)
+    if (server == NULL)
         return;
 
-    server_int->_errno = 0;
-    server_int->error_code = 1;
+    server->_errno = 0;
+    server->error_code = 1;
 
-    if (server_int->error)
+    if (server->error)
     {
-        free(server_int->error);
-        server_int->error = NULL;
+        free(server->error);
+        server->error = NULL;
     }
 }
 
 void cfrds_server_shutdown_socket(cfrds_server *server)
 {
-    cfrds_server_int *server_int = (cfrds_server_int *)server;
-    if (server_int == NULL)
+    if (server == NULL)
         return;
 
-    cfrds_sock_shutdown(server_int->socket);
+    cfrds_sock_shutdown(server->socket);
 }
 
 static char *cfrds_server_encode_password(const char *password)
@@ -92,38 +90,36 @@ bool cfrds_server_init(cfrds_server **server, const char *host, uint16_t port, c
     if ((server == NULL)||(host == NULL)||(port == 0)||(username == NULL)||(password == NULL))
         return false;
 
-    ret = (cfrds_server *)malloc(sizeof(cfrds_server_int));
+    ret = (cfrds_server *)malloc(sizeof(cfrds_server));
     if (ret == NULL)
         return false;
 
-    explicit_bzero(ret, sizeof(cfrds_server_int));
+    explicit_bzero(ret, sizeof(cfrds_server));
 
-    cfrds_server_int *ret_int = (cfrds_server_int *)ret;
-
-    ret_int->host = strdup(host);
-    if (ret_int->host == NULL)
+    ret->host = strdup(host);
+    if (ret->host == NULL)
         return false;
 
-    ret_int->port = port;
+    ret->port = port;
 
-    ret_int->username = strdup(username);
-    if (ret_int->username == NULL)
+    ret->username = strdup(username);
+    if (ret->username == NULL)
         return false;
 
-    ret_int->orig_password = strdup(password);
-    if (ret_int->orig_password == NULL)
+    ret->orig_password = strdup(password);
+    if (ret->orig_password == NULL)
         return false;
 
-    if (strlen(ret_int->orig_password) > 0)
+    if (strlen(ret->orig_password) > 0)
     {
-        ret_int->password = cfrds_server_encode_password(password);
-        if (ret_int->password == NULL)
+        ret->password = cfrds_server_encode_password(password);
+        if (ret->password == NULL)
             return false;
     }
 
-    ret_int->_errno = 0;
-    ret_int->error_code = 1;
-    ret_int->error = NULL;
+    ret->_errno = 0;
+    ret->error_code = 1;
+    ret->error = NULL;
 
     *server = ret;
     ret = NULL;
@@ -133,105 +129,75 @@ bool cfrds_server_init(cfrds_server **server, const char *host, uint16_t port, c
 
 void cfrds_server_free(cfrds_server *server)
 {
-    cfrds_server_int *server_int = NULL;
-
     if (server == NULL)
         return;
 
     cfrds_server_clear_error(server);
 
-    server_int = (cfrds_server_int *)server;
-
-    if (server_int->host) free(server_int->host);
-    if (server_int->username) free(server_int->username);
-    if (server_int->orig_password) free(server_int->orig_password);
-    if (server_int->password) free(server_int->password);
+    if (server->host) free(server->host);
+    if (server->username) free(server->username);
+    if (server->orig_password) free(server->orig_password);
+    if (server->password) free(server->password);
 
     free(server);
 }
 
 void cfrds_server_set_error(cfrds_server *server, int64_t error_code, const char *error)
 {
-    cfrds_server_int *server_int = NULL;
-
     if (server == NULL)
         return;
 
-    server_int = (cfrds_server_int *)server;
+    server->error_code = error_code;
 
-    server_int->error_code = error_code;
+    if(server->error)
+        free(server->error);
 
-    if(server_int->error)
-        free(server_int->error);
-
-    server_int->error = strdup(error);
+    server->error = strdup(error);
 }
 
 const char *cfrds_server_get_error(const cfrds_server *server)
 {
-    const cfrds_server_int *server_int = NULL;
-
     if (server == NULL)
         return NULL;
 
-    server_int = (cfrds_server_int *)server;
-
-    return server_int->error;
+    return server->error;
 }
 
 const char *cfrds_server_get_host(const cfrds_server *server)
 {
-    const cfrds_server_int *server_int = NULL;
-
     if (server == NULL)
         return NULL;
 
-    server_int = (cfrds_server_int *)server;
-
-    return server_int->host;
+    return server->host;
 }
 
 uint16_t cfrds_server_get_port(const cfrds_server *server)
 {
-    const cfrds_server_int *server_int = NULL;
-
     if (server == NULL)
         return 0;
 
-    server_int = (cfrds_server_int *)server;
-
-    return server_int->port;
+    return server->port;
 }
 
 const char *cfrds_server_get_username(const cfrds_server *server)
 {
-    const cfrds_server_int *server_int = NULL;
-
     if (server == NULL)
         return NULL;
 
-    server_int = (cfrds_server_int *)server;
-
-    return server_int->username;
+    return server->username;
 }
 
 const char *cfrds_server_get_password(const cfrds_server *server)
 {
-    const cfrds_server_int *server_int = NULL;
-
     if (server == NULL)
         return NULL;
 
-    server_int = (cfrds_server_int *)server;
-
-    return server_int->orig_password;
+    return server->orig_password;
 }
 
 static cfrds_status cfrds_send_command(cfrds_server *server, cfrds_buffer **response, const char *command, const char *list[])
 {
     cfrds_status ret = CFRDS_STATUS_OK;
-
-    cfrds_server_int *server_int = NULL;
 
     cfrds_buffer_defer(post);
     size_t total_cnt = 0;
@@ -240,9 +206,7 @@ static cfrds_status cfrds_send_command(cfrds_server *server, cfrds_buffer **resp
     if (server == NULL)
         return CFRDS_STATUS_SERVER_IS_NULL;
 
-    server_int = (cfrds_server_int *)server;
-
-    server_int->_errno = 0;
+    server->_errno = 0;
 
     for(int c = 0; ; c++)
     {
@@ -255,8 +219,8 @@ static cfrds_status cfrds_send_command(cfrds_server *server, cfrds_buffer **resp
 
     total_cnt = list_cnt;
 
-    if (server_int->username) total_cnt++;
-    if (server_int->password) total_cnt++;
+    if (server->username) total_cnt++;
+    if (server->password) total_cnt++;
 
     cfrds_server_clear_error(server);
 
@@ -272,19 +236,19 @@ static cfrds_status cfrds_send_command(cfrds_server *server, cfrds_buffer **resp
             return CFRDS_STATUS_MEMORY_ERROR;
     }
 
-    if (server_int->username)
+    if (server->username)
     {
-        if (cfrds_buffer_append_rds_string(post, server_int->username) == false)
+        if (cfrds_buffer_append_rds_string(post, server->username) == false)
             return CFRDS_STATUS_MEMORY_ERROR;
     }
 
-    if (server_int->password)
+    if (server->password)
     {
-        if (cfrds_buffer_append_rds_string(post, server_int->password) == false)
+        if (cfrds_buffer_append_rds_string(post, server->password) == false)
             return CFRDS_STATUS_MEMORY_ERROR;
     }
 
-    ret = cfrds_http_post((cfrds_server_int *)server, command, post, response);
+    ret = cfrds_http_post((cfrds_server *)server, command, post, response);
 
     return ret;
 }
@@ -331,7 +295,6 @@ cfrds_status cfrds_command_file_write(cfrds_server *server, const char *pathname
 {
     cfrds_status ret = CFRDS_STATUS_OK;
 
-    cfrds_server_int *server_int = NULL;
     cfrds_buffer_defer(post);
     size_t total_cnt = 0;
 
@@ -340,14 +303,12 @@ cfrds_status cfrds_command_file_write(cfrds_server *server, const char *pathname
         return CFRDS_STATUS_PARAM_IS_NULL;
     }
 
-    server_int = (cfrds_server_int *)server;
-
-    server_int->_errno = 0;
+    server->_errno = 0;
 
     total_cnt = 4;
 
-    if (server_int->username) total_cnt++;
-    if (server_int->password) total_cnt++;
+    if (server->username) total_cnt++;
+    if (server->password) total_cnt++;
 
     cfrds_server_clear_error(server);
 
@@ -360,10 +321,10 @@ cfrds_status cfrds_command_file_write(cfrds_server *server, const char *pathname
     cfrds_buffer_append_rds_string(post, "");
     cfrds_buffer_append_rds_bytes(post, data, length);
 
-    if (server_int->username) cfrds_buffer_append_rds_string(post, server_int->username);
-    if (server_int->password) cfrds_buffer_append_rds_string(post, server_int->password);
+    if (server->username) cfrds_buffer_append_rds_string(post, server->username);
+    if (server->password) cfrds_buffer_append_rds_string(post, server->password);
 
-    ret = cfrds_http_post((cfrds_server_int *)server, "FILEIO", post, NULL);
+    ret = cfrds_http_post((cfrds_server *)server, "FILEIO", post, NULL);
 
     return ret;
 }
@@ -414,19 +375,16 @@ cfrds_status cfrds_command_file_exists(cfrds_server *server, const char *pathnam
 
     static const char response_file_not_found_start[] = "The system cannot find the path specified: ";
 
-    cfrds_server_int *server_int = NULL;
-
     ret = cfrds_send_command(server, NULL, "FILEIO", (const char *[]){ pathname, "EXISTENCE", "", "", NULL});
     if (ret == CFRDS_STATUS_OK)
     {
         *out = true;
     } else {
-        server_int = (cfrds_server_int *)server;
-        if ((server_int->error_code == -1)&&(server_int->error)&&(strncmp(server_int->error, response_file_not_found_start, strlen(response_file_not_found_start)) == 0))
+        if ((server->error_code == -1)&&(server->error)&&(strncmp(server->error, response_file_not_found_start, strlen(response_file_not_found_start)) == 0))
         {
-            server_int->error_code = 1;
-            free(server_int->error);
-            server_int->error = NULL;
+            server->error_code = 1;
+            free(server->error);
+            server->error = NULL;
 
             *out = false;
 
@@ -451,7 +409,6 @@ cfrds_status cfrds_command_file_get_root_dir(cfrds_server *server, cfrds_str *ou
 {
     cfrds_status ret;
 
-    cfrds_server_int *server_int = NULL;
     cfrds_buffer_defer(response);
 
     if ((server == NULL)||(out == NULL))
@@ -465,17 +422,15 @@ cfrds_status cfrds_command_file_get_root_dir(cfrds_server *server, cfrds_str *ou
         const char *response_data = cfrds_buffer_data(response);
         size_t response_size = cfrds_buffer_data_size(response);
 
-        server_int = (cfrds_server_int *)server;
-
-        if (!cfrds_buffer_parse_number(&response_data, &response_size, &server_int->error_code))
+        if (!cfrds_buffer_parse_number(&response_data, &response_size, &server->error_code))
         {
-            server_int->error_code = -1;
+            server->error_code = -1;
             return CFRDS_STATUS_RESPONSE_ERROR;
         }
 
         if (!cfrds_buffer_parse_string(&response_data, &response_size, out))
         {
-            server_int->error_code = -1;
+            server->error_code = -1;
             return CFRDS_STATUS_RESPONSE_ERROR;
         }
     }
@@ -487,7 +442,6 @@ cfrds_status cfrds_command_sql_dsninfo(cfrds_server *server, cfrds_sql_dsninfo *
 {
     cfrds_status ret;
 
-    cfrds_server_int *server_int = NULL;
     cfrds_buffer_defer(response);
 
     if ((server == NULL)||(dsninfo == NULL))
@@ -501,8 +455,7 @@ cfrds_status cfrds_command_sql_dsninfo(cfrds_server *server, cfrds_sql_dsninfo *
         *dsninfo = (cfrds_sql_dsninfo *)cfrds_buffer_to_sql_dsninfo(response);
         if (*dsninfo == NULL)
         {
-            server_int = (cfrds_server_int *)server;
-            server_int->error_code = -1;
+            server->error_code = -1;
             return CFRDS_STATUS_RESPONSE_ERROR;
         }
     }
@@ -514,7 +467,6 @@ cfrds_status cfrds_command_sql_tableinfo(cfrds_server *server, const char *conne
 {
     cfrds_status ret;
 
-    cfrds_server_int *server_int = NULL;
     cfrds_buffer_defer(response);
 
     if ((server == NULL)||(tableinfo == NULL))
@@ -528,8 +480,7 @@ cfrds_status cfrds_command_sql_tableinfo(cfrds_server *server, const char *conne
         *tableinfo = (cfrds_sql_tableinfo *)cfrds_buffer_to_sql_tableinfo(response);
         if (*tableinfo == NULL)
         {
-            server_int = (cfrds_server_int *)server;
-            server_int->error_code = -1;
+            server->error_code = -1;
             return CFRDS_STATUS_RESPONSE_ERROR;
         }
     }
@@ -541,7 +492,6 @@ cfrds_status cfrds_command_sql_columninfo(cfrds_server *server, const char *conn
 {
     cfrds_status ret;
 
-    cfrds_server_int *server_int = NULL;
     cfrds_buffer_defer(response);
 
     if ((server == NULL)||(columninfo == NULL))
@@ -555,8 +505,7 @@ cfrds_status cfrds_command_sql_columninfo(cfrds_server *server, const char *conn
         *columninfo = (cfrds_sql_columninfo *)cfrds_buffer_to_sql_columninfo(response);
         if (*columninfo == NULL)
         {
-            server_int = (cfrds_server_int *)server;
-            server_int->error_code = -1;
+            server->error_code = -1;
             return CFRDS_STATUS_RESPONSE_ERROR;
         }
     }
@@ -568,7 +517,6 @@ cfrds_status cfrds_command_sql_primarykeys(cfrds_server *server, const char *con
 {
     cfrds_status ret;
 
-    cfrds_server_int *server_int = NULL;
     cfrds_buffer_defer(response);
 
     if ((server == NULL)||(table_name == NULL))
@@ -582,8 +530,7 @@ cfrds_status cfrds_command_sql_primarykeys(cfrds_server *server, const char *con
         *primarykeys = (cfrds_sql_primarykeys *)cfrds_buffer_to_sql_primarykeys(response);
         if (*primarykeys == NULL)
         {
-            server_int = (cfrds_server_int *)server;
-            server_int->error_code = -1;
+            server->error_code = -1;
             return CFRDS_STATUS_RESPONSE_ERROR;
         }
     }
@@ -595,7 +542,6 @@ cfrds_status cfrds_command_sql_foreignkeys(cfrds_server *server, const char *con
 {
     cfrds_status ret;
 
-    cfrds_server_int *server_int = NULL;
     cfrds_buffer_defer(response);
 
     if ((server == NULL)||(table_name == NULL))
@@ -609,8 +555,7 @@ cfrds_status cfrds_command_sql_foreignkeys(cfrds_server *server, const char *con
         *foreignkeys = (cfrds_sql_foreignkeys *)cfrds_buffer_to_sql_foreignkeys(response);
         if (*foreignkeys == NULL)
         {
-            server_int = (cfrds_server_int *)server;
-            server_int->error_code = -1;
+            server->error_code = -1;
             return CFRDS_STATUS_RESPONSE_ERROR;
         }
     }
@@ -622,7 +567,6 @@ cfrds_status cfrds_command_sql_importedkeys(cfrds_server *server, const char *co
 {
     cfrds_status ret;
 
-    cfrds_server_int *server_int = NULL;
     cfrds_buffer_defer(response);
 
     if ((server == NULL)||(table_name == NULL))
@@ -636,8 +580,7 @@ cfrds_status cfrds_command_sql_importedkeys(cfrds_server *server, const char *co
         *importedkeys = (cfrds_sql_importedkeys *)cfrds_buffer_to_sql_importedkeys(response);
         if (*importedkeys == NULL)
         {
-            server_int = (cfrds_server_int *)server;
-            server_int->error_code = -1;
+            server->error_code = -1;
             return CFRDS_STATUS_RESPONSE_ERROR;
         }
     }
@@ -649,7 +592,6 @@ cfrds_status cfrds_command_sql_exportedkeys(cfrds_server *server, const char *co
 {
     cfrds_status ret;
 
-    cfrds_server_int *server_int = NULL;
     cfrds_buffer_defer(response);
 
     if ((server == NULL)||(table_name == NULL))
@@ -663,8 +605,7 @@ cfrds_status cfrds_command_sql_exportedkeys(cfrds_server *server, const char *co
         *exportedkeys = (cfrds_sql_exportedkeys *)cfrds_buffer_to_sql_exportedkeys(response);
         if (*exportedkeys == NULL)
         {
-            server_int = (cfrds_server_int *)server;
-            server_int->error_code = -1;
+            server->error_code = -1;
             return CFRDS_STATUS_RESPONSE_ERROR;
         }
     }
@@ -676,7 +617,6 @@ cfrds_status cfrds_command_sql_sqlstmnt(cfrds_server *server, const char *connec
 {
     cfrds_status ret;
 
-    cfrds_server_int *server_int = NULL;
     cfrds_buffer_defer(response);
 
     if ((server == NULL)||(resultset == NULL))
@@ -690,8 +630,7 @@ cfrds_status cfrds_command_sql_sqlstmnt(cfrds_server *server, const char *connec
         *resultset = (cfrds_sql_resultset *)cfrds_buffer_to_sql_sqlstmnt(response);
         if (*resultset == NULL)
         {
-            server_int = (cfrds_server_int *)server;
-            server_int->error_code = -1;
+            server->error_code = -1;
             return CFRDS_STATUS_RESPONSE_ERROR;
         }
     }
@@ -703,7 +642,6 @@ cfrds_status cfrds_command_sql_sqlmetadata(cfrds_server *server, const char *con
 {
     cfrds_status ret;
 
-    cfrds_server_int *server_int = NULL;
     cfrds_buffer_defer(response);
 
     if ((server == NULL)||(metadata == NULL))
@@ -717,8 +655,7 @@ cfrds_status cfrds_command_sql_sqlmetadata(cfrds_server *server, const char *con
         *metadata = (cfrds_sql_metadata *)cfrds_buffer_to_sql_metadata(response);
         if (*metadata == NULL)
         {
-            server_int = (cfrds_server_int *)server;
-            server_int->error_code = -1;
+            server->error_code = -1;
             return CFRDS_STATUS_RESPONSE_ERROR;
         }
     }
@@ -730,7 +667,6 @@ cfrds_status cfrds_command_sql_getsupportedcommands(cfrds_server *server, cfrds_
 {
     cfrds_status ret;
 
-    cfrds_server_int *server_int = NULL;
     cfrds_buffer_defer(response);
 
     if ((server == NULL)||(supportedcommands == NULL))
@@ -744,8 +680,7 @@ cfrds_status cfrds_command_sql_getsupportedcommands(cfrds_server *server, cfrds_
         *supportedcommands = (cfrds_sql_supportedcommands *)cfrds_buffer_to_sql_supportedcommands(response);
         if (*supportedcommands == NULL)
         {
-            server_int = (cfrds_server_int *)server;
-            server_int->error_code = -1;
+            server->error_code = -1;
             return CFRDS_STATUS_RESPONSE_ERROR;
         }
     }
@@ -757,7 +692,6 @@ cfrds_status cfrds_command_sql_dbdescription(cfrds_server *server, const char *c
 {
     cfrds_status ret;
 
-    cfrds_server_int *server_int = NULL;
     cfrds_buffer_defer(response);
 
     if ((server == NULL)||(description == NULL))
@@ -771,8 +705,7 @@ cfrds_status cfrds_command_sql_dbdescription(cfrds_server *server, const char *c
         *description = cfrds_buffer_to_sql_dbdescription(response);
         if (*description == NULL)
         {
-            server_int = (cfrds_server_int *)server;
-            server_int->error_code = -1;
+            server->error_code = -1;
             return CFRDS_STATUS_RESPONSE_ERROR;
         }
     }
@@ -785,12 +718,10 @@ void cfrds_file_content_free(cfrds_file_content *value)
     if (value == NULL)
         return;
 
-    cfrds_file_content_int *_value = (cfrds_file_content_int *)value;
-
-    free(_value->data);
-    free(_value->modified);
-    free(_value->permission);
-    free(_value);
+    free(value->data);
+    free(value->modified);
+    free(value->permission);
+    free(value);
 }
 
 const char *cfrds_file_content_get_data(const cfrds_file_content *value)
@@ -798,9 +729,7 @@ const char *cfrds_file_content_get_data(const cfrds_file_content *value)
     if (value == NULL)
         return NULL;
 
-    const cfrds_file_content_int *_value = (const cfrds_file_content_int *)value;
-
-    return _value->data;
+    return value->data;
 }
 
 int cfrds_file_content_get_size(const cfrds_file_content *value)
@@ -808,9 +737,7 @@ int cfrds_file_content_get_size(const cfrds_file_content *value)
     if (value == NULL)
         return -1;
 
-    const cfrds_file_content_int *_value = (const cfrds_file_content_int *)value;
-
-    return _value->size;
+    return value->size;
 }
 
 const char *cfrds_file_content_get_modified(const cfrds_file_content *value)
@@ -818,9 +745,7 @@ const char *cfrds_file_content_get_modified(const cfrds_file_content *value)
     if (value == NULL)
         return NULL;
 
-    const cfrds_file_content_int *_value = (const cfrds_file_content_int *)value;
-
-    return _value->modified;
+    return value->modified;
 }
 
 const char *cfrds_file_content_get_permission(const cfrds_file_content *value)
@@ -828,9 +753,7 @@ const char *cfrds_file_content_get_permission(const cfrds_file_content *value)
     if (value == NULL)
         return NULL;
 
-    const cfrds_file_content_int *_value = (const cfrds_file_content_int *)value;
-
-    return _value->permission;
+    return value->permission;
 }
 
 void cfrds_browse_dir_free(cfrds_browse_dir *value)
@@ -838,14 +761,12 @@ void cfrds_browse_dir_free(cfrds_browse_dir *value)
     if (value == NULL)
         return;
 
-    cfrds_browse_dir_int *_value = (cfrds_browse_dir_int *)value;
-
-    for(size_t c = 0; c < _value->cnt; c++)
+    for(size_t c = 0; c < value->cnt; c++)
     {
-        free(_value->items[c].name);
+        free(value->items[c].name);
     }
 
-    free(_value);
+    free(value);
 }
 
 size_t cfrds_browse_dir_count(const cfrds_browse_dir *value)
@@ -853,9 +774,7 @@ size_t cfrds_browse_dir_count(const cfrds_browse_dir *value)
     if (value == NULL)
         return 0;
 
-    const cfrds_browse_dir_int *_value = (const cfrds_browse_dir_int *)value;
-
-    return _value->cnt;
+    return value->cnt;
 }
 
 char cfrds_browse_dir_item_get_kind(const cfrds_browse_dir *value, size_t ndx)
@@ -863,12 +782,10 @@ char cfrds_browse_dir_item_get_kind(const cfrds_browse_dir *value, size_t ndx)
     if (value == NULL)
         return 0;
 
-    const cfrds_browse_dir_int *_value = (const cfrds_browse_dir_int *)value;
-
-    if (ndx >= _value->cnt)
+    if (ndx >= value->cnt)
         return 0;
 
-    return _value->items[ndx].kind;
+    return value->items[ndx].kind;
 }
 
 const char *cfrds_browse_dir_item_get_name(const cfrds_browse_dir *value, size_t ndx)
@@ -876,12 +793,10 @@ const char *cfrds_browse_dir_item_get_name(const cfrds_browse_dir *value, size_t
     if (value == NULL)
         return NULL;
 
-    const cfrds_browse_dir_int *_value = (const cfrds_browse_dir_int *)value;
-
-    if (ndx >= _value->cnt)
+    if (ndx >= value->cnt)
         return NULL;
 
-    return _value->items[ndx].name;
+    return value->items[ndx].name;
 }
 
 uint8_t cfrds_browse_dir_item_get_permissions(const cfrds_browse_dir *value, size_t ndx)
@@ -889,12 +804,10 @@ uint8_t cfrds_browse_dir_item_get_permissions(const cfrds_browse_dir *value, siz
     if (value == NULL)
         return 0;
 
-    const cfrds_browse_dir_int *_value = (const cfrds_browse_dir_int *)value;
-
-    if (ndx >= _value->cnt)
+    if (ndx >= value->cnt)
         return 0;
 
-    return _value->items[ndx].permissions;
+    return value->items[ndx].permissions;
 }
 
 size_t cfrds_browse_dir_item_get_size(const cfrds_browse_dir *value, size_t ndx)
@@ -902,12 +815,10 @@ size_t cfrds_browse_dir_item_get_size(const cfrds_browse_dir *value, size_t ndx)
     if (value == NULL)
         return 0;
 
-    const cfrds_browse_dir_int *_value = (const cfrds_browse_dir_int *)value;
-
-    if (ndx >= _value->cnt)
+    if (ndx >= value->cnt)
         return 0;
 
-    return _value->items[ndx].size;
+    return value->items[ndx].size;
 }
 
 uint64_t cfrds_browse_dir_item_get_modified(const cfrds_browse_dir *value, size_t ndx)
@@ -915,12 +826,10 @@ uint64_t cfrds_browse_dir_item_get_modified(const cfrds_browse_dir *value, size_
     if (value == NULL)
         return 0;
 
-    const cfrds_browse_dir_int *_value = (const cfrds_browse_dir_int *)value;
-
-    if (ndx >= _value->cnt)
+    if (ndx >= value->cnt)
         return 0;
 
-    return _value->items[ndx].modified;
+    return value->items[ndx].modified;
 }
 
 void cfrds_sql_dsninfo_free(cfrds_sql_dsninfo *value)
@@ -928,14 +837,12 @@ void cfrds_sql_dsninfo_free(cfrds_sql_dsninfo *value)
     if (value == NULL)
         return;
 
-    cfrds_sql_dsninfo_int *_value = (cfrds_sql_dsninfo_int *)value;
-
-    for(size_t c = 0; c < _value->cnt; c++)
+    for(size_t c = 0; c < value->cnt; c++)
     {
-        free(_value->names[c]);
+        free(value->names[c]);
     }
 
-    free(_value);
+    free(value);
 }
 
 size_t cfrds_sql_dsninfo_count(const cfrds_sql_dsninfo *value)
@@ -943,9 +850,7 @@ size_t cfrds_sql_dsninfo_count(const cfrds_sql_dsninfo *value)
     if (value == NULL)
         return 0;
 
-    const cfrds_sql_dsninfo_int *_value = (const cfrds_sql_dsninfo_int *)value;
-
-    return _value->cnt;
+    return value->cnt;
 }
 
 const char *cfrds_sql_dsninfo_item_get_name(const cfrds_sql_dsninfo *value, size_t ndx)
@@ -953,12 +858,10 @@ const char *cfrds_sql_dsninfo_item_get_name(const cfrds_sql_dsninfo *value, size
     if (value == NULL)
         return NULL;
 
-    const cfrds_sql_dsninfo_int *_value = (const cfrds_sql_dsninfo_int *)value;
-
-    if (ndx >= _value->cnt)
+    if (ndx >= value->cnt)
         return NULL;
 
-    return _value->names[ndx];
+    return value->names[ndx];
 }
 
 void cfrds_sql_tableinfo_free(cfrds_sql_tableinfo *value)
@@ -966,17 +869,15 @@ void cfrds_sql_tableinfo_free(cfrds_sql_tableinfo *value)
     if (value == NULL)
         return;
 
-    cfrds_sql_tableinfo_int *_value = (cfrds_sql_tableinfo_int *)value;
-
-    for(size_t c = 0; c < _value->cnt; c++)
+    for(size_t c = 0; c < value->cnt; c++)
     {
-        if(_value->items[c].unknown) free(_value->items[c].unknown);
-        if(_value->items[c].schema) free(_value->items[c].schema);
-        if(_value->items[c].name) free(_value->items[c].name);
-        if(_value->items[c].type) free(_value->items[c].type);
+        if(value->items[c].unknown) free(value->items[c].unknown);
+        if(value->items[c].schema) free(value->items[c].schema);
+        if(value->items[c].name) free(value->items[c].name);
+        if(value->items[c].type) free(value->items[c].type);
     }
 
-    free(_value);
+    free(value);
 }
 
 size_t cfrds_sql_tableinfo_count(const cfrds_sql_tableinfo *value)
@@ -984,9 +885,7 @@ size_t cfrds_sql_tableinfo_count(const cfrds_sql_tableinfo *value)
     if (value == NULL)
         return 0;
 
-    const cfrds_sql_tableinfo_int *_value = (const cfrds_sql_tableinfo_int *)value;
-
-    return _value->cnt;
+    return value->cnt;
 }
 
 const char *cfrds_sql_tableinfo_get_column_unknown(const cfrds_sql_tableinfo *value, size_t column)
@@ -994,12 +893,10 @@ const char *cfrds_sql_tableinfo_get_column_unknown(const cfrds_sql_tableinfo *va
     if (value == NULL)
         return NULL;
 
-    const cfrds_sql_tableinfo_int *_value = (const cfrds_sql_tableinfo_int *)value;
-
-    if (column >= _value->cnt)
+    if (column >= value->cnt)
         return NULL;
 
-    return _value->items[column].unknown;
+    return value->items[column].unknown;
 }
 
 const char *cfrds_sql_tableinfo_get_column_schema(const cfrds_sql_tableinfo *value, size_t column)
@@ -1007,12 +904,10 @@ const char *cfrds_sql_tableinfo_get_column_schema(const cfrds_sql_tableinfo *val
     if (value == NULL)
         return NULL;
 
-    const cfrds_sql_tableinfo_int *_value = (const cfrds_sql_tableinfo_int *)value;
-
-    if (column >= _value->cnt)
+    if (column >= value->cnt)
         return NULL;
 
-    return _value->items[column].schema;
+    return value->items[column].schema;
 }
 
 const char *cfrds_sql_tableinfo_get_column_name(const cfrds_sql_tableinfo *value, size_t column)
@@ -1020,12 +915,10 @@ const char *cfrds_sql_tableinfo_get_column_name(const cfrds_sql_tableinfo *value
     if (value == NULL)
         return NULL;
 
-    const cfrds_sql_tableinfo_int *_value = (const cfrds_sql_tableinfo_int *)value;
-
-    if (column >= _value->cnt)
+    if (column >= value->cnt)
         return NULL;
 
-    return _value->items[column].name;
+    return value->items[column].name;
 }
 
 const char *cfrds_sql_tableinfo_get_column_type(const cfrds_sql_tableinfo *value, size_t column)
@@ -1033,12 +926,10 @@ const char *cfrds_sql_tableinfo_get_column_type(const cfrds_sql_tableinfo *value
     if (value == NULL)
         return NULL;
 
-    const cfrds_sql_tableinfo_int *_value = (const cfrds_sql_tableinfo_int *)value;
-
-    if (column >= _value->cnt)
+    if (column >= value->cnt)
         return NULL;
 
-    return _value->items[column].type;
+    return value->items[column].type;
 }
 
 void cfrds_sql_columninfo_free(cfrds_sql_columninfo *value)
@@ -1046,18 +937,16 @@ void cfrds_sql_columninfo_free(cfrds_sql_columninfo *value)
     if (value == NULL)
         return;
 
-    cfrds_sql_columninfo_int *_value = (cfrds_sql_columninfo_int *)value;
-
-    for(size_t c = 0; c < _value->cnt; c++)
+    for(size_t c = 0; c < value->cnt; c++)
     {
-        if(_value->items[c].schema) free(_value->items[c].schema);
-        if(_value->items[c].owner) free(_value->items[c].owner);
-        if(_value->items[c].table) free(_value->items[c].table);
-        if(_value->items[c].name) free(_value->items[c].name);
-        if(_value->items[c].typeStr) free(_value->items[c].typeStr);
+        if(value->items[c].schema) free(value->items[c].schema);
+        if(value->items[c].owner) free(value->items[c].owner);
+        if(value->items[c].table) free(value->items[c].table);
+        if(value->items[c].name) free(value->items[c].name);
+        if(value->items[c].typeStr) free(value->items[c].typeStr);
     }
 
-    free(_value);
+    free(value);
 }
 
 size_t cfrds_sql_columninfo_count(const cfrds_sql_columninfo *value)
@@ -1065,9 +954,7 @@ size_t cfrds_sql_columninfo_count(const cfrds_sql_columninfo *value)
     if (value == NULL)
         return 0;
 
-    const cfrds_sql_columninfo_int *_value = (const cfrds_sql_columninfo_int *)value;
-
-    return _value->cnt;
+    return value->cnt;
 }
 
 const char *cfrds_sql_columninfo_get_schema(const cfrds_sql_columninfo *value, size_t column)
@@ -1075,12 +962,10 @@ const char *cfrds_sql_columninfo_get_schema(const cfrds_sql_columninfo *value, s
     if (value == NULL)
         return NULL;
 
-    const cfrds_sql_columninfo_int *_value = (const cfrds_sql_columninfo_int *)value;
-
-    if (column >= _value->cnt)
+    if (column >= value->cnt)
         return NULL;
 
-    return _value->items[column].schema;
+    return value->items[column].schema;
 }
 
 const char *cfrds_sql_columninfo_get_owner(const cfrds_sql_columninfo *value, size_t column)
@@ -1088,12 +973,10 @@ const char *cfrds_sql_columninfo_get_owner(const cfrds_sql_columninfo *value, si
     if (value == NULL)
         return NULL;
 
-    const cfrds_sql_columninfo_int *_value = (const cfrds_sql_columninfo_int *)value;
-
-    if (column >= _value->cnt)
+    if (column >= value->cnt)
         return NULL;
 
-    return _value->items[column].owner;
+    return value->items[column].owner;
 }
 
 const char *cfrds_sql_columninfo_get_table(const cfrds_sql_columninfo *value, size_t column)
@@ -1101,12 +984,10 @@ const char *cfrds_sql_columninfo_get_table(const cfrds_sql_columninfo *value, si
     if (value == NULL)
         return NULL;
 
-    const cfrds_sql_columninfo_int *_value = (const cfrds_sql_columninfo_int *)value;
-
-    if (column >= _value->cnt)
+    if (column >= value->cnt)
         return NULL;
 
-    return _value->items[column].table;
+    return value->items[column].table;
 }
 
 const char *cfrds_sql_columninfo_get_name(const cfrds_sql_columninfo *value, size_t column)
@@ -1114,12 +995,10 @@ const char *cfrds_sql_columninfo_get_name(const cfrds_sql_columninfo *value, siz
     if (value == NULL)
         return NULL;
 
-    const cfrds_sql_columninfo_int *_value = (const cfrds_sql_columninfo_int *)value;
-
-    if (column >= _value->cnt)
+    if (column >= value->cnt)
         return NULL;
 
-    return _value->items[column].name;
+    return value->items[column].name;
 }
 
 int cfrds_sql_columninfo_get_type(const cfrds_sql_columninfo *value, size_t column)
@@ -1127,12 +1006,10 @@ int cfrds_sql_columninfo_get_type(const cfrds_sql_columninfo *value, size_t colu
     if (value == NULL)
         return -1;
 
-    const cfrds_sql_columninfo_int *_value = (const cfrds_sql_columninfo_int *)value;
-
-    if (column >= _value->cnt)
+    if (column >= value->cnt)
         return -1;
 
-    return _value->items[column].type;
+    return value->items[column].type;
 }
 
 const char *cfrds_sql_columninfo_get_typeStr(const cfrds_sql_columninfo *value, size_t column)
@@ -1140,12 +1017,10 @@ const char *cfrds_sql_columninfo_get_typeStr(const cfrds_sql_columninfo *value, 
     if (value == NULL)
         return NULL;
 
-    const cfrds_sql_columninfo_int *_value = (const cfrds_sql_columninfo_int *)value;
-
-    if (column >= _value->cnt)
+    if (column >= value->cnt)
         return NULL;
 
-    return _value->items[column].typeStr;
+    return value->items[column].typeStr;
 }
 
 int cfrds_sql_columninfo_get_precision(const cfrds_sql_columninfo *value, size_t column)
@@ -1153,12 +1028,10 @@ int cfrds_sql_columninfo_get_precision(const cfrds_sql_columninfo *value, size_t
     if (value == NULL)
         return -1;
 
-    const cfrds_sql_columninfo_int *_value = (const cfrds_sql_columninfo_int *)value;
-
-    if (column >= _value->cnt)
+    if (column >= value->cnt)
         return -1;
 
-    return _value->items[column].precision;
+    return value->items[column].precision;
 }
 
 int cfrds_sql_columninfo_get_length(const cfrds_sql_columninfo *value, size_t column)
@@ -1166,12 +1039,10 @@ int cfrds_sql_columninfo_get_length(const cfrds_sql_columninfo *value, size_t co
     if (value == NULL)
         return -1;
 
-    const cfrds_sql_columninfo_int *_value = (const cfrds_sql_columninfo_int *)value;
-
-    if (column >= _value->cnt)
+    if (column >= value->cnt)
         return -1;
 
-    return _value->items[column].length;
+    return value->items[column].length;
 }
 
 int cfrds_sql_columninfo_get_scale(const cfrds_sql_columninfo *value, size_t column)
@@ -1179,12 +1050,10 @@ int cfrds_sql_columninfo_get_scale(const cfrds_sql_columninfo *value, size_t col
     if (value == NULL)
         return -1;
 
-    const cfrds_sql_columninfo_int *_value = (const cfrds_sql_columninfo_int *)value;
-
-    if (column >= _value->cnt)
+    if (column >= value->cnt)
         return -1;
 
-    return _value->items[column].scale;
+    return value->items[column].scale;
 }
 
 int cfrds_sql_columninfo_get_radix(const cfrds_sql_columninfo *value, size_t column)
@@ -1192,12 +1061,10 @@ int cfrds_sql_columninfo_get_radix(const cfrds_sql_columninfo *value, size_t col
     if (value == NULL)
         return -1;
 
-    const cfrds_sql_columninfo_int *_value = (const cfrds_sql_columninfo_int *)value;
-
-    if (column >= _value->cnt)
+    if (column >= value->cnt)
         return -1;
 
-    return _value->items[column].radix;
+    return value->items[column].radix;
 }
 
 int cfrds_sql_columninfo_get_nullable(const cfrds_sql_columninfo *value, size_t column)
@@ -1205,12 +1072,10 @@ int cfrds_sql_columninfo_get_nullable(const cfrds_sql_columninfo *value, size_t 
     if (value == NULL)
         return -1;
 
-    const cfrds_sql_columninfo_int *_value = (const cfrds_sql_columninfo_int *)value;
-
-    if (column >= _value->cnt)
+    if (column >= value->cnt)
         return -1;
 
-    return _value->items[column].nullable;
+    return value->items[column].nullable;
 }
 
 void cfrds_sql_primarykeys_free(cfrds_sql_primarykeys *value)
@@ -1218,17 +1083,15 @@ void cfrds_sql_primarykeys_free(cfrds_sql_primarykeys *value)
     if (value == NULL)
         return;
 
-    cfrds_sql_primarykeys_int *_value = (cfrds_sql_primarykeys_int *)value;
-
-    for(size_t c = 0; c < _value->cnt; c++)
+    for(size_t c = 0; c < value->cnt; c++)
     {
-        if(_value->items[c].tableCatalog) free(_value->items[c].tableCatalog);
-        if(_value->items[c].tableOwner) free(_value->items[c].tableOwner);
-        if(_value->items[c].tableName) free(_value->items[c].tableName);
-        if(_value->items[c].colName) free(_value->items[c].colName);
+        if(value->items[c].tableCatalog) free(value->items[c].tableCatalog);
+        if(value->items[c].tableOwner) free(value->items[c].tableOwner);
+        if(value->items[c].tableName) free(value->items[c].tableName);
+        if(value->items[c].colName) free(value->items[c].colName);
     }
 
-    free(_value);
+    free(value);
 }
 
 size_t cfrds_sql_primarykeys_count(const cfrds_sql_primarykeys *value)
@@ -1236,9 +1099,7 @@ size_t cfrds_sql_primarykeys_count(const cfrds_sql_primarykeys *value)
     if (value == NULL)
         return 0;
 
-    const cfrds_sql_primarykeys_int *_value = (const cfrds_sql_primarykeys_int *)value;
-
-    return _value->cnt;
+    return value->cnt;
 }
 
 const char *cfrds_sql_primarykeys_get_catalog(const cfrds_sql_primarykeys *value, size_t ndx)
@@ -1246,12 +1107,10 @@ const char *cfrds_sql_primarykeys_get_catalog(const cfrds_sql_primarykeys *value
     if (value == NULL)
         return NULL;
 
-    const cfrds_sql_primarykeys_int *_value = (const cfrds_sql_primarykeys_int *)value;
-
-    if (ndx >= _value->cnt)
+    if (ndx >= value->cnt)
         return NULL;
 
-    return _value->items[ndx].tableCatalog;
+    return value->items[ndx].tableCatalog;
 }
 
 const char *cfrds_sql_primarykeys_get_owner(const cfrds_sql_primarykeys *value, size_t ndx)
@@ -1259,12 +1118,10 @@ const char *cfrds_sql_primarykeys_get_owner(const cfrds_sql_primarykeys *value, 
     if (value == NULL)
         return NULL;
 
-    const cfrds_sql_primarykeys_int *_value = (const cfrds_sql_primarykeys_int *)value;
-
-    if (ndx >= _value->cnt)
+    if (ndx >= value->cnt)
         return NULL;
 
-    return _value->items[ndx].tableOwner;
+    return value->items[ndx].tableOwner;
 }
 
 const char *cfrds_sql_primarykeys_get_table(const cfrds_sql_primarykeys *value, size_t ndx)
@@ -1272,12 +1129,10 @@ const char *cfrds_sql_primarykeys_get_table(const cfrds_sql_primarykeys *value, 
     if (value == NULL)
         return NULL;
 
-    const cfrds_sql_primarykeys_int *_value = (const cfrds_sql_primarykeys_int *)value;
-
-    if (ndx >= _value->cnt)
+    if (ndx >= value->cnt)
         return NULL;
 
-    return _value->items[ndx].tableName;
+    return value->items[ndx].tableName;
 }
 
 const char *cfrds_sql_primarykeys_get_column(const cfrds_sql_primarykeys *value, size_t ndx)
@@ -1285,12 +1140,10 @@ const char *cfrds_sql_primarykeys_get_column(const cfrds_sql_primarykeys *value,
     if (value == NULL)
         return NULL;
 
-    const cfrds_sql_primarykeys_int *_value = (const cfrds_sql_primarykeys_int *)value;
-
-    if (ndx >= _value->cnt)
+    if (ndx >= value->cnt)
         return NULL;
 
-    return _value->items[ndx].colName;
+    return value->items[ndx].colName;
 }
 
 int cfrds_sql_primarykeys_get_key_sequence(const cfrds_sql_primarykeys *value, size_t ndx)
@@ -1298,12 +1151,10 @@ int cfrds_sql_primarykeys_get_key_sequence(const cfrds_sql_primarykeys *value, s
     if (value == NULL)
         return -1;
 
-    const cfrds_sql_primarykeys_int *_value = (const cfrds_sql_primarykeys_int *)value;
-
-    if (ndx >= _value->cnt)
+    if (ndx >= value->cnt)
         return -1;
 
-    return _value->items[ndx].keySequence;
+    return value->items[ndx].keySequence;
 }
 
 void cfrds_sql_foreignkeys_free(cfrds_sql_foreignkeys *value)
@@ -1311,21 +1162,19 @@ void cfrds_sql_foreignkeys_free(cfrds_sql_foreignkeys *value)
     if (value == NULL)
         return;
 
-    cfrds_sql_foreignkeys_int *_value = (cfrds_sql_foreignkeys_int *)value;
-
-    for(size_t c = 0; c < _value->cnt; c++)
+    for(size_t c = 0; c < value->cnt; c++)
     {
-        if(_value->items[c].pkTableCatalog) free(_value->items[c].pkTableCatalog);
-        if(_value->items[c].pkTableOwner) free(_value->items[c].pkTableOwner);
-        if(_value->items[c].pkTableName) free(_value->items[c].pkTableName);
-        if(_value->items[c].pkColName) free(_value->items[c].pkColName);
-        if(_value->items[c].fkTableCatalog) free(_value->items[c].fkTableCatalog);
-        if(_value->items[c].fkTableOwner) free(_value->items[c].fkTableOwner);
-        if(_value->items[c].fkTableName) free(_value->items[c].fkTableName);
-        if(_value->items[c].fkColName) free(_value->items[c].fkColName);
+        if(value->items[c].pkTableCatalog) free(value->items[c].pkTableCatalog);
+        if(value->items[c].pkTableOwner) free(value->items[c].pkTableOwner);
+        if(value->items[c].pkTableName) free(value->items[c].pkTableName);
+        if(value->items[c].pkColName) free(value->items[c].pkColName);
+        if(value->items[c].fkTableCatalog) free(value->items[c].fkTableCatalog);
+        if(value->items[c].fkTableOwner) free(value->items[c].fkTableOwner);
+        if(value->items[c].fkTableName) free(value->items[c].fkTableName);
+        if(value->items[c].fkColName) free(value->items[c].fkColName);
     }
 
-    free(_value);
+    free(value);
 }
 
 size_t cfrds_sql_foreignkeys_count(const cfrds_sql_foreignkeys *value)
@@ -1333,9 +1182,7 @@ size_t cfrds_sql_foreignkeys_count(const cfrds_sql_foreignkeys *value)
     if (value == NULL)
         return 0;
 
-    const cfrds_sql_foreignkeys_int *_value = (const cfrds_sql_foreignkeys_int *)value;
-
-    return _value->cnt;
+    return value->cnt;
 }
 
 const char *cfrds_sql_foreignkeys_get_pkcatalog(const cfrds_sql_foreignkeys *value, size_t ndx)
@@ -1343,12 +1190,10 @@ const char *cfrds_sql_foreignkeys_get_pkcatalog(const cfrds_sql_foreignkeys *val
     if (value == NULL)
         return NULL;
 
-    const cfrds_sql_foreignkeys_int *_value = (const cfrds_sql_foreignkeys_int *)value;
-
-    if (ndx >= _value->cnt)
+    if (ndx >= value->cnt)
         return NULL;
 
-    return _value->items[ndx].pkTableCatalog;
+    return value->items[ndx].pkTableCatalog;
 }
 
 const char *cfrds_sql_foreignkeys_get_pkowner(const cfrds_sql_foreignkeys *value, size_t ndx)
@@ -1356,12 +1201,10 @@ const char *cfrds_sql_foreignkeys_get_pkowner(const cfrds_sql_foreignkeys *value
     if (value == NULL)
         return NULL;
 
-    const cfrds_sql_foreignkeys_int *_value = (const cfrds_sql_foreignkeys_int *)value;
-
-    if (ndx >= _value->cnt)
+    if (ndx >= value->cnt)
         return NULL;
 
-    return _value->items[ndx].pkTableOwner;
+    return value->items[ndx].pkTableOwner;
 }
 
 const char *cfrds_sql_foreignkeys_get_pktable(const cfrds_sql_foreignkeys *value, size_t ndx)
@@ -1369,12 +1212,10 @@ const char *cfrds_sql_foreignkeys_get_pktable(const cfrds_sql_foreignkeys *value
     if (value == NULL)
         return NULL;
 
-    const cfrds_sql_foreignkeys_int *_value = (const cfrds_sql_foreignkeys_int *)value;
-
-    if (ndx >= _value->cnt)
+    if (ndx >= value->cnt)
         return NULL;
 
-    return _value->items[ndx].pkTableName;
+    return value->items[ndx].pkTableName;
 }
 
 const char *cfrds_sql_foreignkeys_get_pkcolumn(const cfrds_sql_foreignkeys *value, size_t ndx)
@@ -1382,12 +1223,10 @@ const char *cfrds_sql_foreignkeys_get_pkcolumn(const cfrds_sql_foreignkeys *valu
     if (value == NULL)
         return NULL;
 
-    const cfrds_sql_foreignkeys_int *_value = (const cfrds_sql_foreignkeys_int *)value;
-
-    if (ndx >= _value->cnt)
+    if (ndx >= value->cnt)
         return NULL;
 
-    return _value->items[ndx].pkColName;
+    return value->items[ndx].pkColName;
 }
 
 const char *cfrds_sql_foreignkeys_get_fkcatalog(const cfrds_sql_foreignkeys *value, size_t ndx)
@@ -1395,12 +1234,10 @@ const char *cfrds_sql_foreignkeys_get_fkcatalog(const cfrds_sql_foreignkeys *val
     if (value == NULL)
         return NULL;
 
-    const cfrds_sql_foreignkeys_int *_value = (const cfrds_sql_foreignkeys_int *)value;
-
-    if (ndx >= _value->cnt)
+    if (ndx >= value->cnt)
         return NULL;
 
-    return _value->items[ndx].fkTableCatalog;
+    return value->items[ndx].fkTableCatalog;
 }
 
 const char *cfrds_sql_foreignkeys_get_fkowner(const cfrds_sql_foreignkeys *value, size_t ndx)
@@ -1408,12 +1245,10 @@ const char *cfrds_sql_foreignkeys_get_fkowner(const cfrds_sql_foreignkeys *value
     if (value == NULL)
         return NULL;
 
-    const cfrds_sql_foreignkeys_int *_value = (const cfrds_sql_foreignkeys_int *)value;
-
-    if (ndx >= _value->cnt)
+    if (ndx >= value->cnt)
         return NULL;
 
-    return _value->items[ndx].fkTableOwner;
+    return value->items[ndx].fkTableOwner;
 }
 
 const char *cfrds_sql_foreignkeys_get_fktable(const cfrds_sql_foreignkeys *value, size_t ndx)
@@ -1421,12 +1256,10 @@ const char *cfrds_sql_foreignkeys_get_fktable(const cfrds_sql_foreignkeys *value
     if (value == NULL)
         return NULL;
 
-    const cfrds_sql_foreignkeys_int *_value = (const cfrds_sql_foreignkeys_int *)value;
-
-    if (ndx >= _value->cnt)
+    if (ndx >= value->cnt)
         return NULL;
 
-    return _value->items[ndx].fkTableName;
+    return value->items[ndx].fkTableName;
 }
 
 const char *cfrds_sql_foreignkeys_get_fkcolumn(const cfrds_sql_foreignkeys *value, size_t ndx)
@@ -1434,12 +1267,10 @@ const char *cfrds_sql_foreignkeys_get_fkcolumn(const cfrds_sql_foreignkeys *valu
     if (value == NULL)
         return NULL;
 
-    const cfrds_sql_foreignkeys_int *_value = (const cfrds_sql_foreignkeys_int *)value;
-
-    if (ndx >= _value->cnt)
+    if (ndx >= value->cnt)
         return NULL;
 
-    return _value->items[ndx].fkColName;
+    return value->items[ndx].fkColName;
 }
 
 int cfrds_sql_foreignkeys_get_key_sequence(const cfrds_sql_foreignkeys *value, size_t ndx)
@@ -1447,12 +1278,10 @@ int cfrds_sql_foreignkeys_get_key_sequence(const cfrds_sql_foreignkeys *value, s
     if (value == NULL)
         return -1;
 
-    const cfrds_sql_foreignkeys_int *_value = (const cfrds_sql_foreignkeys_int *)value;
-
-    if (ndx >= _value->cnt)
+    if (ndx >= value->cnt)
         return -1;
 
-    return _value->items[ndx].keySequence;
+    return value->items[ndx].keySequence;
 }
 
 int cfrds_sql_foreignkeys_get_updaterule(const cfrds_sql_foreignkeys *value, size_t ndx)
@@ -1460,12 +1289,10 @@ int cfrds_sql_foreignkeys_get_updaterule(const cfrds_sql_foreignkeys *value, siz
     if (value == NULL)
         return -1;
 
-    const cfrds_sql_foreignkeys_int *_value = (const cfrds_sql_foreignkeys_int *)value;
-
-    if (ndx >= _value->cnt)
+    if (ndx >= value->cnt)
         return -1;
 
-    return _value->items[ndx].updateRule;
+    return value->items[ndx].updateRule;
 }
 
 int cfrds_sql_foreignkeys_get_deleterule(const cfrds_sql_foreignkeys *value, size_t ndx)
@@ -1473,12 +1300,10 @@ int cfrds_sql_foreignkeys_get_deleterule(const cfrds_sql_foreignkeys *value, siz
     if (value == NULL)
         return -1;
 
-    const cfrds_sql_foreignkeys_int *_value = (const cfrds_sql_foreignkeys_int *)value;
-
-    if (ndx >= _value->cnt)
+    if (ndx >= value->cnt)
         return -1;
 
-    return _value->items[ndx].deleteRule;
+    return value->items[ndx].deleteRule;
 }
 
 void cfrds_sql_importedkeys_free(cfrds_sql_importedkeys *value)
@@ -1486,21 +1311,19 @@ void cfrds_sql_importedkeys_free(cfrds_sql_importedkeys *value)
     if (value == NULL)
         return;
 
-    cfrds_sql_importedkeys_int *_value = (cfrds_sql_importedkeys_int *)value;
-
-    for(size_t c = 0; c < _value->cnt; c++)
+    for(size_t c = 0; c < value->cnt; c++)
     {
-        if(_value->items[c].pkTableCatalog) free(_value->items[c].pkTableCatalog);
-        if(_value->items[c].pkTableOwner) free(_value->items[c].pkTableOwner);
-        if(_value->items[c].pkTableName) free(_value->items[c].pkTableName);
-        if(_value->items[c].pkColName) free(_value->items[c].pkColName);
-        if(_value->items[c].fkTableCatalog) free(_value->items[c].fkTableCatalog);
-        if(_value->items[c].fkTableOwner) free(_value->items[c].fkTableOwner);
-        if(_value->items[c].fkTableName) free(_value->items[c].fkTableName);
-        if(_value->items[c].fkColName) free(_value->items[c].fkColName);
+        if(value->items[c].pkTableCatalog) free(value->items[c].pkTableCatalog);
+        if(value->items[c].pkTableOwner) free(value->items[c].pkTableOwner);
+        if(value->items[c].pkTableName) free(value->items[c].pkTableName);
+        if(value->items[c].pkColName) free(value->items[c].pkColName);
+        if(value->items[c].fkTableCatalog) free(value->items[c].fkTableCatalog);
+        if(value->items[c].fkTableOwner) free(value->items[c].fkTableOwner);
+        if(value->items[c].fkTableName) free(value->items[c].fkTableName);
+        if(value->items[c].fkColName) free(value->items[c].fkColName);
     }
 
-    free(_value);
+    free(value);
 }
 
 size_t cfrds_sql_importedkeys_count(const cfrds_sql_importedkeys *value)
@@ -1508,9 +1331,7 @@ size_t cfrds_sql_importedkeys_count(const cfrds_sql_importedkeys *value)
     if (value == NULL)
         return 0;
 
-    const cfrds_sql_importedkeys_int *_value = (const cfrds_sql_importedkeys_int *)value;
-
-    return _value->cnt;
+    return value->cnt;
 }
 
 const char *cfrds_sql_importedkeys_get_pkcatalog(const cfrds_sql_importedkeys *value, size_t ndx)
@@ -1518,12 +1339,10 @@ const char *cfrds_sql_importedkeys_get_pkcatalog(const cfrds_sql_importedkeys *v
     if (value == NULL)
         return NULL;
 
-    const cfrds_sql_importedkeys_int *_value = (const cfrds_sql_importedkeys_int *)value;
-
-    if (ndx >= _value->cnt)
+    if (ndx >= value->cnt)
         return NULL;
 
-    return _value->items[ndx].pkTableCatalog;
+    return value->items[ndx].pkTableCatalog;
 }
 
 const char *cfrds_sql_importedkeys_get_pkowner(const cfrds_sql_importedkeys *value, size_t ndx)
@@ -1531,12 +1350,10 @@ const char *cfrds_sql_importedkeys_get_pkowner(const cfrds_sql_importedkeys *val
     if (value == NULL)
         return NULL;
 
-    const cfrds_sql_importedkeys_int *_value = (const cfrds_sql_importedkeys_int *)value;
-
-    if (ndx >= _value->cnt)
+    if (ndx >= value->cnt)
         return NULL;
 
-    return _value->items[ndx].pkTableOwner;
+    return value->items[ndx].pkTableOwner;
 }
 
 const char *cfrds_sql_importedkeys_get_pktable(const cfrds_sql_importedkeys *value, size_t ndx)
@@ -1544,12 +1361,10 @@ const char *cfrds_sql_importedkeys_get_pktable(const cfrds_sql_importedkeys *val
     if (value == NULL)
         return NULL;
 
-    const cfrds_sql_importedkeys_int *_value = (const cfrds_sql_importedkeys_int *)value;
-
-    if (ndx >= _value->cnt)
+    if (ndx >= value->cnt)
         return NULL;
 
-    return _value->items[ndx].pkTableName;
+    return value->items[ndx].pkTableName;
 }
 
 const char *cfrds_sql_importedkeys_get_pkcolumn(const cfrds_sql_importedkeys *value, size_t ndx)
@@ -1557,12 +1372,10 @@ const char *cfrds_sql_importedkeys_get_pkcolumn(const cfrds_sql_importedkeys *va
     if (value == NULL)
         return NULL;
 
-    const cfrds_sql_importedkeys_int *_value = (const cfrds_sql_importedkeys_int *)value;
-
-    if (ndx >= _value->cnt)
+    if (ndx >= value->cnt)
         return NULL;
 
-    return _value->items[ndx].pkColName;
+    return value->items[ndx].pkColName;
 }
 
 const char *cfrds_sql_importedkeys_get_fkcatalog(const cfrds_sql_importedkeys *value, size_t ndx)
@@ -1570,12 +1383,10 @@ const char *cfrds_sql_importedkeys_get_fkcatalog(const cfrds_sql_importedkeys *v
     if (value == NULL)
         return NULL;
 
-    const cfrds_sql_importedkeys_int *_value = (const cfrds_sql_importedkeys_int *)value;
-
-    if (ndx >= _value->cnt)
+    if (ndx >= value->cnt)
         return NULL;
 
-    return _value->items[ndx].fkTableCatalog;
+    return value->items[ndx].fkTableCatalog;
 }
 
 const char *cfrds_sql_importedkeys_get_fkowner(const cfrds_sql_importedkeys *value, size_t ndx)
@@ -1583,12 +1394,10 @@ const char *cfrds_sql_importedkeys_get_fkowner(const cfrds_sql_importedkeys *val
     if (value == NULL)
         return NULL;
 
-    const cfrds_sql_importedkeys_int *_value = (const cfrds_sql_importedkeys_int *)value;
-
-    if (ndx >= _value->cnt)
+    if (ndx >= value->cnt)
         return NULL;
 
-    return _value->items[ndx].fkTableOwner;
+    return value->items[ndx].fkTableOwner;
 }
 
 const char *cfrds_sql_importedkeys_get_fktable(const cfrds_sql_importedkeys *value, size_t ndx)
@@ -1596,12 +1405,10 @@ const char *cfrds_sql_importedkeys_get_fktable(const cfrds_sql_importedkeys *val
     if (value == NULL)
         return NULL;
 
-    const cfrds_sql_importedkeys_int *_value = (const cfrds_sql_importedkeys_int *)value;
-
-    if (ndx >= _value->cnt)
+    if (ndx >= value->cnt)
         return NULL;
 
-    return _value->items[ndx].fkTableName;
+    return value->items[ndx].fkTableName;
 }
 
 const char *cfrds_sql_importedkeys_get_fkcolumn(const cfrds_sql_importedkeys *value, size_t ndx)
@@ -1609,12 +1416,10 @@ const char *cfrds_sql_importedkeys_get_fkcolumn(const cfrds_sql_importedkeys *va
     if (value == NULL)
         return NULL;
 
-    const cfrds_sql_importedkeys_int *_value = (const cfrds_sql_importedkeys_int *)value;
-
-    if (ndx >= _value->cnt)
+    if (ndx >= value->cnt)
         return NULL;
 
-    return _value->items[ndx].fkColName;
+    return value->items[ndx].fkColName;
 }
 
 int cfrds_sql_importedkeys_get_key_sequence(const cfrds_sql_importedkeys *value, size_t ndx)
@@ -1622,12 +1427,10 @@ int cfrds_sql_importedkeys_get_key_sequence(const cfrds_sql_importedkeys *value,
     if (value == NULL)
         return -1;
 
-    const cfrds_sql_importedkeys_int *_value = (const cfrds_sql_importedkeys_int *)value;
-
-    if (ndx >= _value->cnt)
+    if (ndx >= value->cnt)
         return -1;
 
-    return _value->items[ndx].keySequence;
+    return value->items[ndx].keySequence;
 }
 
 int cfrds_sql_importedkeys_get_updaterule(const cfrds_sql_importedkeys *value, size_t ndx)
@@ -1635,12 +1438,10 @@ int cfrds_sql_importedkeys_get_updaterule(const cfrds_sql_importedkeys *value, s
     if (value == NULL)
         return -1;
 
-    const cfrds_sql_importedkeys_int *_value = (const cfrds_sql_importedkeys_int *)value;
-
-    if (ndx >= _value->cnt)
+    if (ndx >= value->cnt)
         return -1;
 
-    return _value->items[ndx].updateRule;
+    return value->items[ndx].updateRule;
 }
 
 int cfrds_sql_importedkeys_get_deleterule(const cfrds_sql_importedkeys *value, size_t ndx)
@@ -1648,12 +1449,10 @@ int cfrds_sql_importedkeys_get_deleterule(const cfrds_sql_importedkeys *value, s
     if (value == NULL)
         return -1;
 
-    const cfrds_sql_importedkeys_int *_value = (const cfrds_sql_importedkeys_int *)value;
-
-    if (ndx >= _value->cnt)
+    if (ndx >= value->cnt)
         return -1;
 
-    return _value->items[ndx].deleteRule;
+    return value->items[ndx].deleteRule;
 }
 
 void cfrds_sql_exportedkeys_free(cfrds_sql_exportedkeys *value)
@@ -1661,21 +1460,19 @@ void cfrds_sql_exportedkeys_free(cfrds_sql_exportedkeys *value)
     if (value == NULL)
         return;
 
-    cfrds_sql_exportedkeys_int *_value = (cfrds_sql_exportedkeys_int *)value;
-
-    for(size_t c = 0; c < _value->cnt; c++)
+    for(size_t c = 0; c < value->cnt; c++)
     {
-        if(_value->items[c].pkTableCatalog) free(_value->items[c].pkTableCatalog);
-        if(_value->items[c].pkTableOwner) free(_value->items[c].pkTableOwner);
-        if(_value->items[c].pkTableName) free(_value->items[c].pkTableName);
-        if(_value->items[c].pkColName) free(_value->items[c].pkColName);
-        if(_value->items[c].fkTableCatalog) free(_value->items[c].fkTableCatalog);
-        if(_value->items[c].fkTableOwner) free(_value->items[c].fkTableOwner);
-        if(_value->items[c].fkTableName) free(_value->items[c].fkTableName);
-        if(_value->items[c].fkColName) free(_value->items[c].fkColName);
+        if(value->items[c].pkTableCatalog) free(value->items[c].pkTableCatalog);
+        if(value->items[c].pkTableOwner) free(value->items[c].pkTableOwner);
+        if(value->items[c].pkTableName) free(value->items[c].pkTableName);
+        if(value->items[c].pkColName) free(value->items[c].pkColName);
+        if(value->items[c].fkTableCatalog) free(value->items[c].fkTableCatalog);
+        if(value->items[c].fkTableOwner) free(value->items[c].fkTableOwner);
+        if(value->items[c].fkTableName) free(value->items[c].fkTableName);
+        if(value->items[c].fkColName) free(value->items[c].fkColName);
     }
 
-    free(_value);
+    free(value);
 }
 
 size_t cfrds_sql_exportedkeys_count(const cfrds_sql_exportedkeys *value)
@@ -1683,9 +1480,7 @@ size_t cfrds_sql_exportedkeys_count(const cfrds_sql_exportedkeys *value)
     if (value == NULL)
         return 0;
 
-    const cfrds_sql_exportedkeys_int *_value = (const cfrds_sql_exportedkeys_int *)value;
-
-    return _value->cnt;
+    return value->cnt;
 }
 
 const char *cfrds_sql_exportedkeys_get_pkcatalog(const cfrds_sql_exportedkeys *value, size_t ndx)
@@ -1693,12 +1488,10 @@ const char *cfrds_sql_exportedkeys_get_pkcatalog(const cfrds_sql_exportedkeys *v
     if (value == NULL)
         return NULL;
 
-    const cfrds_sql_exportedkeys_int *_value = (const cfrds_sql_exportedkeys_int *)value;
-
-    if (ndx >= _value->cnt)
+    if (ndx >= value->cnt)
         return NULL;
 
-    return _value->items[ndx].pkTableCatalog;
+    return value->items[ndx].pkTableCatalog;
 }
 
 const char *cfrds_sql_exportedkeys_get_pkowner(const cfrds_sql_exportedkeys *value, size_t ndx)
@@ -1706,12 +1499,10 @@ const char *cfrds_sql_exportedkeys_get_pkowner(const cfrds_sql_exportedkeys *val
     if (value == NULL)
         return NULL;
 
-    const cfrds_sql_exportedkeys_int *_value = (const cfrds_sql_exportedkeys_int *)value;
-
-    if (ndx >= _value->cnt)
+    if (ndx >= value->cnt)
         return NULL;
 
-    return _value->items[ndx].pkTableOwner;
+    return value->items[ndx].pkTableOwner;
 }
 
 const char *cfrds_sql_exportedkeys_get_pktable(const cfrds_sql_exportedkeys *value, size_t ndx)
@@ -1719,12 +1510,10 @@ const char *cfrds_sql_exportedkeys_get_pktable(const cfrds_sql_exportedkeys *val
     if (value == NULL)
         return NULL;
 
-    const cfrds_sql_exportedkeys_int *_value = (const cfrds_sql_exportedkeys_int *)value;
-
-    if (ndx >= _value->cnt)
+    if (ndx >= value->cnt)
         return NULL;
 
-    return _value->items[ndx].pkTableName;
+    return value->items[ndx].pkTableName;
 }
 
 const char *cfrds_sql_exportedkeys_get_pkcolumn(const cfrds_sql_exportedkeys *value, size_t ndx)
@@ -1732,12 +1521,10 @@ const char *cfrds_sql_exportedkeys_get_pkcolumn(const cfrds_sql_exportedkeys *va
     if (value == NULL)
         return NULL;
 
-    const cfrds_sql_exportedkeys_int *_value = (const cfrds_sql_exportedkeys_int *)value;
-
-    if (ndx >= _value->cnt)
+    if (ndx >= value->cnt)
         return NULL;
 
-    return _value->items[ndx].pkColName;
+    return value->items[ndx].pkColName;
 }
 
 const char *cfrds_sql_exportedkeys_get_fkcatalog(const cfrds_sql_exportedkeys *value, size_t ndx)
@@ -1745,12 +1532,10 @@ const char *cfrds_sql_exportedkeys_get_fkcatalog(const cfrds_sql_exportedkeys *v
     if (value == NULL)
         return NULL;
 
-    const cfrds_sql_exportedkeys_int *_value = (const cfrds_sql_exportedkeys_int *)value;
-
-    if (ndx >= _value->cnt)
+    if (ndx >= value->cnt)
         return NULL;
 
-    return _value->items[ndx].fkTableCatalog;
+    return value->items[ndx].fkTableCatalog;
 }
 
 const char *cfrds_sql_exportedkeys_get_fkowner(const cfrds_sql_exportedkeys *value, size_t ndx)
@@ -1758,12 +1543,10 @@ const char *cfrds_sql_exportedkeys_get_fkowner(const cfrds_sql_exportedkeys *val
     if (value == NULL)
         return NULL;
 
-    const cfrds_sql_exportedkeys_int *_value = (const cfrds_sql_exportedkeys_int *)value;
-
-    if (ndx >= _value->cnt)
+    if (ndx >= value->cnt)
         return NULL;
 
-    return _value->items[ndx].fkTableOwner;
+    return value->items[ndx].fkTableOwner;
 }
 
 const char *cfrds_sql_exportedkeys_get_fktable(const cfrds_sql_exportedkeys *value, size_t ndx)
@@ -1771,12 +1554,10 @@ const char *cfrds_sql_exportedkeys_get_fktable(const cfrds_sql_exportedkeys *val
     if (value == NULL)
         return NULL;
 
-    const cfrds_sql_exportedkeys_int *_value = (const cfrds_sql_exportedkeys_int *)value;
-
-    if (ndx >= _value->cnt)
+    if (ndx >= value->cnt)
         return NULL;
 
-    return _value->items[ndx].fkTableName;
+    return value->items[ndx].fkTableName;
 }
 
 const char *cfrds_sql_exportedkeys_get_fkcolumn(const cfrds_sql_exportedkeys *value, size_t ndx)
@@ -1784,12 +1565,10 @@ const char *cfrds_sql_exportedkeys_get_fkcolumn(const cfrds_sql_exportedkeys *va
     if (value == NULL)
         return NULL;
 
-    const cfrds_sql_exportedkeys_int *_value = (const cfrds_sql_exportedkeys_int *)value;
-
-    if (ndx >= _value->cnt)
+    if (ndx >= value->cnt)
         return NULL;
 
-    return _value->items[ndx].fkColName;
+    return value->items[ndx].fkColName;
 }
 
 int cfrds_sql_exportedkeys_get_key_sequence(const cfrds_sql_exportedkeys *value, size_t ndx)
@@ -1797,12 +1576,10 @@ int cfrds_sql_exportedkeys_get_key_sequence(const cfrds_sql_exportedkeys *value,
     if (value == NULL)
         return -1;
 
-    const cfrds_sql_exportedkeys_int *_value = (const cfrds_sql_exportedkeys_int *)value;
-
-    if (ndx >= _value->cnt)
+    if (ndx >= value->cnt)
         return -1;
 
-    return _value->items[ndx].keySequence;
+    return value->items[ndx].keySequence;
 }
 
 int cfrds_sql_exportedkeys_get_updaterule(const cfrds_sql_exportedkeys *value, size_t ndx)
@@ -1810,12 +1587,10 @@ int cfrds_sql_exportedkeys_get_updaterule(const cfrds_sql_exportedkeys *value, s
     if (value == NULL)
         return -1;
 
-    const cfrds_sql_exportedkeys_int *_value = (const cfrds_sql_exportedkeys_int *)value;
-
-    if (ndx >= _value->cnt)
+    if (ndx >= value->cnt)
         return -1;
 
-    return _value->items[ndx].updateRule;
+    return value->items[ndx].updateRule;
 }
 
 int cfrds_sql_exportedkeys_get_deleterule(const cfrds_sql_exportedkeys *value, size_t ndx)
@@ -1823,12 +1598,10 @@ int cfrds_sql_exportedkeys_get_deleterule(const cfrds_sql_exportedkeys *value, s
     if (value == NULL)
         return -1;
 
-    const cfrds_sql_exportedkeys_int *_value = (const cfrds_sql_exportedkeys_int *)value;
-
-    if (ndx >= _value->cnt)
+    if (ndx >= value->cnt)
         return -1;
 
-    return _value->items[ndx].deleteRule;
+    return value->items[ndx].deleteRule;
 }
 
 void cfrds_sql_resultset_free(cfrds_sql_resultset *value)
@@ -1836,15 +1609,13 @@ void cfrds_sql_resultset_free(cfrds_sql_resultset *value)
     if (value == NULL)
         return;
 
-    cfrds_sql_resultset_int *_value = (cfrds_sql_resultset_int *)value;
-
-    for(size_t c = 0; c < (_value->rows + 1) * _value->columns; c++)
+    for(size_t c = 0; c < (value->rows + 1) * value->columns; c++)
     {
-        if (_value->values[c])
-            free(_value->values[c]);
+        if (value->values[c])
+            free(value->values[c]);
     }
 
-    free(_value);
+    free(value);
 }
 
 void cfrds_sql_metadata_free(cfrds_sql_metadata *value)
@@ -1852,16 +1623,14 @@ void cfrds_sql_metadata_free(cfrds_sql_metadata *value)
     if (value == NULL)
         return;
 
-    cfrds_sql_metadata_int *_value = (cfrds_sql_metadata_int *)value;
-
-    for(size_t c = 0; c < _value->cnt; c++)
+    for(size_t c = 0; c < value->cnt; c++)
     {
-        if (_value->items[c].name)  {free(_value->items[c].name); _value->items[c].name = NULL; }
-        if (_value->items[c].type)  {free(_value->items[c].type); _value->items[c].type = NULL; }
-        if (_value->items[c].jtype) {free(_value->items[c].jtype); _value->items[c].jtype = NULL; }
+        if (value->items[c].name)  {free(value->items[c].name); value->items[c].name = NULL; }
+        if (value->items[c].type)  {free(value->items[c].type); value->items[c].type = NULL; }
+        if (value->items[c].jtype) {free(value->items[c].jtype); value->items[c].jtype = NULL; }
     }
 
-    free(_value);
+    free(value);
 }
 
 size_t cfrds_sql_metadata_count(const cfrds_sql_metadata *value)
@@ -1869,9 +1638,7 @@ size_t cfrds_sql_metadata_count(const cfrds_sql_metadata *value)
     if (value == NULL)
         return 0;
 
-    const cfrds_sql_metadata_int *_value = (const cfrds_sql_metadata_int *)value;
-
-    return _value->cnt;
+    return value->cnt;
 }
 
 const char *cfrds_sql_metadata_get_name(const cfrds_sql_metadata *value, size_t ndx)
@@ -1879,12 +1646,10 @@ const char *cfrds_sql_metadata_get_name(const cfrds_sql_metadata *value, size_t 
     if (value == NULL)
         return NULL;
 
-    const cfrds_sql_metadata_int *_value = (const cfrds_sql_metadata_int *)value;
-
-    if (ndx >= _value->cnt)
+    if (ndx >= value->cnt)
         return NULL;
 
-    return _value->items[ndx].name;
+    return value->items[ndx].name;
 }
 
 const char *cfrds_sql_metadata_get_type(const cfrds_sql_metadata *value, size_t ndx)
@@ -1892,12 +1657,10 @@ const char *cfrds_sql_metadata_get_type(const cfrds_sql_metadata *value, size_t 
     if (value == NULL)
         return NULL;
 
-    const cfrds_sql_metadata_int *_value = (const cfrds_sql_metadata_int *)value;
-
-    if (ndx >= _value->cnt)
+    if (ndx >= value->cnt)
         return NULL;
 
-    return _value->items[ndx].type;
+    return value->items[ndx].type;
 }
 
 const char *cfrds_sql_metadata_get_jtype(const cfrds_sql_metadata *value, size_t ndx)
@@ -1905,12 +1668,10 @@ const char *cfrds_sql_metadata_get_jtype(const cfrds_sql_metadata *value, size_t
     if (value == NULL)
         return NULL;
 
-    const cfrds_sql_metadata_int *_value = (const cfrds_sql_metadata_int *)value;
-
-    if (ndx >= _value->cnt)
+    if (ndx >= value->cnt)
         return NULL;
 
-    return _value->items[ndx].jtype;
+    return value->items[ndx].jtype;
 }
 
 size_t cfrds_sql_resultset_columns(const cfrds_sql_resultset *value)
@@ -1918,9 +1679,7 @@ size_t cfrds_sql_resultset_columns(const cfrds_sql_resultset *value)
     if (value == NULL)
         return 0;
 
-    const cfrds_sql_resultset_int *_value = (const cfrds_sql_resultset_int *)value;
-
-    return _value->columns;
+    return value->columns;
 }
 
 size_t cfrds_sql_resultset_rows(const cfrds_sql_resultset *value)
@@ -1928,9 +1687,7 @@ size_t cfrds_sql_resultset_rows(const cfrds_sql_resultset *value)
     if (value == NULL)
         return 0;
 
-    const cfrds_sql_resultset_int *_value = (const cfrds_sql_resultset_int *)value;
-
-    return _value->rows;
+    return value->rows;
 }
 
 const char *cfrds_sql_resultset_column_name(const cfrds_sql_resultset *value, size_t column)
@@ -1938,12 +1695,10 @@ const char *cfrds_sql_resultset_column_name(const cfrds_sql_resultset *value, si
     if (value == NULL)
         return NULL;
 
-    const cfrds_sql_resultset_int *_value = (const cfrds_sql_resultset_int *)value;
-
-    if (column >= _value->columns)
+    if (column >= value->columns)
         return NULL;
 
-    return _value->values[column];
+    return value->values[column];
 }
 
 const char *cfrds_sql_resultset_value(const cfrds_sql_resultset *value, size_t row, size_t column)
@@ -1951,12 +1706,10 @@ const char *cfrds_sql_resultset_value(const cfrds_sql_resultset *value, size_t r
     if (value == NULL)
         return NULL;
 
-    const cfrds_sql_resultset_int *_value = (const cfrds_sql_resultset_int *)value;
-
-    if ((row >= _value->rows)||(column >= _value->columns))
+    if ((row >= value->rows)||(column >= value->columns))
         return NULL;
 
-    return _value->values[(row + 1) * _value->columns + column];
+    return value->values[(row + 1) * value->columns + column];
 }
 
 void cfrds_sql_supportedcommands_free(cfrds_sql_supportedcommands *value)
@@ -1964,15 +1717,13 @@ void cfrds_sql_supportedcommands_free(cfrds_sql_supportedcommands *value)
     if (value == NULL)
         return;
 
-    cfrds_sql_supportedcommands_int *_value = (cfrds_sql_supportedcommands_int *)value;
-
-    for(size_t c = 0; c < _value->cnt; c++)
+    for(size_t c = 0; c < value->cnt; c++)
     {
-        free(_value->commands[c]);
-        _value->commands[c] = NULL;
+        free(value->commands[c]);
+        value->commands[c] = NULL;
     }
 
-    free(_value);
+    free(value);
 }
 
 size_t cfrds_sql_supportedcommands_count(const cfrds_sql_supportedcommands *value)
@@ -1980,9 +1731,7 @@ size_t cfrds_sql_supportedcommands_count(const cfrds_sql_supportedcommands *valu
     if (value == NULL)
         return 0;
 
-    const cfrds_sql_supportedcommands_int *_value = (const cfrds_sql_supportedcommands_int *)value;
-
-    return _value->cnt;
+    return value->cnt;
 }
 
 const char *cfrds_sql_supportedcommands_get(const cfrds_sql_supportedcommands *value, size_t ndx)
@@ -1990,19 +1739,16 @@ const char *cfrds_sql_supportedcommands_get(const cfrds_sql_supportedcommands *v
     if (value == NULL)
         return NULL;
 
-    const cfrds_sql_supportedcommands_int *_value = (const cfrds_sql_supportedcommands_int *)value;
-
-    if (ndx >= _value->cnt)
+    if (ndx >= value->cnt)
         return NULL;
 
-    return _value->commands[ndx];
+    return value->commands[ndx];
 }
 
 cfrds_status cfrds_command_debugger_start(cfrds_server *server, cfrds_str *session_id)
 {
     cfrds_status ret;
 
-    cfrds_server_int *server_int = NULL;
     cfrds_buffer_defer(response);
 
     if (server == NULL)
@@ -2020,8 +1766,7 @@ cfrds_status cfrds_command_debugger_start(cfrds_server *server, cfrds_str *sessi
         *session_id = cfrds_buffer_to_debugger_start(response);
         if (*session_id == NULL)
         {
-            server_int = (cfrds_server_int *)server;
-            server_int->error_code = -1;
+            server->error_code = -1;
             return CFRDS_STATUS_RESPONSE_ERROR;
         }
     }
@@ -2033,7 +1778,6 @@ cfrds_status cfrds_command_debugger_stop(cfrds_server *server, const char *sessi
 {
     cfrds_status ret;
 
-    cfrds_server_int *server_int = NULL;
     cfrds_buffer_defer(response);
 
     if (server == NULL)
@@ -2051,8 +1795,7 @@ cfrds_status cfrds_command_debugger_stop(cfrds_server *server, const char *sessi
     {
         if (cfrds_buffer_to_debugger_stop(response) == false)
         {
-            server_int = (cfrds_server_int *)server;
-            server_int->error_code = -1;
+            server->error_code = -1;
             return CFRDS_STATUS_RESPONSE_ERROR;
         }
     }
@@ -2064,7 +1807,6 @@ cfrds_status cfrds_command_debugger_get_server_info(cfrds_server *server, const 
 {
     cfrds_status ret;
 
-    cfrds_server_int *server_int = NULL;
     cfrds_buffer_defer(response);
 
     if (server == NULL)
@@ -2083,8 +1825,7 @@ cfrds_status cfrds_command_debugger_get_server_info(cfrds_server *server, const 
         int val = cfrds_buffer_to_debugger_info(response);
         if (val == -1)
         {
-            server_int = (cfrds_server_int *)server;
-            server_int->error_code = -1;
+            server->error_code = -1;
             return CFRDS_STATUS_RESPONSE_ERROR;
         }
 
@@ -2098,7 +1839,6 @@ cfrds_status cfrds_command_debugger_breakpoint_on_exception(cfrds_server *server
 {
     cfrds_status ret;
 
-    cfrds_server_int *server_int = NULL;
     cfrds_buffer_defer(response);
 
     if (server == NULL)
@@ -2122,8 +1862,7 @@ cfrds_status cfrds_command_debugger_breakpoint_on_exception(cfrds_server *server
         int val = cfrds_buffer_to_debugger_info(response);
         if (val == -1)
         {
-            server_int = (cfrds_server_int *)server;
-            server_int->error_code = -1;
+            server->error_code = -1;
             return CFRDS_STATUS_RESPONSE_ERROR;
         }
     }
@@ -2381,7 +2120,7 @@ cfrds_debugger_type cfrds_debugger_event_get_type(const cfrds_debugger_event *ev
         return CFRDS_DEBUGGER_EVENT_UNKNOWN;
     }
 
-    const char *event_name = wddx_get_string(event, "0,EVENT");
+    const char *event_name = wddx_get_string((const WDDX *)event, "0,EVENT");
 
     if (event_name == NULL)
         return CFRDS_DEBUGGER_EVENT_UNKNOWN;
@@ -2398,42 +2137,42 @@ cfrds_debugger_type cfrds_debugger_event_get_type(const cfrds_debugger_event *ev
 
 const char *cfrds_debugger_event_breakpoint_get_source(const cfrds_debugger_event *event)
 {
-    return wddx_get_string(event, "0,SOURCE");
+    return wddx_get_string((const WDDX *)event, "0,SOURCE");
 }
 
 int cfrds_debugger_event_breakpoint_get_line(const cfrds_debugger_event *event)
 {
-    return wddx_get_number(event, "0,LINE", NULL);
+    return wddx_get_number((const WDDX *)event, "0,LINE", NULL);
 }
 
 const cfrds_variable *cfrds_debugger_event_breakpoint_get_scopes(const cfrds_debugger_event *event)
 {
-    return wddx_get_var(event, "0,SCOPES");
+    return (const cfrds_variable *)wddx_get_var((const WDDX *)event, "0,SCOPES");
 }
 
 const char *cfrds_debugger_event_breakpoint_get_thread_name(const cfrds_debugger_event *event)
 {
-    return wddx_get_string(event, "0,THREAD");
+    return wddx_get_string((const WDDX *)event, "0,THREAD");
 }
 
 const char *cfrds_debugger_event_breakpoint_set_get_pathname(const cfrds_debugger_event *event)
 {
-    return wddx_get_string(event, "0,CFML_PATH");
+    return wddx_get_string((const WDDX *)event, "0,CFML_PATH");
 }
 
 int cfrds_debugger_event_breakpoint_set_get_req_line(const cfrds_debugger_event *event)
 {
-    return wddx_get_number(event, "0,REQ_LINE_NUM", NULL);
+    return wddx_get_number((const WDDX *)event, "0,REQ_LINE_NUM", NULL);
 }
 
 int cfrds_debugger_event_breakpoint_set_get_act_line(const cfrds_debugger_event *event)
 {
-    return wddx_get_number(event, "0,ACTUAL_LINE_NUM", NULL);
+    return wddx_get_number((const WDDX *)event, "0,ACTUAL_LINE_NUM", NULL);
 }
 
 int cfrds_debugger_event_get_scopes_count(const cfrds_debugger_event *event)
 {
-    return wddx_node_array_size(wddx_get_var(event, "0,SCOPES"));
+    return wddx_node_array_size(wddx_get_var((const WDDX *)event, "0,SCOPES"));
 }
 
 const char *cfrds_debugger_event_get_scopes_item(const cfrds_debugger_event *event, int ndx)
@@ -2448,7 +2187,7 @@ const char *cfrds_debugger_event_get_scopes_item(const cfrds_debugger_event *eve
 
 int cfrds_debugger_event_get_threads_count(const cfrds_debugger_event *event)
 {
-    return wddx_node_array_size(wddx_get_var(event, "0,THREADS"));
+    return wddx_node_array_size(wddx_get_var((const WDDX *)event, "0,THREADS"));
 }
 
 const char *cfrds_debugger_event_get_threads_item(const cfrds_debugger_event *event, int ndx)
@@ -2462,7 +2201,7 @@ const char *cfrds_debugger_event_get_threads_item(const cfrds_debugger_event *ev
 
 int cfrds_debugger_event_get_watch_count(const cfrds_debugger_event *event)
 {
-    return wddx_node_array_size(wddx_get_var(event, "0,WATCH"));
+    return wddx_node_array_size(wddx_get_var((const WDDX *)event, "0,WATCH"));
 }
 
 const char *cfrds_debugger_event_get_watch_item(const cfrds_debugger_event *event, int ndx)
@@ -2476,7 +2215,7 @@ const char *cfrds_debugger_event_get_watch_item(const cfrds_debugger_event *even
 
 int cfrds_debugger_event_get_cf_trace_count(const cfrds_debugger_event *event)
 {
-    return wddx_node_array_size(wddx_get_var(event, "0,CF_TRACE"));
+    return wddx_node_array_size(wddx_get_var((const WDDX *)event, "0,CF_TRACE"));
 }
 
 const char *cfrds_debugger_event_get_cf_trace_item(const cfrds_debugger_event *event, int ndx)
@@ -2491,7 +2230,7 @@ const char *cfrds_debugger_event_get_cf_trace_item(const cfrds_debugger_event *e
     if (n < 0)
         return NULL;
 
-    const WDDX_NODE *node = wddx_get_var(event, key);
+    const WDDX_NODE *node = wddx_get_var((const WDDX *)event, key);
 
     if (wddx_node_type(node) != WDDX_STRING)
         return NULL;
@@ -2501,7 +2240,7 @@ const char *cfrds_debugger_event_get_cf_trace_item(const cfrds_debugger_event *e
 
 int cfrds_debugger_event_get_java_trace_count(const cfrds_debugger_event *event)
 {
-    return wddx_node_array_size(wddx_get_var(event, "0,JAVA_TRACE"));
+    return wddx_node_array_size(wddx_get_var((const WDDX *)event, "0,JAVA_TRACE"));
 }
 
 const char *cfrds_debugger_event_get_java_trace_item(const cfrds_debugger_event *event, int ndx)
@@ -2516,7 +2255,7 @@ const char *cfrds_debugger_event_get_java_trace_item(const cfrds_debugger_event 
     if (n < 0)
         return NULL;
 
-    const WDDX_NODE *node = wddx_get_var(event, key);
+    const WDDX_NODE *node = wddx_get_var((const WDDX *)event, key);
 
     if (wddx_node_type(node) != WDDX_STRING)
         return NULL;
@@ -3007,7 +2746,6 @@ cfrds_status cfrds_command_security_analyzer_result(cfrds_server *server, int co
 {
     cfrds_status ret;
 
-    cfrds_server_int *server_int = NULL;
     char id_str[32];
 
     cfrds_buffer_defer(response);
@@ -3016,8 +2754,6 @@ cfrds_status cfrds_command_security_analyzer_result(cfrds_server *server, int co
     {
         return CFRDS_STATUS_SERVER_IS_NULL;
     }
-
-    server_int = (cfrds_server_int *)server;
 
     snprintf(id_str, sizeof(id_str), "%d", command_id);
 
@@ -3031,7 +2767,7 @@ cfrds_status cfrds_command_security_analyzer_result(cfrds_server *server, int co
 
         if (!cfrds_buffer_parse_number(&response_data, &response_size, &items))
         {
-            server_int->error_code = -1;
+            server->error_code = -1;
             return CFRDS_STATUS_RESPONSE_ERROR;
         }
 
@@ -3042,7 +2778,7 @@ cfrds_status cfrds_command_security_analyzer_result(cfrds_server *server, int co
 
         if (!cfrds_buffer_parse_string(&response_data, &response_size, &json))
         {
-            server_int->error_code = -1;
+            server->error_code = -1;
             return CFRDS_STATUS_RESPONSE_ERROR;
         }
 
@@ -4091,7 +3827,6 @@ cfrds_status cfrds_command_ide_default(cfrds_server *server, int version, int *n
 {
     cfrds_status ret;
 
-    cfrds_server_int *server_int = NULL;
     char param[32];
 
     cfrds_buffer_defer(response);
@@ -4100,8 +3835,6 @@ cfrds_status cfrds_command_ide_default(cfrds_server *server, int version, int *n
     {
         return CFRDS_STATUS_SERVER_IS_NULL;
     }
-
-    server_int = (cfrds_server_int *)server;
 
     snprintf(param, sizeof(param), "%d,", version);
 
@@ -4120,49 +3853,49 @@ cfrds_status cfrds_command_ide_default(cfrds_server *server, int version, int *n
         int64_t count = 0;
         if (!cfrds_buffer_parse_number(&response_data, &response_size, &count))
         {
-            server_int->error_code = -1;
+            server->error_code = -1;
             return CFRDS_STATUS_RESPONSE_ERROR;
         }
 
         if (count != 5)
         {
-            server_int->error_code = -1;
+            server->error_code = -1;
             return CFRDS_STATUS_RESPONSE_ERROR;
         }
 
         if (!cfrds_buffer_parse_string(&response_data, &response_size, &_num1))
         {
-            server_int->error_code = -1;
+            server->error_code = -1;
             return CFRDS_STATUS_RESPONSE_ERROR;
         }
 
         if (!cfrds_buffer_parse_string(&response_data, &response_size, &_server_version))
         {
-            server_int->error_code = -1;
+            server->error_code = -1;
             return CFRDS_STATUS_RESPONSE_ERROR;
         }
 
         if (!cfrds_buffer_parse_string(&response_data, &response_size, &_client_version))
         {
-            server_int->error_code = -1;
+            server->error_code = -1;
             return CFRDS_STATUS_RESPONSE_ERROR;
         }
 
         if (!cfrds_buffer_parse_string(&response_data, &response_size, &_num2))
         {
-            server_int->error_code = -1;
+            server->error_code = -1;
             return CFRDS_STATUS_RESPONSE_ERROR;
         }
 
         if (!cfrds_buffer_parse_string(&response_data, &response_size, &_num3))
         {
-            server_int->error_code = -1;
+            server->error_code = -1;
             return CFRDS_STATUS_RESPONSE_ERROR;
         }
 
         if (response_size != 0)
         {
-            server_int->error_code = -1;
+            server->error_code = -1;
             return CFRDS_STATUS_RESPONSE_ERROR;
         }
 
@@ -4192,11 +3925,7 @@ cfrds_status cfrds_command_adminapi_debugging_getlogproperty(cfrds_server *serve
     ret = cfrds_send_command(server, &response, "ADMINAPI", (const char *[]){ "cfide.adminapi.debugging", "getlogproperty", logdirectory, NULL});
     if (ret == CFRDS_STATUS_OK)
     {
-        cfrds_server_int *server_int = NULL;
-
         cfrds_str_defer(xml);
-
-        server_int = (cfrds_server_int *)server;
 
         const char *response_data = cfrds_buffer_data(response);
         size_t response_size = cfrds_buffer_data_size(response);
@@ -4204,25 +3933,25 @@ cfrds_status cfrds_command_adminapi_debugging_getlogproperty(cfrds_server *serve
         int64_t count = 0;
         if (!cfrds_buffer_parse_number(&response_data, &response_size, &count))
         {
-            server_int->error_code = -1;
+            server->error_code = -1;
             return CFRDS_STATUS_RESPONSE_ERROR;
         }
 
         if (count != 1)
         {
-            server_int->error_code = -1;
+            server->error_code = -1;
             return CFRDS_STATUS_RESPONSE_ERROR;
         }
 
         if (!cfrds_buffer_parse_string(&response_data, &response_size, &xml))
         {
-            server_int->error_code = -1;
+            server->error_code = -1;
             return CFRDS_STATUS_RESPONSE_ERROR;
         }
 
         if (response_size != 0)
         {
-            server_int->error_code = -1;
+            server->error_code = -1;
             return CFRDS_STATUS_RESPONSE_ERROR;
         }
 
@@ -4259,11 +3988,7 @@ cfrds_status cfrds_command_adminapi_extensions_getcustomtagpaths(cfrds_server *s
     ret = cfrds_send_command(server, &response, "ADMINAPI", (const char *[]){ "cfide.adminapi.extensions", "getcustomtagpaths", NULL});
     if (ret == CFRDS_STATUS_OK)
     {
-        cfrds_server_int *server_int = NULL;
-
         cfrds_str_defer(xml);
-
-        server_int = (cfrds_server_int *)server;
 
         const char *response_data = cfrds_buffer_data(response);
         size_t response_size = cfrds_buffer_data_size(response);
@@ -4271,29 +3996,29 @@ cfrds_status cfrds_command_adminapi_extensions_getcustomtagpaths(cfrds_server *s
         int64_t count = 0;
         if (!cfrds_buffer_parse_number(&response_data, &response_size, &count))
         {
-            server_int->error_code = -1;
+            server->error_code = -1;
             return CFRDS_STATUS_RESPONSE_ERROR;
         }
 
         if (count != 1)
         {
-            server_int->error_code = -1;
+            server->error_code = -1;
             return CFRDS_STATUS_RESPONSE_ERROR;
         }
 
         if (!cfrds_buffer_parse_string(&response_data, &response_size, &xml))
         {
-            server_int->error_code = -1;
+            server->error_code = -1;
             return CFRDS_STATUS_RESPONSE_ERROR;
         }
 
         if (response_size != 0)
         {
-            server_int->error_code = -1;
+            server->error_code = -1;
             return CFRDS_STATUS_RESPONSE_ERROR;
         }
 
-        *result = wddx_from_xml(xml);
+        *result = (cfrds_adminapi_customtagpaths *)wddx_from_xml(xml);
     }
 
     return ret;
@@ -4321,10 +4046,10 @@ int cfrds_adminapi_customtagpaths_count(const cfrds_adminapi_customtagpaths *buf
     if (buf == NULL)
         return 0;
 
-    if (wddx_node_type(buf) != WDDX_ARRAY)
+    if (wddx_node_type((const WDDX_NODE *)buf) != WDDX_ARRAY)
         return 0;
 
-    return wddx_node_array_size(buf);
+    return wddx_node_array_size((const WDDX_NODE *)buf);
 }
 
 const char *cfrds_adminapi_customtagpaths_at(const cfrds_adminapi_customtagpaths *buf, int ndx)
@@ -4332,7 +4057,7 @@ const char *cfrds_adminapi_customtagpaths_at(const cfrds_adminapi_customtagpaths
     if (buf == NULL)
         return NULL;
 
-    const WDDX_NODE *item = wddx_node_array_at(buf, ndx);
+    const WDDX_NODE *item = wddx_node_array_at((const WDDX_NODE *)buf, ndx);
 
     if (wddx_node_type(item) != WDDX_STRING)
         return NULL;
@@ -4361,11 +4086,7 @@ cfrds_status cfrds_command_adminapi_extensions_setmapping(cfrds_server *server, 
     ret = cfrds_send_command(server, &response, "ADMINAPI", (const char *[]){ "cfide.adminapi.extensions", "setmappings", cfrds_buffer_data(arg), NULL});
     if (ret == CFRDS_STATUS_OK)
     {
-        cfrds_server_int *server_int = NULL;
-
         cfrds_str_defer(xml);
-
-        server_int = (cfrds_server_int *)server;
 
         const char *response_data = cfrds_buffer_data(response);
         size_t response_size = cfrds_buffer_data_size(response);
@@ -4373,19 +4094,19 @@ cfrds_status cfrds_command_adminapi_extensions_setmapping(cfrds_server *server, 
         int64_t count = 0;
         if (!cfrds_buffer_parse_number(&response_data, &response_size, &count))
         {
-            server_int->error_code = -1;
+            server->error_code = -1;
             return CFRDS_STATUS_RESPONSE_ERROR;
         }
 
         if (count != 1)
         {
-            server_int->error_code = -1;
+            server->error_code = -1;
             return CFRDS_STATUS_RESPONSE_ERROR;
         }
 
         if (!cfrds_buffer_parse_string(&response_data, &response_size, &xml))
         {
-            server_int->error_code = -1;
+            server->error_code = -1;
             return CFRDS_STATUS_RESPONSE_ERROR;
         }
 
@@ -4413,11 +4134,7 @@ cfrds_status cfrds_command_adminapi_extensions_deletemapping(cfrds_server *serve
     ret = cfrds_send_command(server, &response, "ADMINAPI", (const char *[]){ "cfide.adminapi.extensions", "deleltemappings", mapping, NULL});
     if (ret == CFRDS_STATUS_OK)
     {
-        cfrds_server_int *server_int = NULL;
-
         cfrds_str_defer(xml);
-
-        server_int = (cfrds_server_int *)server;
 
         const char *response_data = cfrds_buffer_data(response);
         size_t response_size = cfrds_buffer_data_size(response);
@@ -4425,19 +4142,19 @@ cfrds_status cfrds_command_adminapi_extensions_deletemapping(cfrds_server *serve
         int64_t count = 0;
         if (!cfrds_buffer_parse_number(&response_data, &response_size, &count))
         {
-            server_int->error_code = -1;
+            server->error_code = -1;
             return CFRDS_STATUS_RESPONSE_ERROR;
         }
 
         if (count != 1)
         {
-            server_int->error_code = -1;
+            server->error_code = -1;
             return CFRDS_STATUS_RESPONSE_ERROR;
         }
 
         if (!cfrds_buffer_parse_string(&response_data, &response_size, &xml))
         {
-            server_int->error_code = -1;
+            server->error_code = -1;
             return CFRDS_STATUS_RESPONSE_ERROR;
         }
 
@@ -4465,11 +4182,7 @@ cfrds_status cfrds_command_adminapi_extensions_getmappings(cfrds_server *server,
     ret = cfrds_send_command(server, &response, "ADMINAPI", (const char *[]){ "cfide.adminapi.extensions", "getmappings", NULL});
     if (ret == CFRDS_STATUS_OK)
     {
-        cfrds_server_int *server_int = NULL;
-
         cfrds_str_defer(xml);
-
-        server_int = (cfrds_server_int *)server;
 
         const char *response_data = cfrds_buffer_data(response);
         size_t response_size = cfrds_buffer_data_size(response);
@@ -4477,29 +4190,29 @@ cfrds_status cfrds_command_adminapi_extensions_getmappings(cfrds_server *server,
         int64_t count = 0;
         if (!cfrds_buffer_parse_number(&response_data, &response_size, &count))
         {
-            server_int->error_code = -1;
+            server->error_code = -1;
             return CFRDS_STATUS_RESPONSE_ERROR;
         }
 
         if (count != 1)
         {
-            server_int->error_code = -1;
+            server->error_code = -1;
             return CFRDS_STATUS_RESPONSE_ERROR;
         }
 
         if (!cfrds_buffer_parse_string(&response_data, &response_size, &xml))
         {
-            server_int->error_code = -1;
+            server->error_code = -1;
             return CFRDS_STATUS_RESPONSE_ERROR;
         }
 
         if (response_size != 0)
         {
-            server_int->error_code = -1;
+            server->error_code = -1;
             return CFRDS_STATUS_RESPONSE_ERROR;
         }
 
-        *result = wddx_from_xml(xml);
+        *result = (cfrds_adminapi_mappings *)wddx_from_xml(xml);
     }
 
     return ret;
@@ -4527,10 +4240,10 @@ int cfrds_adminapi_mappings_count(const cfrds_adminapi_mappings *buf)
     if (buf == NULL)
         return 0;
 
-    if (wddx_node_type(buf) != WDDX_STRUCT)
+    if (wddx_node_type((const WDDX_NODE *)buf) != WDDX_STRUCT)
         return 0;
 
-    return wddx_node_struct_size(buf);
+    return wddx_node_struct_size((const WDDX_NODE *)buf);
 }
 
 const char *cfrds_adminapi_mappings_key(const cfrds_adminapi_mappings *buf, int ndx)
@@ -4540,10 +4253,10 @@ const char *cfrds_adminapi_mappings_key(const cfrds_adminapi_mappings *buf, int 
     if (buf == NULL)
         return NULL;
 
-    if (wddx_node_type(buf) != WDDX_STRUCT)
+    if (wddx_node_type((const WDDX_NODE *)buf) != WDDX_STRUCT)
         return NULL;
 
-    wddx_node_struct_at(buf, ndx, &ret);
+    wddx_node_struct_at((const WDDX_NODE *)buf, ndx, &ret);
 
     return ret;
 }
@@ -4553,10 +4266,10 @@ const char *cfrds_adminapi_mappings_value(const cfrds_adminapi_mappings *buf, in
     if (buf == NULL)
         return NULL;
 
-    if (wddx_node_type(buf) != WDDX_STRUCT)
+    if (wddx_node_type((const WDDX_NODE *)buf) != WDDX_STRUCT)
         return NULL;
 
-    const WDDX_NODE *val = wddx_node_struct_at(buf, ndx, NULL);
+    const WDDX_NODE *val = wddx_node_struct_at((const WDDX_NODE *)buf, ndx, NULL);
 
     if (wddx_node_type(val) != WDDX_STRING)
         return NULL;

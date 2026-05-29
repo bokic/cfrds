@@ -29,14 +29,14 @@ enum wddx_type {
  * @brief Opaque handle to a WDDX packet (container for header + data).
  * @see wddx_create(), wddx_cleanup(), wddx_to_xml(), wddx_from_xml()
  */
-typedef void WDDX;
+typedef struct WDDX WDDX;
 
 /**
  * @typedef WDDX_NODE
  * @brief Opaque handle to a single WDDX node (value of any type).
  * @see wddx_data(), wddx_header(), wddx_node_type(), wddx_get_var()
  */
-typedef void WDDX_NODE;
+typedef struct WDDX_NODE WDDX_NODE;
 
 /**
  * @def WDDX_defer(var)

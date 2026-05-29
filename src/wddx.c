@@ -587,6 +587,9 @@ WDDX *wddx_from_xml(const char *xml)
 
 static const WDDX_NODE_int *wddx_recursively_get(const WDDX_NODE_int *node, const char *path)
 {
+    if (node == NULL)
+        return NULL;
+
     if (strlen(path) == 0)
     {
         return node;

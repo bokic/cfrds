@@ -934,7 +934,10 @@ char *wddx_node_to_xml(const WDDX_NODE *node)
 
     xmlBuffer *xml_str = xmlBufferCreate();
 
-    if (xml_str == NULL) return NULL;
+    if (xml_str == NULL) {
+        xmlFreeDoc(doc);
+        return NULL;
+    }
 
     xmlNodeDump(xml_str, doc, root_node, 0, 0);
 

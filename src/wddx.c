@@ -8,6 +8,7 @@
 #include <stddef.h>
 #include <ctype.h>
 #include <math.h>
+#include <limits.h>
 
 
 #define xmlDoc_defer(var) xmlDoc* var __attribute__((cleanup(xmlDoc_cleanup))) = NULL
@@ -383,7 +384,10 @@ static WDDX_NODE_int *wddx_from_xml_element(xmlNodePtr xml_node)
 
         malloc_size = sizeof(WDDX_NODE_int);
         ret = malloc(malloc_size);
-        if (ret == NULL) return NULL;
+        if (ret == NULL) {
+            xmlFree(valueStr);
+            return NULL;
+        }
 
         explicit_bzero(ret, malloc_size);
 
@@ -393,6 +397,8 @@ static WDDX_NODE_int *wddx_from_xml_element(xmlNodePtr xml_node)
             ret->boolean = false;
         else
             ret->boolean = true;
+
+        xmlFree(valueStr);
     }
     else if (strcmp(name, "number") == 0)
     {
@@ -535,6 +541,9 @@ WDDX *wddx_from_xml(const char *xml)
 #ifndef NDEBUG
     xmlSetGenericErrorFunc(NULL, silentErrorHandler);
 #endif
+
+    if (xml_len > INT_MAX)
+        return NULL;
 
     doc = xmlParseMemory(xml, (int)xml_len);
 

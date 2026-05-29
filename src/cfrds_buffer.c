@@ -1019,9 +1019,12 @@ cfrds_sql_primarykeys_int *cfrds_buffer_to_sql_primarykeys(cfrds_buffer *buffer)
     if (!cfrds_buffer_parse_number(&data, &size, &cnt))
         return NULL;
 
-    tmp = malloc(offsetof(cfrds_sql_primarykeys_int, items) + sizeof(cfrds_sql_primarykeysitem_int) * cnt);
+    size_t malloc_size = offsetof(cfrds_sql_primarykeys_int, items) + sizeof(cfrds_sql_primarykeysitem_int) * cnt;
+    tmp = malloc(malloc_size);
     if (tmp == NULL)
         return NULL;
+
+    explicit_bzero(tmp, malloc_size);
 
     ((cfrds_sql_primarykeys_int *)tmp)->cnt = cnt;
 
@@ -1079,9 +1082,12 @@ cfrds_sql_foreignkeys_int *cfrds_buffer_to_sql_foreignkeys(cfrds_buffer *buffer)
     if (!cfrds_buffer_parse_number(&data, &size, &cnt))
         return NULL;
 
-    tmp = malloc(offsetof(cfrds_sql_foreignkeys_int, items) + sizeof(cfrds_sql_foreignkeysitem_int) * cnt);
+    size_t malloc_size = offsetof(cfrds_sql_foreignkeys_int, items) + sizeof(cfrds_sql_foreignkeysitem_int) * cnt;
+    tmp = malloc(malloc_size);
     if (tmp == NULL)
         return NULL;
+
+    explicit_bzero(tmp, malloc_size);
 
     ((cfrds_sql_foreignkeys_int *)tmp)->cnt = cnt;
 
@@ -1160,9 +1166,12 @@ cfrds_sql_importedkeys_int *cfrds_buffer_to_sql_importedkeys(cfrds_buffer *buffe
     if (cnt < 0)
         return NULL;
 
-    tmp = malloc(offsetof(cfrds_sql_importedkeys_int, items) + sizeof(cfrds_sql_importedkeysitem_int) * cnt);
+    size_t malloc_size = offsetof(cfrds_sql_importedkeys_int, items) + sizeof(cfrds_sql_importedkeysitem_int) * cnt;
+    tmp = malloc(malloc_size);
     if (tmp == NULL)
         return NULL;
+
+    explicit_bzero(tmp, malloc_size);
 
     ((cfrds_sql_importedkeys_int *)tmp)->cnt = cnt;
 
@@ -1238,9 +1247,12 @@ cfrds_sql_exportedkeys_int *cfrds_buffer_to_sql_exportedkeys(cfrds_buffer *buffe
     if (!cfrds_buffer_parse_number(&data, &size, &cnt))
         return NULL;
 
-    tmp = malloc(offsetof(cfrds_sql_exportedkeys_int, items) + sizeof(cfrds_sql_exportedkeysitem_int) * cnt);
+    size_t malloc_size = offsetof(cfrds_sql_exportedkeys_int, items) + sizeof(cfrds_sql_exportedkeysitem_int) * cnt;
+    tmp = malloc(malloc_size);
     if (tmp == NULL)
         return NULL;
+
+    explicit_bzero(tmp, malloc_size);
 
     ((cfrds_sql_exportedkeys_int *)tmp)->cnt = cnt;
 

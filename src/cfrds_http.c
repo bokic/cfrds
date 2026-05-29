@@ -130,11 +130,12 @@ cfrds_status cfrds_http_post(cfrds_server_int *server, const char *command, cfrd
         }
 
         trace_net_start("freeaddrinfo");
+        int saved_errno = errno;
         freeaddrinfo(result);
         trace_net_end();
 
         if (sockfd == CFRDS_INVALID_SOCKET) {
-            server->_errno = errno;
+            server->_errno = saved_errno;
             cfrds_server_set_error((cfrds_server *)server, CFRDS_STATUS_CONNECTION_TO_SERVER_FAILED, "failed to establish connection to the server...");
             return CFRDS_STATUS_CONNECTION_TO_SERVER_FAILED;
         }

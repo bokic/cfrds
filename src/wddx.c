@@ -378,8 +378,8 @@ static WDDX_NODE_int *wddx_from_xml_element(xmlNodePtr xml_node)
     }
     else if (strcmp(name, "boolean") == 0)
     {
-        if (xml_node->children == NULL) return NULL;
-        if (xml_node->children->content == NULL) return NULL;
+        xmlChar *valueStr = xmlGetProp(xml_node, BAD_CAST "value");
+        if (valueStr == NULL) return NULL;
 
         malloc_size = sizeof(WDDX_NODE_int);
         ret = malloc(malloc_size);
@@ -389,7 +389,7 @@ static WDDX_NODE_int *wddx_from_xml_element(xmlNodePtr xml_node)
 
         ret->type = WDDX_BOOLEAN;
 
-        if (strcmp((const char *)xml_node->children->content, "false") == 0)
+        if (strcmp((const char *)valueStr, "false") == 0)
             ret->boolean = false;
         else
             ret->boolean = true;

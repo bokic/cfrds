@@ -2383,6 +2383,9 @@ cfrds_debugger_type cfrds_debugger_event_get_type(const cfrds_debugger_event *ev
 
     const char *event_name = wddx_get_string(event, "0,EVENT");
 
+    if (event_name == NULL)
+        return CFRDS_DEBUGGER_EVENT_UNKNOWN;
+
     if (strcmp(event_name, "CF_BREAKPOINT_SET") == 0)
         return CFRDS_DEBUGGER_EVENT_TYPE_BREAKPOINT_SET;
     else if (strcmp(event_name, "BREAKPOINT") == 0)

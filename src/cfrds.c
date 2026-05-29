@@ -351,7 +351,9 @@ cfrds_status cfrds_command_file_write(cfrds_server *server, const char *pathname
 
     cfrds_server_clear_error(server);
 
-    cfrds_buffer_create(&post);
+    if (!cfrds_buffer_create(&post))
+        return CFRDS_STATUS_MEMORY_ERROR;
+
     cfrds_buffer_append_rds_count(post, total_cnt);
     cfrds_buffer_append_rds_string(post, pathname);
     cfrds_buffer_append_rds_string(post, "WRITE");

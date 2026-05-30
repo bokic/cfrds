@@ -25,6 +25,14 @@
 
 #define CFRDS_MAX_RESPONSE_SIZE (100 * 1024 * 1024)
 
+#ifdef _WIN32
+typedef SOCKET cfrds_socket;
+#define CFRDS_INVALID_SOCKET INVALID_SOCKET
+#else
+typedef int cfrds_socket;
+#define CFRDS_INVALID_SOCKET (-1)
+#endif
+
 void cfrds_sock_cleanup(cfrds_socket* sock);
 #define cfrds_sock_defer(var) cfrds_socket var __attribute__((cleanup(cfrds_sock_cleanup))) = CFRDS_INVALID_SOCKET
 
@@ -124,7 +132,6 @@ cfrds_status cfrds_http_post(cfrds_server *server, const char *command, cfrds_bu
             trace_net_end();
             if (res == 0) {
                 sockfd = fd;
-                server->socket = sockfd;
                 break;
             }
 
@@ -283,21 +290,3 @@ void cfrds_sock_cleanup(int* sock)
     }
 }
 #endif
-
-
-void cfrds_sock_shutdown(cfrds_socket sock)
-{
-#ifdef _WIN32
-    if (sock)
-#endif
-    {
-        if (sock != CFRDS_INVALID_SOCKET)
-        {
-#ifdef _WIN32
-            shutdown(sock, SD_BOTH);
-#else
-            shutdown(sock, SHUT_RDWR);
-#endif
-        }
-    }
-}

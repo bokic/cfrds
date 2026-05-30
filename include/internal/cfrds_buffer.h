@@ -11,8 +11,6 @@
 #ifdef _WIN32
 #define WIN32_LEAN_AND_MEAN
 #include <Windows.h>
-#include <WinSock2.h>
-#include <ws2tcpip.h>
 typedef SIZE_T size_t;
 typedef SSIZE_T ssize_t;
 #else
@@ -21,22 +19,12 @@ typedef SSIZE_T ssize_t;
 #include <arpa/inet.h>
 #endif
 
-
-#ifdef _WIN32
-typedef SOCKET cfrds_socket;
-#define CFRDS_INVALID_SOCKET INVALID_SOCKET
-#else
-typedef int cfrds_socket;
-#define CFRDS_INVALID_SOCKET (-1)
-#endif
-
 struct cfrds_server {
     char *host;
     uint16_t port;
     char *username;
     char *orig_password;
     char *password;
-    cfrds_socket socket;
     int _errno;
     int64_t error_code;
     char *error;

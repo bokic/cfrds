@@ -7,4 +7,3 @@
 
 
 cfrds_status cfrds_http_post(cfrds_server *server, const char *command, cfrds_buffer *payload, cfrds_buffer **response);
-void cfrds_sock_shutdown(cfrds_socket sock);

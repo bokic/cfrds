@@ -20,7 +20,6 @@
 struct cfrds_buffer {
     size_t allocated;
     size_t size;
-    size_t offset;
     uint8_t *data;
 };
 
@@ -166,7 +165,6 @@ bool cfrds_buffer_create(cfrds_buffer **buffer)
 
     tmp->allocated = 0;
     tmp->size = 0;
-    tmp->offset = 0;
     tmp->data = NULL;
 
     *buffer = (cfrds_buffer *)tmp;

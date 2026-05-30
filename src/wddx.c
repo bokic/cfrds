@@ -1,4 +1,5 @@
 #include <internal/wddx.h>
+#include <internal/cfrds_buffer.h>
 #include <internal/explicit_bzero.h>
 
 #include <libxml/tree.h>

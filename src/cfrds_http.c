@@ -23,6 +23,8 @@
 #include <errno.h>
 
 
+#define CFRDS_MAX_RESPONSE_SIZE (100 * 1024 * 1024)
+
 void cfrds_sock_cleanup(cfrds_socket* sock);
 #define cfrds_sock_defer(var) cfrds_socket var __attribute__((cleanup(cfrds_sock_cleanup))) = CFRDS_INVALID_SOCKET
 
@@ -187,6 +189,11 @@ cfrds_status cfrds_http_post(cfrds_server *server, const char *command, cfrds_bu
         }
 
         cfrds_buffer_expand(tmp_response, readed);
+
+        if (cfrds_buffer_data_size(tmp_response) > CFRDS_MAX_RESPONSE_SIZE) {
+            cfrds_server_set_error(server, CFRDS_STATUS_RESPONSE_TOO_LARGE, "response exceeded maximum size");
+            return CFRDS_STATUS_RESPONSE_TOO_LARGE;
+        }
     }
 
     const char *response_data = cfrds_buffer_data(tmp_response);

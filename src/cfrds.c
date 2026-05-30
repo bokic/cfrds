@@ -321,14 +321,21 @@ cfrds_status cfrds_command_file_write(cfrds_server *server, const char *pathname
     if (!cfrds_buffer_create(&post))
         return CFRDS_STATUS_MEMORY_ERROR;
 
-    cfrds_buffer_append_rds_count(post, total_cnt);
-    cfrds_buffer_append_rds_string(post, pathname);
-    cfrds_buffer_append_rds_string(post, "WRITE");
-    cfrds_buffer_append_rds_string(post, "");
-    cfrds_buffer_append_rds_bytes(post, data, length);
+    if (!cfrds_buffer_append_rds_count(post, total_cnt))
+        return CFRDS_STATUS_MEMORY_ERROR;
+    if (!cfrds_buffer_append_rds_string(post, pathname))
+        return CFRDS_STATUS_MEMORY_ERROR;
+    if (!cfrds_buffer_append_rds_string(post, "WRITE"))
+        return CFRDS_STATUS_MEMORY_ERROR;
+    if (!cfrds_buffer_append_rds_string(post, ""))
+        return CFRDS_STATUS_MEMORY_ERROR;
+    if (!cfrds_buffer_append_rds_bytes(post, data, length))
+        return CFRDS_STATUS_MEMORY_ERROR;
 
-    if (server->username) cfrds_buffer_append_rds_string(post, server->username);
-    if (server->password) cfrds_buffer_append_rds_string(post, server->password);
+    if (server->username && !cfrds_buffer_append_rds_string(post, server->username))
+        return CFRDS_STATUS_MEMORY_ERROR;
+    if (server->password && !cfrds_buffer_append_rds_string(post, server->password))
+        return CFRDS_STATUS_MEMORY_ERROR;
 
     ret = cfrds_http_post((cfrds_server *)server, "FILEIO", post, NULL);
 
@@ -4083,11 +4090,16 @@ cfrds_status cfrds_command_adminapi_extensions_setmapping(cfrds_server *server, 
         return CFRDS_STATUS_SERVER_IS_NULL;
     }
 
-    cfrds_buffer_create(&arg);
-    cfrds_buffer_append(arg, "name:");
-    cfrds_buffer_append(arg, name);
-    cfrds_buffer_append(arg, ";path:");
-    cfrds_buffer_append(arg, path);
+    if (!cfrds_buffer_create(&arg))
+        return CFRDS_STATUS_MEMORY_ERROR;
+    if (!cfrds_buffer_append(arg, "name:"))
+        return CFRDS_STATUS_MEMORY_ERROR;
+    if (!cfrds_buffer_append(arg, name))
+        return CFRDS_STATUS_MEMORY_ERROR;
+    if (!cfrds_buffer_append(arg, ";path:"))
+        return CFRDS_STATUS_MEMORY_ERROR;
+    if (!cfrds_buffer_append(arg, path))
+        return CFRDS_STATUS_MEMORY_ERROR;
 
     ret = cfrds_send_command(server, &response, "ADMINAPI", (const char *[]){ "cfide.adminapi.extensions", "setmappings", cfrds_buffer_data(arg), NULL});
     if (ret == CFRDS_STATUS_OK)

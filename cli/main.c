@@ -128,7 +128,8 @@ static bool init_server_from_uri(const char *uri, char **hostname, uint16_t *por
 
     const char *path_start = strchr(uri, '/');
     if (path_start) {
-        size_t path_strlen = uri_strlen - (path_start - uri);
+        size_t delta = (size_t)path_start - (size_t)uri;
+        size_t path_strlen = uri_strlen - delta;
         _path = malloc(path_strlen + 1);
         if (!_path)
             return false;
@@ -143,8 +144,8 @@ static bool init_server_from_uri(const char *uri, char **hostname, uint16_t *por
     if (login_start) {
         const char *pass_start = strchr(uri, ':');
         if ((pass_start != NULL)&&(pass_start < login_start)) {
-            size_t user_strlen = pass_start - uri;
-            size_t pass_strlen = login_start - pass_start - 1;
+            size_t user_strlen = (size_t)pass_start - (size_t)uri;
+            size_t pass_strlen = (size_t)login_start - (size_t)pass_start - 1;
 
             if (user_strlen) {
                 _username = malloc(user_strlen + 1);
@@ -161,7 +162,7 @@ static bool init_server_from_uri(const char *uri, char **hostname, uint16_t *por
                 _password[pass_strlen] = '\0';
             }
         } else {
-            size_t user_strlen = login_start - uri;
+            size_t user_strlen = (size_t)login_start - (size_t)uri;
             _username = malloc(user_strlen + 1);
             if (!_username)
                 return false;
@@ -173,8 +174,8 @@ static bool init_server_from_uri(const char *uri, char **hostname, uint16_t *por
 
     const char *port_start = strchr(uri, ':');
     if (port_start) {
-        size_t host_strlen = port_start - uri;
-        size_t port_strlen = path_start - port_start - 1;
+        size_t host_strlen = (size_t)port_start - (size_t)uri;
+        size_t port_strlen = (size_t)path_start - (size_t)port_start - 1;
 
         _hostname = malloc(host_strlen + 1);
         if (!_hostname)
@@ -192,7 +193,7 @@ static bool init_server_from_uri(const char *uri, char **hostname, uint16_t *por
             return false;
         _port = (uint16_t)tmp_port;
     } else {
-        size_t host_strlen = path_start - uri;
+        size_t host_strlen = (size_t)path_start - (size_t)uri;
         _hostname = malloc(host_strlen + 1);
         if (!_hostname)
             return false;
@@ -309,7 +310,7 @@ int main(int argc, char *argv[])
             if (permissions & 0x10) permissions_str[3] = 'A';
             if (permissions & 0x80) permissions_str[4] = 'N';
 
-            const time_t timep = modified / 1000;
+            const time_t timep = (time_t)(modified / 1000);
             const struct tm *newtime = localtime(&timep);
             char modified_str[64] = {0, };
             strftime(modified_str, sizeof(modified_str), "%c", newtime);
@@ -325,8 +326,14 @@ int main(int argc, char *argv[])
         }
 
         int to_write = cfrds_file_content_get_size(content);
-        ssize_t written = os_write_to_terminal(cfrds_file_content_get_data(content), to_write);
-        if (written != to_write)
+        if (to_write == -1)
+        {
+            fprintf(stderr, "cat FAILED with error: %s\n", cfrds_server_get_error(server));
+            return EXIT_FAILURE;
+        }
+
+        ssize_t written = os_write_to_terminal(cfrds_file_content_get_data(content), (size_t)to_write);
+        if ((written < 0) || ((size_t)written != (size_t)to_write))
         {
             fprintf(stderr, "write FAILED with error: %s\n", strerror(errno));
             return EXIT_FAILURE;
@@ -351,8 +358,14 @@ int main(int argc, char *argv[])
         }
 
         int to_write = cfrds_file_content_get_size(content);
-        ssize_t written = os_write(fd, cfrds_file_content_get_data(content), to_write);
-        if (written != to_write)
+        if (to_write == -1)
+        {
+            fprintf(stderr, "get/download FAILED with error: %s\n", cfrds_server_get_error(server));
+            return EXIT_FAILURE;
+        }
+
+        ssize_t written = os_write(fd, cfrds_file_content_get_data(content), (size_t)to_write);
+        if ((written < 0) || ((size_t)written != (size_t)to_write))
         {
             fprintf(stderr, "write FAILED with error: %s\n", strerror(errno));
             return EXIT_FAILURE;
@@ -460,7 +473,7 @@ int main(int argc, char *argv[])
                 size_t tmp_size = 0;
                 cfrds_str_defer(schema);
 
-                tmp_size = table_separator - schema_separator;
+                tmp_size = (size_t)table_separator - (size_t)schema_separator;
                 schema = malloc(tmp_size + 1);
                 if (schema == NULL)
                 {
@@ -504,7 +517,7 @@ int main(int argc, char *argv[])
                 size_t tmp_size = 0;
                 cfrds_str_defer(tmp);
 
-                tmp_size = table - schema;
+                tmp_size = (size_t)table - (size_t)schema;
                 tmp = malloc(tmp_size + 1);
                 if (tmp == NULL)
                     return EXIT_FAILURE;
@@ -552,7 +565,7 @@ int main(int argc, char *argv[])
                 size_t tmp_size = 0;
                 cfrds_str_defer(tmp);
 
-                tmp_size = table - schema;
+                tmp_size = (size_t)table - (size_t)schema;
                 tmp = malloc(tmp_size + 1);
                 if (tmp == NULL)
                     return EXIT_FAILURE;
@@ -617,7 +630,7 @@ int main(int argc, char *argv[])
                 size_t tmp_size = 0;
                 cfrds_str_defer(tmp);
 
-                tmp_size = table - schema;
+                tmp_size = (size_t)table - (size_t)schema;
                 tmp = malloc(tmp_size + 1);
                 if (tmp == NULL)
                     return EXIT_FAILURE;
@@ -682,7 +695,7 @@ int main(int argc, char *argv[])
                 size_t tmp_size = 0;
                 cfrds_str_defer(tmp);
 
-                tmp_size = table - schema;
+                tmp_size = (size_t)table - (size_t)schema;
                 tmp = malloc(tmp_size + 1);
                 if (tmp == NULL)
                     return EXIT_FAILURE;
@@ -771,8 +784,8 @@ int main(int argc, char *argv[])
                 sizes[c] = strlen(name);
             }
 
-            int rows = cfrds_sql_resultset_rows(resultset);
-            for (int r = 0; r < rows; r++)
+            size_t rows = cfrds_sql_resultset_rows(resultset);
+            for (size_t r = 0; r < rows; r++)
             {
                 for (size_t c = 0; c < cols; c++)
                 {
@@ -874,7 +887,7 @@ int main(int argc, char *argv[])
             }
             putchar('\n');
 
-            for (int row = 0; row < rows; row++)
+            for (size_t row = 0; row < rows; row++)
             {
                 printf((const char*)u8"\u2503");
                 for(size_t col = 0; col < cols; col++)

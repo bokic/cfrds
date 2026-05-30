@@ -206,7 +206,7 @@ static cfrds_status cfrds_send_command(cfrds_server *server, cfrds_buffer **resp
 
     server->_errno = 0;
 
-    for(int c = 0; ; c++)
+    for(size_t c = 0; ; c++)
     {
         if (list[c] == NULL)
         {
@@ -1822,13 +1822,13 @@ cfrds_status cfrds_command_debugger_get_server_info(cfrds_server *server, const 
     if (ret == CFRDS_STATUS_OK)
     {
         int val = cfrds_buffer_to_debugger_info(response);
-        if (val == -1)
+        if ((val < 0) || (val > UINT16_MAX))
         {
             server->error_code = -1;
             return CFRDS_STATUS_RESPONSE_ERROR;
         }
 
-        *port = val;
+        *port = (uint16_t)val;
     }
 
     return ret;
@@ -2141,7 +2141,7 @@ const char *cfrds_debugger_event_breakpoint_get_source(const cfrds_debugger_even
 
 int cfrds_debugger_event_breakpoint_get_line(const cfrds_debugger_event *event)
 {
-    return wddx_get_number((const WDDX *)event, "0,LINE", NULL);
+    return (int)wddx_get_number((const WDDX *)event, "0,LINE", NULL);
 }
 
 const cfrds_variable *cfrds_debugger_event_breakpoint_get_scopes(const cfrds_debugger_event *event)
@@ -2161,12 +2161,12 @@ const char *cfrds_debugger_event_breakpoint_set_get_pathname(const cfrds_debugge
 
 int cfrds_debugger_event_breakpoint_set_get_req_line(const cfrds_debugger_event *event)
 {
-    return wddx_get_number((const WDDX *)event, "0,REQ_LINE_NUM", NULL);
+    return (int)wddx_get_number((const WDDX *)event, "0,REQ_LINE_NUM", NULL);
 }
 
 int cfrds_debugger_event_breakpoint_set_get_act_line(const cfrds_debugger_event *event)
 {
-    return wddx_get_number((const WDDX *)event, "0,ACTUAL_LINE_NUM", NULL);
+    return (int)wddx_get_number((const WDDX *)event, "0,ACTUAL_LINE_NUM", NULL);
 }
 
 int cfrds_debugger_event_get_scopes_count(const cfrds_debugger_event *event)
@@ -2350,16 +2350,16 @@ cfrds_status cfrds_command_debugger_watch_variables(cfrds_server *server, const 
             if (variable == NULL) return CFRDS_STATUS_MEMORY_ERROR;
             variables += strlen(variables);
         } else {
-            size_t len = delimiter - variables;
+            ssize_t len = delimiter - variables;
             if (len == 0)
             {
                 variables++;
                 continue;
             }
-            variable = malloc(len + 1);
+            variable = malloc((unsigned)len + 1);
             if (variable == NULL) return CFRDS_STATUS_MEMORY_ERROR;
-            memcpy(variable, variables, len);
-            variable[len] = '\0';
+            memcpy(variable, variables, (unsigned)len);
+            variable[(unsigned)len] = '\0';
             variables += len + 1;
         }
 
@@ -2945,7 +2945,7 @@ int cfrds_security_analyzer_result_errorsdescription_count(const cfrds_security_
     if (json_object_get_type(errorsdescription) != json_type_array)
         goto exit;
 
-    return json_object_array_length(errorsdescription);
+    return (int)json_object_array_length(errorsdescription);
 
 exit:
     return -1;
@@ -2966,7 +2966,7 @@ int cfrds_security_analyzer_result_filesscanned_count(const cfrds_security_analy
     if (json_object_get_type(filesscanned) != json_type_array)
         goto exit;
 
-    return json_object_array_length(filesscanned);
+    return (int)json_object_array_length(filesscanned);
 
 exit:
     return -1;
@@ -2975,6 +2975,9 @@ exit:
 cfrds_str cfrds_security_analyzer_result_filesscanned_item_result(const cfrds_security_analyzer_result *value, int ndx)
 {
     json_object_defer(json_obj);
+
+    if (ndx < 0)
+        goto exit;
 
     json_obj = json_tokener_parse((const char *)value);
     if (json_obj == NULL)
@@ -2988,11 +2991,11 @@ cfrds_str cfrds_security_analyzer_result_filesscanned_item_result(const cfrds_se
     if (json_object_get_type(filesscanned) != json_type_array)
         goto exit;
 
-    int len = json_object_array_length(filesscanned);
-    if (ndx >= len)
+    size_t len = json_object_array_length(filesscanned);
+    if ((unsigned)ndx >= len)
         goto exit;
 
-    json_object *item = json_object_array_get_idx(filesscanned, ndx);
+    json_object *item = json_object_array_get_idx(filesscanned, (unsigned)ndx);
     if (item == NULL)
         goto exit;
 
@@ -3061,7 +3064,7 @@ int cfrds_security_analyzer_result_filesnotscanned_count(const cfrds_security_an
     if (json_object_get_type(filesnotscanned) != json_type_array)
         goto exit;
 
-    return json_object_array_length(filesnotscanned);
+    return (int)json_object_array_length(filesnotscanned);
 
 exit:
     return -1;
@@ -3198,7 +3201,7 @@ int cfrds_security_analyzer_result_files_count(const cfrds_security_analyzer_res
     if (json_object_get_type(files) != json_type_array)
         goto exit;
 
-    return json_object_array_length(files);
+    return (int)json_object_array_length(files);
 
 exit:
     return -1;
@@ -3272,7 +3275,7 @@ int cfrds_security_analyzer_result_filesvisited_count(const cfrds_security_analy
     if (json_object_get_type(filesvisited) != json_type_array)
         goto exit;
 
-    return json_object_array_length(filesvisited);
+    return (int)json_object_array_length(filesvisited);
 
 exit:
     return -1;
@@ -3356,7 +3359,7 @@ int cfrds_security_analyzer_result_errors_count(const cfrds_security_analyzer_re
     if (json_object_get_type(errors) != json_type_array)
         goto exit;
 
-    return json_object_array_length(errors);
+    return (int)json_object_array_length(errors);
 
 exit:
     return -1;

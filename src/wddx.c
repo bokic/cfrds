@@ -67,7 +67,7 @@ static bool is_string_numeric(const char *str)
 static struct WDDX_NODE *wddx_recursively_put(struct WDDX_NODE *node, const char *path, const char *value, enum wddx_type type)
 {
     size_t path_len = strlen(path);
-    size_t newsize = 0;
+    ssize_t newsize = 0;
     bool created_node = false;
 
     if (path_len == 0)
@@ -90,10 +90,10 @@ static struct WDDX_NODE *wddx_recursively_put(struct WDDX_NODE *node, const char
         newsize = path_len;
     else
         newsize = next - path;
-    if (newsize == 0) return NULL;
+    if (newsize <= 0) return NULL;
 
     char newkey[newsize + 1];
-    memcpy(newkey, path, newsize);
+    memcpy(newkey, path, (unsigned)newsize);
     newkey[newsize] = 0;
     if (next)
         path += newsize + 1;
@@ -107,7 +107,7 @@ static struct WDDX_NODE *wddx_recursively_put(struct WDDX_NODE *node, const char
 
         if (node == NULL)
         {
-            newsize = offsetof(struct WDDX_NODE, items) + (sizeof(void *) * idx);
+            size_t newsize = offsetof(struct WDDX_NODE, items) + (sizeof(void *) * (unsigned)idx);
             node = (struct WDDX_NODE *)malloc(newsize);
             if (node == NULL)
             {

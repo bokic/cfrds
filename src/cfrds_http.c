@@ -149,21 +149,27 @@ cfrds_status cfrds_http_post(cfrds_server *server, const char *command, cfrds_bu
         }
     }
 
-    trace_net_start("send");
-    sock_written = send(sockfd, cfrds_buffer_data(send_buf), cfrds_buffer_data_size(send_buf), 0);
-    trace_net_end();
-    if ((sock_written < 0)||((unsigned)sock_written != cfrds_buffer_data_size(send_buf))) {
-        if (sock_written == -1)
+    {
+        const char *send_ptr = cfrds_buffer_data(send_buf);
+        size_t send_remaining = cfrds_buffer_data_size(send_buf);
+
+        while (send_remaining > 0)
         {
-            server->_errno = errno;
-            cfrds_server_set_error(server, CFRDS_STATUS_WRITING_TO_SOCKET_FAILED, "failed to write to socket...");
-            return CFRDS_STATUS_WRITING_TO_SOCKET_FAILED;
-        }
-        else
-        {
-            server->_errno = errno;
-            cfrds_server_set_error(server, CFRDS_STATUS_PARTIALLY_WRITE_TO_SOCKET, "failed to write to all data socket...");
-            return CFRDS_STATUS_PARTIALLY_WRITE_TO_SOCKET;
+            trace_net_start("send");
+            sock_written = send(sockfd, send_ptr, send_remaining, 0);
+            trace_net_end();
+            if (sock_written < 0)
+            {
+#ifdef EINTR
+                if (errno == EINTR)
+                    continue;
+#endif
+                server->_errno = errno;
+                cfrds_server_set_error(server, CFRDS_STATUS_WRITING_TO_SOCKET_FAILED, "failed to write to socket...");
+                return CFRDS_STATUS_WRITING_TO_SOCKET_FAILED;
+            }
+            send_ptr += sock_written;
+            send_remaining -= (size_t)sock_written;
         }
     }
 

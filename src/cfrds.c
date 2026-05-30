@@ -230,29 +230,23 @@ static cfrds_status cfrds_send_command(cfrds_server *server, cfrds_buffer **resp
 
     cfrds_server_clear_error(server);
 
-    if (cfrds_buffer_create(&post) == false)
+    if (!cfrds_buffer_create(&post))
         return CFRDS_STATUS_MEMORY_ERROR;
 
-    if (cfrds_buffer_append_rds_count(post, total_cnt) == false)
+    if (!cfrds_buffer_append_rds_count(post, total_cnt))
         return CFRDS_STATUS_MEMORY_ERROR;
 
     for(size_t c = 0; c < list_cnt; c++)
     {
-        if (cfrds_buffer_append_rds_string(post, list[c]) == false)
+        if (!cfrds_buffer_append_rds_string(post, list[c]))
             return CFRDS_STATUS_MEMORY_ERROR;
     }
 
-    if (server->username)
-    {
-        if (cfrds_buffer_append_rds_string(post, server->username) == false)
-            return CFRDS_STATUS_MEMORY_ERROR;
-    }
+    if (server->username && !cfrds_buffer_append_rds_string(post, server->username))
+        return CFRDS_STATUS_MEMORY_ERROR;
 
-    if (server->password)
-    {
-        if (cfrds_buffer_append_rds_string(post, server->password) == false)
-            return CFRDS_STATUS_MEMORY_ERROR;
-    }
+    if (server->password && !cfrds_buffer_append_rds_string(post, server->password))
+        return CFRDS_STATUS_MEMORY_ERROR;
 
     ret = cfrds_http_post((cfrds_server *)server, command, post, response);
 

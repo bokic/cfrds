@@ -594,11 +594,16 @@ cfrds_browse_dir *cfrds_buffer_to_browse_dir(cfrds_buffer *buffer)
         ssize_t filesize = -1;
         uint64_t modified = -1;
 
-        cfrds_buffer_parse_string(&data, &size, &str_kind);
-        cfrds_buffer_parse_string(&data, &size, &filename);
-        cfrds_buffer_parse_string(&data, &size, &str_permissions);
-        cfrds_buffer_parse_string(&data, &size, &str_filesize);
-        cfrds_buffer_parse_string(&data, &size, &str_timestamp);
+        if (!cfrds_buffer_parse_string(&data, &size, &str_kind))
+            return NULL;
+        if (!cfrds_buffer_parse_string(&data, &size, &filename))
+            return NULL;
+        if (!cfrds_buffer_parse_string(&data, &size, &str_permissions))
+            return NULL;
+        if (!cfrds_buffer_parse_string(&data, &size, &str_filesize))
+            return NULL;
+        if (!cfrds_buffer_parse_string(&data, &size, &str_timestamp))
+            return NULL;
 
         if (str_kind)
         {

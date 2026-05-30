@@ -191,10 +191,10 @@ cfrds_status cfrds_http_post(cfrds_server *server, const char *command, cfrds_bu
             return CFRDS_STATUS_MEMORY_ERROR;
 
         trace_net_start("recv");
-        ssize_t readed = recv(sockfd, cfrds_buffer_data(tmp_response) + cfrds_buffer_data_size(tmp_response), 4096, 0);
+        ssize_t nread = recv(sockfd, cfrds_buffer_data(tmp_response) + cfrds_buffer_data_size(tmp_response), 4096, 0);
         trace_net_end();
-        if (readed <= 0) {
-            if (readed == -1) {
+        if (nread <= 0) {
+            if (nread == -1) {
                 server->_errno = errno;
                 cfrds_server_set_error(server, CFRDS_STATUS_READING_FROM_SOCKET_FAILED, "failed to read from socket...");
                 return CFRDS_STATUS_READING_FROM_SOCKET_FAILED;
@@ -202,7 +202,7 @@ cfrds_status cfrds_http_post(cfrds_server *server, const char *command, cfrds_bu
             break;
         }
 
-        cfrds_buffer_expand(tmp_response, readed);
+        cfrds_buffer_expand(tmp_response, nread);
 
         if (cfrds_buffer_data_size(tmp_response) > CFRDS_MAX_RESPONSE_SIZE) {
             cfrds_server_set_error(server, CFRDS_STATUS_RESPONSE_TOO_LARGE, "response exceeded maximum size");

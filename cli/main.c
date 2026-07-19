@@ -325,15 +325,15 @@ int main(int argc, char *argv[])
             return EXIT_FAILURE;
         }
 
-        int to_write = cfrds_file_content_get_size(content);
-        if (to_write == -1)
+        size_t to_write = cfrds_file_content_get_size(content);
+        if (to_write == (size_t)-1)
         {
             fprintf(stderr, "cat FAILED with error: %s\n", cfrds_server_get_error(server));
             return EXIT_FAILURE;
         }
 
-        ssize_t written = os_write_to_terminal(cfrds_file_content_get_data(content), (size_t)to_write);
-        if ((written < 0) || ((size_t)written != (size_t)to_write))
+        ssize_t written = os_write_to_terminal(cfrds_file_content_get_data(content), to_write);
+        if ((written < 0) || ((size_t)written != to_write))
         {
             fprintf(stderr, "write FAILED with error: %s\n", strerror(errno));
             return EXIT_FAILURE;
@@ -357,15 +357,15 @@ int main(int argc, char *argv[])
             return EXIT_FAILURE;
         }
 
-        int to_write = cfrds_file_content_get_size(content);
-        if (to_write == -1)
+        size_t to_write = cfrds_file_content_get_size(content);
+        if (to_write == (size_t)-1)
         {
             fprintf(stderr, "get/download FAILED with error: %s\n", cfrds_server_get_error(server));
             return EXIT_FAILURE;
         }
 
-        ssize_t written = os_write(fd, cfrds_file_content_get_data(content), (size_t)to_write);
-        if ((written < 0) || ((size_t)written != (size_t)to_write))
+        ssize_t written = os_write(fd, cfrds_file_content_get_data(content), to_write);
+        if ((written < 0) || ((size_t)written != to_write))
         {
             fprintf(stderr, "write FAILED with error: %s\n", strerror(errno));
             return EXIT_FAILURE;

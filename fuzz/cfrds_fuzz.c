@@ -96,7 +96,7 @@ int LLVMFuzzerTestOneInput_rds_bytearray(const uint8_t *Data, size_t Size) {
     const char *p = input;
     size_t remaining = strlen(input);
     char *out = NULL;
-    int size = -1;
+    size_t size = 0;
 
     bool ok = cfrds_buffer_parse_bytearray(&p, &remaining, &out, &size);
 

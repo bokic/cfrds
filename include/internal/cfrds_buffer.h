@@ -32,7 +32,7 @@ struct cfrds_server {
 
 struct cfrds_file_content {
     char *data;
-    int size;
+    size_t size;
     char *modified;
     char *permission;
 };
@@ -219,7 +219,7 @@ bool cfrds_buffer_expand(cfrds_buffer *buffer, size_t size);
 void cfrds_buffer_free(cfrds_buffer *buffer);
 
 bool cfrds_buffer_parse_number(const char **data, size_t *remaining, int64_t *out);
-bool cfrds_buffer_parse_bytearray(const char **data, size_t *remaining, char **out, int *out_size);
+bool cfrds_buffer_parse_bytearray(const char **data, size_t *remaining, char **out, size_t *out_size);
 bool cfrds_buffer_parse_string(const char **data, size_t *remaining, char **out);
 bool cfrds_buffer_parse_string_list_item(const char **data, size_t *remaining, char **out);
 

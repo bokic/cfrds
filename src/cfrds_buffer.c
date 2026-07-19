@@ -426,7 +426,7 @@ bool cfrds_buffer_parse_number(const char **data, size_t *remaining, int64_t *ou
     return true;
 }
 
-bool cfrds_buffer_parse_bytearray(const char **data, size_t *remaining, char **out, int *out_size)
+bool cfrds_buffer_parse_bytearray(const char **data, size_t *remaining, char **out, size_t *out_size)
 {
     size_t size = 0;
     int64_t tmp = 0;

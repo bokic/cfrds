@@ -731,10 +731,10 @@ const char *cfrds_file_content_get_data(const cfrds_file_content *value)
     return value->data;
 }
 
-int cfrds_file_content_get_size(const cfrds_file_content *value)
+size_t cfrds_file_content_get_size(const cfrds_file_content *value)
 {
     if (value == NULL)
-        return -1;
+        return (size_t)-1;
 
     return value->size;
 }

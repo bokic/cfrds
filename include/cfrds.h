@@ -124,7 +124,7 @@ EXPORT_CFRDS uint64_t cfrds_browse_dir_item_get_modified(const cfrds_browse_dir 
 EXPORT_CFRDS cfrds_status cfrds_command_file_read(cfrds_server *server, const char *pathname, cfrds_file_content **out);
 EXPORT_CFRDS void cfrds_file_content_free(cfrds_file_content *value);
 EXPORT_CFRDS const char *cfrds_file_content_get_data(const cfrds_file_content *value);
-EXPORT_CFRDS int cfrds_file_content_get_size(const cfrds_file_content *value);
+EXPORT_CFRDS size_t cfrds_file_content_get_size(const cfrds_file_content *value);
 EXPORT_CFRDS const char *cfrds_file_content_get_modified(const cfrds_file_content *value);
 EXPORT_CFRDS const char *cfrds_file_content_get_permission(const cfrds_file_content *value);
 

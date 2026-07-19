@@ -403,7 +403,7 @@ static int test_parse_bytearray_basic(void)
     const char *data = input;
     size_t remaining = sizeof(input);
     char *out = NULL;
-    int out_size = 0;
+    size_t out_size = 0;
 
     CHECK(cfrds_buffer_parse_bytearray(&data, &remaining, &out, &out_size));
     CHECK(out != NULL);
@@ -418,7 +418,7 @@ static int test_parse_bytearray_null_out(void)
 {
     const char *data = "2:ab";
     size_t remaining = 4;
-    int out_size = 0;
+    size_t out_size = 0;
     CHECK(cfrds_buffer_parse_bytearray(&data, &remaining, NULL, &out_size) == false);
     return PASS;
 }

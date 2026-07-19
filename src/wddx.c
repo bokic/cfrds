@@ -141,12 +141,16 @@ static struct WDDX_NODE *wddx_recursively_put(struct WDDX_NODE *node, const char
                     if (created_node) wddx_node_free(pre_realloc_node);
                     return NULL;
                 }
-                int oldsize = offsetof(struct WDDX_NODE, items) + (sizeof(struct WDDX_NODE) * node->cnt);
-                explicit_bzero((char *)node + oldsize, newsize - oldsize);
+                size_t oldsize = offsetof(struct WDDX_NODE, items) + (sizeof(void *) * (size_t)node->cnt);
+                explicit_bzero((char *)node + oldsize, (size_t)newsize - oldsize);
                 node->cnt = idx;
             }
 
-            node->items[idx - 1] = wddx_recursively_put(node->items[idx - 1], path, value, type);
+            struct WDDX_NODE *new_child = wddx_recursively_put(node->items[idx - 1], path, value, type);
+            if (new_child == NULL && node->items[idx - 1] != NULL) {
+                return NULL;
+            }
+            node->items[idx - 1] = new_child;
             return node;
         }
         case WDDX_STRUCT:
@@ -187,8 +191,13 @@ static struct WDDX_NODE *wddx_recursively_put(struct WDDX_NODE *node, const char
                 WDDX_STRUCT_NODE *child = (WDDX_STRUCT_NODE *)node->items[c];
                 if (strcmp(child->name, newkey) == 0)
                 {
+                    struct WDDX_NODE *new_val = wddx_recursively_put(NULL, path, value, type);
+                    if (new_val == NULL)
+                    {
+                        return NULL;
+                    }
                     if (child->value != NULL) wddx_node_free(child->value);
-                    child->value = wddx_recursively_put(NULL, path, value, type);
+                    child->value = new_val;
                     return node;
                 }
             }
@@ -207,11 +216,19 @@ static struct WDDX_NODE *wddx_recursively_put(struct WDDX_NODE *node, const char
             }
             char *tstr = strdup(newkey);
             if (tstr == NULL) {
+                free(node->items[node->cnt]);
+                if (created_node) wddx_node_free(node);
+                return NULL;
+            }
+            struct WDDX_NODE *new_val = wddx_recursively_put(NULL, path, value, type);
+            if (new_val == NULL) {
+                free(tstr);
+                free(node->items[node->cnt]);
                 if (created_node) wddx_node_free(node);
                 return NULL;
             }
             ((WDDX_STRUCT_NODE *)node->items[node->cnt])->name = tstr;
-            ((WDDX_STRUCT_NODE *)node->items[node->cnt])->value = wddx_recursively_put(NULL, path, value, type);
+            ((WDDX_STRUCT_NODE *)node->items[node->cnt])->value = new_val;
             node->cnt++;
             return node;
         }
@@ -238,7 +255,12 @@ static bool wddx_put(WDDX *dest, const char *path, const char *value, enum wddx_
 {
     if (dest == NULL) return false;
 
-    dest->data = wddx_recursively_put(dest->data, path, value, type);
+    struct WDDX_NODE *new_data = wddx_recursively_put(dest->data, path, value, type);
+    if (new_data == NULL && dest->data != NULL) {
+        return false;
+    }
+
+    dest->data = new_data;
 
     return dest->data != NULL;
 }

@@ -1449,8 +1449,8 @@ cfrds_sql_supportedcommands *cfrds_buffer_to_sql_supportedcommands(cfrds_buffer 
 
     cfrds_sql_supportedcommands_defer(tmp);
 
-    ssize_t rows = 0;
-    ssize_t row_size = 0;
+    int64_t rows = 0;
+    int64_t row_size = 0;
     size_t cnt = 0;
     size_t buf_size = 0;
 

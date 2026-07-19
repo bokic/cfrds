@@ -194,11 +194,6 @@ struct cfrds_security_analyzer_result {
     void *errors;
 };
 
-#ifdef __cplusplus
-extern "C"
-{
-#endif
-
 bool cfrds_buffer_create(cfrds_buffer **buffer);
 
 char *cfrds_buffer_data(cfrds_buffer *buffer);
@@ -241,7 +236,3 @@ char *cfrds_buffer_to_debugger_start(cfrds_buffer *buffer);
 bool cfrds_buffer_to_debugger_stop(cfrds_buffer *buffer);
 int cfrds_buffer_to_debugger_info(cfrds_buffer *buffer);
 cfrds_debugger_event *cfrds_buffer_to_debugger_event(cfrds_buffer *buffer);
-
-#ifdef __cplusplus
-}
-#endif

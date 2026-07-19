@@ -92,6 +92,17 @@ typedef enum {
 #define cfrds_adminapi_mappings_defer(var) cfrds_adminapi_mappings* var __attribute__((cleanup(cfrds_adminapi_mappings_cleanup))) = NULL
 #endif
 
+/**
+ * @note Thread Safety
+ *
+ * This library is NOT thread-safe. A `cfrds_server` instance must not be used
+ * concurrently from multiple threads without external synchronisation.
+ *
+ * Each thread must create and manage its own `cfrds_server` instance.
+ * Result types (`cfrds_browse_dir`, `cfrds_file_content`, `cfrds_sql_resultset`,
+ * etc.) are likewise not safe to share across threads without external locking.
+ */
+
 #ifdef __cplusplus
 extern "C"
 {

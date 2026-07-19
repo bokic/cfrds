@@ -10,6 +10,7 @@
  * correctness.
  */
 
+#include <cfrds.h>
 #include <internal/wddx.h>
 
 #include <stdio.h>
@@ -438,6 +439,52 @@ static int test_roundtrip_array(void)
     return PASS;
 }
 
+/* ── Debugger Event Getters test ────────────────────────────────────────── */
+
+static int test_debugger_event_getters(void)
+{
+    static const char FIXTURE_DBG_EVENT[] =
+        "<wddxPacket version=\"1.0\">"
+        "<header/>"
+        "<data>"
+          "<array length=\"1\">"
+            "<struct>"
+              "<var name=\"SCOPES\"><array length=\"2\"><string>SCOPE_A</string><string>SCOPE_B</string></array></var>"
+              "<var name=\"THREADS\"><array length=\"1\"><string>THREAD_1</string></array></var>"
+              "<var name=\"WATCH\"><array length=\"1\"><string>EXPR_1</string></array></var>"
+            "</struct>"
+          "</array>"
+        "</data>"
+        "</wddxPacket>";
+
+    WDDX_defer(w);
+    w = wddx_from_xml(FIXTURE_DBG_EVENT);
+    CHECK(w != NULL);
+
+    cfrds_debugger_event *event = (cfrds_debugger_event *)w;
+
+    /* Test SCOPES */
+    CHECK(cfrds_debugger_event_get_scopes_count(event) == 2);
+    CHECK(cfrds_debugger_event_get_scopes_item(event, 0) != NULL);
+    CHECK(strcmp(cfrds_debugger_event_get_scopes_item(event, 0), "SCOPE_A") == 0);
+    CHECK(strcmp(cfrds_debugger_event_get_scopes_item(event, 1), "SCOPE_B") == 0);
+    CHECK(cfrds_debugger_event_get_scopes_item(event, 2) == NULL);
+
+    /* Test THREADS */
+    CHECK(cfrds_debugger_event_get_threads_count(event) == 1);
+    CHECK(cfrds_debugger_event_get_threads_item(event, 0) != NULL);
+    CHECK(strcmp(cfrds_debugger_event_get_threads_item(event, 0), "THREAD_1") == 0);
+    CHECK(cfrds_debugger_event_get_threads_item(event, 1) == NULL);
+
+    /* Test WATCH */
+    CHECK(cfrds_debugger_event_get_watch_count(event) == 1);
+    CHECK(cfrds_debugger_event_get_watch_item(event, 0) != NULL);
+    CHECK(strcmp(cfrds_debugger_event_get_watch_item(event, 0), "EXPR_1") == 0);
+    CHECK(cfrds_debugger_event_get_watch_item(event, 1) == NULL);
+
+    return PASS;
+}
+
 /* ── main ──────────────────────────────────────────────────────────────── */
 
 int main(void)
@@ -471,6 +518,7 @@ int main(void)
     RUN(test_roundtrip_string);
     RUN(test_roundtrip_struct);
     RUN(test_roundtrip_array);
+    RUN(test_debugger_event_getters);
 
     printf("\n%d test(s) failed.\n", _failures);
     return _failures ? 1 : 0;

@@ -1755,6 +1755,11 @@ cfrds_status cfrds_command_debugger_start(cfrds_server *server, cfrds_str *sessi
         return CFRDS_STATUS_SERVER_IS_NULL;
     }
 
+    if (session_id == NULL)
+    {
+        return CFRDS_STATUS_PARAM_IS_NULL;
+    }
+
     WDDX_defer(wddx);
     wddx = wddx_create();
     wddx_put_bool(wddx, "0,REMOTE_SESSION", true);
@@ -1869,6 +1874,44 @@ cfrds_status cfrds_command_debugger_breakpoint_on_exception(cfrds_server *server
     return ret;
 }
 
+static bool cfrds_buffer_to_debugger_response_ok(cfrds_buffer *buffer)
+{
+    if (buffer == NULL)
+        return false;
+
+    const char *data = cfrds_buffer_data(buffer);
+    size_t size = cfrds_buffer_data_size(buffer);
+    int64_t rows = 0;
+
+    if (!cfrds_buffer_parse_number(&data, &size, &rows))
+        return false;
+
+    /* 0: means empty void success response */
+    if (rows == 0)
+        return true;
+
+    if (rows == 1)
+    {
+        cfrds_str_defer(xml);
+        if (!cfrds_buffer_parse_string(&data, &size, &xml))
+            return false;
+
+        WDDX_defer(result);
+        result = wddx_from_xml(xml);
+        if (!result)
+            return false;
+
+        bool ok = false;
+        double val = wddx_get_number(result, "0,VALUE", &ok);
+        if (ok && val == -1)
+            return false;
+
+        return true;
+    }
+
+    return false;
+}
+
 cfrds_status cfrds_command_debugger_breakpoint(cfrds_server *server, const char *session_id, const char *filepath, int line, bool enable)
 {
     cfrds_status ret;
@@ -1896,9 +1939,14 @@ cfrds_status cfrds_command_debugger_breakpoint(cfrds_server *server, const char 
     wddx_put_number(wddx, "0,SEQ", 1.0);
 
     ret = cfrds_send_command(server, &response, "DBGREQUEST", (const char *[]){ "DBG_REQUEST", session_id, wddx_to_xml(wddx), NULL});
-
-    // TODO: Should return 1=sucess, 0=pending, -1=failed
-    printf("cfrds_command_debugger_breakpoint - response: [%s]\n", cfrds_buffer_data(response));
+    if (ret == CFRDS_STATUS_OK)
+    {
+        if (!cfrds_buffer_to_debugger_response_ok(response))
+        {
+            server->error_code = -1;
+            return CFRDS_STATUS_RESPONSE_ERROR;
+        }
+    }
 
     return ret;
 }
@@ -1924,9 +1972,14 @@ cfrds_status cfrds_command_debugger_clear_all_breakpoints(cfrds_server *server, 
     wddx_put_string(wddx, "0,COMMAND", "UNSET_ALL_BREAKPOINTS");
 
     ret = cfrds_send_command(server, &response, "DBGREQUEST", (const char *[]){ "DBG_REQUEST", session_id, wddx_to_xml(wddx), NULL});
-
-    // TODO: Should return null
-    printf("cfrds_command_debugger_clear_all_breakpoints - response: [%s]\n", cfrds_buffer_data(response));
+    if (ret == CFRDS_STATUS_OK)
+    {
+        if (!cfrds_buffer_to_debugger_response_ok(response))
+        {
+            server->error_code = -1;
+            return CFRDS_STATUS_RESPONSE_ERROR;
+        }
+    }
 
     return ret;
 }
@@ -2013,9 +2066,14 @@ cfrds_status cfrds_command_debugger_step_in(cfrds_server *server, const char *se
     wddx_put_string(wddx, "0,THREAD", thread_name);
 
     ret = cfrds_send_command(server, &response, "DBGREQUEST", (const char *[]){ "DBG_REQUEST", session_id, wddx_to_xml(wddx), NULL});
-
-    // TODO: Should return null
-    printf("cfrds_command_debugger_step_in - response: [%s]\n", cfrds_buffer_data(response));
+    if (ret == CFRDS_STATUS_OK)
+    {
+        if (!cfrds_buffer_to_debugger_response_ok(response))
+        {
+            server->error_code = -1;
+            return CFRDS_STATUS_RESPONSE_ERROR;
+        }
+    }
 
     return ret;
 }
@@ -2042,9 +2100,14 @@ cfrds_status cfrds_command_debugger_step_over(cfrds_server *server, const char *
     wddx_put_string(wddx, "0,THREAD", thread_name);
 
     ret = cfrds_send_command(server, &response, "DBGREQUEST", (const char *[]){ "DBG_REQUEST", session_id, wddx_to_xml(wddx), NULL});
-
-    // TODO: Should return null
-    printf("cfrds_command_debugger_step_over - response: [%s]\n", cfrds_buffer_data(response));
+    if (ret == CFRDS_STATUS_OK)
+    {
+        if (!cfrds_buffer_to_debugger_response_ok(response))
+        {
+            server->error_code = -1;
+            return CFRDS_STATUS_RESPONSE_ERROR;
+        }
+    }
 
     return ret;
 }
@@ -2071,9 +2134,14 @@ cfrds_status cfrds_command_debugger_step_out(cfrds_server *server, const char *s
     wddx_put_string(wddx, "0,THREAD", thread_name);
 
     ret = cfrds_send_command(server, &response, "DBGREQUEST", (const char *[]){ "DBG_REQUEST", session_id, wddx_to_xml(wddx), NULL});
-
-    // TODO: Should return null
-    printf("cfrds_command_debugger_step_out - response: [%s]\n", cfrds_buffer_data(response));
+    if (ret == CFRDS_STATUS_OK)
+    {
+        if (!cfrds_buffer_to_debugger_response_ok(response))
+        {
+            server->error_code = -1;
+            return CFRDS_STATUS_RESPONSE_ERROR;
+        }
+    }
 
     return ret;
 }
@@ -2100,9 +2168,14 @@ cfrds_status cfrds_command_debugger_continue(cfrds_server *server, const char *s
     wddx_put_string(wddx, "0,THREAD", thread_name);
 
     ret = cfrds_send_command(server, &response, "DBGREQUEST", (const char *[]){ "DBG_REQUEST", session_id, wddx_to_xml(wddx), NULL});
-
-    // TODO: Should return null
-    printf("cfrds_command_debugger_continue - response: [%s]\n", cfrds_buffer_data(response));
+    if (ret == CFRDS_STATUS_OK)
+    {
+        if (!cfrds_buffer_to_debugger_response_ok(response))
+        {
+            server->error_code = -1;
+            return CFRDS_STATUS_RESPONSE_ERROR;
+        }
+    }
 
     return ret;
 }
@@ -2176,12 +2249,16 @@ int cfrds_debugger_event_get_scopes_count(const cfrds_debugger_event *event)
 
 const char *cfrds_debugger_event_get_scopes_item(const cfrds_debugger_event *event, int ndx)
 {
-    // TODO: Implement cfrds_debugger_event_get_scopes_item()
+    if ((event == NULL) || (ndx < 0))
+        return NULL;
 
-    printf("Implement cfrds_debugger_event_get_scopes_item()\n");
+    const WDDX_NODE *array_node = wddx_get_var((const WDDX *)event, "0,SCOPES");
+    const WDDX_NODE *item = wddx_node_array_at(array_node, ndx);
 
-    return NULL;
-    //return wddx_get_array_item(event, "0,SCOPES", ndx);
+    if (wddx_node_type(item) != WDDX_STRING)
+        return NULL;
+
+    return wddx_node_string(item);
 }
 
 int cfrds_debugger_event_get_threads_count(const cfrds_debugger_event *event)
@@ -2191,11 +2268,16 @@ int cfrds_debugger_event_get_threads_count(const cfrds_debugger_event *event)
 
 const char *cfrds_debugger_event_get_threads_item(const cfrds_debugger_event *event, int ndx)
 {
-    // TODO: Implement cfrds_debugger_event_get_threads_item()
+    if ((event == NULL) || (ndx < 0))
+        return NULL;
 
-    printf("Implement cfrds_debugger_event_get_threads_item()\n");
+    const WDDX_NODE *array_node = wddx_get_var((const WDDX *)event, "0,THREADS");
+    const WDDX_NODE *item = wddx_node_array_at(array_node, ndx);
 
-    return NULL;
+    if (wddx_node_type(item) != WDDX_STRING)
+        return NULL;
+
+    return wddx_node_string(item);
 }
 
 int cfrds_debugger_event_get_watch_count(const cfrds_debugger_event *event)
@@ -2205,11 +2287,16 @@ int cfrds_debugger_event_get_watch_count(const cfrds_debugger_event *event)
 
 const char *cfrds_debugger_event_get_watch_item(const cfrds_debugger_event *event, int ndx)
 {
-    // TODO: Implement cfrds_debugger_event_get_watch_item()
+    if ((event == NULL) || (ndx < 0))
+        return NULL;
 
-    printf("Implement cfrds_debugger_event_get_watch_item()\n");
+    const WDDX_NODE *array_node = wddx_get_var((const WDDX *)event, "0,WATCH");
+    const WDDX_NODE *item = wddx_node_array_at(array_node, ndx);
 
-    return NULL;
+    if (wddx_node_type(item) != WDDX_STRING)
+        return NULL;
+
+    return wddx_node_string(item);
 }
 
 int cfrds_debugger_event_get_cf_trace_count(const cfrds_debugger_event *event)

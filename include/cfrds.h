@@ -128,6 +128,8 @@ extern "C"
 #endif
 
 EXPORT_CFRDS void cfrds_buffer_cleanup(cfrds_buffer **buf);
+EXPORT_CFRDS char *cfrds_buffer_data(cfrds_buffer *buf);
+EXPORT_CFRDS size_t cfrds_buffer_data_size(cfrds_buffer *buf);
 EXPORT_CFRDS void cfrds_file_content_cleanup(cfrds_file_content **buf);
 EXPORT_CFRDS void cfrds_str_cleanup(cfrds_str *str);
 
@@ -377,6 +379,8 @@ EXPORT_CFRDS void cfrds_adminapi_mappings_cleanup(cfrds_adminapi_mappings **buf)
 EXPORT_CFRDS int cfrds_adminapi_mappings_count(const cfrds_adminapi_mappings *buf);
 EXPORT_CFRDS const char *cfrds_adminapi_mappings_key(const cfrds_adminapi_mappings *buf, int ndx);
 EXPORT_CFRDS const char *cfrds_adminapi_mappings_value(const cfrds_adminapi_mappings *buf, int ndx);
+
+EXPORT_CFRDS cfrds_status cfrds_command_graphing(cfrds_server *server, cfrds_buffer **out_buffer, const char *chart_attributes, int num_series, const char **series_data);
 
 #ifdef __cplusplus
 }

@@ -1433,6 +1433,46 @@ int main(int argc, char *argv[])
             fprintf(stderr, "continue FAILED with error: %s\n", cfrds_server_get_error(server));
             return EXIT_FAILURE;
         }
+    } else if (strcmp(command, "graphing") == 0)
+    {
+        if (argc < 4)
+        {
+            fprintf(stderr, "Usage: %s graphing <rds_url> <chart_attributes> [out_file.png] [series1] ...\n", argv[0]);
+            return EXIT_FAILURE;
+        }
+
+        const char *chart_attr = argv[3];
+        const char *out_path = (argc >= 5) ? argv[4] : NULL;
+        int num_series = (argc >= 6) ? (argc - 5) : 0;
+        const char **series_data = (num_series > 0) ? (const char **)&argv[5] : NULL;
+
+        cfrds_buffer_defer(chart_buf);
+        res = cfrds_command_graphing(server, &chart_buf, chart_attr, num_series, series_data);
+        if (res != CFRDS_STATUS_OK)
+        {
+            fprintf(stderr, "graphing FAILED with error: %s\n", cfrds_server_get_error(server));
+            return EXIT_FAILURE;
+        }
+
+        if (out_path && chart_buf)
+        {
+            FILE *f = fopen(out_path, "wb");
+            if (f)
+            {
+                fwrite(cfrds_buffer_data(chart_buf), 1, cfrds_buffer_data_size(chart_buf), f);
+                fclose(f);
+                printf("Saved graph image to %s (%zu bytes)\n", out_path, cfrds_buffer_data_size(chart_buf));
+            }
+            else
+            {
+                fprintf(stderr, "Failed to open %s for writing\n", out_path);
+                return EXIT_FAILURE;
+            }
+        }
+        else if (chart_buf)
+        {
+            printf("Graph rendered successfully (%zu bytes)\n", cfrds_buffer_data_size(chart_buf));
+        }
     } else {
         fprintf(stderr, "Unknown command %s\n", command);
         return EXIT_FAILURE;

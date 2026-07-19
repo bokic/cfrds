@@ -4370,3 +4370,43 @@ const char *cfrds_adminapi_mappings_value(const cfrds_adminapi_mappings *buf, in
 
     return wddx_node_string(val);
 }
+
+cfrds_status cfrds_command_graphing(cfrds_server *server, cfrds_buffer **out_buffer, const char *chart_attributes, int num_series, const char **series_data)
+{
+    cfrds_status ret;
+
+    if (server == NULL)
+    {
+        return CFRDS_STATUS_SERVER_IS_NULL;
+    }
+
+    if ((chart_attributes == NULL) || (out_buffer == NULL) || (num_series < 0) || (num_series > 0 && series_data == NULL))
+    {
+        return CFRDS_STATUS_PARAM_IS_NULL;
+    }
+
+    char num_series_str[16];
+    snprintf(num_series_str, sizeof(num_series_str), "%d", num_series);
+
+    int total_params = 3 + num_series;
+    const char **list = malloc((total_params + 1) * sizeof(const char *));
+    if (list == NULL)
+    {
+        server->error_code = -1;
+        return CFRDS_STATUS_RESPONSE_ERROR;
+    }
+
+    list[0] = "GRAPH";
+    list[1] = chart_attributes;
+    list[2] = num_series_str;
+    for (int i = 0; i < num_series; i++)
+    {
+        list[3 + i] = series_data[i];
+    }
+    list[total_params] = NULL;
+
+    ret = cfrds_send_command(server, out_buffer, "GRAPHING", list);
+
+    free((void *)list);
+    return ret;
+}

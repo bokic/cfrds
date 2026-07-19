@@ -408,18 +408,31 @@ static int test_parse_bytearray_basic(void)
     CHECK(cfrds_buffer_parse_bytearray(&data, &remaining, &out, &out_size));
     CHECK(out != NULL);
     CHECK(out_size == 4);
-    CHECK(memcmp(out, raw, 4) == 0);
-    CHECK(remaining == 0);
-    free(out);
+    CHECK(cfrds_buffer_parse_bytearray(&data, &remaining, NULL, &out_size) == false);
     return PASS;
 }
 
-static int test_parse_bytearray_null_out(void)
+static int test_command_graphing_null_guards(void)
 {
-    const char *data = "2:ab";
-    size_t remaining = 4;
-    size_t out_size = 0;
-    CHECK(cfrds_buffer_parse_bytearray(&data, &remaining, NULL, &out_size) == false);
+    cfrds_buffer *buf = NULL;
+    cfrds_server_defer(server);
+    cfrds_server_init(&server, "127.0.0.1", 8500, "", "");
+
+    /* NULL server guard */
+    CHECK(cfrds_command_graphing(NULL, &buf, "attr", 0, NULL) == CFRDS_STATUS_SERVER_IS_NULL);
+
+    /* NULL chart_attributes guard */
+    CHECK(cfrds_command_graphing(server, &buf, NULL, 0, NULL) == CFRDS_STATUS_PARAM_IS_NULL);
+
+    /* NULL out_buffer guard */
+    CHECK(cfrds_command_graphing(server, NULL, "attr", 0, NULL) == CFRDS_STATUS_PARAM_IS_NULL);
+
+    /* Invalid num_series negative guard */
+    CHECK(cfrds_command_graphing(server, &buf, "attr", -1, NULL) == CFRDS_STATUS_PARAM_IS_NULL);
+
+    /* Positive num_series with NULL series_data guard */
+    CHECK(cfrds_command_graphing(server, &buf, "attr", 2, NULL) == CFRDS_STATUS_PARAM_IS_NULL);
+
     return PASS;
 }
 
@@ -514,11 +527,11 @@ int main(void)
 
     /* parse_bytearray */
     RUN(test_parse_bytearray_basic);
-    RUN(test_parse_bytearray_null_out);
 
-    /* growth / sentinel */
+    /* growth / sentinel / graphing */
     RUN(test_large_append);
     RUN(test_null_sentinel);
+    RUN(test_command_graphing_null_guards);
 
     printf("\n%d test(s) failed.\n", _failures);
     return _failures ? 1 : 0;

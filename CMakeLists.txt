@@ -75,6 +75,7 @@ set(PROJECT_LIB_NAME cfrds)
 include(GNUInstallDirs)
 
 if(WIN32)
+    add_compile_definitions(_CRT_SECURE_NO_WARNINGS)
     # Define the location of the template and the output file
     set(RC_DLL_IN_FILE "version.rc.in")
     set(RC_DLL_OUT_FILE "version_dll.rc")

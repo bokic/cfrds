@@ -4,6 +4,25 @@
 #include <stdint.h>
 #include <stddef.h>
 
+/**
+ * @defgroup version Version Macros
+ * @brief Compile-time version information, injected by CMake from the git tag (X.Y.Z).
+ *
+ * Usage example (require at least v1.2.0 at compile time):
+ * @code
+ * #if CFRDS_VERSION_INT < 10200
+ * #error "libcfrds 1.2.0 or newer is required"
+ * #endif
+ * @endcode
+ *
+ * @def CFRDS_VERSION         Full version string, e.g. "1.0.5" or "1.0.5-3-gabcdef-dirty"
+ * @def CFRDS_VERSION_MAJOR   Major version number (integer)
+ * @def CFRDS_VERSION_MINOR   Minor version number (integer)
+ * @def CFRDS_VERSION_PATCH   Patch version number (integer)
+ * @def CFRDS_VERSION_INT     Combined integer: MAJOR*10000 + MINOR*100 + PATCH
+ */
+
+
 
 #ifdef libcfrds_EXPORTS
  #if defined(_WIN32) || defined(__CYGWIN__)

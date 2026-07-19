@@ -159,6 +159,19 @@ cfrds_status cfrds_http_post(cfrds_server *server, const char *command, cfrds_bu
         }
 
         {
+#ifdef _WIN32
+            DWORD tv = 30000;
+            if (setsockopt(sockfd, SOL_SOCKET, SO_RCVTIMEO, (const char *)&tv, sizeof(tv)) < 0) {
+                server->_errno = GET_SOCKET_ERRNO();
+                cfrds_server_set_error(server, CFRDS_STATUS_CONNECTION_TO_SERVER_FAILED, "failed to set socket receive timeout");
+                return CFRDS_STATUS_CONNECTION_TO_SERVER_FAILED;
+            }
+            if (setsockopt(sockfd, SOL_SOCKET, SO_SNDTIMEO, (const char *)&tv, sizeof(tv)) < 0) {
+                server->_errno = GET_SOCKET_ERRNO();
+                cfrds_server_set_error(server, CFRDS_STATUS_CONNECTION_TO_SERVER_FAILED, "failed to set socket send timeout");
+                return CFRDS_STATUS_CONNECTION_TO_SERVER_FAILED;
+            }
+#else
             struct timeval tv;
             tv.tv_sec = 30;
             tv.tv_usec = 0;
@@ -172,6 +185,7 @@ cfrds_status cfrds_http_post(cfrds_server *server, const char *command, cfrds_bu
                 cfrds_server_set_error(server, CFRDS_STATUS_CONNECTION_TO_SERVER_FAILED, "failed to set socket send timeout");
                 return CFRDS_STATUS_CONNECTION_TO_SERVER_FAILED;
             }
+#endif
         }
     }
 

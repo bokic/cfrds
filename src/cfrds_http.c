@@ -28,9 +28,17 @@
 #ifdef _WIN32
 typedef SOCKET cfrds_socket;
 #define CFRDS_INVALID_SOCKET INVALID_SOCKET
+#define GET_SOCKET_ERRNO() WSAGetLastError()
+#define IS_SOCKET_EINTR(err) ((err) == WSAEINTR)
 #else
 typedef int cfrds_socket;
 #define CFRDS_INVALID_SOCKET (-1)
+#define GET_SOCKET_ERRNO() errno
+#ifdef EINTR
+#define IS_SOCKET_EINTR(err) ((err) == EINTR)
+#else
+#define IS_SOCKET_EINTR(err) false
+#endif
 #endif
 
 void cfrds_sock_cleanup(cfrds_socket* sock);
@@ -141,7 +149,7 @@ cfrds_status cfrds_http_post(cfrds_server *server, const char *command, cfrds_bu
             cfrds_sock_cleanup(&fd);
         }
 
-        int saved_errno = errno;
+        int saved_errno = GET_SOCKET_ERRNO();
         freeaddrinfo(result);
 
         if (sockfd == CFRDS_INVALID_SOCKET) {
@@ -155,12 +163,12 @@ cfrds_status cfrds_http_post(cfrds_server *server, const char *command, cfrds_bu
             tv.tv_sec = 30;
             tv.tv_usec = 0;
             if (setsockopt(sockfd, SOL_SOCKET, SO_RCVTIMEO, &tv, sizeof(tv)) < 0) {
-                server->_errno = errno;
+                server->_errno = GET_SOCKET_ERRNO();
                 cfrds_server_set_error(server, CFRDS_STATUS_CONNECTION_TO_SERVER_FAILED, "failed to set socket receive timeout");
                 return CFRDS_STATUS_CONNECTION_TO_SERVER_FAILED;
             }
             if (setsockopt(sockfd, SOL_SOCKET, SO_SNDTIMEO, &tv, sizeof(tv)) < 0) {
-                server->_errno = errno;
+                server->_errno = GET_SOCKET_ERRNO();
                 cfrds_server_set_error(server, CFRDS_STATUS_CONNECTION_TO_SERVER_FAILED, "failed to set socket send timeout");
                 return CFRDS_STATUS_CONNECTION_TO_SERVER_FAILED;
             }
@@ -178,11 +186,10 @@ cfrds_status cfrds_http_post(cfrds_server *server, const char *command, cfrds_bu
             trace_net_end();
             if (sock_written < 0)
             {
-#ifdef EINTR
-                if (errno == EINTR)
+                int err = GET_SOCKET_ERRNO();
+                if (IS_SOCKET_EINTR(err))
                     continue;
-#endif
-                server->_errno = errno;
+                server->_errno = err;
                 cfrds_server_set_error(server, CFRDS_STATUS_WRITING_TO_SOCKET_FAILED, "failed to write to socket...");
                 return CFRDS_STATUS_WRITING_TO_SOCKET_FAILED;
             }
@@ -205,7 +212,7 @@ cfrds_status cfrds_http_post(cfrds_server *server, const char *command, cfrds_bu
         trace_net_end();
         if (nread <= 0) {
             if (nread == -1) {
-                server->_errno = errno;
+                server->_errno = GET_SOCKET_ERRNO();
                 cfrds_server_set_error(server, CFRDS_STATUS_READING_FROM_SOCKET_FAILED, "failed to read from socket...");
                 return CFRDS_STATUS_READING_FROM_SOCKET_FAILED;
             }

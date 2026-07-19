@@ -75,7 +75,10 @@ set(PROJECT_LIB_NAME cfrds)
 include(GNUInstallDirs)
 
 if(WIN32)
-    add_compile_definitions(_CRT_SECURE_NO_WARNINGS)
+    add_compile_definitions(_CRT_SECURE_NO_WARNINGS _CRT_NONSTDC_NO_WARNINGS)
+    if(CMAKE_C_COMPILER_ID MATCHES "Clang|GNU")
+        add_compile_options(-Wno-deprecated-declarations)
+    endif()
     # Define the location of the template and the output file
     set(RC_DLL_IN_FILE "version.rc.in")
     set(RC_DLL_OUT_FILE "version_dll.rc")

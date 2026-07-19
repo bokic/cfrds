@@ -1,0 +1,34 @@
+[build-system]
+requires = ["setuptools>=61.0.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "cfrds"
+dynamic = ["version"]
+description = "Python interface for ColdFusion RDS service."
+readme = "README.md"
+authors = [
+    { name = "Boris Barbulovski", email = "bbarbulovski@gmail.com" }
+]
+license = "MIT"
+keywords = ["coldfusion", "rds", "cfds", "cf", "client", "library"]
+requires-python = ">=3.8"
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Intended Audience :: Developers",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Topic :: Internet :: WWW/HTTP",
+]
+dependencies = []
+
+[project.urls]
+Homepage = "https://github.com/bbarbulovski/cfrds"
+Repository = "https://github.com/bbarbulovski/cfrds.git"
+Issues = "https://github.com/bbarbulovski/cfrds/issues"

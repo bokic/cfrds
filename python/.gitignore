@@ -1,0 +1,25 @@
+# Build outputs
+dist/
+build/
+*.egg-info/
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# Distribution / packaging
+*.whl
+*.tar.gz
+MANIFEST
+
+# Editor / OS
+.DS_Store
+*.swp
+*.swo

@@ -1,51 +1,91 @@
-# cfrds Python binding
----
-cfrds python module for connecting to ColdFusion RDS service.
+# cfrds Python Package
 
-TODO:
-- [ ] ColdFusion error string passed to python exception.
+Pure Python interface for connecting to Adobe ColdFusion Remote Development Service (RDS).
 
-Examples:
-``` Python
-# Create ColdFusion RDS connection
+## Features
+
+- **Pure Python** implementation with zero external PyPI dependencies.
+- Full parity with `libcfrds` C library exported API (`cfrds.h`).
+- Convenient high-level Pythonic `server` API.
+- Support for directory browsing, file read/write/rename/delete, directory creation/deletion.
+- Database metadata queries (DSN info, tables, columns, primary keys, foreign keys, imported/exported keys, SQL execution, metadata, DB description).
+- ColdFusion remote debugger session management and breakpoint control.
+- Security analyzer and Admin API operations.
+- Cross-platform support (Linux, macOS, Windows).
+
+## Installation
+
+```bash
+pip install cfrds
+```
+
+> **Note:** `cfrds` requires the native `libcfrds` shared library (`libcfrds.so` on Linux, `libcfrds.dylib` on macOS, `cfrds.dll` on Windows).
+> If `libcfrds` is located in a custom directory, set the `CFRDS_LIBRARY_PATH` environment variable:
+> ```bash
+> export CFRDS_LIBRARY_PATH=/path/to/libcfrds.so
+> ```
+
+## Quick Start
+
+```python
+import cfrds
+
+# Create ColdFusion RDS server connection
 rds = cfrds.server(
     hostname="127.0.0.1",
     port=8500,
     username="admin",
-    password=""
+    password="secretpassword"
 )
 
 # Browse directory
-dir = rds.browse_dir("/var/log")
-print(dir)
+files = rds.browse_dir("/var/log")
+for item in files:
+    print(f"{item['kind']} {item['name']} ({item['size']} bytes)")
 
-# Read file
-filepath = "/var/log/dpkg.log"
-file_content = rds.file_read(filepath)
-print(file_content)
+# Read file content
+content = rds.file_read("/var/log/dpkg.log")
+print(content.decode("utf-8", errors="ignore"))
 
-# Write file
-filepath = "/opt/ColdFusion2021/cfusion/wwwroot/test.cfm"
-file_content = bytearray("Test cfm file...\n", 'utf-8')
-rds.file_write(filepath, file_content)
+# Write file content
+data = b"ColdFusion RDS test content\n"
+rds.file_write("/opt/ColdFusion2021/cfusion/wwwroot/test.cfm", data)
 
-# File rename
-from_filepath = "/opt/ColdFusion2021/cfusion/wwwroot/test.cfm"
-to_filepath =   "/opt/ColdFusion2021/cfusion/wwwroot/test_renamed.cfm"
-rds.file_rename(from_filepath, to_filepath)
+# File exists check
+if rds.file_exists("/opt/ColdFusion2021/cfusion/wwwroot/test.cfm"):
+    print("File exists!")
 
-# File remove
-rds.file_remove("/opt/ColdFusion2021/cfusion/wwwroot/test_renamed.cfm")
+# Remove file
+rds.file_remove("/opt/ColdFusion2021/cfusion/wwwroot/test.cfm")
 
-# Check if file exists
-file_exists = rds.file_exists("/opt/ColdFusion2021/cfusion/wwwroot/test_renamed.cfm")
-print(file_exists)
+# Database datasources
+datasources = rds.sql_dsninfo()
+print("Data Sources:", datasources)
 
-# Create directory
-new_dir = "/opt/ColdFusion2021/cfusion/wwwroot/some_dir"
-rds.dir_create(new_dir)
-
-# Return ColdFusion installation directory(ex. /opt/ColdFusion2021/cfusion)
-cf_dir = rds.cf_root_dir()
-print(cf_dir)
+# Close connection
+rds.close()
 ```
+
+## Context Manager Usage
+
+```python
+import cfrds
+
+with cfrds.server("127.0.0.1", 8500, "admin", "password") as rds:
+    print("ColdFusion Root Dir:", rds.cf_root_dir())
+```
+
+## Low-level C API Access
+
+All functions exported in `cfrds.h` are accessible directly at module level:
+
+```python
+import cfrds
+
+# Access status constants and low-level C functions
+print(cfrds.CFRDS_STATUS_OK)
+```
+
+## License
+
+MIT License.

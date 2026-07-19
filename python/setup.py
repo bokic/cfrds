@@ -1,29 +1,49 @@
-from setuptools import Extension, setup
+import os
+import subprocess
+from setuptools import setup
+
+here = os.path.abspath(os.path.dirname(__file__))
 
 
-def main():
-    setup(
-        name="cfrds",
-        version="1.0.0",
-        description="Python interface for ColdFusion RDS service.",
-        author="Boris Barbulovski",
-        author_email="bbarbulovski@gmail.com",
-        ext_modules=[
-            Extension(
-                "cfrds",
-                [
-                    "cfrds.py.c",
-                    "../src/cfrds.c",
-                    "../src/wddx.c",
-                    "../src/cfrds_buffer.c",
-                    "../src/cfrds_http.c",
-                ],
-                include_dirs=["../include", "/usr/include/libxml2", "/usr/include/json-c"],
-                libraries=["xml2", "json-c"],
-            )
-        ],
-    )
+def _get_version():
+    try:
+        # e.g. "v1.0.6-3-gabcdef" or "v1.0.6-0-gabcdef"
+        desc = subprocess.check_output(
+            ["git", "describe", "--tags", "--long"],
+            cwd=here,
+            stderr=subprocess.DEVNULL,
+        ).decode().strip()
+        parts = desc.rsplit("-", 2)          # [tag, commits_ahead, ghash]
+        tag = parts[0].lstrip("v")
+        commits_ahead = int(parts[1])
+        ghash = parts[2]                     # e.g. "gabcdef"
+        dirty = subprocess.check_output(
+            ["git", "status", "--porcelain"],
+            cwd=here,
+            stderr=subprocess.DEVNULL,
+        ).decode().strip()
+        version = tag
+        if commits_ahead:
+            version += f".post{commits_ahead}+{ghash}"
+        if dirty:
+            version += "+dirty" if not commits_ahead else ".dirty"
+        return version
+    except Exception:
+        return "0.0.0"
 
 
-if __name__ == "__main__":
-    main()
+with open(os.path.join(here, "README.md"), encoding="utf-8") as f:
+    long_description = f.read()
+
+setup(
+    name="cfrds",
+    version=_get_version(),
+    description="Python interface for ColdFusion RDS service.",
+    long_description=long_description,
+    long_description_content_type="text/markdown",
+    author="Boris Barbulovski",
+    author_email="bbarbulovski@gmail.com",
+    url="https://github.com/bbarbulovski/cfrds",
+    py_modules=["cfrds"],
+    python_requires=">=3.8",
+)

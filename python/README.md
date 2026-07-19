@@ -35,7 +35,7 @@ to_filepath =   "/opt/ColdFusion2021/cfusion/wwwroot/test_renamed.cfm"
 rds.file_rename(from_filepath, to_filepath)
 
 # File remove
-rds.dir_remove("/opt/ColdFusion2021/cfusion/wwwroot/test_renamed.cfm")
+rds.file_remove("/opt/ColdFusion2021/cfusion/wwwroot/test_renamed.cfm")
 
 # Check if file exists
 file_exists = rds.file_exists("/opt/ColdFusion2021/cfusion/wwwroot/test_renamed.cfm")

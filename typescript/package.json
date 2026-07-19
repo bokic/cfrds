@@ -1,0 +1,28 @@
+{
+  "name": "cfrds",
+  "version": "0.0.0",
+  "description": "Pure TypeScript implementation of the ColdFusion RDS (Remote Development Service) protocol",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "version": "node scripts/version.js",
+    "prebuild": "npm run version",
+    "build": "tsc",
+    "prebuild:test": "npm run version",
+    "build:test": "tsc --project tsconfig.test.json",
+    "test": "npm run build:test && node dist/test.js",
+    "clean": "rm -rf dist",
+    "publish:npm": "node scripts/publish.js"
+  },
+  "keywords": [
+    "coldfusion",
+    "rds",
+    "cfml",
+    "cfrds"
+  ],
+  "license": "MIT",
+  "devDependencies": {
+    "typescript": "^5.4.0",
+    "@types/node": "^20.0.0"
+  }
+}

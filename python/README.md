@@ -19,12 +19,6 @@ Pure Python interface for connecting to Adobe ColdFusion Remote Development Serv
 pip install cfrds
 ```
 
-> **Note:** `cfrds` requires the native `libcfrds` shared library (`libcfrds.so` on Linux, `libcfrds.dylib` on macOS, `cfrds.dll` on Windows).
-> If `libcfrds` is located in a custom directory, set the `CFRDS_LIBRARY_PATH` environment variable:
-> ```bash
-> export CFRDS_LIBRARY_PATH=/path/to/libcfrds.so
-> ```
-
 ## Quick Start
 
 ```python
@@ -75,16 +69,9 @@ with cfrds.server("127.0.0.1", 8500, "admin", "password") as rds:
     print("ColdFusion Root Dir:", rds.cf_root_dir())
 ```
 
-## Low-level C API Access
+## API Compatibility
 
-All functions exported in `cfrds.h` are accessible directly at module level:
-
-```python
-import cfrds
-
-# Access status constants and low-level C functions
-print(cfrds.CFRDS_STATUS_OK)
-```
+The Python package provides the same API surface as the `libcfrds` C library (`cfrds.h`), but is implemented entirely in pure Python with no native dependencies.
 
 ## License
 

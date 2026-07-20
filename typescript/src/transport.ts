@@ -85,7 +85,7 @@ export function sendRdsCommand(
               return;
             }
 
-            resolve(body.subarray(offset));
+            resolve(body);
           } catch (e) {
             if (e instanceof CFRDSError) {
               ctx.errorCode = e.status;

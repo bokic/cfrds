@@ -93,8 +93,11 @@ process.on("exit", revert);
 process.on("SIGINT", () => process.exit(1));
 process.on("SIGTERM", () => process.exit(1));
 
+const extraFlags = process.argv.slice(2).filter((arg) => arg.startsWith("-")).join(" ");
+const publishCmd = `npm publish --access public --registry https://registry.npmjs.org/ ${extraFlags}`.trim();
+
 try {
-  execSync("npm publish --registry https://registry.npmjs.org/", { stdio: "inherit" });
+  execSync(publishCmd, { stdio: "inherit" });
 } catch {
   process.exit(1);
 }

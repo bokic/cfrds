@@ -6,6 +6,7 @@ This package is completely standalone and does NOT require libcfrds.so or any na
 from enum import IntEnum
 import http.client
 import os
+import re
 import sys
 from typing import Optional, List, Dict, Any, Union, Tuple
 
@@ -231,7 +232,7 @@ def _send_rds_command(server_ctx: cfrds_server, command: str, args: List[Union[s
         server_ctx.set_error(CFRDS_STATUS_COMMAND_FAILED, err_msg)
         raise CFRDSError(CFRDS_STATUS_COMMAND_FAILED, err_msg)
 
-    return body[offset:]
+    return body
 
 
 # Struct Result Container Objects for C-API Compatibility
@@ -477,7 +478,8 @@ class server:
 
     def cf_root_dir(self) -> Optional[str]:
         raw = _send_rds_command(self._ctx, "FILEIO", ["", "CF_DIRECTORY"])
-        path_str, _ = _parse_string(raw, 0)
+        _, offset = _parse_number(raw, 0)
+        path_str, _ = _parse_string(raw, offset)
         return path_str
 
     # SQL Operations
@@ -648,19 +650,22 @@ class server:
         cnt, offset = _parse_number(raw, 0)
         cmds: List[str] = []
         for _ in range(cnt):
-            cmd, offset = _parse_string(raw, offset)
-            cmds.append(cmd)
+            cmd_str, offset = _parse_string(raw, offset)
+            cmds.extend(_parse_string_list_item(cmd_str))
         return cmds
 
     def sql_dbdescription(self, connection_name: str) -> Optional[str]:
         raw = _send_rds_command(self._ctx, "DBFUNCS", [connection_name, "DBDESCRIPTION"])
-        desc, _ = _parse_string(raw, 0)
-        return desc
+        _, offset = _parse_number(raw, 0)
+        item, _ = _parse_string(raw, offset)
+        fields = _parse_string_list_item(item)
+        return fields[0] if fields else item
 
     # Debugger Operations
     def debugger_start(self) -> str:
         raw = _send_rds_command(self._ctx, "DBGREQUEST", ["DBG_START", ""])
-        session_id, _ = _parse_string(raw, 0)
+        _, offset = _parse_number(raw, 0)
+        session_id, _ = _parse_string(raw, offset)
         return session_id
 
     def debugger_stop(self, session_name: str) -> None:
@@ -673,22 +678,26 @@ class server:
             auto_session = True
         try:
             raw = _send_rds_command(self._ctx, "DBGREQUEST", ["DBG_GET_DEBUG_SERVER_INFO", session_name])
-            port_str, _ = _parse_string(raw, 0)
-            return int(port_str) if port_str.isdigit() else 0
+            _, offset = _parse_number(raw, 0)
+            wddx_xml, _ = _parse_string(raw, offset)
+            m = re.search(r"<var name=['\"]DEBUG_SERVER_PORT['\"]>\s*<number>(\d+(?:\.\d+)?)</number>", wddx_xml, re.IGNORECASE)
+            return int(float(m.group(1))) if m else 0
         finally:
             if auto_session:
                 self.debugger_stop(session_name)
 
     def debugger_breakpoint_on_exception(self, session_name: str, enable: bool) -> None:
-        _send_rds_command(self._ctx, "DBGREQUEST", ["DBG_REQUEST", session_name, "<wddxPacket version='1.0'><header/><data><struct><var name='breakpointonexception'><string>" + ("yes" if enable else "no") + "</string></var></struct></data></wddxPacket>"])
+        val = "true" if enable else "false"
+        wddx = f"<wddxPacket version='1.0'><header/><data><array length='1'><struct type='java.util.HashMap'><var name='COMMAND'><string>SESSION_BREAK_ON_EXCEPTION</string></var><var name='BREAK_ON_EXCEPTION'><boolean value='{val}'/></var></struct></array></data></wddxPacket>"
+        _send_rds_command(self._ctx, "DBGREQUEST", ["DBG_REQUEST", session_name, wddx])
 
     def debugger_breakpoint(self, session_name: str, filepath: str, line: int, enable: bool) -> None:
-        action = "addbreakpoint" if enable else "removebreakpoint"
-        wddx = f"<wddxPacket version='1.0'><header/><data><struct><var name='{action}'><struct><var name='file'><string>{filepath}</string></var><var name='line'><number>{line}</number></var></struct></var></struct></data></wddxPacket>"
+        cmd = "SET_BREAKPOINT" if enable else "UNSET_BREAKPOINT"
+        wddx = f"<wddxPacket version='1.0'><header/><data><array length='1'><struct type='java.util.HashMap'><var name='COMMAND'><string>{cmd}</string></var><var name='FILE'><string>{filepath}</string></var><var name='Y'><number>{line}</number></var><var name='SEQ'><number>1.0</number></var></struct></array></data></wddxPacket>"
         _send_rds_command(self._ctx, "DBGREQUEST", ["DBG_REQUEST", session_name, wddx])
 
     def debugger_clear_all_breakpoints(self, session_name: str) -> None:
-        wddx = "<wddxPacket version='1.0'><header/><data><struct><var name='clearallbreakpoints'><boolean value='true'/></var></struct></data></wddxPacket>"
+        wddx = "<wddxPacket version='1.0'><header/><data><array length='1'><struct type='java.util.HashMap'><var name='COMMAND'><string>UNSET_ALL_BREAKPOINTS</string></var></struct></array></data></wddxPacket>"
         _send_rds_command(self._ctx, "DBGREQUEST", ["DBG_REQUEST", session_name, wddx])
 
     def debugger_get_debug_events(self, session_name: str) -> Optional[Dict[str, Any]]:
@@ -719,48 +728,51 @@ class server:
     ) -> None:
         def b(v: bool) -> str:
             return "true" if v else "false"
-        wddx = (f"<wddxPacket version='1.0'><header/><data><struct>"
-                f"<var name='threads'><boolean value='{b(threads)}'/></var>"
-                f"<var name='watch'><boolean value='{b(watch)}'/></var>"
-                f"<var name='scopes'><boolean value='{b(scopes)}'/></var>"
-                f"<var name='cftrace'><boolean value='{b(cf_trace)}'/></var>"
-                f"<var name='javatrace'><boolean value='{b(java_trace)}'/></var>"
+        wddx = (f"<wddxPacket version='1.0'><header/><data><struct type='java.util.HashMap'>"
+                f"<var name='THREADS'><boolean value='{b(threads)}'/></var>"
+                f"<var name='WATCH'><boolean value='{b(watch)}'/></var>"
+                f"<var name='SCOPES'><boolean value='{b(scopes)}'/></var>"
+                f"<var name='CF_TRACE'><boolean value='{b(cf_trace)}'/></var>"
+                f"<var name='JAVA_TRACE'><boolean value='{b(java_trace)}'/></var>"
                 f"</struct></data></wddxPacket>")
         _send_rds_command(self._ctx, "DBGREQUEST", ["DBG_EVENTS", session_name, wddx])
 
     def debugger_step_in(self, session_name: str, thread_name: str) -> None:
-        wddx = f"<wddxPacket version='1.0'><header/><data><struct><var name='stepin'><string>{thread_name}</string></var></struct></data></wddxPacket>"
+        wddx = f"<wddxPacket version='1.0'><header/><data><array length='1'><struct type='java.util.HashMap'><var name='COMMAND'><string>STEP_IN</string></var><var name='THREAD'><string>{thread_name}</string></var></struct></array></data></wddxPacket>"
         _send_rds_command(self._ctx, "DBGREQUEST", ["DBG_REQUEST", session_name, wddx])
 
     def debugger_step_over(self, session_name: str, thread_name: str) -> None:
-        wddx = f"<wddxPacket version='1.0'><header/><data><struct><var name='stepover'><string>{thread_name}</string></var></struct></data></wddxPacket>"
+        wddx = f"<wddxPacket version='1.0'><header/><data><array length='1'><struct type='java.util.HashMap'><var name='COMMAND'><string>STEP_OVER</string></var><var name='THREAD'><string>{thread_name}</string></var></struct></array></data></wddxPacket>"
         _send_rds_command(self._ctx, "DBGREQUEST", ["DBG_REQUEST", session_name, wddx])
 
     def debugger_step_out(self, session_name: str, thread_name: str) -> None:
-        wddx = f"<wddxPacket version='1.0'><header/><data><struct><var name='stepout'><string>{thread_name}</string></var></struct></data></wddxPacket>"
+        wddx = f"<wddxPacket version='1.0'><header/><data><array length='1'><struct type='java.util.HashMap'><var name='COMMAND'><string>STEP_OUT</string></var><var name='THREAD'><string>{thread_name}</string></var></struct></array></data></wddxPacket>"
         _send_rds_command(self._ctx, "DBGREQUEST", ["DBG_REQUEST", session_name, wddx])
 
     def debugger_continue(self, session_name: str, thread_name: str) -> None:
-        wddx = f"<wddxPacket version='1.0'><header/><data><struct><var name='continue'><string>{thread_name}</string></var></struct></data></wddxPacket>"
+        wddx = f"<wddxPacket version='1.0'><header/><data><array length='1'><struct type='java.util.HashMap'><var name='COMMAND'><string>CONTINUE</string></var><var name='THREAD'><string>{thread_name}</string></var></struct></array></data></wddxPacket>"
         _send_rds_command(self._ctx, "DBGREQUEST", ["DBG_REQUEST", session_name, wddx])
 
     def debugger_watch_expression(self, session_name: str, thread_name: str, expression: str) -> None:
-        wddx = f"<wddxPacket version='1.0'><header/><data><struct><var name='watchexpression'><struct><var name='thread'><string>{thread_name}</string></var><var name='expression'><string>{expression}</string></var></struct></var></struct></data></wddxPacket>"
+        wddx = f"<wddxPacket version='1.0'><header/><data><array length='1'><struct type='java.util.HashMap'><var name='COMMAND'><string>GET_SINGLE_CF_VARIABLE</string></var><var name='VARIABLE_NAME'><string>{expression}</string></var><var name='THREAD'><string>{thread_name}</string></var></struct></array></data></wddxPacket>"
         _send_rds_command(self._ctx, "DBGREQUEST", ["DBG_REQUEST", session_name, wddx])
 
     def debugger_set_variable(self, session_name: str, thread_name: str, variable: str, value: str) -> None:
-        wddx = f"<wddxPacket version='1.0'><header/><data><struct><var name='setvariable'><struct><var name='thread'><string>{thread_name}</string></var><var name='variable'><string>{variable}</string></var><var name='value'><string>{value}</string></var></struct></var></struct></data></wddxPacket>"
+        wddx = f"<wddxPacket version='1.0'><header/><data><array length='1'><struct type='java.util.HashMap'><var name='COMMAND'><string>SET_VARIABLE_VALUE</string></var><var name='VARIABLE_NAME'><string>{variable}</string></var><var name='VARIABLE_VALUE'><string>{value}</string></var><var name='THREAD'><string>{thread_name}</string></var></struct></array></data></wddxPacket>"
         _send_rds_command(self._ctx, "DBGREQUEST", ["DBG_REQUEST", session_name, wddx])
 
     def debugger_watch_variables(self, session_name: str, variables: str) -> None:
-        _send_rds_command(self._ctx, "DBGREQUEST", ["DBG_REQUEST", session_name, variables])
+        vars_list = [v.strip() for v in variables.split(",") if v.strip()]
+        var_tags = "".join([f"<var name='WATCH_{i}'><string>{v}</string></var>" for i, v in enumerate(vars_list)])
+        wddx = f"<wddxPacket version='1.0'><header/><data><array length='1'><struct type='java.util.HashMap'><var name='COMMAND'><string>SET_WATCH_VARIABLES</string></var>{var_tags}</struct></array></data></wddxPacket>"
+        _send_rds_command(self._ctx, "DBGREQUEST", ["DBG_REQUEST", session_name, wddx])
 
     def debugger_get_output(self, session_name: str, thread_name: str) -> None:
-        wddx = f"<wddxPacket version='1.0'><header/><data><struct><var name='getoutput'><string>{thread_name}</string></var></struct></data></wddxPacket>"
+        wddx = f"<wddxPacket version='1.0'><header/><data><array length='1'><struct type='java.util.HashMap'><var name='BODY_ONLY'><boolean value='true'/></var><var name='THREAD'><string>{thread_name}</string></var></struct></array></data></wddxPacket>"
         _send_rds_command(self._ctx, "DBGREQUEST", ["DBG_REQUEST", session_name, wddx])
 
     def debugger_set_scope_filter(self, session_name: str, filter_str: str) -> None:
-        wddx = f"<wddxPacket version='1.0'><header/><data><struct><var name='setscopefilter'><string>{filter_str}</string></var></struct></data></wddxPacket>"
+        wddx = f"<wddxPacket version='1.0'><header/><data><array length='1'><struct type='java.util.HashMap'><var name='COMMAND'><string>SET_SCOPE_FILTER</string></var><var name='FILTER'><string>{filter_str}</string></var></struct></array></data></wddxPacket>"
         _send_rds_command(self._ctx, "DBGREQUEST", ["DBG_REQUEST", session_name, wddx])
 
     # Security Analyzer Operations

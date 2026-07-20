@@ -1,5 +1,5 @@
 {
-  "name": "cfrds",
+  "name": "@bokic/cfrds",
   "version": "0.0.0",
   "description": "Pure TypeScript implementation of the ColdFusion RDS (Remote Development Service) protocol",
   "main": "dist/index.js",

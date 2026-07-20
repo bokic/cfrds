@@ -1,5 +1,6 @@
 #ifdef __linux__
 #define _GNU_SOURCE
+#include <errno.h>
 #endif
 #include "tracing.h"
 

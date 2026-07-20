@@ -489,9 +489,9 @@ class server:
         dsns: List[str] = []
         for _ in range(cnt):
             item, offset = _parse_string(raw, offset)
-            if item.startswith('"') and item.endswith('"'):
-                item = item[1:-1]
-            dsns.append(item)
+            fields = _parse_string_list_item(item)
+            name = fields[0] if fields else item
+            dsns.append(name)
         return dsns
 
     def sql_tableinfo(self, connection_name: str) -> List[Dict[str, Optional[str]]]:
@@ -813,18 +813,22 @@ class server:
 
     # IDE Default
     def ide_default(self, version: int = 1) -> Dict[str, Any]:
-        raw = _send_rds_command(self._ctx, "IDE_DEFAULT", ["", str(version)])
-        n1, offset = _parse_string(raw, 0)
+        raw = _send_rds_command(self._ctx, "IDE_DEFAULT", ["", f"{version},"])
+        _, offset = _parse_number(raw, 0)
+        n1, offset = _parse_string(raw, offset)
         s_ver, offset = _parse_string(raw, offset)
         c_ver, offset = _parse_string(raw, offset)
         n2, offset = _parse_string(raw, offset)
         n3, offset = _parse_string(raw, offset)
+        def safe_int(s: str) -> int:
+            try: return int(s)
+            except ValueError: return 0
         return {
-            "num1": int(n1) if n1.isdigit() else 0,
+            "num1": safe_int(n1),
             "server_version": s_ver,
             "client_version": c_ver,
-            "num2": int(n2) if n2.isdigit() else 0,
-            "num3": int(n3) if n3.isdigit() else 0,
+            "num2": safe_int(n2),
+            "num3": safe_int(n3),
         }
 
     # Admin API Operations

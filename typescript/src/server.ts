@@ -152,10 +152,8 @@ export class Server {
     for (let i = 0; i < cnt; i++) {
       const [item, o] = parseString(raw, off);
       off = o;
-      let name = item;
-      if (name.startsWith('"') && name.endsWith('"')) {
-        name = name.slice(1, -1);
-      }
+      const fields = parseStringListItem(item);
+      const name = fields[0] || item;
       dsns.push(name);
     }
     return dsns;
@@ -527,11 +525,17 @@ export class Server {
 
   // Security Analyzer Operations
   async securityAnalyzerScan(pathnames: string, recursively: boolean = true, cores: number = 1): Promise<number> {
-    const raw = await sendRdsCommand(this.ctx, "SECURITYANALYZER", [
-      "scan", pathnames, recursively ? "1" : "0", String(cores),
-    ]);
-    const [cmdStr] = parseString(raw, 0);
-    return /^\d+$/.test(cmdStr) ? parseInt(cmdStr, 10) : 0;
+    try {
+      const raw = await sendRdsCommand(this.ctx, "SECURITYANALYZER", [
+        "scan", pathnames, recursively ? "true" : "false", String(cores),
+      ]);
+      const [, offset] = parseNumber(raw, 0);
+      const [resStr] = parseString(raw, offset);
+      const parsed = JSON.parse(resStr);
+      return typeof parsed.id === "number" ? parsed.id : (parseInt(resStr, 10) || 0);
+    } catch {
+      return 0;
+    }
   }
 
   async securityAnalyzerCancel(commandId: number): Promise<void> {
@@ -540,11 +544,12 @@ export class Server {
 
   async securityAnalyzerStatus(commandId: number): Promise<SecurityAnalyzerStatus> {
     const raw = await sendRdsCommand(this.ctx, "SECURITYANALYZER", ["status", String(commandId)]);
-    const [totStr, o1] = parseString(raw, 0);
+    const [, offset] = parseNumber(raw, 0);
+    const [totStr, o1] = parseString(raw, offset);
     const [visStr, o2] = parseString(raw, o1);
     const [pctStr, o3] = parseString(raw, o2);
     const [updStr] = parseString(raw, o3);
-    const safeInt = (s: string): number => (/^\d+$/.test(s)) ? parseInt(s, 10) : 0;
+    const safeInt = (s: string): number => (/^-?\d+$/.test(s)) ? parseInt(s, 10) : 0;
     return {
       totalfiles: safeInt(totStr),
       filesvisitedcount: safeInt(visStr),
@@ -555,7 +560,8 @@ export class Server {
 
   async securityAnalyzerResult(commandId: number): Promise<Record<string, unknown> | null> {
     const raw = await sendRdsCommand(this.ctx, "SECURITYANALYZER", ["result", String(commandId)]);
-    const [resStr] = parseString(raw, 0);
+    const [, offset] = parseNumber(raw, 0);
+    const [resStr] = parseString(raw, offset);
     try {
       return JSON.parse(resStr);
     } catch {
@@ -569,13 +575,14 @@ export class Server {
 
   // IDE Default
   async ideDefault(version: number = 1): Promise<IdeDefaultResult> {
-    const raw = await sendRdsCommand(this.ctx, "IDE_DEFAULT", ["", String(version)]);
-    const [n1, o1] = parseString(raw, 0);
+    const raw = await sendRdsCommand(this.ctx, "IDE_DEFAULT", ["", `${version},`]);
+    const [, offset] = parseNumber(raw, 0);
+    const [n1, o1] = parseString(raw, offset);
     const [sVer, o2] = parseString(raw, o1);
     const [cVer, o3] = parseString(raw, o2);
     const [n2, o4] = parseString(raw, o3);
     const [n3] = parseString(raw, o4);
-    const safeInt = (s: string): number => (/^\d+$/.test(s)) ? parseInt(s, 10) : 0;
+    const safeInt = (s: string): number => (/^-?\d+$/.test(s)) ? parseInt(s, 10) : 0;
     return {
       num1: safeInt(n1),
       server_version: sVer,

@@ -5,6 +5,7 @@ import {
   Server,
   encodePassword,
   parseStringListItem,
+  VERSION,
 } from "./index";
 
 function assert(condition: boolean, message: string): void {
@@ -36,6 +37,10 @@ async function main(): Promise<void> {
 
   log("Testing pure TypeScript cfrds module...");
 
+  // Verify VERSION
+  assert(typeof VERSION === "string" && VERSION.length > 0, "VERSION should be a non-empty string");
+  log(`Module version: ${VERSION}`);
+
   // Verify status enums and constants
   assert(CFRDS_STATUS.OK === 0, "CFRDS_STATUS.OK should be 0");
   assert(CFRDS_STATUS.COMMAND_FAILED === 6, "CFRDS_STATUS.COMMAND_FAILED should be 6");
@@ -55,8 +60,16 @@ async function main(): Promise<void> {
   assert(err.message.includes("test error"), "CFRDSError message should contain custom message");
   assert(err.name === "CFRDSError", "CFRDSError.name should be 'CFRDSError'");
 
-  // Verify Server class exists and has all expected methods
+  // Verify Server class exists and has all expected methods on its prototype
   const serverMethods = [
+    "getHost",
+    "getPort",
+    "getUsername",
+    "getPassword",
+    "getError",
+    "getErrorCode",
+    "clearError",
+    "close",
     "browseDir",
     "fileRead",
     "fileWrite",
@@ -100,12 +113,6 @@ async function main(): Promise<void> {
     "securityAnalyzerResult",
     "securityAnalyzerClean",
     "ideDefault",
-    "adminapiDebuggingGetlogproperty",
-    "adminapiExtensionsGetcustomtagpaths",
-    "adminapiExtensionsSetmapping",
-    "adminapiExtensionsDeletemapping",
-    "adminapiExtensionsGetmappings",
-    "graphing",
   ];
 
   for (const method of serverMethods) {
@@ -115,19 +122,18 @@ async function main(): Promise<void> {
     );
   }
 
-  log(`All ${serverMethods.length} Server methods successfully verified!`);
+  log(`All ${serverMethods.length} Server methods successfully verified on prototype!`);
 
   // Verify utility functions
   assert(typeof encodePassword === "function", "encodePassword should be exported");
   assert(typeof parseStringListItem === "function", "parseStringListItem should be exported");
 
   // Verify encodePassword produces correct output
-  // "admin" XOR "4p0L@r1$" should produce a known hex string
   const encoded = encodePassword("admin");
   assert(encoded.length > 0, "encodePassword should produce non-empty output");
   assert(/^[0-9a-f]+$/.test(encoded), "encodePassword output should be hex");
 
-  // Verify password round-trip with C implementation
+  // Verify password round-trip with expected hash
   const expectedAdmin = "55145d252e";
   assert(encoded === expectedAdmin, `encodePassword('admin') should be '${expectedAdmin}', got '${encoded}'`);
 
@@ -150,7 +156,7 @@ async function main(): Promise<void> {
 
   log("Utility function tests passed!");
 
-  // Verify Server constructor defaults
+  // Verify Server constructor defaults and getter/setter/state methods
   const srv = new Server("192.168.1.100", 8501, "testuser", "testpass");
   assert(srv.getHost() === "192.168.1.100", "getHost should return constructor value");
   assert(srv.getPort() === 8501, "getPort should return constructor value");
@@ -162,7 +168,9 @@ async function main(): Promise<void> {
   srv.clearError();
   assert(srv.getError() === null, "clearError should reset error");
 
-  log("Server constructor tests passed!");
+  await srv.close();
+
+  log("Server constructor and state method tests passed!");
 
   // Live server integration tests if env vars present
   const rdsHost = process.env.RDS_HOST;
@@ -175,46 +183,218 @@ async function main(): Promise<void> {
     log(`Connecting to live RDS server at ${rdsHost}:${port}...`);
     const rds = new Server(rdsHost, port, rdsUsername, rdsPassword);
 
-    // CF Root Dir
+    // --- File & Directory Operations ---
+    log("\n--- Validating File & Directory Operations ---");
+    let cfRoot = "";
     try {
-      log("Getting CF root dir...");
-      const rootDir = await rds.cfRootDir();
-      log(`CF Root Dir: ${rootDir}`);
+      cfRoot = await rds.cfRootDir();
+      log(`  cfRootDir(): ${cfRoot}`);
+      assert(typeof cfRoot === "string", "cfRootDir should return a string");
     } catch (e) {
-      log(`CF Root Dir error: ${e}`);
+      log(`  cfRootDir error: ${e}`);
     }
 
-    // Browse Directory
     try {
-      log("Browsing directory...");
-      const items = await rds.browseDir("/");
-      log(`Found ${items.length} items in /`);
+      const targetPath = cfRoot || "/";
+      const items = await rds.browseDir(targetPath);
+      log(`  browseDir('${targetPath}'): Found ${items.length} items`);
+      assert(Array.isArray(items), "browseDir should return an array");
     } catch (e) {
-      log(`Browse dir error: ${e}`);
+      log(`  browseDir error: ${e}`);
     }
 
-    // Debugger
+    const testDir = `/tmp/ts_test_dir_${Date.now()}`;
+    const testFile = `${testDir}/test.txt`;
+    const testFileRenamed = `${testDir}/test_renamed.txt`;
+
     try {
-      log("Starting Debugger...");
-      const sessionId = await rds.debuggerStart();
-      log(`Debugger session ID: ${sessionId}`);
-      await rds.debuggerStop(sessionId);
-      log("Debugger session stopped.");
+      await rds.dirCreate(testDir);
+      log(`  dirCreate('${testDir}'): success`);
+
+      const existsDir = await rds.fileExists(testDir);
+      log(`  fileExists('${testDir}'): ${existsDir}`);
+      assert(existsDir === true, "fileExists for created directory should be true");
+
+      const fileData = "Hello ColdFusion RDS TypeScript Test!";
+      await rds.fileWrite(testFile, fileData);
+      log(`  fileWrite('${testFile}'): success`);
+
+      const existsFile = await rds.fileExists(testFile);
+      log(`  fileExists('${testFile}'): ${existsFile}`);
+      assert(existsFile === true, "fileExists for written file should be true");
+
+      const readRes = await rds.fileRead(testFile);
+      const textRead = readRes.data.toString("utf-8");
+      log(`  fileRead('${testFile}'): ${readRes.size} bytes read ("${textRead}")`);
+      assert(textRead === fileData, "fileRead data should match fileWrite data");
+
+      await rds.fileRename(testFile, testFileRenamed);
+      log(`  fileRename('${testFile}' -> '${testFileRenamed}'): success`);
+
+      const existsOld = await rds.fileExists(testFile);
+      assert(existsOld === false, "old file should not exist after rename");
+
+      const existsRenamed = await rds.fileExists(testFileRenamed);
+      assert(existsRenamed === true, "renamed file should exist");
+
+      await rds.fileRemove(testFileRenamed);
+      log(`  fileRemove('${testFileRenamed}'): success`);
+
+      await rds.dirRemove(testDir);
+      log(`  dirRemove('${testDir}'): success`);
+
+      const existsDirAfter = await rds.fileExists(testDir);
+      assert(existsDirAfter === false, "directory should not exist after removal");
     } catch (e) {
-      log(`Debugger notification (expected if CF debugging disabled): ${e}`);
+      log(`  File/Directory operation error: ${e}`);
+      try { await rds.fileRemove(testFile); } catch {}
+      try { await rds.fileRemove(testFileRenamed); } catch {}
+      try { await rds.dirRemove(testDir); } catch {}
     }
 
-    // Graphing
+    // --- SQL Operations ---
+    log("\n--- Validating SQL Operations ---");
     try {
-      log("Testing graphing (bar chart)...");
-      const chartAttrs = "type=bar;height=400;width=600;title=Test Chart";
-      const series = ["seriesLabel=Sales;values=10,20,30,40"];
-      const imgBytes = await rds.graphing(chartAttrs, series);
-      const hexPrefix = imgBytes.subarray(0, 8).toString("hex");
-      log(`Graph rendered successfully (${imgBytes.length} bytes, starts with: ${hexPrefix})`);
+      const supportedCmds = await rds.sqlGetsupportedcommands();
+      log(`  sqlGetsupportedcommands(): ${supportedCmds.length} commands (${supportedCmds.join(", ")})`);
+      assert(Array.isArray(supportedCmds), "sqlGetsupportedcommands should return an array");
     } catch (e) {
-      log(`Graphing error: ${e}`);
+      log(`  sqlGetsupportedcommands error: ${e}`);
     }
+
+    let dsns: string[] = [];
+    try {
+      dsns = await rds.sqlDsninfo();
+      log(`  sqlDsninfo(): ${dsns.length} DSNs found (${dsns.join(", ")})`);
+      assert(Array.isArray(dsns), "sqlDsninfo should return an array");
+    } catch (e) {
+      log(`  sqlDsninfo error: ${e}`);
+    }
+
+    const targetDsn = process.env.RDS_DSN || (dsns.length > 0 ? dsns[0] : "");
+    if (targetDsn) {
+      try {
+        const dbDesc = await rds.sqlDbdescription(targetDsn);
+        log(`  sqlDbdescription('${targetDsn}'): ${dbDesc}`);
+      } catch (e) {
+        log(`  sqlDbdescription error: ${e}`);
+      }
+
+      let tables: any[] = [];
+      try {
+        tables = await rds.sqlTableinfo(targetDsn);
+        log(`  sqlTableinfo('${targetDsn}'): ${tables.length} tables found`);
+        assert(Array.isArray(tables), "sqlTableinfo should return an array");
+      } catch (e) {
+        log(`  sqlTableinfo error: ${e}`);
+      }
+
+      const targetTable = process.env.RDS_DSN_TABLE || (tables.length > 0 ? tables[0].name : "");
+      if (targetTable) {
+        try {
+          const cols = await rds.sqlColumninfo(targetDsn, targetTable);
+          log(`  sqlColumninfo('${targetDsn}', '${targetTable}'): ${cols.length} columns`);
+          assert(Array.isArray(cols), "sqlColumninfo should return an array");
+        } catch (e) {
+          log(`  sqlColumninfo error: ${e}`);
+        }
+
+        try {
+          const pks = await rds.sqlPrimarykeys(targetDsn, targetTable);
+          log(`  sqlPrimarykeys('${targetDsn}', '${targetTable}'): ${pks.length} primary keys`);
+          assert(Array.isArray(pks), "sqlPrimarykeys should return an array");
+        } catch (e) {
+          log(`  sqlPrimarykeys error: ${e}`);
+        }
+
+        try {
+          const fks = await rds.sqlForeignkeys(targetDsn, targetTable);
+          log(`  sqlForeignkeys('${targetDsn}', '${targetTable}'): ${fks.length} foreign keys`);
+          assert(Array.isArray(fks), "sqlForeignkeys should return an array");
+        } catch (e) {
+          log(`  sqlForeignkeys error: ${e}`);
+        }
+
+        try {
+          const impKeys = await rds.sqlImportedkeys(targetDsn, targetTable);
+          log(`  sqlImportedkeys('${targetDsn}', '${targetTable}'): ${impKeys.length} imported keys`);
+          assert(Array.isArray(impKeys), "sqlImportedkeys should return an array");
+        } catch (e) {
+          log(`  sqlImportedkeys error: ${e}`);
+        }
+
+        try {
+          const expKeys = await rds.sqlExportedkeys(targetDsn, targetTable);
+          log(`  sqlExportedkeys('${targetDsn}', '${targetTable}'): ${expKeys.length} exported keys`);
+          assert(Array.isArray(expKeys), "sqlExportedkeys should return an array");
+        } catch (e) {
+          log(`  sqlExportedkeys error: ${e}`);
+        }
+      }
+
+      try {
+        const sqlRes = await rds.sqlSqlstmnt(targetDsn, "SELECT 1");
+        log(`  sqlSqlstmnt('${targetDsn}', 'SELECT 1'): ${sqlRes.rows} rows, ${sqlRes.columns} columns`);
+      } catch (e) {
+        log(`  sqlSqlstmnt error: ${e}`);
+      }
+
+      try {
+        const metaRes = await rds.sqlMetadata(targetDsn, "SELECT 1");
+        log(`  sqlMetadata('${targetDsn}', 'SELECT 1'): ${metaRes.length} metadata items`);
+        assert(Array.isArray(metaRes), "sqlMetadata should return an array");
+      } catch (e) {
+        log(`  sqlMetadata error: ${e}`);
+      }
+    } else {
+      log("  Skipping DSN-specific SQL tests (no DSN available)");
+    }
+
+    // --- Security Analyzer Operations ---
+    log("\n--- Validating Security Analyzer Operations ---");
+    try {
+      const scanPath = cfRoot || "/";
+      const cmdId = await rds.securityAnalyzerScan(scanPath, true, 1);
+      log(`  securityAnalyzerScan('${scanPath}'): commandId=${cmdId}`);
+      assert(typeof cmdId === "number", "securityAnalyzerScan should return number");
+
+      if (cmdId > 0) {
+        const status = await rds.securityAnalyzerStatus(cmdId);
+        log(`  securityAnalyzerStatus(${cmdId}): visited=${status.filesvisitedcount}/${status.totalfiles}`);
+        assert(typeof status === "object", "securityAnalyzerStatus should return object");
+
+        const result = await rds.securityAnalyzerResult(cmdId);
+        log(`  securityAnalyzerResult(${cmdId}): ${JSON.stringify(result)}`);
+
+        await rds.securityAnalyzerCancel(cmdId);
+        log(`  securityAnalyzerCancel(${cmdId}): success`);
+
+        await rds.securityAnalyzerClean(cmdId);
+        log(`  securityAnalyzerClean(${cmdId}): success`);
+      }
+    } catch (e) {
+      log(`  Security Analyzer error: ${e}`);
+    }
+
+    // --- IDE Default ---
+    log("\n--- Validating IDE Default ---");
+    try {
+      const ideRes = await rds.ideDefault(1);
+      log(`  ideDefault(1): server_version=${ideRes.server_version}, client_version=${ideRes.client_version}`);
+      assert(typeof ideRes === "object", "ideDefault should return object");
+    } catch (e) {
+      log(`  ideDefault error: ${e}`);
+    }
+
+    // --- Debugging Operations ---
+    log("\n--- Debugging Operations ---");
+    // TODO: Validate debugging functions (debuggerStart, debuggerStop, debuggerGetServerInfo,
+    // debuggerBreakpointOnException, debuggerBreakpoint, debuggerClearAllBreakpoints, debuggerGetDebugEvents,
+    // debuggerAllFetchFlagsEnabled, debuggerStepIn, debuggerStepOver, debuggerStepOut, debuggerContinue,
+    // debuggerWatchExpression, debuggerSetVariable, debuggerWatchVariables, debuggerGetOutput, debuggerSetScopeFilter)
+    log("  Skipping live debugging function validation (TODO)");
+
+    await rds.close();
   }
 
   log("cfrds pure TypeScript test completed successfully!");

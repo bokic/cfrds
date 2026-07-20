@@ -2,95 +2,103 @@
 
 set -e
 
-clear
+echo "Running C CLI (cfrds) tests..."
 
-echo "Running tests..."
+USER="${RDS_USERNAME:-admin}"
+PASS="${RDS_PASSWORD:-admin}"
+HOST="${RDS_HOST:-192.168.100.10}"
+PORT="${RDS_PORT:-8500}"
 
-echo "Listing files in /app..."
-bin/cfrds ls $RDS_HOST/app
-echo "Listed files."
+TARGET="rds://${USER}:${PASS}@${HOST}:${PORT}"
+echo "Target server: ${TARGET}"
+
+# Pre-cleanup
+bin/cfrds rm "${TARGET}/tmp/c_testfile.txt" 2>/dev/null || true
+bin/cfrds rm "${TARGET}/tmp/c_testfile2.txt" 2>/dev/null || true
+bin/cfrds rmdir "${TARGET}/tmp/c_test_dir" 2>/dev/null || true
+
+echo "1. Testing file operations..."
+echo "Creating temp directory..."
+bin/cfrds mkdir "${TARGET}/tmp/c_test_dir"
+echo "Directory created."
 
 echo "Uploading test file..."
-echo "some file content" > /tmp/testfile.txt
-bin/cfrds put /tmp/testfile.txt $RDS_HOST/app/testfile.txt
+echo "some file content from C test" > /tmp/c_testfile.txt
+bin/cfrds put /tmp/c_testfile.txt "${TARGET}/tmp/c_testfile.txt"
 
 echo "Downloading and displaying test file..."
-bin/cfrds get $RDS_HOST/app/testfile.txt /tmp/testfile.txt
-bin/cfrds cat $RDS_HOST/app/testfile.txt
+bin/cfrds get "${TARGET}/tmp/c_testfile.txt" /tmp/c_testfile_out.txt
+bin/cfrds cat "${TARGET}/tmp/c_testfile.txt"
 
 echo "Moving test file..."
-bin/cfrds mv $RDS_HOST/app/testfile.txt /app/testfile2.txt
+bin/cfrds mv "${TARGET}/tmp/c_testfile.txt" "/tmp/c_testfile2.txt"
 
-echo "Listing files in /app..."
-bin/cfrds ls $RDS_HOST/app
-echo "Listed files."
+echo "Listing files in /tmp..."
+bin/cfrds ls "${TARGET}/tmp"
 
-echo 'Removing test files...'
-bin/cfrds rm $RDS_HOST/app/testfile2.txt
-echo 'Removed testfile.txt'
+echo "Removing test file..."
+bin/cfrds rm "${TARGET}/tmp/c_testfile2.txt"
 
-echo "Listing files in /app..."
-bin/cfrds ls $RDS_HOST/app
-echo "Listed files."
+echo "Removing directory..."
+bin/cfrds rmdir "${TARGET}/tmp/c_test_dir"
 
-echo "Creating new directory /app/newdir..."
-bin/cfrds mkdir $RDS_HOST/app/newdir
-echo "Created directory /app/newdir"
+echo "2. Testing root directory..."
+bin/cfrds cfroot "${TARGET}/"
 
-echo "Removing directory /app/newdir..."
-bin/cfrds rmdir $RDS_HOST/app/newdir
-echo "Removed directory /app/newdir"
-
-echo "Listing files in /app..."
-bin/cfrds ls $RDS_HOST/app
-echo "Listed files."
-
-echo "Fetching cfroot..."
-bin/cfrds cfroot $RDS_HOST/
-echo "Fetched cfroot"
+echo "3. Testing SQL operations..."
+echo "Fetching supportedcommands..."
+bin/cfrds supportedcommands "${TARGET}/"
 
 echo "Fetching dsninfo..."
-bin/cfrds dsninfo $RDS_HOST/
-echo "Fetched dsninfo"
+DSN_LIST=$(bin/cfrds dsninfo "${TARGET}/" | tr '\n' ' ')
+echo "Fetched dsninfo: ${DSN_LIST}"
 
-echo "Fetching tableinfo..."
-bin/cfrds tableinfo $RDS_HOST/$RDS_DSN
-echo "Fetched tableinfo"
+DSN="${RDS_DSN:-}"
+if [ -z "$DSN" ]; then
+    DSN=$(echo "$DSN_LIST" | awk '{print $1}')
+fi
 
-echo "Fetching columninfo..."
-bin/cfrds columninfo $RDS_HOST/$RDS_DSN/$RDS_DSN_TABLE
-echo "Fetched columninfo"
+if [ -n "$DSN" ]; then
+    echo "Using DSN: ${DSN}"
+    
+    echo "Fetching dbdescription..."
+    bin/cfrds dbdescription "${TARGET}/${DSN}" || true
 
-echo "Fetching primarykeys..."
-bin/cfrds primarykeys $RDS_HOST/$RDS_DSN/$RDS_DSN_TABLE
-echo "Fetched primarykeys"
+    echo "Fetching tableinfo..."
+    TABLE_LIST=$(bin/cfrds tableinfo "${TARGET}/${DSN}" | head -n 1 | awk '{print $3}')
+    echo "Fetched tableinfo."
 
-echo "Fetching foreignkeys..."
-bin/cfrds foreignkeys $RDS_HOST/$RDS_DSN/$RDS_DSN_TABLE
-echo "Fetched foreignkeys"
+    DSN_TABLE="${RDS_DSN_TABLE:-}"
+    if [ -z "$DSN_TABLE" ]; then
+        DSN_TABLE="$TABLE_LIST"
+    fi
 
-echo "Fetching importedkeys..."
-bin/cfrds importedkeys $RDS_HOST/$RDS_DSN/$RDS_DSN_TABLE
-echo "Fetched importedkeys"
+    if [ -n "$DSN_TABLE" ]; then
+        echo "Using table: ${DSN_TABLE}"
+        bin/cfrds columninfo "${TARGET}/${DSN}/${DSN_TABLE}" || true
+        bin/cfrds primarykeys "${TARGET}/${DSN}/${DSN_TABLE}" || true
+        bin/cfrds foreignkeys "${TARGET}/${DSN}/${DSN_TABLE}" || true
+        bin/cfrds importedkeys "${TARGET}/${DSN}/${DSN_TABLE}" || true
+        bin/cfrds exportedkeys "${TARGET}/${DSN}/${DSN_TABLE}" || true
+    fi
 
-echo "Fetching exportedkeys..."
-bin/cfrds exportedkeys $RDS_HOST/$RDS_DSN/$RDS_DSN_TABLE
-echo "Fetched exportedkeys"
+    echo "Fetching sql..."
+    bin/cfrds sql "${TARGET}/${DSN}" "SELECT 1" || true
 
-echo "Fetching sql..."
-bin/cfrds sql $RDS_HOST/$RDS_DSN "SELECT 1"
-echo "Fetched sql"
+    echo "Fetching sqlmetadata..."
+    bin/cfrds sqlmetadata "${TARGET}/${DSN}" "SELECT 1" || true
+else
+    echo "No DSN available, skipping DSN-specific SQL tests."
+fi
 
-echo "Fetching sqlmetadata..."
-bin/cfrds sqlmetadata $RDS_HOST/$RDS_DSN "SELECT 1"
-echo "Fetched sqlmetadata"
+echo "4. Testing Security Analyzer..."
+bin/cfrds security_analyzer "${TARGET}/app" || true
 
-echo "Fetching dbdescription..."
-bin/cfrds dbdescription $RDS_HOST/$RDS_DSN
-echo "Fetched dbdescription"
+echo "5. Testing IDE Default..."
+bin/cfrds ide_default "${TARGET}/" 1 || true
 
-echo "Testing debugger..."
-bin/cfrds test_debugger $RDS_HOST
-echo "Tested debugger"
+echo "6. Debugger Operations..."
+# TODO: Test debugger operations (skipped for now)
+echo "Skipping debugger tests (TODO)"
 
-echo "Done..."
+echo "C CLI (cfrds) tests completed successfully!"

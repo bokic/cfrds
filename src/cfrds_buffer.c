@@ -796,15 +796,13 @@ cfrds_sql_tableinfo *cfrds_buffer_to_sql_tableinfo(cfrds_buffer *buffer)
             if (!end_item)
                 return NULL;
             if (end_item >= current_item) {
-                ssize_t size = end_item - current_item;
-                if (size < 0)
-                    return NULL;
+                size_t size = (size_t)(end_item - current_item);
 
-                field1 = malloc((unsigned)size + 1);
+                field1 = malloc(size + 1);
                 if (field1 == NULL)
                     return NULL;
 
-                memcpy(field1, current_item, (unsigned)size);
+                memcpy(field1, current_item, size);
                 field1[size] = '\0';
             }
             current_item = end_item + 1;
@@ -822,14 +820,14 @@ cfrds_sql_tableinfo *cfrds_buffer_to_sql_tableinfo(cfrds_buffer *buffer)
                 return NULL;
 
             if (end_item >= current_item) {
-                ssize_t size = end_item - current_item;
+                size_t size = (size_t)(end_item - current_item);
 
-                field2 = malloc((unsigned)size + 1);
+                field2 = malloc(size + 1);
                 if (!field2)
                     return NULL;
 
-                memcpy(field2, current_item, (unsigned)size);
-                field2[(unsigned)size] = '\0';
+                memcpy(field2, current_item, size);
+                field2[size] = '\0';
             }
             current_item = end_item + 1;
 
@@ -846,14 +844,14 @@ cfrds_sql_tableinfo *cfrds_buffer_to_sql_tableinfo(cfrds_buffer *buffer)
                 return NULL;
 
             if (end_item >= current_item) {
-                ssize_t size = end_item - current_item;
+                size_t size = (size_t)(end_item - current_item);
 
-                field3 = malloc((unsigned)size + 1);
+                field3 = malloc(size + 1);
                 if (!field3)
                     return NULL;
 
-                memcpy(field3, current_item, (unsigned)size);
-                field3[(unsigned)size] = '\0';
+                memcpy(field3, current_item, size);
+                field3[size] = '\0';
             }
             current_item = end_item + 1;
 
@@ -870,14 +868,14 @@ cfrds_sql_tableinfo *cfrds_buffer_to_sql_tableinfo(cfrds_buffer *buffer)
                 return NULL;
 
             if (end_item >= current_item) {
-                ssize_t size = end_item - current_item;
+                size_t size = (size_t)(end_item - current_item);
 
-                field4 = malloc((unsigned)size + 1);
+                field4 = malloc(size + 1);
                 if (!field4)
                     return NULL;
 
-                memcpy(field4, current_item, (unsigned)size);
-                field4[(unsigned)size] = '\0';
+                memcpy(field4, current_item, size);
+                field4[size] = '\0';
             }
 
             tmp->items[tmp->cnt].unknown = field1; field1 = NULL;
@@ -1419,14 +1417,15 @@ cfrds_sql_metadata *cfrds_buffer_to_sql_metadata(cfrds_buffer *buffer)
     if ((cnt < 0) || (cnt > CFRDS_MAX_PARSER_ITEMS))
         return NULL;
 
-    buf_size = offsetof(cfrds_sql_metadata, items) + sizeof(cfrds_sql_metadataitem) * (unsigned)cnt;
+    size_t ucnt = (size_t)cnt;
+    buf_size = offsetof(cfrds_sql_metadata, items) + sizeof(cfrds_sql_metadataitem) * ucnt;
     tmp = malloc(buf_size);
     if (tmp == NULL)
         return NULL;
 
     explicit_bzero(tmp, buf_size);
 
-    tmp->cnt = (unsigned)cnt;
+    tmp->cnt = ucnt;
 
     for(int64_t c = 0; c < cnt; c++)
     {
@@ -1536,7 +1535,7 @@ char *cfrds_buffer_to_sql_dbdescription(cfrds_buffer *buffer)
     if (row == NULL)
         return NULL;
 
-    data = (const char *)row;
+    data = row;
     size = strlen(data);
 
     cfrds_buffer_parse_string_list_item(&data, &size, &ret);

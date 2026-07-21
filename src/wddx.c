@@ -106,7 +106,7 @@ static struct WDDX_NODE *wddx_recursively_put(struct WDDX_NODE *node, const char
         if (node == NULL)
         {
             size_t newsize = offsetof(struct WDDX_NODE, items) + (sizeof(void *) * (size_t)idx);
-            node = (struct WDDX_NODE *)malloc(newsize);
+            node = malloc(newsize);
             if (node == NULL)
             {
                 return NULL;
@@ -133,7 +133,7 @@ static struct WDDX_NODE *wddx_recursively_put(struct WDDX_NODE *node, const char
             {
                 newsize = offsetof(struct WDDX_NODE, items) + (sizeof(void *) * (size_t)idx);
                 struct WDDX_NODE *pre_realloc_node = node;
-                node = (struct WDDX_NODE *)realloc(node, newsize);
+                node = realloc(node, newsize);
                 if (node == NULL) {
                     if (created_node) wddx_node_free(pre_realloc_node);
                     return NULL;
@@ -161,7 +161,7 @@ static struct WDDX_NODE *wddx_recursively_put(struct WDDX_NODE *node, const char
         if (node == NULL)
         {
             newsize = sizeof(struct WDDX_NODE);
-            node = (struct WDDX_NODE *)malloc(newsize);
+            node = malloc(newsize);
             if (node == NULL)
                 return NULL;
             explicit_bzero(node, newsize);
@@ -201,7 +201,7 @@ static struct WDDX_NODE *wddx_recursively_put(struct WDDX_NODE *node, const char
 
             newsize = offsetof(struct WDDX_NODE, items) + (sizeof(WDDX_STRUCT_NODE *) * (size_t)(node->cnt + 1));
             struct WDDX_NODE *pre_realloc_node = node;
-            node = (struct WDDX_NODE *)realloc(node, newsize);
+            node = realloc(node, newsize);
             if (node == NULL) {
                 if (created_node) wddx_node_free(pre_realloc_node);
                 return NULL;
@@ -320,7 +320,7 @@ static void wddx_to_xml_node(xmlNode *xml_node, const struct WDDX_NODE *node)
 
         for(int c = 0; c < node->cnt; c++)
         {
-            wddx_to_xml_node(child_node, ((const struct WDDX_NODE *)node)->items[c]);
+            wddx_to_xml_node(child_node, node->items[c]);
         }
         break;
     case WDDX_STRUCT:

@@ -120,6 +120,37 @@ for method in server_methods:
 
 print(f"All {len(server_methods)} server class methods successfully verified!")
 
+# Verify container class ready-to-use array/struct interfaces
+dsn_container = cfrds.cfrds_sql_dsninfo(["dsn1", "dsn2"])
+assert len(dsn_container) == 2
+assert dsn_container[0] == "dsn1"
+assert list(dsn_container) == ["dsn1", "dsn2"]
+assert dsn_container.to_list() == ["dsn1", "dsn2"]
+
+tbl_container = cfrds.cfrds_sql_tableinfo([{"name": "t1"}])
+assert len(tbl_container) == 1
+assert tbl_container[0]["name"] == "t1"
+assert list(tbl_container) == [{"name": "t1"}]
+
+res_container = cfrds.cfrds_sql_resultset(1, 1, ["col1"], [["val1"]])
+assert res_container["columns"] == 1
+assert res_container["names"] == ["col1"]
+assert res_container["values"] == [["val1"]]
+assert res_container[0] == ["val1"]
+assert res_container.to_dict()["values"] == [["val1"]]
+
+fc_container = cfrds.cfrds_file_content(b"hello", "ts", "perm")
+assert fc_container["data"] == b"hello"
+assert fc_container["size"] == 5
+assert fc_container.to_dict()["data"] == b"hello"
+
+map_container = cfrds.cfrds_adminapi_mappings({"k1": "v1"})
+assert map_container["k1"] == "v1"
+assert map_container.to_dict() == {"k1": "v1"}
+assert list(map_container) == ["k1"]
+
+print("Container class ready-to-use value tests passed!")
+
 # Live server integration test if env vars present
 if "RDS_HOST" in os.environ and "RDS_PORT" in os.environ:
     host = os.environ["RDS_HOST"]

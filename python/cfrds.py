@@ -8,7 +8,7 @@ import http.client
 import os
 import re
 import sys
-from typing import Optional, List, Dict, Any, Union, Tuple
+from typing import Optional, List, Dict, Any, Union, Tuple, Iterator
 
 
 
@@ -243,8 +243,24 @@ class cfrds_browse_dir:
     def __len__(self) -> int:
         return len(self.items)
 
-    def __getitem__(self, idx: int) -> Dict[str, Any]:
+    def __getitem__(self, idx: Any) -> Any:
         return self.items[idx]
+
+    def __iter__(self) -> Iterator[Dict[str, Any]]:
+        return iter(self.items)
+
+    def to_list(self) -> List[Dict[str, Any]]:
+        return list(self.items)
+
+    def __repr__(self) -> str:
+        return f"cfrds_browse_dir({self.items!r})"
+
+    def __eq__(self, other: Any) -> bool:
+        if isinstance(other, cfrds_browse_dir):
+            return self.items == other.items
+        if isinstance(other, list):
+            return self.items == other
+        return False
 
 
 class cfrds_file_content:
@@ -254,6 +270,42 @@ class cfrds_file_content:
         self.modified = modified
         self.permission = permission
 
+    def to_dict(self) -> Dict[str, Any]:
+        return {
+            "data": self.data,
+            "size": self.size,
+            "modified": self.modified,
+            "permission": self.permission,
+        }
+
+    def __getitem__(self, key: Any) -> Any:
+        if isinstance(key, str):
+            return getattr(self, key)
+        keys = ["data", "size", "modified", "permission"]
+        return getattr(self, keys[key])
+
+    def keys(self) -> List[str]:
+        return ["data", "size", "modified", "permission"]
+
+    def values(self) -> List[Any]:
+        return [self.data, self.size, self.modified, self.permission]
+
+    def items(self) -> List[Tuple[str, Any]]:
+        return list(self.to_dict().items())
+
+    def __iter__(self) -> Iterator[str]:
+        return iter(self.keys())
+
+    def __repr__(self) -> str:
+        return f"cfrds_file_content({self.to_dict()!r})"
+
+    def __eq__(self, other: Any) -> bool:
+        if isinstance(other, cfrds_file_content):
+            return self.to_dict() == other.to_dict()
+        if isinstance(other, dict):
+            return self.to_dict() == other
+        return False
+
 
 class cfrds_sql_dsninfo:
     def __init__(self, names: List[str]):
@@ -261,6 +313,25 @@ class cfrds_sql_dsninfo:
 
     def __len__(self) -> int:
         return len(self.names)
+
+    def __getitem__(self, idx: Any) -> Any:
+        return self.names[idx]
+
+    def __iter__(self) -> Iterator[str]:
+        return iter(self.names)
+
+    def to_list(self) -> List[str]:
+        return list(self.names)
+
+    def __repr__(self) -> str:
+        return f"cfrds_sql_dsninfo({self.names!r})"
+
+    def __eq__(self, other: Any) -> bool:
+        if isinstance(other, cfrds_sql_dsninfo):
+            return self.names == other.names
+        if isinstance(other, list):
+            return self.names == other
+        return False
 
 
 class cfrds_sql_tableinfo:
@@ -270,6 +341,25 @@ class cfrds_sql_tableinfo:
     def __len__(self) -> int:
         return len(self.items)
 
+    def __getitem__(self, idx: Any) -> Any:
+        return self.items[idx]
+
+    def __iter__(self) -> Iterator[Dict[str, Optional[str]]]:
+        return iter(self.items)
+
+    def to_list(self) -> List[Dict[str, Optional[str]]]:
+        return list(self.items)
+
+    def __repr__(self) -> str:
+        return f"cfrds_sql_tableinfo({self.items!r})"
+
+    def __eq__(self, other: Any) -> bool:
+        if isinstance(other, cfrds_sql_tableinfo):
+            return self.items == other.items
+        if isinstance(other, list):
+            return self.items == other
+        return False
+
 
 class cfrds_sql_columninfo:
     def __init__(self, items: List[Dict[str, Any]]):
@@ -277,6 +367,25 @@ class cfrds_sql_columninfo:
 
     def __len__(self) -> int:
         return len(self.items)
+
+    def __getitem__(self, idx: Any) -> Any:
+        return self.items[idx]
+
+    def __iter__(self) -> Iterator[Dict[str, Any]]:
+        return iter(self.items)
+
+    def to_list(self) -> List[Dict[str, Any]]:
+        return list(self.items)
+
+    def __repr__(self) -> str:
+        return f"cfrds_sql_columninfo({self.items!r})"
+
+    def __eq__(self, other: Any) -> bool:
+        if isinstance(other, cfrds_sql_columninfo):
+            return self.items == other.items
+        if isinstance(other, list):
+            return self.items == other
+        return False
 
 
 class cfrds_sql_primarykeys:
@@ -286,6 +395,25 @@ class cfrds_sql_primarykeys:
     def __len__(self) -> int:
         return len(self.items)
 
+    def __getitem__(self, idx: Any) -> Any:
+        return self.items[idx]
+
+    def __iter__(self) -> Iterator[Dict[str, Any]]:
+        return iter(self.items)
+
+    def to_list(self) -> List[Dict[str, Any]]:
+        return list(self.items)
+
+    def __repr__(self) -> str:
+        return f"cfrds_sql_primarykeys({self.items!r})"
+
+    def __eq__(self, other: Any) -> bool:
+        if isinstance(other, cfrds_sql_primarykeys):
+            return self.items == other.items
+        if isinstance(other, list):
+            return self.items == other
+        return False
+
 
 class cfrds_sql_foreignkeys:
     def __init__(self, items: List[Dict[str, Any]]):
@@ -293,6 +421,25 @@ class cfrds_sql_foreignkeys:
 
     def __len__(self) -> int:
         return len(self.items)
+
+    def __getitem__(self, idx: Any) -> Any:
+        return self.items[idx]
+
+    def __iter__(self) -> Iterator[Dict[str, Any]]:
+        return iter(self.items)
+
+    def to_list(self) -> List[Dict[str, Any]]:
+        return list(self.items)
+
+    def __repr__(self) -> str:
+        return f"cfrds_sql_foreignkeys({self.items!r})"
+
+    def __eq__(self, other: Any) -> bool:
+        if isinstance(other, cfrds_sql_foreignkeys):
+            return self.items == other.items
+        if isinstance(other, list):
+            return self.items == other
+        return False
 
 
 class cfrds_sql_importedkeys:
@@ -302,6 +449,25 @@ class cfrds_sql_importedkeys:
     def __len__(self) -> int:
         return len(self.items)
 
+    def __getitem__(self, idx: Any) -> Any:
+        return self.items[idx]
+
+    def __iter__(self) -> Iterator[Dict[str, Any]]:
+        return iter(self.items)
+
+    def to_list(self) -> List[Dict[str, Any]]:
+        return list(self.items)
+
+    def __repr__(self) -> str:
+        return f"cfrds_sql_importedkeys({self.items!r})"
+
+    def __eq__(self, other: Any) -> bool:
+        if isinstance(other, cfrds_sql_importedkeys):
+            return self.items == other.items
+        if isinstance(other, list):
+            return self.items == other
+        return False
+
 
 class cfrds_sql_exportedkeys:
     def __init__(self, items: List[Dict[str, Any]]):
@@ -309,6 +475,25 @@ class cfrds_sql_exportedkeys:
 
     def __len__(self) -> int:
         return len(self.items)
+
+    def __getitem__(self, idx: Any) -> Any:
+        return self.items[idx]
+
+    def __iter__(self) -> Iterator[Dict[str, Any]]:
+        return iter(self.items)
+
+    def to_list(self) -> List[Dict[str, Any]]:
+        return list(self.items)
+
+    def __repr__(self) -> str:
+        return f"cfrds_sql_exportedkeys({self.items!r})"
+
+    def __eq__(self, other: Any) -> bool:
+        if isinstance(other, cfrds_sql_exportedkeys):
+            return self.items == other.items
+        if isinstance(other, list):
+            return self.items == other
+        return False
 
 
 class cfrds_sql_resultset:
@@ -318,6 +503,38 @@ class cfrds_sql_resultset:
         self.names = names
         self.values = values
 
+    def to_dict(self) -> Dict[str, Any]:
+        return {
+            "columns": self.columns,
+            "rows": self.rows,
+            "names": self.names,
+            "values": self.values,
+        }
+
+    def __len__(self) -> int:
+        return self.rows
+
+    def __getitem__(self, key: Any) -> Any:
+        if isinstance(key, str):
+            return self.to_dict()[key]
+        return self.values[key]
+
+    def keys(self) -> List[str]:
+        return ["columns", "rows", "names", "values"]
+
+    def __iter__(self) -> Iterator[List[Optional[str]]]:
+        return iter(self.values)
+
+    def __repr__(self) -> str:
+        return f"cfrds_sql_resultset({self.to_dict()!r})"
+
+    def __eq__(self, other: Any) -> bool:
+        if isinstance(other, cfrds_sql_resultset):
+            return self.to_dict() == other.to_dict()
+        if isinstance(other, dict):
+            return self.to_dict() == other
+        return False
+
 
 class cfrds_sql_metadata:
     def __init__(self, items: List[Dict[str, Optional[str]]]):
@@ -325,6 +542,25 @@ class cfrds_sql_metadata:
 
     def __len__(self) -> int:
         return len(self.items)
+
+    def __getitem__(self, idx: Any) -> Any:
+        return self.items[idx]
+
+    def __iter__(self) -> Iterator[Dict[str, Optional[str]]]:
+        return iter(self.items)
+
+    def to_list(self) -> List[Dict[str, Optional[str]]]:
+        return list(self.items)
+
+    def __repr__(self) -> str:
+        return f"cfrds_sql_metadata({self.items!r})"
+
+    def __eq__(self, other: Any) -> bool:
+        if isinstance(other, cfrds_sql_metadata):
+            return self.items == other.items
+        if isinstance(other, list):
+            return self.items == other
+        return False
 
 
 class cfrds_sql_supportedcommands:
@@ -334,16 +570,92 @@ class cfrds_sql_supportedcommands:
     def __len__(self) -> int:
         return len(self.commands)
 
+    def __getitem__(self, idx: Any) -> Any:
+        return self.commands[idx]
+
+    def __iter__(self) -> Iterator[str]:
+        return iter(self.commands)
+
+    def to_list(self) -> List[str]:
+        return list(self.commands)
+
+    def __repr__(self) -> str:
+        return f"cfrds_sql_supportedcommands({self.commands!r})"
+
+    def __eq__(self, other: Any) -> bool:
+        if isinstance(other, cfrds_sql_supportedcommands):
+            return self.commands == other.commands
+        if isinstance(other, list):
+            return self.commands == other
+        return False
+
 
 class cfrds_debugger_event:
     def __init__(self, event_type: int, data: Dict[str, Any]):
         self.event_type = event_type
         self.data = data
 
+    def to_dict(self) -> Dict[str, Any]:
+        return {"event_type": self.event_type, "type": self.event_type, "data": self.data}
+
+    def __getitem__(self, key: Any) -> Any:
+        if isinstance(key, str):
+            if key in ("event_type", "type"):
+                return self.event_type
+            if key == "data":
+                return self.data
+            return self.data.get(key)
+        keys = ["event_type", "data"]
+        return getattr(self, keys[key])
+
+    def keys(self) -> List[str]:
+        return ["event_type", "type", "data"]
+
+    def __iter__(self) -> Iterator[str]:
+        return iter(self.keys())
+
+    def __repr__(self) -> str:
+        return f"cfrds_debugger_event({self.to_dict()!r})"
+
+    def __eq__(self, other: Any) -> bool:
+        if isinstance(other, cfrds_debugger_event):
+            return self.to_dict() == other.to_dict()
+        if isinstance(other, dict):
+            return self.to_dict() == other
+        return False
+
 
 class cfrds_security_analyzer_result:
     def __init__(self, data: Dict[str, Any]):
         self.data = data
+
+    def to_dict(self) -> Dict[str, Any]:
+        return dict(self.data)
+
+    def __getitem__(self, key: str) -> Any:
+        return self.data[key]
+
+    def keys(self) -> Any:
+        return self.data.keys()
+
+    def values(self) -> Any:
+        return self.data.values()
+
+    def items(self) -> Any:
+        return self.data.items()
+
+    def __iter__(self) -> Iterator[str]:
+        return iter(self.data)
+
+    def __repr__(self) -> str:
+        return f"cfrds_security_analyzer_result({self.data!r})"
+
+    def __eq__(self, other: Any) -> bool:
+        if isinstance(other, cfrds_security_analyzer_result):
+            return self.data == other.data
+        if isinstance(other, dict):
+            return self.data == other
+        return False
 
 
 class cfrds_adminapi_customtagpaths:
@@ -353,15 +665,66 @@ class cfrds_adminapi_customtagpaths:
     def __len__(self) -> int:
         return len(self.paths)
 
+    def __getitem__(self, idx: Any) -> Any:
+        return self.paths[idx]
+
+    def __iter__(self) -> Iterator[str]:
+        return iter(self.paths)
+
+    def to_list(self) -> List[str]:
+        return list(self.paths)
+
+    def __repr__(self) -> str:
+        return f"cfrds_adminapi_customtagpaths({self.paths!r})"
+
+    def __eq__(self, other: Any) -> bool:
+        if isinstance(other, cfrds_adminapi_customtagpaths):
+            return self.paths == other.paths
+        if isinstance(other, list):
+            return self.paths == other
+        return False
+
 
 class cfrds_adminapi_mappings:
     def __init__(self, mappings: Dict[str, str]):
         self.mappings = mappings
-        self.keys = list(mappings.keys())
-        self.values = list(mappings.values())
+        self.keys_list = list(mappings.keys())
+        self.values_list = list(mappings.values())
+
+    @property
+    def keys(self) -> Any:
+        return self.keys_list
+
+    @property
+    def values(self) -> Any:
+        return self.values_list
 
     def __len__(self) -> int:
-        return len(self.keys)
+        return len(self.mappings)
+
+    def __getitem__(self, key: Any) -> Any:
+        if isinstance(key, str):
+            return self.mappings[key]
+        return (self.keys_list[key], self.values_list[key])
+
+    def items(self) -> Any:
+        return self.mappings.items()
+
+    def __iter__(self) -> Iterator[str]:
+        return iter(self.mappings)
+
+    def to_dict(self) -> Dict[str, str]:
+        return dict(self.mappings)
+
+    def __repr__(self) -> str:
+        return f"cfrds_adminapi_mappings({self.mappings!r})"
+
+    def __eq__(self, other: Any) -> bool:
+        if isinstance(other, cfrds_adminapi_mappings):
+            return self.mappings == other.mappings
+        if isinstance(other, dict):
+            return self.mappings == other
+        return False
 
 
 # High-Level Server API
@@ -617,7 +980,7 @@ class server:
         cnt, offset = _parse_number(raw, 0)
         rows = max(0, cnt - 1)
         if cnt <= 0:
-            return {"columns": 0, "rows": 0, "names": [], "data": []}
+            return {"columns": 0, "rows": 0, "names": [], "values": []}
 
         col_str, offset = _parse_string(raw, offset)
         names = _parse_string_list_item(col_str)
@@ -629,7 +992,7 @@ class server:
             r_vals = _parse_string_list_item(r_str)
             data_rows.append(r_vals)
 
-        return {"columns": cols, "rows": rows, "names": names, "data": data_rows}
+        return {"columns": cols, "rows": rows, "names": names, "values": data_rows}
 
     def sql_metadata(self, connection_name: str, sql: str) -> List[Dict[str, Optional[str]]]:
         raw = _send_rds_command(self._ctx, "DBFUNCS", [connection_name, "SQLMETADATA", sql])

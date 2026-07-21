@@ -2483,6 +2483,7 @@ cfrds_status cfrds_command_debugger_get_output(cfrds_server *server, const char 
 
     WDDX_defer(wddx);
     wddx = wddx_create();
+    wddx_put_string(wddx, "0,COMMAND", "GET_OUTPUT");
     wddx_put_bool(wddx, "0,BODY_ONLY", true);
     wddx_put_string(wddx, "0,THREAD", thread_name);
 

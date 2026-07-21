@@ -3,10 +3,9 @@ import {
   CFRDS_DEBUGGER_EVENT_TYPE,
   CFRDSError,
   Server,
-  encodePassword,
-  parseStringListItem,
   VERSION,
 } from "./index";
+import { encodePassword, parseStringListItem } from "./parser";
 
 function assert(condition: boolean, message: string): void {
   if (!condition) {
@@ -335,6 +334,7 @@ async function main(): Promise<void> {
       try {
         const sqlRes = await rds.sqlSqlstmnt(targetDsn, "SELECT 1");
         log(`  sqlSqlstmnt('${targetDsn}', 'SELECT 1'): ${sqlRes.rows} rows, ${sqlRes.columns} columns`);
+        assert(Array.isArray(sqlRes.values), "sqlRes.values should be an array");
       } catch (e) {
         log(`  sqlSqlstmnt error: ${e}`);
       }

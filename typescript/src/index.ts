@@ -21,5 +21,4 @@ export {
 } from "./types";
 
 export { Server } from "./server";
-export { encodePassword, parseStringListItem } from "./parser";
 export { VERSION } from "./version";

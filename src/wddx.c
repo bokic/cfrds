@@ -689,16 +689,18 @@ const WDDX_NODE *wddx_header(const WDDX *src)
     return src->header;
 }
 
-const WDDX_NODE *wddx_data(const WDDX *src)
+const WDDX_NODE *wddx_data(const void *src_ptr)
 {
+    const struct WDDX *src = src_ptr;
     if (src == NULL)
         return NULL;
 
     return src->data;
 }
 
-int wddx_node_type(const WDDX_NODE *value)
+int wddx_node_type(const void *value_ptr)
 {
+    const struct WDDX_NODE *value = value_ptr;
     if (value == NULL)
         return WDDX_NULL;
 
@@ -729,39 +731,43 @@ const char *wddx_node_string(const WDDX_NODE *value)
     return value->string;
 }
 
-int wddx_node_array_size(const WDDX_NODE *value)
+int wddx_node_array_size(const void *value_ptr)
 {
+    const struct WDDX_NODE *value = value_ptr;
     if (value == NULL)
         return 0;
 
     return value->cnt;
 }
 
-const WDDX_NODE *wddx_node_array_at(const WDDX_NODE *value, int cnt)
+const WDDX_NODE *wddx_node_array_at(const void *value_ptr, size_t cnt)
 {
+    const struct WDDX_NODE *value = value_ptr;
     if (value == NULL)
         return NULL;
 
-    if ((cnt < 0) || (cnt >= value->cnt))
+    if (cnt >= (size_t)value->cnt)
         return NULL;
 
     return value->items[cnt];
 }
 
-int wddx_node_struct_size(const WDDX_NODE *value)
+int wddx_node_struct_size(const void *value_ptr)
 {
+    const struct WDDX_NODE *value = value_ptr;
     if (value == NULL)
         return 0;
 
     return value->cnt;
 }
 
-const WDDX_NODE *wddx_node_struct_at(const WDDX_NODE *value, int cnt, const char **name)
+const WDDX_NODE *wddx_node_struct_at(const void *value_ptr, size_t cnt, const char **name)
 {
+    const struct WDDX_NODE *value = value_ptr;
     if (value == NULL)
         return NULL;
 
-    if ((cnt < 0) || (cnt >= value->cnt))
+    if (cnt >= (size_t)value->cnt)
         return NULL;
 
     const WDDX_STRUCT_NODE *child = value->items[cnt];
@@ -769,13 +775,14 @@ const WDDX_NODE *wddx_node_struct_at(const WDDX_NODE *value, int cnt, const char
     if (child == NULL)
         return NULL;
 
-    *name = child->name;
+    if (name) *name = child->name;
 
     return child->value;
 }
 
-bool wddx_get_bool(const WDDX *src, const char *path, bool *ok)
+bool wddx_get_bool(const void *src_ptr, const char *path, bool *ok)
 {
+    const struct WDDX *src = src_ptr;
     if (src == NULL)
     {
         if (ok) *ok = false;
@@ -800,8 +807,9 @@ bool wddx_get_bool(const WDDX *src, const char *path, bool *ok)
     return node->boolean;
 }
 
-double wddx_get_number(const WDDX *src, const char *path, bool *ok)
+double wddx_get_number(const void *src_ptr, const char *path, bool *ok)
 {
+    const struct WDDX *src = src_ptr;
     if (src == NULL)
     {
         if (ok) *ok = false;
@@ -826,8 +834,9 @@ double wddx_get_number(const WDDX *src, const char *path, bool *ok)
     return node->number;
 }
 
-const char *wddx_get_string(const WDDX *src, const char *path)
+const char *wddx_get_string(const void *src_ptr, const char *path)
 {
+    const struct WDDX *src = src_ptr;
     if (src == NULL)
     {
         return NULL;
@@ -848,8 +857,9 @@ const char *wddx_get_string(const WDDX *src, const char *path)
     return node->string;
 }
 
-const WDDX_NODE *wddx_get_var(const WDDX *src, const char *path)
+const WDDX_NODE *wddx_get_var(const void *src_ptr, const char *path)
 {
+    const struct WDDX *src = src_ptr;
     if (src == NULL)
     {
         return NULL;
@@ -982,29 +992,30 @@ void wddx_node_free(struct WDDX_NODE *value)
     free(value);
 }
 
-void wddx_cleanup(WDDX **value)
+void wddx_cleanup(void *value_ptr)
 {
-    if (value)
+    if (value_ptr && *(struct WDDX **)value_ptr)
     {
-        if ((*value)->header)
+        struct WDDX **v = value_ptr;
+        if ((*v)->header)
         {
-            wddx_node_free((*value)->header);
-            (*value)->header = NULL;
+            wddx_node_free((*v)->header);
+            (*v)->header = NULL;
         }
 
-        if ((*value)->data)
+        if ((*v)->data)
         {
-            wddx_node_free((*value)->data);
-            (*value)->data = NULL;
+            wddx_node_free((*v)->data);
+            (*v)->data = NULL;
         }
 
-        if ((*value)->str)
+        if ((*v)->str)
         {
-            xmlBufferFree((*value)->str);
-            (*value)->str = NULL;
+            xmlBufferFree((*v)->str);
+            (*v)->str = NULL;
         }
 
-        free(*value);
-        *value = NULL;
+        free(*v);
+        *v = NULL;
     }
 }

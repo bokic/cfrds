@@ -1,6 +1,7 @@
 #pragma once
 
 #include <stdbool.h>
+#include <stddef.h>
 
 
 /**
@@ -134,7 +135,7 @@ const WDDX_NODE *wddx_header(const WDDX *src);
  * @param src The WDDX packet (non-`NULL`).
  * @return A pointer to the data `WDDX_NODE*`, or `NULL` if no data has been inserted.
  */
-const WDDX_NODE *wddx_data(const WDDX *src);
+const WDDX_NODE *wddx_data(const void *src);
 
 /**
  * @brief Returns the type of a WDDX node.
@@ -142,7 +143,7 @@ const WDDX_NODE *wddx_data(const WDDX *src);
  * @return One of `wddx_type` values.
  * @note This is the primary way to determine how to interpret the node's content.
  */
-int wddx_node_type(const WDDX_NODE *value);
+int wddx_node_type(const void *value);
 
 /**
  * @brief Extracts the boolean value from a `WDDX_BOOLEAN` node.
@@ -176,7 +177,7 @@ const char *wddx_node_string(const WDDX_NODE *value);
  * @return The array length (≥ 0), or `0` if node is `NULL` or not an array.
  * @note Does not distinguish between empty array and type mismatch — use `wddx_node_type()` first.
  */
-int wddx_node_array_size(const WDDX_NODE *value);
+int wddx_node_array_size(const void *value);
 
 /**
  * @brief Retrieves an element from a `WDDX_ARRAY` node by index.
@@ -186,7 +187,7 @@ int wddx_node_array_size(const WDDX_NODE *value);
  * @note Returns `NULL` for invalid index, `NULL` node, or non-array type.
  * @warning Does **not** validate `cnt` — caller must check bounds (or use `wddx_node_array_size()`).
  */
-const WDDX_NODE *wddx_node_array_at(const WDDX_NODE *value, int cnt);
+const WDDX_NODE *wddx_node_array_at(const void *value, size_t cnt);
 
 /**
  * @brief Returns the number of fields in a `WDDX_STRUCT` node.
@@ -194,7 +195,7 @@ const WDDX_NODE *wddx_node_array_at(const WDDX_NODE *value, int cnt);
  * @return The number of struct fields (≥ 0), or `0` for non-struct or `NULL`.
  * @note Does not distinguish between empty struct and type mismatch.
  */
-int wddx_node_struct_size(const WDDX_NODE *value);
+int wddx_node_struct_size(const void *value);
 
 /**
  * @brief Retrieves a field from a `WDDX_STRUCT` node by index.
@@ -205,7 +206,7 @@ int wddx_node_struct_size(const WDDX_NODE *value);
  * @note If `name` is non-`NULL`, `*name` is set to the field's key (null-terminated, internal storage).
  * @warning Does not validate `cnt`; must be called with valid `cnt` < struct size.
  */
-const WDDX_NODE *wddx_node_struct_at(const WDDX_NODE *value, int cnt, const char **name);
+const WDDX_NODE *wddx_node_struct_at(const void *value, size_t cnt, const char **name);
 
 /**
  * @brief Gets a boolean value from the data section at a given path.
@@ -215,7 +216,7 @@ const WDDX_NODE *wddx_node_struct_at(const WDDX_NODE *value, int cnt, const char
  * @return The boolean value if successful, `false` otherwise.
  * @note Always sets `*ok` to `false` on error — use `ok` parameter to disambiguate `false` vs. error.
  */
-bool wddx_get_bool(const WDDX *src, const char *path, bool *ok);
+bool wddx_get_bool(const void *src, const char *path, bool *ok);
 
 /**
  * @brief Gets a numeric value from the data section at a given path.
@@ -225,7 +226,7 @@ bool wddx_get_bool(const WDDX *src, const char *path, bool *ok);
  * @return The `double` value if successful, `0.0` otherwise.
  * @note Always sets `*ok = false` on error — use to distinguish `0.0` vs. missing/invalid.
  */
-double wddx_get_number(const WDDX *src, const char *path, bool *ok);
+double wddx_get_number(const void *src, const char *path, bool *ok);
 
 /**
  * @brief Gets a string value from the data section at a given path.
@@ -234,7 +235,7 @@ double wddx_get_number(const WDDX *src, const char *path, bool *ok);
  * @return The string if found and of type `WDDX_STRING`, `NULL` otherwise.
  * @note Returns `NULL` for missing, wrong type, or allocation errors — use `wddx_get_var()` + `wddx_node_type()` for robustness.
  */
-const char *wddx_get_string(const WDDX *src, const char *path);
+const char *wddx_get_string(const void *src, const char *path);
 
 /**
  * @brief Retrieves the node at a given path in the data section, or `NULL`.
@@ -243,7 +244,7 @@ const char *wddx_get_string(const WDDX *src, const char *path);
  * @return A pointer to the node, or `NULL` if not found.
  * @note Allows inspection of the node (e.g., to check its type and access sub-values).
  */
-const WDDX_NODE *wddx_get_var(const WDDX *src, const char *path);
+const WDDX_NODE *wddx_get_var(const void *src, const char *path);
 
 /**
  * @brief Serializes a single WDDX node (not the full packet) into XML.
@@ -261,4 +262,4 @@ char *wddx_node_to_xml(const WDDX_NODE *node);
  * @note Frees the packet and all associated nodes (recursively), and XML buffer.
  * @note Sets `*value = NULL` after cleanup.
  */
-void wddx_cleanup(WDDX **value);
+void wddx_cleanup(void *value);

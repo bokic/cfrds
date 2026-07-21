@@ -290,11 +290,11 @@ static int test_parse_nested(void)
     CHECK(wddx_node_type(var) == WDDX_ARRAY);
     CHECK(wddx_node_array_size(var) == 3);
 
-    for (int i = 0; i < 3; i++) {
+    for (size_t i = 0; i < 3; i++) {
         const WDDX_NODE *el = wddx_node_array_at(var, i);
         CHECK(el != NULL);
         CHECK(wddx_node_type(el) == WDDX_NUMBER);
-        CHECK(fabs(wddx_node_number(el) - (i + 1)) < 0.001);
+        CHECK(fabs(wddx_node_number(el) - (double)(i + 1)) < 0.001);
     }
     return PASS;
 }

@@ -42,7 +42,7 @@ typedef char* cfrds_str;
 typedef struct cfrds_buffer cfrds_buffer;
 typedef struct cfrds_file_content cfrds_file_content;
 typedef struct cfrds_server cfrds_server;
-typedef struct cfrds_variable cfrds_variable;
+typedef struct WDDX_NODE cfrds_variable;
 typedef struct cfrds_browse_dir cfrds_browse_dir;
 typedef struct cfrds_sql_dsninfo cfrds_sql_dsninfo;
 typedef struct cfrds_sql_tableinfo cfrds_sql_tableinfo;
@@ -54,10 +54,10 @@ typedef struct cfrds_sql_exportedkeys cfrds_sql_exportedkeys;
 typedef struct cfrds_sql_resultset cfrds_sql_resultset;
 typedef struct cfrds_sql_metadata cfrds_sql_metadata;
 typedef struct cfrds_sql_supportedcommands cfrds_sql_supportedcommands;
-typedef struct cfrds_debugger_event cfrds_debugger_event;
-typedef struct cfrds_security_analyzer_result cfrds_security_analyzer_result;
-typedef struct cfrds_adminapi_customtagpaths cfrds_adminapi_customtagpaths;
-typedef struct cfrds_adminapi_mappings cfrds_adminapi_mappings;
+typedef struct WDDX cfrds_debugger_event;
+typedef char cfrds_security_analyzer_result;
+typedef struct WDDX cfrds_adminapi_customtagpaths;
+typedef struct WDDX cfrds_adminapi_mappings;
 
 typedef enum {
     CFRDS_STATUS_OK,

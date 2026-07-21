@@ -419,44 +419,70 @@ export class Server {
     await sendRdsCommand(this.ctx, "DBGREQUEST", ["DBG_REQUEST", sessionName, wddx]);
   }
 
+  /**
+   * Fetches debugger events for the specified session.
+   * NOTE: This is a long-polling request on the ColdFusion server that blocks until a debugger event occurs or times out.
+   */
   async debuggerGetDebugEvents(sessionName: string): Promise<DebuggerEvent | null> {
-    const raw = await sendRdsCommand(this.ctx, "DBGREQUEST", ["DBG_EVENTS", sessionName]);
-    const [evtType, offset] = parseNumber(raw, 0);
-    let off = offset;
+    try {
+      const raw = await sendRdsCommand(this.ctx, "DBGREQUEST", ["DBG_EVENTS", sessionName]);
+      if (!raw || raw.length === 0) {
+        return null;
+      }
+      const [cnt, offset] = parseNumber(raw, 0);
+      const [wddxXml] = parseString(raw, offset);
+      if (!wddxXml) {
+        return null;
+      }
+      const data: Record<string, any> = {};
+      const varMatches = wddxXml.matchAll(/<var name=['"]([^'"]+)['"]>(?:<string>([^<]*)<\/string>|<number>([^<]*)<\/number>|<boolean value=['"]([^'"]+)['"]\/>)/gi);
+      for (const m of varMatches) {
+        const key = m[1];
+        if (m[2] !== undefined) data[key] = m[2];
+        else if (m[3] !== undefined) data[key] = parseFloat(m[3]);
+        else if (m[4] !== undefined) data[key] = m[4] === "true";
+      }
 
-    if (evtType === CFRDS_DEBUGGER_EVENT_TYPE.BREAKPOINT_SET) {
-      const [pathname, o1] = parseString(raw, off);
-      const [reqLineStr, o2] = parseString(raw, o1);
-      const [actLineStr, o3] = parseString(raw, o2);
-      off = o3;
-      return {
-        type: CFRDS_DEBUGGER_EVENT_TYPE.BREAKPOINT_SET,
-        data: {
-          pathname,
-          req_line: /^\d+$/.test(reqLineStr) ? parseInt(reqLineStr, 10) : 0,
-          act_line: /^\d+$/.test(actLineStr) ? parseInt(actLineStr, 10) : 0,
-        },
-      };
-    } else if (
-      evtType === CFRDS_DEBUGGER_EVENT_TYPE.BREAKPOINT ||
-      evtType === CFRDS_DEBUGGER_EVENT_TYPE.STEP
-    ) {
-      const [source, o1] = parseString(raw, off);
-      const [lineStr, o2] = parseString(raw, o1);
-      const [threadName, o3] = parseString(raw, o2);
-      off = o3;
-      return {
-        type: evtType as CFRDS_DEBUGGER_EVENT_TYPE.BREAKPOINT | CFRDS_DEBUGGER_EVENT_TYPE.STEP,
-        data: {
-          source,
-          line: /^\d+$/.test(lineStr) ? parseInt(lineStr, 10) : 0,
-          thread_name: threadName,
-        },
-      };
+      const evtName = data.EVENT || data.COMMAND;
+      const threadName = data.THREAD || data.THREAD_ID || data.THREAD_NAME || "main";
+      data.thread_name = threadName;
+      data.thread_id = threadName;
+
+      if (evtName === "CF_BREAKPOINT_SET") {
+        return {
+          type: CFRDS_DEBUGGER_EVENT_TYPE.BREAKPOINT_SET,
+          data: {
+            pathname: data.CFML_PATH || data.FILE || "",
+            req_line: Math.floor(data.REQ_LINE_NUM || 0),
+            act_line: Math.floor(data.ACTUAL_LINE_NUM || 0),
+            thread_name: threadName,
+            thread_id: threadName,
+          },
+        };
+      } else if (evtName === "CF_BREAKPOINT_HIT" || evtName === "CF_STEP" || evtName === "BREAKPOINT" || evtName === "STEP") {
+        const type = String(evtName).includes("BREAKPOINT")
+          ? CFRDS_DEBUGGER_EVENT_TYPE.BREAKPOINT
+          : CFRDS_DEBUGGER_EVENT_TYPE.STEP;
+        return {
+          type,
+          data: {
+            source: data.CFML_PATH || data.FILE || "",
+            line: Math.floor(data.REQ_LINE_NUM || data.LINE || 0),
+            thread_name: threadName,
+            thread_id: threadName,
+          },
+        };
+      }
+      return { type: CFRDS_DEBUGGER_EVENT_TYPE.UNKNOWN, data };
+    } catch {
+      return null;
     }
-    return null;
   }
 
+  /**
+   * Configures fetch flags and waits for debugger events.
+   * NOTE: This is a long-polling request on the ColdFusion server that blocks until a debugger event occurs or times out.
+   */
   async debuggerAllFetchFlagsEnabled(
     sessionName: string,
     threads: boolean,
@@ -507,14 +533,14 @@ export class Server {
   }
 
   async debuggerWatchVariables(sessionName: string, variables: string): Promise<void> {
-    const vars = variables.split(",").filter((v) => v.trim().length > 0);
-    const varTags = vars.map((v, i) => `<var name='WATCH_${i}'><string>${v.trim()}</string></var>`).join("");
-    const wddx = `<wddxPacket version='1.0'><header/><data><array length='1'><struct type='java.util.HashMap'><var name='COMMAND'><string>SET_WATCH_VARIABLES</string></var>${varTags}</struct></array></data></wddxPacket>`;
+    const vars = variables.split(",").map((v) => v.trim()).filter((v) => v.length > 0);
+    const varTags = vars.map((v) => `<string>${v}</string>`).join("");
+    const wddx = `<wddxPacket version='1.0'><header/><data><array length='1'><struct type='java.util.HashMap'><var name='COMMAND'><string>SET_WATCH_VARIABLES</string></var><var name='WATCH'><array length='${vars.length}'>${varTags}</array></var></struct></array></data></wddxPacket>`;
     await sendRdsCommand(this.ctx, "DBGREQUEST", ["DBG_REQUEST", sessionName, wddx]);
   }
 
   async debuggerGetOutput(sessionName: string, threadName: string): Promise<void> {
-    const wddx = `<wddxPacket version='1.0'><header/><data><array length='1'><struct type='java.util.HashMap'><var name='BODY_ONLY'><boolean value='true'/></var><var name='THREAD'><string>${threadName}</string></var></struct></array></data></wddxPacket>`;
+    const wddx = `<wddxPacket version='1.0'><header/><data><array length='1'><struct type='java.util.HashMap'><var name='COMMAND'><string>GET_OUTPUT</string></var><var name='BODY_ONLY'><boolean value='true'/></var><var name='THREAD'><string>${threadName}</string></var></struct></array></data></wddxPacket>`;
     await sendRdsCommand(this.ctx, "DBGREQUEST", ["DBG_REQUEST", sessionName, wddx]);
   }
 

@@ -288,7 +288,9 @@ EXPORT_CFRDS cfrds_status cfrds_command_debugger_breakpoint_on_exception(cfrds_s
 EXPORT_CFRDS cfrds_status cfrds_command_debugger_breakpoint(cfrds_server *server, const char *session_id, const char *filepath, int line, bool enable);
 EXPORT_CFRDS cfrds_status cfrds_command_debugger_clear_all_breakpoints(cfrds_server *server, const char *session_id);
 
+/* NOTE: This is a long-polling request on the ColdFusion server that blocks until a debugger event occurs or times out. */
 EXPORT_CFRDS cfrds_status cfrds_command_debugger_get_debug_events(cfrds_server *server, const char *session_id, cfrds_debugger_event **event);
+/* NOTE: This is a long-polling request on the ColdFusion server that blocks until a debugger event occurs or times out. */
 EXPORT_CFRDS cfrds_status cfrds_command_debugger_all_fetch_flags_enabled(cfrds_server *server, const char *session_id, bool threads, bool watch, bool scopes, bool cf_trace, bool java_trace, cfrds_debugger_event **event);
 EXPORT_CFRDS void cfrds_debugger_event_free(cfrds_debugger_event *event);
 EXPORT_CFRDS void cfrds_debugger_event_cleanup(cfrds_debugger_event **buf);

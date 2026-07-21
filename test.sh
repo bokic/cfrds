@@ -98,7 +98,8 @@ echo "5. Testing IDE Default..."
 bin/cfrds ide_default "${TARGET}/" 1 || true
 
 echo "6. Debugger Operations..."
-# TODO: Test debugger operations (skipped for now)
-echo "Skipping debugger tests (TODO)"
+echo "Testing debugger start and stop..."
+bin/cfrds test_debugger "${TARGET}" || echo "  Debugger start/stop notification (expected if CF debugging disabled)"
+# TODO: Test remaining debugger operations (debugger_get_server_info, dbg_brk, step_in, step_over, step_out, continue)
 
 echo "C CLI (cfrds) tests completed successfully!"

@@ -701,31 +701,81 @@ class server:
         _send_rds_command(self._ctx, "DBGREQUEST", ["DBG_REQUEST", session_name, wddx])
 
     def debugger_get_debug_events(self, session_name: str) -> Optional[Dict[str, Any]]:
-        raw = _send_rds_command(self._ctx, "DBGREQUEST", ["DBG_EVENTS", session_name])
-        evt_type, offset = _parse_number(raw, 0)
-        if evt_type == CFRDS_DEBUGGER_EVENT_TYPE_BREAKPOINT_SET:
-            pathname, offset = _parse_string(raw, offset)
-            req_line_str, offset = _parse_string(raw, offset)
-            act_line_str, offset = _parse_string(raw, offset)
-            return {
-                "pathname": pathname,
-                "req_line": int(req_line_str) if req_line_str.isdigit() else 0,
-                "act_line": int(act_line_str) if act_line_str.isdigit() else 0,
-            }
-        elif evt_type in (CFRDS_DEBUGGER_EVENT_TYPE_BREAKPOINT, CFRDS_DEBUGGER_EVENT_TYPE_STEP):
-            source, offset = _parse_string(raw, offset)
-            line_str, offset = _parse_string(raw, offset)
-            thread_name, offset = _parse_string(raw, offset)
-            return {
-                "source": source,
-                "line": int(line_str) if line_str.isdigit() else 0,
-                "thread_name": thread_name,
-            }
-        return None
+        """
+        Fetches debugger events for the specified session.
+        NOTE: This is a long-polling request on the ColdFusion server that blocks until a debugger event occurs or times out.
+        """
+        try:
+            raw = _send_rds_command(self._ctx, "DBGREQUEST", ["DBG_EVENTS", session_name])
+            if not raw:
+                return None
+            wddx_xml, _ = _parse_string(raw, 0)
+            if not wddx_xml:
+                return None
+
+            import xml.etree.ElementTree as ET
+            root = ET.fromstring(wddx_xml)
+            data: Dict[str, Any] = {}
+            for var in root.findall(".//var"):
+                name = var.attrib.get("name")
+                if not name:
+                    continue
+                str_elem = var.find("string")
+                num_elem = var.find("number")
+                bool_elem = var.find("boolean")
+                if str_elem is not None and str_elem.text:
+                    data[name] = str_elem.text
+                elif num_elem is not None and num_elem.text:
+                    try:
+                        data[name] = float(num_elem.text)
+                    except ValueError:
+                        data[name] = num_elem.text
+                elif bool_elem is not None:
+                    data[name] = bool_elem.attrib.get("value") == "true"
+
+            evt_name = data.get("EVENT") or data.get("COMMAND")
+            thread_name = str(data.get("THREAD") or data.get("THREAD_ID") or data.get("THREAD_NAME") or "main")
+            data["thread_name"] = thread_name
+            data["thread_id"] = thread_name
+
+            def _to_int(val: Any) -> int:
+                try:
+                    return int(float(val))
+                except (ValueError, TypeError):
+                    return 0
+
+            if evt_name == "CF_BREAKPOINT_SET":
+                return {
+                    "type": CFRDS_DEBUGGER_EVENT_TYPE_BREAKPOINT_SET,
+                    "data": {
+                        "pathname": data.get("CFML_PATH") or data.get("FILE", ""),
+                        "req_line": _to_int(data.get("REQ_LINE_NUM")),
+                        "act_line": _to_int(data.get("ACTUAL_LINE_NUM")),
+                        "thread_name": thread_name,
+                        "thread_id": thread_name,
+                    },
+                }
+            elif evt_name in ("CF_BREAKPOINT_HIT", "CF_STEP", "BREAKPOINT", "STEP"):
+                return {
+                    "type": CFRDS_DEBUGGER_EVENT_TYPE_BREAKPOINT if "BREAKPOINT" in str(evt_name) else CFRDS_DEBUGGER_EVENT_TYPE_STEP,
+                    "data": {
+                        "source": data.get("CFML_PATH") or data.get("FILE", ""),
+                        "line": _to_int(data.get("REQ_LINE_NUM") or data.get("LINE")),
+                        "thread_name": thread_name,
+                        "thread_id": thread_name,
+                    },
+                }
+            return {"type": CFRDS_DEBUGGER_EVENT_UNKNOWN, "data": data}
+        except Exception:
+            return None
 
     def debugger_all_fetch_flags_enabled(
         self, session_name: str, threads: bool, watch: bool, scopes: bool, cf_trace: bool, java_trace: bool
     ) -> None:
+        """
+        Configures fetch flags and waits for debugger events.
+        NOTE: This is a long-polling request on the ColdFusion server that blocks until a debugger event occurs or times out.
+        """
         def b(v: bool) -> str:
             return "true" if v else "false"
         wddx = (f"<wddxPacket version='1.0'><header/><data><struct type='java.util.HashMap'>"
@@ -763,12 +813,12 @@ class server:
 
     def debugger_watch_variables(self, session_name: str, variables: str) -> None:
         vars_list = [v.strip() for v in variables.split(",") if v.strip()]
-        var_tags = "".join([f"<var name='WATCH_{i}'><string>{v}</string></var>" for i, v in enumerate(vars_list)])
-        wddx = f"<wddxPacket version='1.0'><header/><data><array length='1'><struct type='java.util.HashMap'><var name='COMMAND'><string>SET_WATCH_VARIABLES</string></var>{var_tags}</struct></array></data></wddxPacket>"
+        var_tags = "".join([f"<string>{v}</string>" for v in vars_list])
+        wddx = f"<wddxPacket version='1.0'><header/><data><array length='1'><struct type='java.util.HashMap'><var name='COMMAND'><string>SET_WATCH_VARIABLES</string></var><var name='WATCH'><array length='{len(vars_list)}'>{var_tags}</array></var></struct></array></data></wddxPacket>"
         _send_rds_command(self._ctx, "DBGREQUEST", ["DBG_REQUEST", session_name, wddx])
 
     def debugger_get_output(self, session_name: str, thread_name: str) -> None:
-        wddx = f"<wddxPacket version='1.0'><header/><data><array length='1'><struct type='java.util.HashMap'><var name='BODY_ONLY'><boolean value='true'/></var><var name='THREAD'><string>{thread_name}</string></var></struct></array></data></wddxPacket>"
+        wddx = f"<wddxPacket version='1.0'><header/><data><array length='1'><struct type='java.util.HashMap'><var name='COMMAND'><string>GET_OUTPUT</string></var><var name='BODY_ONLY'><boolean value='true'/></var><var name='THREAD'><string>{thread_name}</string></var></struct></array></data></wddxPacket>"
         _send_rds_command(self._ctx, "DBGREQUEST", ["DBG_REQUEST", session_name, wddx])
 
     def debugger_set_scope_filter(self, session_name: str, filter_str: str) -> None:
@@ -778,35 +828,50 @@ class server:
     # Security Analyzer Operations
     def security_analyzer_scan(self, pathnames: str, recursively: bool = True, cores: int = 1) -> int:
         raw = _send_rds_command(
-            self._ctx, "SECURITYANALYZER", ["scan", pathnames, "1" if recursively else "0", str(cores)]
+            self._ctx, "SECURITYANALYZER", ["scan", pathnames, "true" if recursively else "false", str(cores)]
         )
-        cmd_str, _ = _parse_string(raw, 0)
-        return int(cmd_str) if cmd_str.isdigit() else 0
+        _, offset = _parse_number(raw, 0)
+        json_str, _ = _parse_string(raw, offset)
+        import json
+        try:
+            data = json.loads(json_str)
+            return int(data.get("id", 0))
+        except Exception:
+            return 0
 
     def security_analyzer_cancel(self, command_id: int) -> None:
         _send_rds_command(self._ctx, "SECURITYANALYZER", ["cancel", str(command_id)])
 
     def security_analyzer_status(self, command_id: int) -> Dict[str, Any]:
         raw = _send_rds_command(self._ctx, "SECURITYANALYZER", ["status", str(command_id)])
-        tot_str, offset = _parse_string(raw, 0)
-        vis_str, offset = _parse_string(raw, offset)
-        pct_str, offset = _parse_string(raw, offset)
-        upd_str, offset = _parse_string(raw, offset)
-        return {
-            "totalfiles": int(tot_str) if tot_str.isdigit() else 0,
-            "filesvisitedcount": int(vis_str) if vis_str.isdigit() else 0,
-            "percentage": int(pct_str) if pct_str.isdigit() else 0,
-            "lastupdated": int(upd_str) if upd_str.isdigit() else 0,
-        }
+        _, offset = _parse_number(raw, 0)
+        json_str, _ = _parse_string(raw, offset)
+        import json
+        try:
+            data = json.loads(json_str)
+            return {
+                "totalfiles": int(data.get("totalfiles", 0)),
+                "filesvisitedcount": int(data.get("filesvisitedcount", 0)),
+                "percentage": int(data.get("percentage", 0)),
+                "lastupdated": int(data.get("lastupdated", 0)),
+            }
+        except Exception:
+            return {
+                "totalfiles": 0,
+                "filesvisitedcount": 0,
+                "percentage": 0,
+                "lastupdated": 0,
+            }
 
     def security_analyzer_result(self, command_id: int) -> Optional[Dict[str, Any]]:
         raw = _send_rds_command(self._ctx, "SECURITYANALYZER", ["result", str(command_id)])
-        res_str, _ = _parse_string(raw, 0)
+        _, offset = _parse_number(raw, 0)
+        json_str, _ = _parse_string(raw, offset)
         import json
         try:
-            return json.loads(res_str)
+            return json.loads(json_str)
         except Exception:
-            return {"raw": res_str}
+            return {"raw": json_str}
 
     def security_analyzer_clean(self, command_id: int) -> None:
         _send_rds_command(self._ctx, "SECURITYANALYZER", ["clean", str(command_id)])

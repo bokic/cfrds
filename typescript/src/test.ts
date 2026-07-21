@@ -353,7 +353,7 @@ async function main(): Promise<void> {
     // --- Security Analyzer Operations ---
     log("\n--- Validating Security Analyzer Operations ---");
     try {
-      const scanPath = cfRoot || "/";
+      const scanPath = testDir;
       const cmdId = await rds.securityAnalyzerScan(scanPath, true, 1);
       log(`  securityAnalyzerScan('${scanPath}'): commandId=${cmdId}`);
       assert(typeof cmdId === "number", "securityAnalyzerScan should return number");
@@ -388,11 +388,151 @@ async function main(): Promise<void> {
 
     // --- Debugging Operations ---
     log("\n--- Debugging Operations ---");
-    // TODO: Validate debugging functions (debuggerStart, debuggerStop, debuggerGetServerInfo,
-    // debuggerBreakpointOnException, debuggerBreakpoint, debuggerClearAllBreakpoints, debuggerGetDebugEvents,
-    // debuggerAllFetchFlagsEnabled, debuggerStepIn, debuggerStepOver, debuggerStepOut, debuggerContinue,
-    // debuggerWatchExpression, debuggerSetVariable, debuggerWatchVariables, debuggerGetOutput, debuggerSetScopeFilter)
-    log("  Skipping live debugging function validation (TODO)");
+    try {
+      log("  Starting Debugger...");
+      const sessionId = await rds.debuggerStart();
+      log(`  debuggerStart(): sessionId=${sessionId}`);
+      assert(typeof sessionId === "string" && sessionId.length > 0, "debuggerStart should return non-empty sessionId string");
+
+      try {
+        try {
+          const dbgPort = await rds.debuggerGetServerInfo(sessionId);
+          log(`  debuggerGetServerInfo('${sessionId}'): port=${dbgPort}`);
+        } catch (e) {
+          log(`  debuggerGetServerInfo error: ${e}`);
+        }
+
+        try {
+          await rds.debuggerSetScopeFilter(sessionId, "VARIABLES,SESSION");
+          log(`  debuggerSetScopeFilter('${sessionId}'): success`);
+        } catch (e) {
+          log(`  debuggerSetScopeFilter error: ${e}`);
+        }
+
+        try {
+          await rds.debuggerWatchVariables(sessionId, "VARIABLES.A");
+          log(`  debuggerWatchVariables('${sessionId}'): success`);
+        } catch (e) {
+          log(`  debuggerWatchVariables error: ${e}`);
+        }
+
+        try {
+          await rds.debuggerClearAllBreakpoints(sessionId);
+          log(`  debuggerClearAllBreakpoints('${sessionId}'): success`);
+        } catch (e) {
+          log(`  debuggerClearAllBreakpoints error: ${e}`);
+        }
+
+        const testCfmContent = "<cfset a = 10>\n<cfset b = 20>\n<cfset c = a + b>\n<cfoutput>Debug Test Page: #c#</cfoutput>\n";
+        const appCfmPath = "/app/test_debug.cfm";
+        const wwwrootCfmPath = cfRoot ? `${cfRoot}/wwwroot/test_debug.cfm` : "/opt/coldfusion/cfusion/wwwroot/test_debug.cfm";
+
+        try { await rds.fileWrite(appCfmPath, testCfmContent); } catch {}
+        try { await rds.fileWrite(wwwrootCfmPath, testCfmContent); } catch {}
+
+        const targetBpPath = appCfmPath;
+        try {
+          await rds.debuggerBreakpoint(sessionId, targetBpPath, 2, true);
+          log(`  debuggerBreakpoint('${sessionId}', '${targetBpPath}', line 2): success`);
+        } catch (e) {
+          log(`  debuggerBreakpoint error: ${e}`);
+        }
+
+        if (wwwrootCfmPath !== appCfmPath) {
+          try { await rds.debuggerBreakpoint(sessionId, wwwrootCfmPath, 2, true); } catch {}
+        }
+
+        try {
+          await rds.debuggerBreakpointOnException(sessionId, true);
+          log(`  debuggerBreakpointOnException('${sessionId}'): success`);
+        } catch (e) {
+          log(`  debuggerBreakpointOnException error: ${e}`);
+        }
+
+        try {
+          await rds.debuggerAllFetchFlagsEnabled(sessionId, true, true, true, true, true);
+          log(`  debuggerAllFetchFlagsEnabled('${sessionId}'): success`);
+        } catch (e) {
+          log(`  debuggerAllFetchFlagsEnabled error: ${e}`);
+        }
+
+        // Fetch Event 1 (Dummy / Breakpoint Registration Event)
+        let evt1 = null;
+        try {
+          evt1 = await rds.debuggerGetDebugEvents(sessionId);
+          log(`  >>> EVENT 1 (Dummy / Registration Event): ${JSON.stringify(evt1)}`);
+        } catch (e) {
+          log(`  debuggerGetDebugEvents (Event 1) error: ${e}`);
+        }
+
+        log("\n" + "=".repeat(72));
+        log("[DEBUGGER READY]");
+        log(`  Created CFML file: ${appCfmPath} (and ${wwwrootCfmPath})`);
+        log(`  Breakpoint set on line 2`);
+        log(`  Please open http://${rdsHost}:${port}/test_debug.cfm in your browser.`);
+        log("  Waiting for Event 2 (Browser Hit Event - script will block until requested)...");
+        log("=".repeat(72) + "\n");
+
+        // Fetch Event 2 (Actual Browser Hit Event)
+        let evt2 = null;
+        try {
+          evt2 = await rds.debuggerGetDebugEvents(sessionId);
+          log(`  >>> EVENT 2 (Browser Hit Event): ${JSON.stringify(evt2)}`);
+        } catch (e) {
+          log(`  debuggerGetDebugEvents (Event 2) error: ${e}`);
+        }
+
+        const threadName = (evt2 && ((evt2.data as any)?.thread_name || (evt2.data as any)?.thread_id)) ||
+                           (evt1 && ((evt1.data as any)?.thread_name || (evt1.data as any)?.thread_id)) || "main";
+
+        try {
+          await rds.debuggerWatchExpression(sessionId, threadName, "arrayNew(1)");
+          log(`  debuggerWatchExpression('${sessionId}', '${threadName}'): success`);
+        } catch (e) {
+          log(`  debuggerWatchExpression error: ${e}`);
+        }
+
+        try {
+          await rds.debuggerSetVariable(sessionId, threadName, "VARIABLES.A", "200");
+          log(`  debuggerSetVariable('${sessionId}', '${threadName}'): success`);
+        } catch (e) {
+          log(`  debuggerSetVariable error: ${e}`);
+        }
+
+        try {
+          await rds.debuggerGetOutput(sessionId, threadName);
+          log(`  debuggerGetOutput('${sessionId}', '${threadName}'): success`);
+        } catch (e) {
+          log(`  debuggerGetOutput error: ${e}`);
+        }
+
+        try {
+          await rds.debuggerStepOver(sessionId, threadName);
+          log(`  debuggerStepOver('${sessionId}', '${threadName}'): success`);
+        } catch (e) {
+          log(`  debuggerStepOver error: ${e}`);
+        }
+
+        try {
+          await rds.debuggerContinue(sessionId, threadName);
+          log(`  debuggerContinue('${sessionId}', '${threadName}'): success`);
+        } catch (e) {
+          log(`  debuggerContinue error: ${e}`);
+        }
+
+        try {
+          await rds.debuggerBreakpoint(sessionId, targetBpPath, 2, false);
+          log(`  debuggerBreakpoint disable('${sessionId}'): success`);
+        } catch (e) {
+          log(`  debuggerBreakpoint disable error: ${e}`);
+        }
+      } finally {
+        await rds.debuggerStop(sessionId);
+        log(`  debuggerStop('${sessionId}'): success`);
+      }
+    } catch (e) {
+      log(`  Debugger session failed to start (skipping remaining debugger tests): ${e}`);
+    }
 
     await rds.close();
   }

@@ -1129,6 +1129,8 @@ class server:
                     },
                 }
             return {"type": CFRDS_DEBUGGER_EVENT_UNKNOWN, "data": data}
+        except CFRDSError:
+            raise
         except Exception:
             return None
 

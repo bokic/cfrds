@@ -474,7 +474,10 @@ export class Server {
         };
       }
       return { type: CFRDS_DEBUGGER_EVENT_TYPE.UNKNOWN, data };
-    } catch {
+    } catch (e) {
+      if (e instanceof CFRDSError) {
+        throw e;
+      }
       return null;
     }
   }
@@ -551,16 +554,16 @@ export class Server {
 
   // Security Analyzer Operations
   async securityAnalyzerScan(pathnames: string, recursively: boolean = true, cores: number = 1): Promise<number> {
+    const raw = await sendRdsCommand(this.ctx, "SECURITYANALYZER", [
+      "scan", pathnames, recursively ? "true" : "false", String(cores),
+    ]);
+    const [, offset] = parseNumber(raw, 0);
+    const [resStr] = parseString(raw, offset);
     try {
-      const raw = await sendRdsCommand(this.ctx, "SECURITYANALYZER", [
-        "scan", pathnames, recursively ? "true" : "false", String(cores),
-      ]);
-      const [, offset] = parseNumber(raw, 0);
-      const [resStr] = parseString(raw, offset);
       const parsed = JSON.parse(resStr);
       return typeof parsed.id === "number" ? parsed.id : (parseInt(resStr, 10) || 0);
     } catch {
-      return 0;
+      return parseInt(resStr, 10) || 0;
     }
   }
 

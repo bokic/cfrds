@@ -2247,13 +2247,13 @@ int cfrds_debugger_event_get_scopes_count(const cfrds_debugger_event *event)
     return wddx_node_array_size(wddx_get_var((const WDDX *)event, "0,SCOPES"));
 }
 
-const char *cfrds_debugger_event_get_scopes_item(const cfrds_debugger_event *event, int ndx)
+const char *cfrds_debugger_event_get_scopes_item(const cfrds_debugger_event *event, size_t ndx)
 {
-    if ((event == NULL) || (ndx < 0))
+    if ((event == NULL) )
         return NULL;
 
     const WDDX_NODE *array_node = wddx_get_var((const WDDX *)event, "0,SCOPES");
-    const WDDX_NODE *item = wddx_node_array_at(array_node, ndx);
+    const WDDX_NODE *item = wddx_node_array_at(array_node, (int)ndx);
 
     if (wddx_node_type(item) != WDDX_STRING)
         return NULL;
@@ -2266,13 +2266,13 @@ int cfrds_debugger_event_get_threads_count(const cfrds_debugger_event *event)
     return wddx_node_array_size(wddx_get_var((const WDDX *)event, "0,THREADS"));
 }
 
-const char *cfrds_debugger_event_get_threads_item(const cfrds_debugger_event *event, int ndx)
+const char *cfrds_debugger_event_get_threads_item(const cfrds_debugger_event *event, size_t ndx)
 {
-    if ((event == NULL) || (ndx < 0))
+    if ((event == NULL) )
         return NULL;
 
     const WDDX_NODE *array_node = wddx_get_var((const WDDX *)event, "0,THREADS");
-    const WDDX_NODE *item = wddx_node_array_at(array_node, ndx);
+    const WDDX_NODE *item = wddx_node_array_at(array_node, (int)ndx);
 
     if (wddx_node_type(item) != WDDX_STRING)
         return NULL;
@@ -2285,13 +2285,13 @@ int cfrds_debugger_event_get_watch_count(const cfrds_debugger_event *event)
     return wddx_node_array_size(wddx_get_var((const WDDX *)event, "0,WATCH"));
 }
 
-const char *cfrds_debugger_event_get_watch_item(const cfrds_debugger_event *event, int ndx)
+const char *cfrds_debugger_event_get_watch_item(const cfrds_debugger_event *event, size_t ndx)
 {
-    if ((event == NULL) || (ndx < 0))
+    if ((event == NULL) )
         return NULL;
 
     const WDDX_NODE *array_node = wddx_get_var((const WDDX *)event, "0,WATCH");
-    const WDDX_NODE *item = wddx_node_array_at(array_node, ndx);
+    const WDDX_NODE *item = wddx_node_array_at(array_node, (int)ndx);
 
     if (wddx_node_type(item) != WDDX_STRING)
         return NULL;
@@ -2304,15 +2304,15 @@ int cfrds_debugger_event_get_cf_trace_count(const cfrds_debugger_event *event)
     return wddx_node_array_size(wddx_get_var((const WDDX *)event, "0,CF_TRACE"));
 }
 
-const char *cfrds_debugger_event_get_cf_trace_item(const cfrds_debugger_event *event, int ndx)
+const char *cfrds_debugger_event_get_cf_trace_item(const cfrds_debugger_event *event, size_t ndx)
 {
     char key[32];
     int n;
 
-    if ((event == NULL)||(ndx < 0))
+    if ((event == NULL))
         return NULL;
 
-    n = snprintf(key, sizeof(key), "0,CF_TRACE,%d", ndx);
+    n = snprintf(key, sizeof(key), "0,CF_TRACE,%zu", ndx);
     if (n < 0)
         return NULL;
 
@@ -2329,15 +2329,15 @@ int cfrds_debugger_event_get_java_trace_count(const cfrds_debugger_event *event)
     return wddx_node_array_size(wddx_get_var((const WDDX *)event, "0,JAVA_TRACE"));
 }
 
-const char *cfrds_debugger_event_get_java_trace_item(const cfrds_debugger_event *event, int ndx)
+const char *cfrds_debugger_event_get_java_trace_item(const cfrds_debugger_event *event, size_t ndx)
 {
     char key[32];
     int n;
 
-    if ((event == NULL)||(ndx < 0))
+    if ((event == NULL))
         return NULL;
 
-    n = snprintf(key, sizeof(key), "0,JAVA_TRACE,%d", ndx);
+    n = snprintf(key, sizeof(key), "0,JAVA_TRACE,%zu", ndx);
     if (n < 0)
         return NULL;
 
@@ -3060,11 +3060,10 @@ exit:
     return -1;
 }
 
-cfrds_str cfrds_security_analyzer_result_filesscanned_item_result(const cfrds_security_analyzer_result *value, int ndx)
+cfrds_str cfrds_security_analyzer_result_filesscanned_item_result(const cfrds_security_analyzer_result *value, size_t ndx)
 {
     json_object_defer(json_obj);
 
-    if (ndx < 0)
         goto exit;
 
     json_obj = json_tokener_parse((const char *)value);
@@ -3080,10 +3079,10 @@ cfrds_str cfrds_security_analyzer_result_filesscanned_item_result(const cfrds_se
         goto exit;
 
     size_t len = json_object_array_length(filesscanned);
-    if ((unsigned)ndx >= len)
+    if (ndx >= len)
         goto exit;
 
-    json_object *item = json_object_array_get_idx(filesscanned, (unsigned)ndx);
+    json_object *item = json_object_array_get_idx(filesscanned, ndx);
     if (item == NULL)
         goto exit;
 
@@ -3100,7 +3099,7 @@ exit:
     return NULL;
 }
 
-cfrds_str cfrds_security_analyzer_result_filesscanned_item_filename(const cfrds_security_analyzer_result *value, int ndx)
+cfrds_str cfrds_security_analyzer_result_filesscanned_item_filename(const cfrds_security_analyzer_result *value, size_t ndx)
 {
     json_object_defer(json_obj);
 
@@ -3116,7 +3115,7 @@ cfrds_str cfrds_security_analyzer_result_filesscanned_item_filename(const cfrds_
     if (json_object_get_type(filesscanned) != json_type_array)
         goto exit;
 
-    int len = json_object_array_length(filesscanned);
+    size_t len = json_object_array_length(filesscanned);
     if (ndx >= len)
         goto exit;
 
@@ -3158,7 +3157,7 @@ exit:
     return -1;
 }
 
-cfrds_str cfrds_security_analyzer_result_filesnotscanned_item_reason(const cfrds_security_analyzer_result *value, int ndx)
+cfrds_str cfrds_security_analyzer_result_filesnotscanned_item_reason(const cfrds_security_analyzer_result *value, size_t ndx)
 {
     json_object_defer(json_obj);
 
@@ -3174,7 +3173,7 @@ cfrds_str cfrds_security_analyzer_result_filesnotscanned_item_reason(const cfrds
     if (json_object_get_type(filesscanned) != json_type_array)
         goto exit;
 
-    int len = json_object_array_length(filesscanned);
+    size_t len = json_object_array_length(filesscanned);
     if (ndx >= len)
         goto exit;
 
@@ -3195,7 +3194,7 @@ exit:
     return NULL;
 }
 
-cfrds_str cfrds_security_analyzer_result_filesnotscanned_item_filename(const cfrds_security_analyzer_result *value, int ndx)
+cfrds_str cfrds_security_analyzer_result_filesnotscanned_item_filename(const cfrds_security_analyzer_result *value, size_t ndx)
 {
     json_object_defer(json_obj);
 
@@ -3211,7 +3210,7 @@ cfrds_str cfrds_security_analyzer_result_filesnotscanned_item_filename(const cfr
     if (json_object_get_type(filesscanned) != json_type_array)
         goto exit;
 
-    int len = json_object_array_length(filesscanned);
+    size_t len = json_object_array_length(filesscanned);
     if (ndx >= len)
         goto exit;
 
@@ -3295,7 +3294,7 @@ exit:
     return -1;
 }
 
-cfrds_str cfrds_security_analyzer_result_files_value(const cfrds_security_analyzer_result *value, int ndx)
+cfrds_str cfrds_security_analyzer_result_files_value(const cfrds_security_analyzer_result *value, size_t ndx)
 {
     json_object_defer(json_obj);
     json_obj = json_tokener_parse((const char *)value);
@@ -3310,7 +3309,7 @@ cfrds_str cfrds_security_analyzer_result_files_value(const cfrds_security_analyz
     if (json_object_get_type(files) != json_type_array)
         goto exit;
 
-    int len = json_object_array_length(files);
+    size_t len = json_object_array_length(files);
     if (ndx >= len)
         goto exit;
 
@@ -3454,7 +3453,7 @@ exit:
 }
 
 
-cfrds_str cfrds_security_analyzer_result_errors_item_errormessage(const cfrds_security_analyzer_result *value, int ndx)
+cfrds_str cfrds_security_analyzer_result_errors_item_errormessage(const cfrds_security_analyzer_result *value, size_t ndx)
 {
     json_object_defer(json_obj);
     json_obj = json_tokener_parse((const char *)value);
@@ -3490,7 +3489,7 @@ exit:
     return NULL;
 }
 
-int cfrds_security_analyzer_result_errors_item_endline(const cfrds_security_analyzer_result *value, int ndx)
+int cfrds_security_analyzer_result_errors_item_endline(const cfrds_security_analyzer_result *value, size_t ndx)
 {
     json_object_defer(json_obj);
     json_obj = json_tokener_parse((const char *)value);
@@ -3505,7 +3504,7 @@ int cfrds_security_analyzer_result_errors_item_endline(const cfrds_security_anal
     if (json_object_get_type(errors) != json_type_array)
         goto exit;
 
-    int len = json_object_array_length(errors);
+    size_t len = json_object_array_length(errors);
     if (ndx >= len)
         goto exit;
 
@@ -3529,7 +3528,7 @@ exit:
     return -1;
 }
 
-cfrds_str cfrds_security_analyzer_result_errors_item_path(const cfrds_security_analyzer_result *value, int ndx)
+cfrds_str cfrds_security_analyzer_result_errors_item_path(const cfrds_security_analyzer_result *value, size_t ndx)
 {
     json_object_defer(json_obj);
     json_obj = json_tokener_parse((const char *)value);
@@ -3565,7 +3564,7 @@ exit:
     return NULL;
 }
 
-cfrds_str cfrds_security_analyzer_result_errors_item_vulnerablecode(const cfrds_security_analyzer_result *value, int ndx)
+cfrds_str cfrds_security_analyzer_result_errors_item_vulnerablecode(const cfrds_security_analyzer_result *value, size_t ndx)
 {
     json_object_defer(json_obj);
     json_obj = json_tokener_parse((const char *)value);
@@ -3601,7 +3600,7 @@ exit:
     return NULL;
 }
 
-cfrds_str cfrds_security_analyzer_result_errors_item_filename(const cfrds_security_analyzer_result *value, int ndx)
+cfrds_str cfrds_security_analyzer_result_errors_item_filename(const cfrds_security_analyzer_result *value, size_t ndx)
 {
     json_object_defer(json_obj);
     json_obj = json_tokener_parse((const char *)value);
@@ -3637,7 +3636,7 @@ exit:
     return NULL;
 }
 
-int cfrds_security_analyzer_result_errors_item_beginline(const cfrds_security_analyzer_result *value, int ndx)
+int cfrds_security_analyzer_result_errors_item_beginline(const cfrds_security_analyzer_result *value, size_t ndx)
 {
     json_object_defer(json_obj);
     json_obj = json_tokener_parse((const char *)value);
@@ -3673,7 +3672,7 @@ exit:
     return -1;
 }
 
-int cfrds_security_analyzer_result_errors_item_column(const cfrds_security_analyzer_result *value, int ndx)
+int cfrds_security_analyzer_result_errors_item_column(const cfrds_security_analyzer_result *value, size_t ndx)
 {
     json_object_defer(json_obj);
     json_obj = json_tokener_parse((const char *)value);
@@ -3709,7 +3708,7 @@ exit:
     return -1;
 }
 
-cfrds_str cfrds_security_analyzer_result_errors_item_error(const cfrds_security_analyzer_result *value, int ndx)
+cfrds_str cfrds_security_analyzer_result_errors_item_error(const cfrds_security_analyzer_result *value, size_t ndx)
 {
     json_object_defer(json_obj);
     json_obj = json_tokener_parse((const char *)value);
@@ -3745,7 +3744,7 @@ exit:
     return NULL;
 }
 
-int cfrds_security_analyzer_result_errors_item_begincolumn(const cfrds_security_analyzer_result *value, int ndx)
+int cfrds_security_analyzer_result_errors_item_begincolumn(const cfrds_security_analyzer_result *value, size_t ndx)
 {
     json_object_defer(json_obj);
     json_obj = json_tokener_parse((const char *)value);
@@ -3781,7 +3780,7 @@ exit:
     return -1;
 }
 
-cfrds_str cfrds_security_analyzer_result_errors_item_type(const cfrds_security_analyzer_result *value, int ndx)
+cfrds_str cfrds_security_analyzer_result_errors_item_type(const cfrds_security_analyzer_result *value, size_t ndx)
 {
     json_object_defer(json_obj);
     json_obj = json_tokener_parse((const char *)value);
@@ -3817,7 +3816,7 @@ exit:
     return NULL;
 }
 
-int cfrds_security_analyzer_result_errors_item_endcolumn(const cfrds_security_analyzer_result *value, int ndx)
+int cfrds_security_analyzer_result_errors_item_endcolumn(const cfrds_security_analyzer_result *value, size_t ndx)
 {
     json_object_defer(json_obj);
     json_obj = json_tokener_parse((const char *)value);
@@ -3853,7 +3852,7 @@ exit:
     return -1;
 }
 
-cfrds_str cfrds_security_analyzer_result_errors_item_referencetype(const cfrds_security_analyzer_result *value, int ndx)
+cfrds_str cfrds_security_analyzer_result_errors_item_referencetype(const cfrds_security_analyzer_result *value, size_t ndx)
 {
     json_object_defer(json_obj);
     json_obj = json_tokener_parse((const char *)value);
@@ -4142,12 +4141,12 @@ int cfrds_adminapi_customtagpaths_count(const cfrds_adminapi_customtagpaths *buf
     return wddx_node_array_size((const WDDX_NODE *)buf);
 }
 
-const char *cfrds_adminapi_customtagpaths_at(const cfrds_adminapi_customtagpaths *buf, int ndx)
+const char *cfrds_adminapi_customtagpaths_at(const cfrds_adminapi_customtagpaths *buf, size_t ndx)
 {
     if (buf == NULL)
         return NULL;
 
-    const WDDX_NODE *item = wddx_node_array_at((const WDDX_NODE *)buf, ndx);
+    const WDDX_NODE *item = wddx_node_array_at((const WDDX_NODE *)buf, (int)ndx);
 
     if (wddx_node_type(item) != WDDX_STRING)
         return NULL;
@@ -4341,7 +4340,7 @@ int cfrds_adminapi_mappings_count(const cfrds_adminapi_mappings *buf)
     return wddx_node_struct_size((const WDDX_NODE *)buf);
 }
 
-const char *cfrds_adminapi_mappings_key(const cfrds_adminapi_mappings *buf, int ndx)
+const char *cfrds_adminapi_mappings_key(const cfrds_adminapi_mappings *buf, size_t ndx)
 {
     const char *ret = NULL;
 
@@ -4351,12 +4350,12 @@ const char *cfrds_adminapi_mappings_key(const cfrds_adminapi_mappings *buf, int 
     if (wddx_node_type((const WDDX_NODE *)buf) != WDDX_STRUCT)
         return NULL;
 
-    wddx_node_struct_at((const WDDX_NODE *)buf, ndx, &ret);
+    wddx_node_struct_at((const WDDX_NODE *)buf, (int)ndx, &ret);
 
     return ret;
 }
 
-const char *cfrds_adminapi_mappings_value(const cfrds_adminapi_mappings *buf, int ndx)
+const char *cfrds_adminapi_mappings_value(const cfrds_adminapi_mappings *buf, size_t ndx)
 {
     if (buf == NULL)
         return NULL;
@@ -4364,7 +4363,7 @@ const char *cfrds_adminapi_mappings_value(const cfrds_adminapi_mappings *buf, in
     if (wddx_node_type((const WDDX_NODE *)buf) != WDDX_STRUCT)
         return NULL;
 
-    const WDDX_NODE *val = wddx_node_struct_at((const WDDX_NODE *)buf, ndx, NULL);
+    const WDDX_NODE *val = wddx_node_struct_at((const WDDX_NODE *)buf, (int)ndx, NULL);
 
     if (wddx_node_type(val) != WDDX_STRING)
         return NULL;

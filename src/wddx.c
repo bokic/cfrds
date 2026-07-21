@@ -105,7 +105,7 @@ static struct WDDX_NODE *wddx_recursively_put(struct WDDX_NODE *node, const char
 
         if (node == NULL)
         {
-            size_t newsize = offsetof(struct WDDX_NODE, items) + (sizeof(void *) * idx);
+            size_t newsize = offsetof(struct WDDX_NODE, items) + (sizeof(void *) * (size_t)idx);
             node = (struct WDDX_NODE *)malloc(newsize);
             if (node == NULL)
             {
@@ -138,7 +138,7 @@ static struct WDDX_NODE *wddx_recursively_put(struct WDDX_NODE *node, const char
                     if (created_node) wddx_node_free(pre_realloc_node);
                     return NULL;
                 }
-                size_t oldsize = offsetof(struct WDDX_NODE, items) + (sizeof(void *) * node->cnt);
+                size_t oldsize = offsetof(struct WDDX_NODE, items) + (sizeof(void *) * (size_t)node->cnt);
                 explicit_bzero((char *)node + oldsize, newsize - oldsize);
                 node->cnt = idx;
             }

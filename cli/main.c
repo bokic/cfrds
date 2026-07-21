@@ -1070,8 +1070,8 @@ int main(int argc, char *argv[])
                 cfrds_str_defer(reason);
                 cfrds_str_defer(filename);
 
-                reason = cfrds_security_analyzer_result_filesnotscanned_item_reason(analyzer_result, ndx);
-                filename = cfrds_security_analyzer_result_filesnotscanned_item_filename(analyzer_result, ndx);
+                reason = cfrds_security_analyzer_result_filesnotscanned_item_reason(analyzer_result, (size_t)ndx);
+                filename = cfrds_security_analyzer_result_filesnotscanned_item_filename(analyzer_result, (size_t)ndx);
 
                 printf("\t%s - %s\n", reason, filename);
             }
@@ -1084,8 +1084,8 @@ int main(int argc, char *argv[])
             cfrds_str_defer(result);
             cfrds_str_defer(filename);
 
-            result = cfrds_security_analyzer_result_filesscanned_item_result(analyzer_result, ndx);
-            filename = cfrds_security_analyzer_result_filesscanned_item_filename(analyzer_result, ndx);
+            result = cfrds_security_analyzer_result_filesscanned_item_result(analyzer_result, (size_t)ndx);
+            filename = cfrds_security_analyzer_result_filesscanned_item_filename(analyzer_result, (size_t)ndx);
 
             printf("\t%s - %s\n", result, filename);
         }
@@ -1102,11 +1102,11 @@ int main(int argc, char *argv[])
                 cfrds_str_defer(errormessage);
                 int line = 0;
 
-                type = cfrds_security_analyzer_result_errors_item_type(analyzer_result, ndx);
-                filename = cfrds_security_analyzer_result_errors_item_filename(analyzer_result, ndx);
-                line = cfrds_security_analyzer_result_errors_item_beginline(analyzer_result, ndx);
-                error = cfrds_security_analyzer_result_errors_item_error(analyzer_result, ndx);
-                errormessage = cfrds_security_analyzer_result_errors_item_errormessage(analyzer_result, ndx);
+                type = cfrds_security_analyzer_result_errors_item_type(analyzer_result, (size_t)ndx);
+                filename = cfrds_security_analyzer_result_errors_item_filename(analyzer_result, (size_t)ndx);
+                line = cfrds_security_analyzer_result_errors_item_beginline(analyzer_result, (size_t)ndx);
+                error = cfrds_security_analyzer_result_errors_item_error(analyzer_result, (size_t)ndx);
+                errormessage = cfrds_security_analyzer_result_errors_item_errormessage(analyzer_result, (size_t)ndx);
 
                 printf("\t%s - %s:%d - %s(%s)\n", type, filename, line, error, errormessage);
             }
@@ -1181,7 +1181,7 @@ int main(int argc, char *argv[])
             int size = cfrds_adminapi_customtagpaths_count(result);
             for(int c = 0; c < size; c++)
             {
-                const char *value = cfrds_adminapi_customtagpaths_at(result, c);
+                const char *value = cfrds_adminapi_customtagpaths_at(result, (size_t)c);
                 printf("%s\n", value);
             }
         } else if (strcmp(subcommand, "extensions_setmapping") == 0)
@@ -1231,8 +1231,8 @@ int main(int argc, char *argv[])
             int size = cfrds_adminapi_mappings_count(result);
             for(int c = 0; c < size; c++)
             {
-                const char *key = cfrds_adminapi_mappings_key(result, c);
-                const char *value = cfrds_adminapi_mappings_value(result, c);
+                const char *key = cfrds_adminapi_mappings_key(result, (size_t)c);
+                const char *value = cfrds_adminapi_mappings_value(result, (size_t)c);
                 printf("%s => %s\n", key, value);
             }
         } else {
@@ -1291,7 +1291,7 @@ int main(int argc, char *argv[])
         printf("cf_trace_count: %d\n", cf_trace_count);
         for(int c = 0; c < cf_trace_count; c++)
         {
-            const char *cf_trace = cfrds_debugger_event_get_cf_trace_item(event, c);
+            const char *cf_trace = cfrds_debugger_event_get_cf_trace_item(event, (size_t)c);
             printf("cf_trace: %s\n", cf_trace);
         }
 
@@ -1299,7 +1299,7 @@ int main(int argc, char *argv[])
         printf("java_trace_count: %d\n", java_trace_count);
         for(int c = 0; c < java_trace_count; c++)
         {
-            const char *java_trace = cfrds_debugger_event_get_java_trace_item(event, c);
+            const char *java_trace = cfrds_debugger_event_get_java_trace_item(event, (size_t)c);
             printf("java_trace: %s\n", java_trace);
         }
 
@@ -1331,7 +1331,7 @@ int main(int argc, char *argv[])
         printf("scopes_count: %d\n", scopes_count);
         for(int c = 0; c < scopes_count; c++)
         {
-            const char *scopes_item = cfrds_debugger_event_get_scopes_item(event, c);
+            const char *scopes_item = cfrds_debugger_event_get_scopes_item(event, (size_t)c);
             printf("scopes_item: %s\n", scopes_item ? scopes_item : "(null)");
         }
 
@@ -1339,7 +1339,7 @@ int main(int argc, char *argv[])
         printf("threads_count: %d\n", threads_count);
         for(int c = 0; c < threads_count; c++)
         {
-            const char *threads_item = cfrds_debugger_event_get_threads_item(event, c);
+            const char *threads_item = cfrds_debugger_event_get_threads_item(event, (size_t)c);
             printf("threads_item: %s\n", threads_item ? threads_item : "(null)");
         }
 
@@ -1347,7 +1347,7 @@ int main(int argc, char *argv[])
         printf("watch_count: %d\n", watch_count);
         for(int c = 0; c < watch_count; c++)
         {
-            const char *watch_item = cfrds_debugger_event_get_watch_item(event, c);
+            const char *watch_item = cfrds_debugger_event_get_watch_item(event, (size_t)c);
             printf("watch_item: %s\n", watch_item ? watch_item : "(null)");
         }
 

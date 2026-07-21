@@ -169,7 +169,7 @@ bool cfrds_buffer_create(cfrds_buffer **buffer)
     tmp->size = 0;
     tmp->data = NULL;
 
-    *buffer = (cfrds_buffer *)tmp;
+    *buffer = tmp;
 
     return true;
 }
@@ -179,7 +179,7 @@ char *cfrds_buffer_data(cfrds_buffer *buffer)
     if (buffer == NULL)
         return NULL;
 
-    return (char *)((cfrds_buffer *)buffer)->data;
+    return (char *)buffer->data;
 }
 
 size_t cfrds_buffer_data_size(cfrds_buffer *buffer)
@@ -579,7 +579,7 @@ cfrds_browse_dir *cfrds_buffer_to_browse_dir(cfrds_buffer *buffer)
 
     explicit_bzero(tmp, malloc_size);
 
-    ((cfrds_browse_dir *)tmp)->cnt = cnt;
+    tmp->cnt = cnt;
 
     for(int64_t c = 0; c < cnt; c++)
     {
@@ -638,14 +638,14 @@ cfrds_browse_dir *cfrds_buffer_to_browse_dir(cfrds_buffer *buffer)
         if(((file_type != 'D')&&(file_type != 'F'))||(!filename)||(permissions < 0)||(permissions > 0xff)||(filesize < 0))
             return NULL;
 
-        ((cfrds_browse_dir *)tmp)->items[c].kind = file_type;
-        ((cfrds_browse_dir *)tmp)->items[c].name = filename; filename = NULL;
-        ((cfrds_browse_dir *)tmp)->items[c].permissions = permissions;
-        ((cfrds_browse_dir *)tmp)->items[c].size = filesize;
-        ((cfrds_browse_dir *)tmp)->items[c].modified = modified;
+        tmp->items[c].kind = file_type;
+        tmp->items[c].name = filename; filename = NULL;
+        tmp->items[c].permissions = permissions;
+        tmp->items[c].size = filesize;
+        tmp->items[c].modified = modified;
     }
 
-    ret = (void *)tmp; tmp = NULL;
+    ret = tmp; tmp = NULL;
     return ret;
 }
 
@@ -704,7 +704,7 @@ cfrds_sql_dsninfo *cfrds_buffer_to_sql_dsninfo(cfrds_buffer *buffer)
 
       explicit_bzero(tmp, offsetof(cfrds_sql_dsninfo, names) + sizeof(char *) * cnt);
 
-      ((cfrds_sql_dsninfo *)tmp)->cnt = cnt;
+      tmp->cnt = cnt;
 
       for(int c = 0; c < cnt; c++)
       {
@@ -733,11 +733,11 @@ cfrds_sql_dsninfo *cfrds_buffer_to_sql_dsninfo(cfrds_buffer *buffer)
                   }
               }
 
-              ((cfrds_sql_dsninfo *)tmp)->names[c] = item; item = NULL;
+              tmp->names[c] = item; item = NULL;
           }
       }
 
-    ret = (void *)tmp; tmp = NULL;
+    ret = tmp; tmp = NULL;
 
     return ret;
 }
@@ -769,7 +769,7 @@ cfrds_sql_tableinfo *cfrds_buffer_to_sql_tableinfo(cfrds_buffer *buffer)
 
     explicit_bzero(tmp, malloc_size);
 
-    ((cfrds_sql_tableinfo *)tmp)->cnt = 0;
+    tmp->cnt = 0;
 
     for(int c = 0; c < cnt; c++)
     {
@@ -877,15 +877,15 @@ cfrds_sql_tableinfo *cfrds_buffer_to_sql_tableinfo(cfrds_buffer *buffer)
                 field4[(unsigned)size] = '\0';
             }
 
-            ((cfrds_sql_tableinfo *)tmp)->items[((cfrds_sql_tableinfo *)tmp)->cnt].unknown = field1; field1 = NULL;
-            ((cfrds_sql_tableinfo *)tmp)->items[((cfrds_sql_tableinfo *)tmp)->cnt].schema  = field2; field2 = NULL;
-            ((cfrds_sql_tableinfo *)tmp)->items[((cfrds_sql_tableinfo *)tmp)->cnt].name    = field3; field3 = NULL;
-            ((cfrds_sql_tableinfo *)tmp)->items[((cfrds_sql_tableinfo *)tmp)->cnt].type    = field4; field4 = NULL;
-            ((cfrds_sql_tableinfo *)tmp)->cnt++;
+            tmp->items[tmp->cnt].unknown = field1; field1 = NULL;
+            tmp->items[tmp->cnt].schema  = field2; field2 = NULL;
+            tmp->items[tmp->cnt].name    = field3; field3 = NULL;
+            tmp->items[tmp->cnt].type    = field4; field4 = NULL;
+            tmp->cnt++;
         }
     }
 
-    ret = (void *)tmp; tmp = NULL;
+    ret = tmp; tmp = NULL;
 
     return ret;
 }
@@ -915,7 +915,7 @@ cfrds_sql_columninfo *cfrds_buffer_to_sql_columninfo(cfrds_buffer *buffer)
         return NULL;
 
     explicit_bzero(tmp, offsetof(cfrds_sql_columninfo, items) + sizeof(cfrds_sql_columninfoitem) * columns);
-    ((cfrds_sql_columninfo *)tmp)->cnt = columns;
+    tmp->cnt = columns;
 
     for(int64_t column = 0; column < columns; column++)
     {
@@ -971,20 +971,20 @@ cfrds_sql_columninfo *cfrds_buffer_to_sql_columninfo(cfrds_buffer *buffer)
         if (list_remaining != 0)
             return NULL;
 
-        ((cfrds_sql_columninfo *)tmp)->items[column].schema    = field1; field1 = NULL;
-        ((cfrds_sql_columninfo *)tmp)->items[column].owner     = field2; field2 = NULL;
-        ((cfrds_sql_columninfo *)tmp)->items[column].table     = field3; field3 = NULL;
-        ((cfrds_sql_columninfo *)tmp)->items[column].name      = field4; field4 = NULL;
-        ((cfrds_sql_columninfo *)tmp)->items[column].type      = atoi(field5);
-        ((cfrds_sql_columninfo *)tmp)->items[column].typeStr   = field6; field6 = NULL;
-        ((cfrds_sql_columninfo *)tmp)->items[column].precision = atoi(field7);
-        ((cfrds_sql_columninfo *)tmp)->items[column].length    = atoi(field8);
-        ((cfrds_sql_columninfo *)tmp)->items[column].scale     = atoi(field9);
-        ((cfrds_sql_columninfo *)tmp)->items[column].radix     = atoi(field10);
-        ((cfrds_sql_columninfo *)tmp)->items[column].nullable  = atoi(field11);
+        tmp->items[column].schema    = field1; field1 = NULL;
+        tmp->items[column].owner     = field2; field2 = NULL;
+        tmp->items[column].table     = field3; field3 = NULL;
+        tmp->items[column].name      = field4; field4 = NULL;
+        tmp->items[column].type      = atoi(field5);
+        tmp->items[column].typeStr   = field6; field6 = NULL;
+        tmp->items[column].precision = atoi(field7);
+        tmp->items[column].length    = atoi(field8);
+        tmp->items[column].scale     = atoi(field9);
+        tmp->items[column].radix     = atoi(field10);
+        tmp->items[column].nullable  = atoi(field11);
     }
 
-    ret = (void *)tmp; tmp = NULL;
+    ret = tmp; tmp = NULL;
 
     return ret;
 }
@@ -1015,7 +1015,7 @@ cfrds_sql_primarykeys *cfrds_buffer_to_sql_primarykeys(cfrds_buffer *buffer)
 
     explicit_bzero(tmp, malloc_size);
 
-    ((cfrds_sql_primarykeys *)tmp)->cnt = cnt;
+    tmp->cnt = cnt;
 
     for(int64_t c = 0; c < cnt; c++)
     {
@@ -1041,14 +1041,14 @@ cfrds_sql_primarykeys *cfrds_buffer_to_sql_primarykeys(cfrds_buffer *buffer)
         cfrds_buffer_parse_string_list_item(&column_buf, &list_remaining, &colName);
         cfrds_buffer_parse_string_list_item(&column_buf, &list_remaining, &keySequence);
 
-        ((cfrds_sql_primarykeys *)tmp)->items[c].tableCatalog = tableCatalog; tableCatalog = NULL;
-        ((cfrds_sql_primarykeys *)tmp)->items[c].tableOwner   = tableOwner; tableOwner = NULL;
-        ((cfrds_sql_primarykeys *)tmp)->items[c].tableName    = tableName; tableName = NULL;
-        ((cfrds_sql_primarykeys *)tmp)->items[c].colName      = colName; colName = NULL;
-        ((cfrds_sql_primarykeys *)tmp)->items[c].keySequence  = atoi(keySequence);
+        tmp->items[c].tableCatalog = tableCatalog; tableCatalog = NULL;
+        tmp->items[c].tableOwner   = tableOwner; tableOwner = NULL;
+        tmp->items[c].tableName    = tableName; tableName = NULL;
+        tmp->items[c].colName      = colName; colName = NULL;
+        tmp->items[c].keySequence  = atoi(keySequence);
     }
 
-    ret = (void *)tmp; tmp = NULL;
+    ret = tmp; tmp = NULL;
 
     return ret;
 }
@@ -1079,7 +1079,7 @@ cfrds_sql_foreignkeys *cfrds_buffer_to_sql_foreignkeys(cfrds_buffer *buffer)
 
     explicit_bzero(tmp, malloc_size);
 
-    ((cfrds_sql_foreignkeys *)tmp)->cnt = cnt;
+    tmp->cnt = cnt;
 
     for(int64_t c = 0; c < cnt; c++)
     {
@@ -1117,20 +1117,20 @@ cfrds_sql_foreignkeys *cfrds_buffer_to_sql_foreignkeys(cfrds_buffer *buffer)
         cfrds_buffer_parse_string_list_item(&column_buf, &list_remaining, &updateRule);
         cfrds_buffer_parse_string_list_item(&column_buf, &list_remaining, &deleteRule);
 
-        ((cfrds_sql_foreignkeys *)tmp)->items[c].pkTableCatalog = pkTableCatalog; pkTableCatalog = NULL;
-        ((cfrds_sql_foreignkeys *)tmp)->items[c].pkTableOwner   = pkTableOwner; pkTableOwner = NULL;
-        ((cfrds_sql_foreignkeys *)tmp)->items[c].pkTableName    = pkTableName; pkTableName = NULL;
-        ((cfrds_sql_foreignkeys *)tmp)->items[c].pkColName      = pkColName; pkColName = NULL;
-        ((cfrds_sql_foreignkeys *)tmp)->items[c].fkTableCatalog = fkTableCatalog; fkTableCatalog = NULL;
-        ((cfrds_sql_foreignkeys *)tmp)->items[c].fkTableOwner   = fkTableOwner; fkTableOwner = NULL;
-        ((cfrds_sql_foreignkeys *)tmp)->items[c].fkTableName    = fkTableName; fkTableName = NULL;
-        ((cfrds_sql_foreignkeys *)tmp)->items[c].fkColName      = fkColName; fkColName = NULL;
-        ((cfrds_sql_foreignkeys *)tmp)->items[c].keySequence    = atoi(keySequence);
-        ((cfrds_sql_foreignkeys *)tmp)->items[c].updateRule     = atoi(updateRule);
-        ((cfrds_sql_foreignkeys *)tmp)->items[c].deleteRule     = atoi(deleteRule);
+        tmp->items[c].pkTableCatalog = pkTableCatalog; pkTableCatalog = NULL;
+        tmp->items[c].pkTableOwner   = pkTableOwner; pkTableOwner = NULL;
+        tmp->items[c].pkTableName    = pkTableName; pkTableName = NULL;
+        tmp->items[c].pkColName      = pkColName; pkColName = NULL;
+        tmp->items[c].fkTableCatalog = fkTableCatalog; fkTableCatalog = NULL;
+        tmp->items[c].fkTableOwner   = fkTableOwner; fkTableOwner = NULL;
+        tmp->items[c].fkTableName    = fkTableName; fkTableName = NULL;
+        tmp->items[c].fkColName      = fkColName; fkColName = NULL;
+        tmp->items[c].keySequence    = atoi(keySequence);
+        tmp->items[c].updateRule     = atoi(updateRule);
+        tmp->items[c].deleteRule     = atoi(deleteRule);
     }
 
-    ret = (void *)tmp; tmp = NULL;
+    ret = tmp; tmp = NULL;
 
     return ret;
 }
@@ -1164,7 +1164,7 @@ cfrds_sql_importedkeys *cfrds_buffer_to_sql_importedkeys(cfrds_buffer *buffer)
 
     explicit_bzero(tmp, malloc_size);
 
-    ((cfrds_sql_importedkeys *)tmp)->cnt = cnt;
+    tmp->cnt = cnt;
 
     for(int64_t c = 0; c < cnt; c++)
     {
@@ -1202,20 +1202,20 @@ cfrds_sql_importedkeys *cfrds_buffer_to_sql_importedkeys(cfrds_buffer *buffer)
         cfrds_buffer_parse_string_list_item(&column_buf, &list_remaining, &updateRule);
         cfrds_buffer_parse_string_list_item(&column_buf, &list_remaining, &deleteRule);
 
-        ((cfrds_sql_importedkeys *)tmp)->items[c].pkTableCatalog = pkTableCatalog; pkTableCatalog = NULL;
-        ((cfrds_sql_importedkeys *)tmp)->items[c].pkTableOwner   = pkTableOwner; pkTableOwner = NULL;
-        ((cfrds_sql_importedkeys *)tmp)->items[c].pkTableName    = pkTableName; pkTableName = NULL;
-        ((cfrds_sql_importedkeys *)tmp)->items[c].pkColName      = pkColName; pkColName = NULL;
-        ((cfrds_sql_importedkeys *)tmp)->items[c].fkTableCatalog = fkTableCatalog; fkTableCatalog = NULL;
-        ((cfrds_sql_importedkeys *)tmp)->items[c].fkTableOwner   = fkTableOwner; fkTableOwner = NULL;
-        ((cfrds_sql_importedkeys *)tmp)->items[c].fkTableName    = fkTableName; fkTableName = NULL;
-        ((cfrds_sql_importedkeys *)tmp)->items[c].fkColName      = fkColName; fkColName = NULL;
-        ((cfrds_sql_importedkeys *)tmp)->items[c].keySequence    = atoi(keySequence);
-        ((cfrds_sql_importedkeys *)tmp)->items[c].updateRule     = atoi(updateRule);
-        ((cfrds_sql_importedkeys *)tmp)->items[c].deleteRule     = atoi(deleteRule);
+        tmp->items[c].pkTableCatalog = pkTableCatalog; pkTableCatalog = NULL;
+        tmp->items[c].pkTableOwner   = pkTableOwner; pkTableOwner = NULL;
+        tmp->items[c].pkTableName    = pkTableName; pkTableName = NULL;
+        tmp->items[c].pkColName      = pkColName; pkColName = NULL;
+        tmp->items[c].fkTableCatalog = fkTableCatalog; fkTableCatalog = NULL;
+        tmp->items[c].fkTableOwner   = fkTableOwner; fkTableOwner = NULL;
+        tmp->items[c].fkTableName    = fkTableName; fkTableName = NULL;
+        tmp->items[c].fkColName      = fkColName; fkColName = NULL;
+        tmp->items[c].keySequence    = atoi(keySequence);
+        tmp->items[c].updateRule     = atoi(updateRule);
+        tmp->items[c].deleteRule     = atoi(deleteRule);
     }
 
-    ret = (void *)tmp; tmp = NULL;
+    ret = tmp; tmp = NULL;
 
     return ret;
 }
@@ -1246,7 +1246,7 @@ cfrds_sql_exportedkeys *cfrds_buffer_to_sql_exportedkeys(cfrds_buffer *buffer)
 
     explicit_bzero(tmp, malloc_size);
 
-    ((cfrds_sql_exportedkeys *)tmp)->cnt = cnt;
+    tmp->cnt = cnt;
 
     for(int64_t c = 0; c < cnt; c++)
     {
@@ -1284,20 +1284,20 @@ cfrds_sql_exportedkeys *cfrds_buffer_to_sql_exportedkeys(cfrds_buffer *buffer)
         cfrds_buffer_parse_string_list_item(&column_buf, &list_remaining, &updateRule);
         cfrds_buffer_parse_string_list_item(&column_buf, &list_remaining, &deleteRule);
 
-        ((cfrds_sql_exportedkeys *)tmp)->items[c].pkTableCatalog = pkTableCatalog; pkTableCatalog = NULL;
-        ((cfrds_sql_exportedkeys *)tmp)->items[c].pkTableOwner   = pkTableOwner; pkTableOwner = NULL;
-        ((cfrds_sql_exportedkeys *)tmp)->items[c].pkTableName    = pkTableName; pkTableName = NULL;
-        ((cfrds_sql_exportedkeys *)tmp)->items[c].pkColName      = pkColName; pkColName = NULL;
-        ((cfrds_sql_exportedkeys *)tmp)->items[c].fkTableCatalog = fkTableCatalog; fkTableCatalog = NULL;
-        ((cfrds_sql_exportedkeys *)tmp)->items[c].fkTableOwner   = fkTableOwner; fkTableOwner = NULL;
-        ((cfrds_sql_exportedkeys *)tmp)->items[c].fkTableName    = fkTableName; fkTableName = NULL;
-        ((cfrds_sql_exportedkeys *)tmp)->items[c].fkColName      = fkColName; fkColName = NULL;
-        ((cfrds_sql_exportedkeys *)tmp)->items[c].keySequence    = atoi(keySequence);
-        ((cfrds_sql_exportedkeys *)tmp)->items[c].updateRule     = atoi(updateRule);
-        ((cfrds_sql_exportedkeys *)tmp)->items[c].deleteRule     = atoi(deleteRule);
+        tmp->items[c].pkTableCatalog = pkTableCatalog; pkTableCatalog = NULL;
+        tmp->items[c].pkTableOwner   = pkTableOwner; pkTableOwner = NULL;
+        tmp->items[c].pkTableName    = pkTableName; pkTableName = NULL;
+        tmp->items[c].pkColName      = pkColName; pkColName = NULL;
+        tmp->items[c].fkTableCatalog = fkTableCatalog; fkTableCatalog = NULL;
+        tmp->items[c].fkTableOwner   = fkTableOwner; fkTableOwner = NULL;
+        tmp->items[c].fkTableName    = fkTableName; fkTableName = NULL;
+        tmp->items[c].fkColName      = fkColName; fkColName = NULL;
+        tmp->items[c].keySequence    = atoi(keySequence);
+        tmp->items[c].updateRule     = atoi(updateRule);
+        tmp->items[c].deleteRule     = atoi(deleteRule);
     }
 
-    ret = (void *)tmp; tmp = NULL;
+    ret = tmp; tmp = NULL;
 
     return ret;
 }
@@ -1359,8 +1359,8 @@ cfrds_sql_resultset *cfrds_buffer_to_sql_sqlstmnt(cfrds_buffer *buffer)
 
     explicit_bzero(tmp, buf_size);
 
-    ((cfrds_sql_resultset *)tmp)->columns = cols;
-    ((cfrds_sql_resultset *)tmp)->rows = rows;
+    tmp->columns = cols;
+    tmp->rows = rows;
 
     response_data = response_start_data;
     response_size = response_start_size;
@@ -1378,11 +1378,11 @@ cfrds_sql_resultset *cfrds_buffer_to_sql_sqlstmnt(cfrds_buffer *buffer)
 
             cfrds_buffer_parse_string_list_item(&row_walker, &row_size, &field);
 
-            ((cfrds_sql_resultset *)tmp)->values[r * cols + c] = field;
+            tmp->values[r * cols + c] = field;
         }
     }
 
-    ret = (void *)tmp; tmp = NULL;
+    ret = tmp; tmp = NULL;
 
     return ret;
 }
@@ -1414,7 +1414,7 @@ cfrds_sql_metadata *cfrds_buffer_to_sql_metadata(cfrds_buffer *buffer)
 
     explicit_bzero(tmp, buf_size);
 
-    ((cfrds_sql_metadata *)tmp)->cnt = (unsigned)cnt;
+    tmp->cnt = (unsigned)cnt;
 
     for(int64_t c = 0; c < cnt; c++)
     {
@@ -1429,16 +1429,16 @@ cfrds_sql_metadata *cfrds_buffer_to_sql_metadata(cfrds_buffer *buffer)
         size_t row_size = strlen(row_walker);
 
         cfrds_buffer_parse_string_list_item(&row_walker, &row_size, &field);
-        ((cfrds_sql_metadata *)tmp)->items[c].name = field;
+        tmp->items[c].name = field;
 
         cfrds_buffer_parse_string_list_item(&row_walker, &row_size, &field);
-        ((cfrds_sql_metadata *)tmp)->items[c].type = field;
+        tmp->items[c].type = field;
 
         cfrds_buffer_parse_string_list_item(&row_walker, &row_size, &field);
-        ((cfrds_sql_metadata *)tmp)->items[c].jtype = field;
+        tmp->items[c].jtype = field;
     }
 
-    ret = (void *)tmp; tmp = NULL;
+    ret = tmp; tmp = NULL;
 
     return ret;
 }
@@ -1490,17 +1490,17 @@ cfrds_sql_supportedcommands *cfrds_buffer_to_sql_supportedcommands(cfrds_buffer 
 
     explicit_bzero(tmp, buf_size);
 
-    ((cfrds_sql_supportedcommands *)tmp)->cnt = cnt;
+    tmp->cnt = cnt;
 
     for(size_t c = 0; c < cnt; c++)
     {
         char *field = NULL;
 
         cfrds_buffer_parse_string_list_item(&data, &size, &field);
-        ((cfrds_sql_supportedcommands *)tmp)->commands[c] = field;
+        tmp->commands[c] = field;
     }
 
-    ret = (void *)tmp; tmp = NULL;
+    ret = tmp; tmp = NULL;
 
     return ret;
 }

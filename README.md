@@ -1,9 +1,11 @@
-# cfrds - ColdFusion RDS protocol library with python bindings and CLI application. [![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/bokic/cfrds)
+# cfrds - ColdFusion RDS protocol library with Python and TypeScript implementations and CLI application. [![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/bokic/cfrds)
 
 ## Project description
 cfrds is a shared library and CLI application designed to communicate to ColdFusion server via Adobe RDS protocol. More info regarding the protocol at [Adobe RDS protocol](https://helpx.adobe.com/coldfusion/coldfusion-builder-extension-for-visual-studio-code/rds-support.html).
 
-Written in C, it's portable and can be compiled with GCC or Clang for Windows/Linux/MacOS, x86/ARM, 32/64-bit targets.
+Written in C, the core shared library is highly portable and can be compiled with GCC or Clang for Windows/Linux/MacOS, x86/ARM, 32/64-bit targets.
+
+Additionally, the project features fully standalone, pure Python and pure TypeScript implementations of the protocol, enabling seamless integration into Node.js/web and Python runtimes without any native build steps or C binary dependencies.
 
 Some of the features RDS protocol supports:
 * Server side file access(list dir, upload, download file).
@@ -22,9 +24,9 @@ Some of the features RDS protocol supports:
 * Remote ColdFusion server info.
 * Remote ColdFusion server adminapi settings.
 * Remote ColdFusion server webapp security analyzer service.
+* Remote ColdFusion server graph (chart) rendering.
 
 ## TODO
-* Remote ColdFusion server graph(chart).
 * cfrds cli print all output in json format(--json tail argument).
 * Code cleanup.
 
@@ -50,7 +52,7 @@ Some of the features RDS protocol supports:
 * Get ColdFusion data source name table exported keys info - `cfrds exportedkeys <rds://[username[:password]@]host[:port]/<dsn_name>/<table_name>>`
 * Execute ColdFusion data source name SQL - `cfrds sql <rds://[username[:password]@]host[:port]/<dsn_name>> "<sql_statement>"`
 * Get ColdFusion data source name SQL metadata - `cfrds sqlmetadata <rds://[username[:password]@]host[:port]/<dsn_name>> "<sql_statement>"`
-* Get ColdFusion data source supported SQL commands - `cfrds sqlsupportedcommands <rds://[username[:password]@]host[:port]/<dsn_name>>`
+* Get ColdFusion data source supported SQL commands - `cfrds supportedcommands <rds://[username[:password]@]host[:port]/<dsn_name>>` (or `sqlsupportedcommands`)
 * Get ColdFusion data source name database info - `cfrds dbdescription <rds://[username[:password]@]host[:port]/<dsn_name>>`
 * Get ColdFusion server info - `cfrds ide_default <rds://[username[:password]@]host[:port]> <version>`
 * Get ColdFusion server debugging log property - `cfrds adminapi <rds://[username[:password]@]host[:port]> debugging_getlogproperty <log_directory>`
@@ -58,6 +60,12 @@ Some of the features RDS protocol supports:
 * Get ColdFusion server extensions mappings - `cfrds adminapi <rds://[username[:password]@]host[:port]> extensions_getmappings`
 * Set ColdFusion server extensions mapping - `cfrds adminapi <rds://[username[:password]@]host[:port]> extensions_setmapping <mapping_name> <mapping_path>`
 * Delete ColdFusion server extensions mapping - `cfrds adminapi <rds://[username[:password]@]host[:port]> extensions_deletemapping <mapping_name>`
+* Run ColdFusion webapp security analyzer - `cfrds security_analyzer <rds://[username[:password]@]host[:port]</pathname>>`
+* Generate ColdFusion server graph/chart - `cfrds graphing <rds://[username[:password]@]host[:port]> <chart_attributes> [out_file.png] [series1] ...`
+* Debugger step in - `cfrds step_in <rds://[username[:password]@]host[:port]> <session_id> <thread_name>`
+* Debugger step over - `cfrds step_over <rds://[username[:password]@]host[:port]> <session_id> <thread_name>`
+* Debugger step out - `cfrds step_out <rds://[username[:password]@]host[:port]> <session_id> <thread_name>`
+* Debugger continue - `cfrds continue <rds://[username[:password]@]host[:port]> <session_id> <thread_name>`
 
 ## Build
 > `git clone https://github.com/bokic/cfrds.git`

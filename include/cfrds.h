@@ -382,7 +382,7 @@ EXPORT_CFRDS int cfrds_adminapi_mappings_count(const cfrds_adminapi_mappings *bu
 EXPORT_CFRDS const char *cfrds_adminapi_mappings_key(const cfrds_adminapi_mappings *buf, size_t ndx);
 EXPORT_CFRDS const char *cfrds_adminapi_mappings_value(const cfrds_adminapi_mappings *buf, size_t ndx);
 
-EXPORT_CFRDS cfrds_status cfrds_command_graphing(cfrds_server *server, cfrds_buffer **out_buffer, const char *chart_attributes, int num_series, const char **series_data);
+EXPORT_CFRDS cfrds_status cfrds_command_graphing(cfrds_server *server, cfrds_buffer **out_buffer, const char *chart_attributes, size_t num_series, const char **series_data);
 
 #ifdef __cplusplus
 }

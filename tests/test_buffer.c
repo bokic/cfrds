@@ -428,7 +428,7 @@ static int test_command_graphing_null_guards(void)
     CHECK(cfrds_command_graphing(server, NULL, "attr", 0, NULL) == CFRDS_STATUS_PARAM_IS_NULL);
 
     /* Invalid num_series negative guard */
-    CHECK(cfrds_command_graphing(server, &buf, "attr", -1, NULL) == CFRDS_STATUS_PARAM_IS_NULL);
+    CHECK(cfrds_command_graphing(server, &buf, "attr", (size_t)-1, NULL) == CFRDS_STATUS_PARAM_IS_NULL);
 
     /* Positive num_series with NULL series_data guard */
     CHECK(cfrds_command_graphing(server, &buf, "attr", 2, NULL) == CFRDS_STATUS_PARAM_IS_NULL);

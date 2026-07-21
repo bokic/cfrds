@@ -4371,7 +4371,7 @@ const char *cfrds_adminapi_mappings_value(const cfrds_adminapi_mappings *buf, si
     return wddx_node_string(val);
 }
 
-cfrds_status cfrds_command_graphing(cfrds_server *server, cfrds_buffer **out_buffer, const char *chart_attributes, int num_series, const char **series_data)
+cfrds_status cfrds_command_graphing(cfrds_server *server, cfrds_buffer **out_buffer, const char *chart_attributes, size_t num_series, const char **series_data)
 {
     cfrds_status ret;
 
@@ -4380,16 +4380,16 @@ cfrds_status cfrds_command_graphing(cfrds_server *server, cfrds_buffer **out_buf
         return CFRDS_STATUS_SERVER_IS_NULL;
     }
 
-    if ((chart_attributes == NULL) || (out_buffer == NULL) || (num_series < 0) || (num_series > 0 && series_data == NULL))
+    if ((chart_attributes == NULL) || (out_buffer == NULL) || (num_series > 0 && series_data == NULL))
     {
         return CFRDS_STATUS_PARAM_IS_NULL;
     }
 
-    char num_series_str[16];
-    snprintf(num_series_str, sizeof(num_series_str), "%d", num_series);
+    char num_series_str[32];
+    snprintf(num_series_str, sizeof(num_series_str), "%zu", num_series);
 
-    int total_params = 3 + num_series;
-    const char **list = malloc(((size_t)total_params + 1) * sizeof(const char *));
+    size_t total_params = 3 + num_series;
+    const char **list = malloc((total_params + 1) * sizeof(const char *));
     if (list == NULL)
     {
         server->error_code = -1;
@@ -4399,7 +4399,7 @@ cfrds_status cfrds_command_graphing(cfrds_server *server, cfrds_buffer **out_buf
     list[0] = "GRAPH";
     list[1] = chart_attributes;
     list[2] = num_series_str;
-    for (int i = 0; i < num_series; i++)
+    for (size_t i = 0; i < num_series; i++)
     {
         list[3 + i] = series_data[i];
     }

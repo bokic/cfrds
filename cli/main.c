@@ -87,25 +87,28 @@ static void usage(void)
     printf("  - 'sqlmetadata' - Return SQL statement metadata on ColdFusion data sources.\n");
     printf("         example: `cfrds sqlmetadata <rds://[username[:password]@]host[:port]/<dsn_name>> \"<sql_statement>\"`\n");
     printf("\n");
-    printf("  - 'sqlsupportedcommands' - Return SQL statement supported commands on ColdFusion data sources.\n");
-    printf("         example: `cfrds sqlsupportedcommands <rds://[username[:password]@]host[:port]/<dsn_name>>`\n");
+    printf("  - 'supportedcommands', 'sqlsupportedcommands' - Return SQL statement supported commands on ColdFusion data sources.\n");
+    printf("         example: `cfrds supportedcommands <rds://[username[:password]@]host[:port]/<dsn_name>>`\n");
     printf("\n");
     printf("  - 'dbdescription' - Return ColdFusion data sources database info.\n");
     printf("         example: `cfrds dbdescription <rds://[username[:password]@]host[:port]/<dsn_name>>`\n");
     printf("\n");
-    printf("  - 'security_analyzer' - Get ColdFusion server information.\n");
+    printf("  - 'security_analyzer' - Run security analyzer on CFML application.\n");
     printf("         example: `cfrds security_analyzer <rds://[username[:password]@]host[:port]</pathname>>`\n");
     printf("\n");
     printf("  - 'ide_default' - Get ColdFusion server information.\n");
     printf("         example: `cfrds ide_default <rds://[username[:password]@]host[:port]> <version>`\n");
     printf("\n");
-    printf("  - 'adminapi' - Get ColdFusion server information.\n");
+    printf("  - 'adminapi' - Get/set ColdFusion server adminapi settings.\n");
     printf("         examples:\n");
     printf("           `cfrds adminapi <rds://[username[:password]@]host[:port]> debugging_getlogproperty <log_directory>`\n");
     printf("           `cfrds adminapi <rds://[username[:password]@]host[:port]> extensions_getcustomtagpaths`\n");
     printf("           `cfrds adminapi <rds://[username[:password]@]host[:port]> extensions_setmapping <mapping_name> <mapping_path>`\n");
     printf("           `cfrds adminapi <rds://[username[:password]@]host[:port]> extensions_deletemapping <mapping_name>`\n");
     printf("           `cfrds adminapi <rds://[username[:password]@]host[:port]> extensions_getmappings`\n");
+    printf("\n");
+    printf("  - 'graphing' - Generate ColdFusion server graph/chart.\n");
+    printf("         example: `cfrds graphing <rds://[username[:password]@]host[:port]> <chart_attributes> [out_file.png] [series1] ...`\n");
     printf("\n");
     printf("  - 'step_in', 'step_over', 'step_out', 'continue' - Debugger execution control.\n");
     printf("         example: `cfrds step_in <rds://[username[:password]@]host[:port]> <session_id> <thread_name>`\n");
@@ -971,7 +974,7 @@ int main(int argc, char *argv[])
                 printf("name: '%s', type: '%s', jtype: '%s'\n", name, type, jtype);
             }
         }
-    } else if (strcmp(command, "supportedcommands") == 0) {
+    } else if ((strcmp(command, "supportedcommands") == 0) || (strcmp(command, "sqlsupportedcommands") == 0)) {
         if ((path != NULL)&&(strlen(path) > 1))
         {
             cfrds_sql_supportedcommands_defer(supportedcommands);
@@ -1443,7 +1446,7 @@ int main(int argc, char *argv[])
 
         const char *chart_attr = argv[3];
         const char *out_path = (argc >= 5) ? argv[4] : NULL;
-        int num_series = (argc >= 6) ? (argc - 5) : 0;
+        size_t num_series = (argc >= 6) ? (size_t)(argc - 5) : 0;
         const char **series_data = (num_series > 0) ? (const char **)&argv[5] : NULL;
 
         cfrds_buffer_defer(chart_buf);

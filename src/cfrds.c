@@ -82,7 +82,7 @@ bool cfrds_server_init(cfrds_server **server, const char *host, uint16_t port, c
     if ((server == NULL)||(host == NULL)||(port == 0)||(username == NULL)||(password == NULL))
         return false;
 
-    ret = (cfrds_server *)malloc(sizeof(cfrds_server));
+    ret = malloc(sizeof(cfrds_server));
     if (ret == NULL)
         return false;
 
@@ -240,7 +240,7 @@ static cfrds_status cfrds_send_command(cfrds_server *server, cfrds_buffer **resp
     if (server->password && !cfrds_buffer_append_rds_string(post, server->password))
         return CFRDS_STATUS_MEMORY_ERROR;
 
-    ret = cfrds_http_post((cfrds_server *)server, command, post, response);
+    ret = cfrds_http_post(server, command, post, response);
 
     return ret;
 }
@@ -258,7 +258,7 @@ cfrds_status cfrds_command_browse_dir(cfrds_server *server, const char *path, cf
     ret = cfrds_send_command(server, &response, "BROWSEDIR", (const char *[]){ path, "", NULL});
     if (ret == CFRDS_STATUS_OK)
     {
-        *out = (cfrds_browse_dir *)cfrds_buffer_to_browse_dir(response);
+        *out = cfrds_buffer_to_browse_dir(response);
     }
 
     return ret;
@@ -277,7 +277,7 @@ cfrds_status cfrds_command_file_read(cfrds_server *server, const char *pathname,
     ret = cfrds_send_command(server, &response, "FILEIO", (const char *[]){ pathname, "READ", "", NULL});
     if (ret == CFRDS_STATUS_OK)
     {
-        *out = (cfrds_file_content *)cfrds_buffer_to_file_content(response);
+        *out = cfrds_buffer_to_file_content(response);
     }
 
     return ret;
@@ -323,7 +323,7 @@ cfrds_status cfrds_command_file_write(cfrds_server *server, const char *pathname
     if (server->password && !cfrds_buffer_append_rds_string(post, server->password))
         return CFRDS_STATUS_MEMORY_ERROR;
 
-    ret = cfrds_http_post((cfrds_server *)server, "FILEIO", post, NULL);
+    ret = cfrds_http_post(server, "FILEIO", post, NULL);
 
     return ret;
 }
@@ -451,7 +451,7 @@ cfrds_status cfrds_command_sql_dsninfo(cfrds_server *server, cfrds_sql_dsninfo *
     ret = cfrds_send_command(server, &response, "DBFUNCS", (const char *[]){ "", "DSNINFO", NULL});
     if (ret == CFRDS_STATUS_OK)
     {
-        *dsninfo = (cfrds_sql_dsninfo *)cfrds_buffer_to_sql_dsninfo(response);
+        *dsninfo = cfrds_buffer_to_sql_dsninfo(response);
         if (*dsninfo == NULL)
         {
             server->error_code = -1;
@@ -476,7 +476,7 @@ cfrds_status cfrds_command_sql_tableinfo(cfrds_server *server, const char *conne
     ret = cfrds_send_command(server, &response, "DBFUNCS", (const char *[]){ connection_name, "TABLEINFO", NULL});
     if (ret == CFRDS_STATUS_OK)
     {
-        *tableinfo = (cfrds_sql_tableinfo *)cfrds_buffer_to_sql_tableinfo(response);
+        *tableinfo = cfrds_buffer_to_sql_tableinfo(response);
         if (*tableinfo == NULL)
         {
             server->error_code = -1;
@@ -501,7 +501,7 @@ cfrds_status cfrds_command_sql_columninfo(cfrds_server *server, const char *conn
     ret = cfrds_send_command(server, &response, "DBFUNCS", (const char *[]){ connection_name, "COLUMNINFO", table_name, NULL});
     if (ret == CFRDS_STATUS_OK)
     {
-        *columninfo = (cfrds_sql_columninfo *)cfrds_buffer_to_sql_columninfo(response);
+        *columninfo = cfrds_buffer_to_sql_columninfo(response);
         if (*columninfo == NULL)
         {
             server->error_code = -1;
@@ -526,7 +526,7 @@ cfrds_status cfrds_command_sql_primarykeys(cfrds_server *server, const char *con
     ret = cfrds_send_command(server, &response, "DBFUNCS", (const char *[]){ connection_name, "PRIMARYKEYS", table_name, NULL});
     if (ret == CFRDS_STATUS_OK)
     {
-        *primarykeys = (cfrds_sql_primarykeys *)cfrds_buffer_to_sql_primarykeys(response);
+        *primarykeys = cfrds_buffer_to_sql_primarykeys(response);
         if (*primarykeys == NULL)
         {
             server->error_code = -1;
@@ -551,7 +551,7 @@ cfrds_status cfrds_command_sql_foreignkeys(cfrds_server *server, const char *con
     ret = cfrds_send_command(server, &response, "DBFUNCS", (const char *[]){ connection_name, "FOREIGNKEYS", table_name, NULL});
     if (ret == CFRDS_STATUS_OK)
     {
-        *foreignkeys = (cfrds_sql_foreignkeys *)cfrds_buffer_to_sql_foreignkeys(response);
+        *foreignkeys = cfrds_buffer_to_sql_foreignkeys(response);
         if (*foreignkeys == NULL)
         {
             server->error_code = -1;
@@ -576,7 +576,7 @@ cfrds_status cfrds_command_sql_importedkeys(cfrds_server *server, const char *co
     ret = cfrds_send_command(server, &response, "DBFUNCS", (const char *[]){ connection_name, "IMPORTEDKEYS", table_name, NULL});
     if (ret == CFRDS_STATUS_OK)
     {
-        *importedkeys = (cfrds_sql_importedkeys *)cfrds_buffer_to_sql_importedkeys(response);
+        *importedkeys = cfrds_buffer_to_sql_importedkeys(response);
         if (*importedkeys == NULL)
         {
             server->error_code = -1;
@@ -601,7 +601,7 @@ cfrds_status cfrds_command_sql_exportedkeys(cfrds_server *server, const char *co
     ret = cfrds_send_command(server, &response, "DBFUNCS", (const char *[]){ connection_name, "EXPORTEDKEYS", table_name, NULL});
     if (ret == CFRDS_STATUS_OK)
     {
-        *exportedkeys = (cfrds_sql_exportedkeys *)cfrds_buffer_to_sql_exportedkeys(response);
+        *exportedkeys = cfrds_buffer_to_sql_exportedkeys(response);
         if (*exportedkeys == NULL)
         {
             server->error_code = -1;
@@ -626,7 +626,7 @@ cfrds_status cfrds_command_sql_sqlstmnt(cfrds_server *server, const char *connec
     ret = cfrds_send_command(server, &response, "DBFUNCS", (const char *[]){ connection_name, "SQLSTMNT", sql, NULL});
     if (ret == CFRDS_STATUS_OK)
     {
-        *resultset = (cfrds_sql_resultset *)cfrds_buffer_to_sql_sqlstmnt(response);
+        *resultset = cfrds_buffer_to_sql_sqlstmnt(response);
         if (*resultset == NULL)
         {
             server->error_code = -1;
@@ -651,7 +651,7 @@ cfrds_status cfrds_command_sql_sqlmetadata(cfrds_server *server, const char *con
     ret = cfrds_send_command(server, &response, "DBFUNCS", (const char *[]){ connection_name, "SQLMETADATA", sql, NULL});
     if (ret == CFRDS_STATUS_OK)
     {
-        *metadata = (cfrds_sql_metadata *)cfrds_buffer_to_sql_metadata(response);
+        *metadata = cfrds_buffer_to_sql_metadata(response);
         if (*metadata == NULL)
         {
             server->error_code = -1;
@@ -676,7 +676,7 @@ cfrds_status cfrds_command_sql_getsupportedcommands(cfrds_server *server, cfrds_
     ret = cfrds_send_command(server, &response, "DBFUNCS", (const char *[]){ "", "SUPPORTEDCOMMANDS", NULL});
     if (ret == CFRDS_STATUS_OK)
     {
-        *supportedcommands = (cfrds_sql_supportedcommands *)cfrds_buffer_to_sql_supportedcommands(response);
+        *supportedcommands = cfrds_buffer_to_sql_supportedcommands(response);
         if (*supportedcommands == NULL)
         {
             server->error_code = -1;
@@ -4408,6 +4408,6 @@ cfrds_status cfrds_command_graphing(cfrds_server *server, cfrds_buffer **out_buf
 
     ret = cfrds_send_command(server, out_buffer, "GRAPHING", list);
 
-    free((void *)list);
+    free(list);
     return ret;
 }

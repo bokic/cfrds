@@ -108,7 +108,7 @@ static struct WDDX_NODE *wddx_recursively_put(struct WDDX_NODE *node, const char
 
         if (node == NULL)
         {
-            size_t newsize = offsetof(struct WDDX_NODE, items) + (sizeof(void *) * (unsigned)idx);
+            size_t newsize = offsetof(struct WDDX_NODE, items) + (sizeof(void *) * idx);
             node = (struct WDDX_NODE *)malloc(newsize);
             if (node == NULL)
             {
@@ -141,8 +141,8 @@ static struct WDDX_NODE *wddx_recursively_put(struct WDDX_NODE *node, const char
                     if (created_node) wddx_node_free(pre_realloc_node);
                     return NULL;
                 }
-                size_t oldsize = offsetof(struct WDDX_NODE, items) + (sizeof(void *) * (size_t)node->cnt);
-                explicit_bzero((char *)node + oldsize, (size_t)newsize - oldsize);
+                size_t oldsize = offsetof(struct WDDX_NODE, items) + (sizeof(void *) * node->cnt);
+                explicit_bzero((char *)node + oldsize, newsize - oldsize);
                 node->cnt = idx;
             }
 
@@ -188,7 +188,7 @@ static struct WDDX_NODE *wddx_recursively_put(struct WDDX_NODE *node, const char
         {
             for(int c = 0; c < node->cnt; c++)
             {
-                WDDX_STRUCT_NODE *child = (WDDX_STRUCT_NODE *)node->items[c];
+                WDDX_STRUCT_NODE *child = node->items[c];
                 if (strcmp(child->name, newkey) == 0)
                 {
                     struct WDDX_NODE *new_val = wddx_recursively_put(NULL, path, value, type);
@@ -227,8 +227,9 @@ static struct WDDX_NODE *wddx_recursively_put(struct WDDX_NODE *node, const char
                 if (created_node) wddx_node_free(node);
                 return NULL;
             }
-            ((WDDX_STRUCT_NODE *)node->items[node->cnt])->name = tstr;
-            ((WDDX_STRUCT_NODE *)node->items[node->cnt])->value = new_val;
+            WDDX_STRUCT_NODE *sitem = node->items[node->cnt];
+            sitem->name = tstr;
+            sitem->value = new_val;
             node->cnt++;
             return node;
         }
@@ -332,7 +333,7 @@ static void wddx_to_xml_node(xmlNode *xml_node, const struct WDDX_NODE *node)
 
         for(int c = 0; c < node->cnt; c++)
         {
-            WDDX_STRUCT_NODE *var = (WDDX_STRUCT_NODE *)node->items[c];
+            WDDX_STRUCT_NODE *var = node->items[c];
 
             xmlNode *var_node = xmlNewChild(child_node, NULL, BAD_CAST "var", NULL);
 
@@ -641,7 +642,7 @@ static const struct WDDX_NODE *wddx_recursively_get(const struct WDDX_NODE *node
 
             for(int c = 0; c < node->cnt; c++)
             {
-                WDDX_STRUCT_NODE *item = (WDDX_STRUCT_NODE *)node->items[c];
+                WDDX_STRUCT_NODE *item = node->items[c];
                 if (strcmp(item->name, path) == 0)
                     return item->value;
             }
@@ -670,7 +671,7 @@ static const struct WDDX_NODE *wddx_recursively_get(const struct WDDX_NODE *node
 
             for(int c = 0; c < node->cnt; c++)
             {
-                WDDX_STRUCT_NODE *item = (WDDX_STRUCT_NODE *)node->items[c];
+                WDDX_STRUCT_NODE *item = node->items[c];
                 if (strcmp(item->name, tmp_path) == 0)
                     return wddx_recursively_get(item->value, next + 1);
             }
@@ -765,7 +766,7 @@ const WDDX_NODE *wddx_node_struct_at(const WDDX_NODE *value, int cnt, const char
     if ((cnt < 0) || (cnt >= value->cnt))
         return NULL;
 
-    const WDDX_STRUCT_NODE *child = (const WDDX_STRUCT_NODE *)value->items[cnt];
+    const WDDX_STRUCT_NODE *child = value->items[cnt];
 
     if (child == NULL)
         return NULL;
@@ -906,7 +907,7 @@ static void wddx_node_recursively(xmlNodePtr xml, const struct WDDX_NODE *wddx)
         new_node = xmlNewNode(NULL, BAD_CAST "struct");
         for(int c = 0; c < wddx->cnt; c++)
         {
-            const WDDX_STRUCT_NODE *struct_node = (const WDDX_STRUCT_NODE *)wddx->items[c];
+            const WDDX_STRUCT_NODE *struct_node = wddx->items[c];
               xmlNodePtr var_node = xmlNewNode(NULL, BAD_CAST "var");
               xmlNewProp(var_node, BAD_CAST "key", BAD_CAST struct_node->name);
               wddx_node_recursively(var_node, struct_node->value);
@@ -958,7 +959,7 @@ void wddx_node_free(struct WDDX_NODE *value)
     case WDDX_ARRAY:
         for(int c = 0;c < value->cnt; c++)
         {
-            struct WDDX_NODE *child = (struct WDDX_NODE *)value->items[c];
+            struct WDDX_NODE *child = value->items[c];
             wddx_node_free(child);
             child = NULL;
         }
@@ -967,7 +968,7 @@ void wddx_node_free(struct WDDX_NODE *value)
     case WDDX_STRUCT:
         for(int c = 0;c < value->cnt; c++)
         {
-            WDDX_STRUCT_NODE *child = (WDDX_STRUCT_NODE *)value->items[c];
+            WDDX_STRUCT_NODE *child = value->items[c];
             free(child->name);
             wddx_node_free(child->value);
             child->name = NULL;

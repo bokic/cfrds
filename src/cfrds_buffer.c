@@ -341,7 +341,7 @@ bool cfrds_buffer_append_char(cfrds_buffer *buffer, const char ch)
         return false;
     }
 
-    buffer->data[buffer->size] = ch;
+    buffer->data[buffer->size] = (uint8_t)ch;
     buffer->size++;
 
     return true;
@@ -420,7 +420,7 @@ bool cfrds_buffer_parse_number(const char **data, size_t *remaining, int64_t *ou
     if (errno == ERANGE)
         return false;
 
-    *remaining -= end - *data + 1;
+    *remaining -= (size_t)(end - *data + 1);
     *data = end + 1;
 
     return true;
@@ -510,7 +510,7 @@ bool cfrds_buffer_parse_string_list_item(const char **data, size_t *remaining, c
         endstr = strchr(*data, '"');
         if (endstr == NULL)
             return false;
-        len = endstr - *data;
+        len = (size_t)(endstr - *data);
     }
     else
     {
@@ -518,7 +518,7 @@ bool cfrds_buffer_parse_string_list_item(const char **data, size_t *remaining, c
         if (endstr == NULL)
             len = strlen(*data);
         else
-            len = endstr - *data;
+            len = (size_t)(endstr - *data);
     }
 
     tmp = malloc(len + 1);
@@ -568,10 +568,11 @@ cfrds_browse_dir *cfrds_buffer_to_browse_dir(cfrds_buffer *buffer)
 
     cnt = total / 5;
 
-    if (cnt > CFRDS_MAX_PARSER_ITEMS)
+    if (cnt < 0 || cnt > CFRDS_MAX_PARSER_ITEMS)
         return NULL;
 
-    malloc_size = offsetof(cfrds_browse_dir, items) + (cnt * (offsetof(cfrds_browse_dir, items[1]) - (offsetof(cfrds_browse_dir, items[0]))));
+    size_t ucnt = (size_t)cnt;
+    malloc_size = offsetof(cfrds_browse_dir, items) + ucnt * sizeof(cfrds_browse_dir_item);
 
     tmp = malloc(malloc_size);
     if (tmp == NULL)
@@ -579,7 +580,7 @@ cfrds_browse_dir *cfrds_buffer_to_browse_dir(cfrds_buffer *buffer)
 
     explicit_bzero(tmp, malloc_size);
 
-    tmp->cnt = cnt;
+    tmp->cnt = ucnt;
 
     for(int64_t c = 0; c < cnt; c++)
     {
@@ -592,7 +593,7 @@ cfrds_browse_dir *cfrds_buffer_to_browse_dir(cfrds_buffer *buffer)
         char file_type = '\0';
         ssize_t permissions = -1;
         ssize_t filesize = -1;
-        uint64_t modified = -1;
+        uint64_t modified = UINT64_MAX;
 
         if (!cfrds_buffer_parse_string(&data, &size, &str_kind))
             return NULL;
@@ -622,13 +623,13 @@ cfrds_browse_dir *cfrds_buffer_to_browse_dir(cfrds_buffer *buffer)
 
         if (str_timestamp)
         {
-            uint32_t num1 = strtoul(str_timestamp, NULL, 10);
+            uint32_t num1 = (uint32_t)strtoul(str_timestamp, NULL, 10);
 
             const char *str_num2 = strchr(str_timestamp, ',');
             if (str_num2)
             {
                 str_num2++;
-                uint32_t num2 = atol(str_num2);
+                uint32_t num2 = (uint32_t)atol(str_num2);
                 modified = num1 + ((uint64_t)num2 << 32);
                 modified /= 10000;
                 modified -= 11644473600000L;
@@ -640,8 +641,8 @@ cfrds_browse_dir *cfrds_buffer_to_browse_dir(cfrds_buffer *buffer)
 
         tmp->items[c].kind = file_type;
         tmp->items[c].name = filename; filename = NULL;
-        tmp->items[c].permissions = permissions;
-        tmp->items[c].size = filesize;
+        tmp->items[c].permissions = (uint8_t)permissions;
+        tmp->items[c].size = (size_t)filesize;
         tmp->items[c].modified = modified;
     }
 
@@ -695,16 +696,18 @@ cfrds_sql_dsninfo *cfrds_buffer_to_sql_dsninfo(cfrds_buffer *buffer)
           return NULL;
       }
 
-      if (cnt > CFRDS_MAX_PARSER_ITEMS)
+      if (cnt < 0 || cnt > CFRDS_MAX_PARSER_ITEMS)
           return NULL;
 
-      tmp = malloc(offsetof(cfrds_sql_dsninfo, names) + sizeof(char *) * cnt);
+      size_t ucnt = (size_t)cnt;
+      size_t malloc_size = offsetof(cfrds_sql_dsninfo, names) + sizeof(char *) * ucnt;
+      tmp = malloc(malloc_size);
       if (tmp == NULL)
           return NULL;
 
-      explicit_bzero(tmp, offsetof(cfrds_sql_dsninfo, names) + sizeof(char *) * cnt);
+      explicit_bzero(tmp, malloc_size);
 
-      tmp->cnt = cnt;
+      tmp->cnt = ucnt;
 
       for(int c = 0; c < cnt; c++)
       {
@@ -720,7 +723,7 @@ cfrds_sql_dsninfo *cfrds_buffer_to_sql_dsninfo(cfrds_buffer *buffer)
                   const char *pos2 = strchr(pos1 + 1, '"');
                   if (pos2)
                   {
-                      size_t len = pos2 - pos1 - 1;
+                      size_t len = (size_t)(pos2 - pos1 - 1);
 
                       char *str_tmp = malloc(len + 1);
                       if (str_tmp == NULL)
@@ -758,10 +761,10 @@ cfrds_sql_tableinfo *cfrds_buffer_to_sql_tableinfo(cfrds_buffer *buffer)
         return NULL;
     }
 
-    if (cnt > CFRDS_MAX_PARSER_ITEMS)
+    if (cnt < 0 || cnt > CFRDS_MAX_PARSER_ITEMS)
         return NULL;
 
-    size_t malloc_size = offsetof(cfrds_sql_tableinfo, items) + sizeof(cfrds_sql_tableinfoitem) * cnt;
+    size_t malloc_size = offsetof(cfrds_sql_tableinfo, items) + sizeof(cfrds_sql_tableinfoitem) * (size_t)cnt;
 
     tmp = malloc(malloc_size);
     if (tmp == NULL)
@@ -907,15 +910,17 @@ cfrds_sql_columninfo *cfrds_buffer_to_sql_columninfo(cfrds_buffer *buffer)
     if (!cfrds_buffer_parse_number(&data, &size, &columns))
         return NULL;
 
-    if (columns < 0)
+    if (columns < 0 || columns > CFRDS_MAX_PARSER_ITEMS)
         return NULL;
 
-    tmp = malloc(offsetof(cfrds_sql_columninfo, items) + sizeof(cfrds_sql_columninfoitem) * columns);
+    size_t ucolumns = (size_t)columns;
+    size_t malloc_size = offsetof(cfrds_sql_columninfo, items) + sizeof(cfrds_sql_columninfoitem) * ucolumns;
+    tmp = malloc(malloc_size);
     if (tmp == NULL)
         return NULL;
 
-    explicit_bzero(tmp, offsetof(cfrds_sql_columninfo, items) + sizeof(cfrds_sql_columninfoitem) * columns);
-    tmp->cnt = columns;
+    explicit_bzero(tmp, malloc_size);
+    tmp->cnt = ucolumns;
 
     for(int64_t column = 0; column < columns; column++)
     {
@@ -1005,17 +1010,18 @@ cfrds_sql_primarykeys *cfrds_buffer_to_sql_primarykeys(cfrds_buffer *buffer)
     if (!cfrds_buffer_parse_number(&data, &size, &cnt))
         return NULL;
 
-    if (cnt > CFRDS_MAX_PARSER_ITEMS)
+    if (cnt < 0 || cnt > CFRDS_MAX_PARSER_ITEMS)
         return NULL;
 
-    size_t malloc_size = offsetof(cfrds_sql_primarykeys, items) + sizeof(cfrds_sql_primarykeysitem) * cnt;
+    size_t ucnt = (size_t)cnt;
+    size_t malloc_size = offsetof(cfrds_sql_primarykeys, items) + sizeof(cfrds_sql_primarykeysitem) * ucnt;
     tmp = malloc(malloc_size);
     if (tmp == NULL)
         return NULL;
 
     explicit_bzero(tmp, malloc_size);
 
-    tmp->cnt = cnt;
+    tmp->cnt = ucnt;
 
     for(int64_t c = 0; c < cnt; c++)
     {
@@ -1069,17 +1075,18 @@ cfrds_sql_foreignkeys *cfrds_buffer_to_sql_foreignkeys(cfrds_buffer *buffer)
     if (!cfrds_buffer_parse_number(&data, &size, &cnt))
         return NULL;
 
-    if (cnt > CFRDS_MAX_PARSER_ITEMS)
+    if (cnt < 0 || cnt > CFRDS_MAX_PARSER_ITEMS)
         return NULL;
 
-    size_t malloc_size = offsetof(cfrds_sql_foreignkeys, items) + sizeof(cfrds_sql_foreignkeysitem) * cnt;
+    size_t ucnt = (size_t)cnt;
+    size_t malloc_size = offsetof(cfrds_sql_foreignkeys, items) + sizeof(cfrds_sql_foreignkeysitem) * ucnt;
     tmp = malloc(malloc_size);
     if (tmp == NULL)
         return NULL;
 
     explicit_bzero(tmp, malloc_size);
 
-    tmp->cnt = cnt;
+    tmp->cnt = ucnt;
 
     for(int64_t c = 0; c < cnt; c++)
     {
@@ -1154,17 +1161,18 @@ cfrds_sql_importedkeys *cfrds_buffer_to_sql_importedkeys(cfrds_buffer *buffer)
     if (cnt < 0)
         return NULL;
 
-    if (cnt > CFRDS_MAX_PARSER_ITEMS)
+    if (cnt < 0 || cnt > CFRDS_MAX_PARSER_ITEMS)
         return NULL;
 
-    size_t malloc_size = offsetof(cfrds_sql_importedkeys, items) + sizeof(cfrds_sql_importedkeysitem) * cnt;
+    size_t ucnt = (size_t)cnt;
+    size_t malloc_size = offsetof(cfrds_sql_importedkeys, items) + sizeof(cfrds_sql_importedkeysitem) * ucnt;
     tmp = malloc(malloc_size);
     if (tmp == NULL)
         return NULL;
 
     explicit_bzero(tmp, malloc_size);
 
-    tmp->cnt = cnt;
+    tmp->cnt = ucnt;
 
     for(int64_t c = 0; c < cnt; c++)
     {
@@ -1236,17 +1244,18 @@ cfrds_sql_exportedkeys *cfrds_buffer_to_sql_exportedkeys(cfrds_buffer *buffer)
     if (!cfrds_buffer_parse_number(&data, &size, &cnt))
         return NULL;
 
-    if (cnt > CFRDS_MAX_PARSER_ITEMS)
+    if (cnt < 0 || cnt > CFRDS_MAX_PARSER_ITEMS)
         return NULL;
 
-    size_t malloc_size = offsetof(cfrds_sql_exportedkeys, items) + sizeof(cfrds_sql_exportedkeysitem) * cnt;
+    size_t ucnt = (size_t)cnt;
+    size_t malloc_size = offsetof(cfrds_sql_exportedkeys, items) + sizeof(cfrds_sql_exportedkeysitem) * ucnt;
     tmp = malloc(malloc_size);
     if (tmp == NULL)
         return NULL;
 
     explicit_bzero(tmp, malloc_size);
 
-    tmp->cnt = cnt;
+    tmp->cnt = ucnt;
 
     for(int64_t c = 0; c < cnt; c++)
     {
@@ -1350,17 +1359,20 @@ cfrds_sql_resultset *cfrds_buffer_to_sql_sqlstmnt(cfrds_buffer *buffer)
     if (cols < 1)
         return NULL;
 
-    cnt = cols * (rows + 1);
+    if (cnt < 0)
+        return NULL;
 
-    buf_size = offsetof(cfrds_sql_resultset, values) + sizeof(char *) * cnt;
+    size_t ucnt = (size_t)cnt;
+
+    buf_size = offsetof(cfrds_sql_resultset, values) + sizeof(char *) * ucnt;
     tmp = malloc(buf_size);
     if (tmp == NULL)
         return NULL;
 
     explicit_bzero(tmp, buf_size);
 
-    tmp->columns = cols;
-    tmp->rows = rows;
+    tmp->columns = (size_t)cols;
+    tmp->rows = (size_t)rows;
 
     response_data = response_start_data;
     response_size = response_start_size;

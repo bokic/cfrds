@@ -4390,7 +4390,7 @@ cfrds_status cfrds_command_graphing(cfrds_server *server, cfrds_buffer **out_buf
     snprintf(num_series_str, sizeof(num_series_str), "%d", num_series);
 
     int total_params = 3 + num_series;
-    const char **list = malloc((total_params + 1) * sizeof(const char *));
+    const char **list = malloc(((size_t)total_params + 1) * sizeof(const char *));
     if (list == NULL)
     {
         server->error_code = -1;

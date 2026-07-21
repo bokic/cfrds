@@ -20,8 +20,8 @@ struct WDDX_NODE {
     union {
         bool boolean;
         double number;
-        void *items[];
-        char string[];
+        void *items[1];
+        char string[1];
     };
 };
 
@@ -68,7 +68,7 @@ static bool is_string_numeric(const char *str)
 static struct WDDX_NODE *wddx_recursively_put(struct WDDX_NODE *node, const char *path, const char *value, enum wddx_type type)
 {
     size_t path_len = strlen(path);
-    ssize_t newsize = 0;
+    size_t newsize = 0;
     bool created_node = false;
 
     if (path_len == 0)
@@ -87,19 +87,16 @@ static struct WDDX_NODE *wddx_recursively_put(struct WDDX_NODE *node, const char
     }
 
     const char *next = strchr(path, ',');
-    if (next == NULL)
-        newsize = path_len;
-    else
-        newsize = next - path;
-    if (newsize <= 0) return NULL;
+    size_t seg_len = (next == NULL) ? path_len : (size_t)(next - path);
+    if (seg_len == 0) return NULL;
 
-    char newkey[newsize + 1];
-    memcpy(newkey, path, (unsigned)newsize);
-    newkey[newsize] = 0;
+    char newkey[seg_len + 1];
+    memcpy(newkey, path, seg_len);
+    newkey[seg_len] = 0;
     if (next)
-        path += newsize + 1;
+        path += seg_len + 1;
     else
-        path += newsize;
+        path += seg_len;
 
     if(is_string_numeric(newkey))
     {
@@ -134,7 +131,7 @@ static struct WDDX_NODE *wddx_recursively_put(struct WDDX_NODE *node, const char
         {
             if(node->cnt < idx)
             {
-                newsize = offsetof(struct WDDX_NODE, items) + (sizeof(void *) * idx);
+                newsize = offsetof(struct WDDX_NODE, items) + (sizeof(void *) * (size_t)idx);
                 struct WDDX_NODE *pre_realloc_node = node;
                 node = (struct WDDX_NODE *)realloc(node, newsize);
                 if (node == NULL) {
@@ -202,7 +199,7 @@ static struct WDDX_NODE *wddx_recursively_put(struct WDDX_NODE *node, const char
                 }
             }
 
-            newsize = offsetof(struct WDDX_NODE, items) + (sizeof(WDDX_STRUCT_NODE *) * (node->cnt + 1));
+            newsize = offsetof(struct WDDX_NODE, items) + (sizeof(WDDX_STRUCT_NODE *) * (size_t)(node->cnt + 1));
             struct WDDX_NODE *pre_realloc_node = node;
             node = (struct WDDX_NODE *)realloc(node, newsize);
             if (node == NULL) {
@@ -463,7 +460,7 @@ static struct WDDX_NODE *wddx_from_xml_element(xmlNodePtr xml_node)
         xmlFree(lengthStr); lengthStr = NULL;
         if (length <= 0) return NULL;
 
-        malloc_size = offsetof(struct WDDX_NODE, items) + length * sizeof(void *);
+        malloc_size = offsetof(struct WDDX_NODE, items) + (size_t)length * sizeof(void *);
         ret = malloc(malloc_size);
         if (ret == NULL) return NULL;
 
@@ -493,7 +490,7 @@ static struct WDDX_NODE *wddx_from_xml_element(xmlNodePtr xml_node)
             length++;
         }
 
-        malloc_size = offsetof(struct WDDX_NODE, items) + length * sizeof(void *);
+        malloc_size = offsetof(struct WDDX_NODE, items) + (size_t)length * sizeof(void *);
         ret = malloc(malloc_size);
         if (ret == NULL) return NULL;
 
@@ -652,9 +649,10 @@ static const struct WDDX_NODE *wddx_recursively_get(const struct WDDX_NODE *node
     }
     else
     {
-        char tmp_path[next - path + 1];
-        memcpy(tmp_path, path, next - path);
-        tmp_path[next - path] = 0;
+        size_t seg_len = (size_t)(next - path);
+        char tmp_path[seg_len + 1];
+        memcpy(tmp_path, path, seg_len);
+        tmp_path[seg_len] = 0;
 
         if(is_string_numeric(tmp_path))
         {

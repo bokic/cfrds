@@ -52,7 +52,13 @@ export class Server {
   async browseDir(path: string): Promise<BrowseDirItem[]> {
     const raw = await sendRdsCommand(this.ctx, "BROWSEDIR", [path, ""]);
     const [total, offset] = parseNumber(raw, 0);
-    const cnt = Math.floor(total / 5);
+    if (total < 0 || (total !== 0 && total % 5 !== 0)) {
+      throw new CFRDSError(
+        CFRDS_STATUS.RESPONSE_ERROR,
+        "Invalid total items count in browseDir response"
+      );
+    }
+    const cnt = total / 5;
     const items: BrowseDirItem[] = [];
     let off = offset;
     for (let i = 0; i < cnt; i++) {

@@ -6,6 +6,8 @@ import {
   VERSION,
 } from "./index";
 import { encodePassword, parseStringListItem } from "./parser";
+import * as http from "http";
+import { EventEmitter } from "events";
 
 function assert(condition: boolean, message: string): void {
   if (!condition) {
@@ -170,6 +172,57 @@ async function main(): Promise<void> {
   await srv.close();
 
   log("Server constructor and state method tests passed!");
+
+  // Verify browseDir validation (offline tests using http mock)
+  {
+    const httpModule = require("http");
+    const originalRequest = httpModule.request;
+    let mockResponseBody: Buffer = Buffer.from("0:", "utf-8");
+
+    httpModule.request = (options: any, callback: any) => {
+      const mockRes = new EventEmitter() as any;
+      mockRes.statusCode = 200;
+      mockRes.statusMessage = "OK";
+      
+      const mockReq = new EventEmitter() as any;
+      mockReq.write = () => {};
+      mockReq.end = () => {
+        process.nextTick(() => {
+          callback(mockRes);
+          mockRes.emit("data", mockResponseBody);
+          mockRes.emit("end");
+        });
+      };
+      return mockReq;
+    };
+
+    try {
+      const srvMock = new Server("127.0.0.1", 8500, "admin", "admin");
+      
+      // Test 1: total = 0 (divisible by 5) -> should succeed
+      mockResponseBody = Buffer.from("0:", "utf-8");
+      const items0 = await srvMock.browseDir("/");
+      assert(items0.length === 0, "browseDir with total = 0 should return empty list");
+
+      // Test 2: total = 3 (not divisible by 5) -> should throw CFRDSError with RESPONSE_ERROR
+      mockResponseBody = Buffer.from("3:", "utf-8");
+      let threw = false;
+      try {
+        await srvMock.browseDir("/");
+      } catch (e: any) {
+        if (e instanceof CFRDSError && e.status === CFRDS_STATUS.RESPONSE_ERROR) {
+          threw = true;
+        } else {
+          throw new Error(`Unexpected error thrown: ${e}`);
+        }
+      }
+      assert(threw, "browseDir should throw CFRDSError(RESPONSE_ERROR) when total is 3");
+
+      log("Offline browseDir validation tests passed!");
+    } finally {
+      httpModule.request = originalRequest;
+    }
+  }
 
   // Live server integration tests if env vars present
   const rdsHost = process.env.RDS_HOST;

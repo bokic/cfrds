@@ -757,6 +757,8 @@ class server:
     def browse_dir(self, path: str) -> List[Dict[str, Any]]:
         raw = _send_rds_command(self._ctx, "BROWSEDIR", [path, ""])
         total, offset = _parse_number(raw, 0)
+        if total < 0 or (total != 0 and total % 5 != 0):
+            raise CFRDSError(CFRDS_STATUS_RESPONSE_ERROR, "Invalid total items count in browse_dir response")
         cnt = total // 5
         items: List[Dict[str, Any]] = []
         for _ in range(cnt):

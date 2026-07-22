@@ -151,6 +151,38 @@ assert list(map_container) == ["k1"]
 
 print("Container class ready-to-use value tests passed!")
 
+# Verify browse_dir validation (offline tests using http mock)
+from unittest.mock import patch, MagicMock
+
+mock_resp = MagicMock()
+mock_resp.status = 200
+mock_resp.reason = "OK"
+
+mock_conn = MagicMock()
+mock_conn.getresponse.return_value = mock_resp
+
+with patch("http.client.HTTPConnection", return_value=mock_conn):
+    srv_mock = cfrds.server("127.0.0.1", 8500, "admin", "admin")
+    
+    # Test 1: total = 0 (divisible by 5) -> should succeed
+    mock_resp.read.return_value = b"0:"
+    items0 = srv_mock.browse_dir("/")
+    assert len(items0) == 0, "browse_dir with total = 0 should return empty list"
+    
+    # Test 2: total = 3 (not divisible by 5) -> should throw CFRDSError with CFRDS_STATUS_RESPONSE_ERROR
+    mock_resp.read.return_value = b"3:"
+    threw = False
+    try:
+        srv_mock.browse_dir("/")
+    except cfrds.CFRDSError as e:
+        if e.status == cfrds.CFRDS_STATUS_RESPONSE_ERROR:
+            threw = True
+        else:
+            raise Exception(f"Unexpected error status: {e.status}")
+    assert threw, "browse_dir should throw CFRDSError(CFRDS_STATUS_RESPONSE_ERROR) when total is 3"
+    
+    print("Offline browse_dir validation tests passed!")
+
 # Live server integration test if env vars present
 if "RDS_HOST" in os.environ and "RDS_PORT" in os.environ:
     host = os.environ["RDS_HOST"]

@@ -1,4 +1,6 @@
+// cppcheck-suppress-file unusedFunction
 #include "os.h"
+
 
 #ifdef _WIN32
 #error Not a Windows target

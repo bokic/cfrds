@@ -1,4 +1,8 @@
+// cppcheck-suppress-file unusedFunction
+// cppcheck-suppress-file staticFunction
 #include <internal/explicit_bzero.h>
+
+
 #include <internal/cfrds_buffer.h>
 #include <internal/wddx.h>
 #include <cfrds.h>

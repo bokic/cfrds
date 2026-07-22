@@ -36,7 +36,7 @@ struct WDDX {
     xmlBufferPtr str;
 };
 
-void wddx_node_free(struct WDDX_NODE *value);
+static void wddx_node_free(struct WDDX_NODE *value);
 
 static void xmlDoc_cleanup(xmlDoc **value)
 {
@@ -970,7 +970,7 @@ char *wddx_node_to_xml(const WDDX_NODE *node)
     return ret;
 }
 
-void wddx_node_free(struct WDDX_NODE *value)
+static void wddx_node_free(struct WDDX_NODE *value)
 {
     if (value == NULL) return;
 

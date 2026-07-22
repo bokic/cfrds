@@ -382,7 +382,6 @@ class cfrds_browse_dir:
             return self.items == other
         return False
 
-
 class cfrds_file_content:
     def __init__(self, data: bytes, modified: str, permission: str):
         self.data = data
@@ -940,7 +939,7 @@ class server:
         return items
 
     # File Operations
-    def file_read(self, filepath: str) -> bytearray:
+    def file_read(self, filepath: str) -> cfrds_file_content:
         if filepath is None:
             raise CFRDSError("filepath is required")
         raw = _send_rds_command(self._ctx, "FILEIO", [filepath, "READ", ""])
@@ -948,7 +947,7 @@ class server:
         data_bytes, offset = _parse_bytearray(raw, offset)
         modified, offset = _parse_string(raw, offset)
         permission, offset = _parse_string(raw, offset)
-        return bytearray(data_bytes)
+        return cfrds_file_content(data_bytes, modified, permission)
 
     def file_write(self, filepath: str, content: Union[bytes, bytearray, str]) -> None:
         if filepath is None:
@@ -1746,7 +1745,7 @@ def cfrds_command_file_read(srv: Optional[cfrds_server], pathname: Optional[str]
         s = server(srv.host, srv.port, srv.username, srv.orig_password)
         data = s.file_read(pathname)
         if isinstance(out_ptr, list):
-            out_ptr[0] = cfrds_file_content(bytes(data), "", "")
+            out_ptr[0] = data
         return CFRDS_STATUS_OK
     except CFRDSError as e:
         return e.status

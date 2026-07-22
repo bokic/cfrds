@@ -242,6 +242,30 @@ with patch("http.client.HTTPConnection", return_value=mock_conn):
     assert mappings.mappings == {"k1": "v3", "k2": "v2"}
     assert mappings["k2"] == "v2"
     assert mappings[1] == ("k2", "v2")
+
+    # Test 5c: file_read parses and retains modified/permission metadata (offline test)
+    mock_conn.request.reset_mock()
+    # Response: total(3) + data_bytes("hello") + modified("2026-07-22") + permission("rw-r--r--")
+    mock_resp.read.return_value = b"3:5:hello10:2026-07-229:rw-r--r--"
+    
+    # 1. High-level client API
+    read_data = srv_mock.file_read("/dummy/path")
+    assert isinstance(read_data, cfrds.cfrds_file_content)
+    assert read_data.data == b"hello"
+    assert read_data.modified == "2026-07-22"
+    assert read_data.permission == "rw-r--r--"
+    
+    # 2. C API Wrapper
+    out_ptr = [None]
+    srv_struct = cfrds.cfrds_server("127.0.0.1", 8500, "admin", "admin")
+    
+    status = cfrds.cfrds_command_file_read(srv_struct, "/dummy/path", out_ptr)
+    assert status == cfrds.CFRDS_STATUS_OK
+    assert out_ptr[0] is not None
+    assert out_ptr[0].data == b"hello"
+    assert out_ptr[0].modified == "2026-07-22"
+    assert out_ptr[0].permission == "rw-r--r--"
+
     # Test 6: _wddx_deserialize offline validation
     wddx = """<wddxPacket version='1.0'>
       <header/>
@@ -421,9 +445,9 @@ if "RDS_HOST" in os.environ and "RDS_PORT" in os.environ:
         exists_file = rds.file_exists(test_file)
         print(f"  file_exists('{test_file}'): {exists_file}")
 
-        read_bytes = rds.file_read(test_file)
-        print(f"  file_read('{test_file}'): {len(read_bytes)} bytes read ({read_bytes})")
-        assert read_bytes == file_data, "file_read data should match file_write data"
+        read_content = rds.file_read(test_file)
+        print(f"  file_read('{test_file}'): {read_content.size} bytes read ({read_content.data})")
+        assert read_content.data == file_data, "file_read data should match file_write data"
 
         rds.file_rename(test_file, test_file_renamed)
         print(f"  file_rename('{test_file}' -> '{test_file_renamed}'): success")

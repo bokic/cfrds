@@ -39,7 +39,7 @@ for item in files:
 
 # Read file content
 content = rds.file_read("/var/log/dpkg.log")
-print(content.decode("utf-8", errors="ignore"))
+print(content.data.decode("utf-8", errors="ignore"))
 
 # Write file content
 data = b"ColdFusion RDS test content\n"

@@ -5,9 +5,8 @@
 #include <stdbool.h>
 #include <stdalign.h>
 
-// Include only what's needed (no Qt/UI deps)
-#include "../include/internal/cfrds_buffer.h"
-#include "../include/internal/wddx.h"
+#include "../src/cfrds_buffer.c"
+#include "../src/wddx.c"
 
 // Silence unused warnings in clean build
 #pragma GCC diagnostic ignored "-Wunused-function"

@@ -2,7 +2,7 @@ CC = clang
 CFLAGS = -fsanitize=fuzzer,address,undefined -g -O1 -fno-omit-frame-pointer -Wall -Wextra
 FUZZER_CXXFLAGS = -fsanitize=fuzzer,address,undefined
 
-SRCS = ../src/cfrds_buffer.c ../src/wddx.c ../src/cfrds.c ../src/cfrds_http.c
+SRCS = ../src/cfrds.c ../src/cfrds_http.c
 INC = -I../include -I../include/internal -I/usr/include/libxml2 -I/usr/include/json-c
 LDFLAGS = -lxml2 -ljson-c
 

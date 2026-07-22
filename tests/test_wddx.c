@@ -11,7 +11,7 @@
  */
 
 #include <cfrds.h>
-#include <internal/wddx.h>
+#include "../src/wddx.c"
 
 #include <stdio.h>
 #include <string.h>

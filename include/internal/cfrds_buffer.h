@@ -5,6 +5,7 @@
 #include <stddef.h>
 #include <stdint.h>
 
+
 #include <cfrds.h>
 
 
@@ -233,16 +234,7 @@ size_t cfrds_buffer_data_size(cfrds_buffer *buffer);
  */
 bool cfrds_buffer_append(cfrds_buffer *buffer, const char *str);
 
-/**
- * @brief Appends an integer formatted as a base-10 string to the buffer.
- * 
- * Formats the number via snprintf and appends it to the buffer.
- * 
- * @param buffer Destination buffer.
- * @param number Integer value to format and append.
- * @return true on success, false if buffer is NULL or append fails.
- */
-bool cfrds_buffer_append_int(cfrds_buffer *buffer, int number);
+
 
 /**
  * @brief Appends raw bytes of a specified length to the buffer.
@@ -267,16 +259,7 @@ bool cfrds_buffer_append_bytes(cfrds_buffer *buffer, const void *data, size_t le
  */
 bool cfrds_buffer_append_buffer(cfrds_buffer *buffer, cfrds_buffer *new);
 
-/**
- * @brief Appends a single char byte to the buffer.
- * 
- * Reallocates internal storage by 1 byte if necessary.
- * 
- * @param buffer Destination buffer.
- * @param ch Character to append.
- * @return true on success, false if buffer is NULL or reallocation fails.
- */
-bool cfrds_buffer_append_char(cfrds_buffer *buffer, const char ch);
+
 
 /**
  * @brief Appends a count followed by a colon for RDS protocol list sizes.
@@ -356,19 +339,7 @@ void cfrds_buffer_free(cfrds_buffer *buffer);
  */
 bool cfrds_buffer_parse_number(const char **data, size_t *remaining, int64_t *out);
 
-/**
- * @brief Parses an RDS protocol byte array prefixed by its size.
- * 
- * Reads size, allocates `size + 1` bytes, copies raw bytes, appends a null terminator, 
- * and updates data parsing cursors.
- * 
- * @param data Input/output parsing cursor.
- * @param remaining Input/output remaining byte tracker.
- * @param out Output pointer populated with the allocated array. Must be freed by the caller.
- * @param out_size Output pointer for size of parsed byte array.
- * @return true on success, false on parsing or allocation failure.
- */
-bool cfrds_buffer_parse_bytearray(const char **data, size_t *remaining, char **out, size_t *out_size);
+
 
 /**
  * @brief Parses an RDS protocol string prefixed by its size.
@@ -383,18 +354,7 @@ bool cfrds_buffer_parse_bytearray(const char **data, size_t *remaining, char **o
  */
 bool cfrds_buffer_parse_string(const char **data, size_t *remaining, char **out);
 
-/**
- * @brief Parses a list item (quoted or unquoted) from a comma-separated string list.
- * 
- * Supports double-quoted items (stripping quotes) and advances cursor past the item and trailing comma.
- * Allocates and returns a null-terminated string copy of the list item.
- * 
- * @param data Input/output parsing cursor.
- * @param remaining Input/output remaining byte tracker.
- * @param out Output pointer for the parsed string copy. Must be freed by the caller.
- * @return true on success, false on format error or allocation failure.
- */
-bool cfrds_buffer_parse_string_list_item(const char **data, size_t *remaining, char **out);
+
 
 /**
  * @brief Parses folder/file directory browsing results from the RDS server response.

@@ -6,7 +6,7 @@
  * CTest treats non-zero exit as a test failure.
  */
 
-#include <internal/cfrds_buffer.h>
+#include "../src/cfrds_buffer.c"
 
 #include <stdio.h>
 #include <string.h>

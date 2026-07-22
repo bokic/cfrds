@@ -692,7 +692,7 @@ static const struct WDDX_NODE *wddx_recursively_get(const struct WDDX_NODE *node
     }
 }
 
-const WDDX_NODE *wddx_header(const WDDX *src)
+static __attribute__((unused)) const WDDX_NODE *wddx_header(const WDDX *src)
 {
     if (src == NULL)
         return NULL;
@@ -718,7 +718,7 @@ int wddx_node_type(const void *value_ptr)
     return value->type;
 }
 
-bool wddx_node_bool(const WDDX_NODE *value)
+static __attribute__((unused)) bool wddx_node_bool(const WDDX_NODE *value)
 {
     if (value == NULL)
         return false;
@@ -726,7 +726,7 @@ bool wddx_node_bool(const WDDX_NODE *value)
     return value->boolean;
 }
 
-double wddx_node_number(const WDDX_NODE *value)
+static __attribute__((unused)) double wddx_node_number(const WDDX_NODE *value)
 {
     if (value == NULL)
         return NAN;
@@ -791,7 +791,7 @@ const WDDX_NODE *wddx_node_struct_at(const void *value_ptr, size_t cnt, const ch
     return child->value;
 }
 
-bool wddx_get_bool(const void *src_ptr, const char *path, bool *ok)
+static __attribute__((unused)) bool wddx_get_bool(const void *src_ptr, const char *path, bool *ok)
 {
     const struct WDDX *src = src_ptr;
     if (src == NULL)
@@ -940,7 +940,7 @@ static void wddx_node_recursively(xmlNodePtr xml, const struct WDDX_NODE *wddx)
     }
 }
 
-char *wddx_node_to_xml(const WDDX_NODE *node)
+static __attribute__((unused)) char *wddx_node_to_xml(const WDDX_NODE *node)
 {
     char *ret = NULL;
 

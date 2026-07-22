@@ -22,6 +22,8 @@
 
 #define CFRDS_MAX_PARSER_ITEMS 10000
 
+static bool cfrds_buffer_append_char(cfrds_buffer *buffer, const char ch);
+
 
 struct cfrds_buffer {
     size_t allocated;
@@ -223,7 +225,7 @@ bool cfrds_buffer_append(cfrds_buffer *buffer, const char *str)
     return true;
 }
 
-bool cfrds_buffer_append_int(cfrds_buffer *buffer, int number)
+static __attribute__((unused)) bool cfrds_buffer_append_int(cfrds_buffer *buffer, int number)
 {
     char str[16];
 
@@ -335,7 +337,7 @@ bool cfrds_buffer_append_rds_bytes(cfrds_buffer *buffer, const void *data, size_
     return true;
 }
 
-bool cfrds_buffer_append_char(cfrds_buffer *buffer, const char ch)
+static bool cfrds_buffer_append_char(cfrds_buffer *buffer, const char ch)
 {
     if (buffer == NULL)
         return false;
@@ -430,7 +432,7 @@ bool cfrds_buffer_parse_number(const char **data, size_t *remaining, int64_t *ou
     return true;
 }
 
-bool cfrds_buffer_parse_bytearray(const char **data, size_t *remaining, char **out, size_t *out_size)
+static bool cfrds_buffer_parse_bytearray(const char **data, size_t *remaining, char **out, size_t *out_size)
 {
     size_t size = 0;
     int64_t tmp = 0;
@@ -496,7 +498,7 @@ bool cfrds_buffer_parse_string(const char **data, size_t *remaining, char **out)
     return true;
 }
 
-bool cfrds_buffer_parse_string_list_item(const char **data, size_t *remaining, char **out)
+static bool cfrds_buffer_parse_string_list_item(const char **data, size_t *remaining, char **out)
 {
     bool with_quotes = false;
     const char *endstr = NULL;

@@ -146,13 +146,7 @@ const char *wddx_to_xml(WDDX *src);
  */
 WDDX *wddx_from_xml(const char *xml);
 
-/**
- * @brief Retrieves the header node of a WDDX packet.
- * 
- * @param src The WDDX packet.
- * @return Pointer to WDDX_NODE representing the header, or NULL if packet is NULL or has no header.
- */
-const WDDX_NODE *wddx_header(const WDDX *src);
+
 
 /**
  * @brief Retrieves the data root node of a WDDX packet.
@@ -170,23 +164,9 @@ const WDDX_NODE *wddx_data(const void *src);
  */
 int wddx_node_type(const void *value);
 
-/**
- * @brief Extracts the boolean value from a WDDX_BOOLEAN node.
- * 
- * @param value Pointer to the node.
- * @return The stored boolean value. Returns false if value is NULL.
- */
-bool wddx_node_bool(const WDDX_NODE *value);
 
-/**
- * @brief Extracts the numeric value from a WDDX_NUMBER node.
- * 
- * Internally, number node parsing during deserialization parses the text as double via `atof`.
- * 
- * @param value Pointer to the node.
- * @return The double value. Returns NaN if node is NULL.
- */
-double wddx_node_number(const WDDX_NODE *value);
+
+
 
 /**
  * @brief Extracts the string pointer from a WDDX_STRING node.
@@ -235,17 +215,7 @@ int wddx_node_struct_size(const void *value);
  */
 const WDDX_NODE *wddx_node_struct_at(const void *value, size_t cnt, const char **name);
 
-/**
- * @brief Query helper to retrieve a boolean value at a specific path.
- * 
- * Performs recursive traversal to locate the node at `path` and verifies its type is `WDDX_BOOLEAN`.
- * 
- * @param src Pointer to the WDDX structure.
- * @param path Comma-separated path.
- * @param ok Output parameter set to true on success, false on traversal or type mismatch.
- * @return The boolean value if successful, false otherwise.
- */
-bool wddx_get_bool(const void *src, const char *path, bool *ok);
+
 
 /**
  * @brief Query helper to retrieve a double value at a specific path.
@@ -281,17 +251,7 @@ const char *wddx_get_string(const void *src, const char *path);
  */
 const WDDX_NODE *wddx_get_var(const void *src, const char *path);
 
-/**
- * @brief Serializes a single WDDX node into XML.
- * 
- * Generates an XML document with a root element `<var>`, dumps the serialized node 
- * tree inside it recursively, and returns the duplicated XML string.
- * 
- * @param node Pointer to the node to serialize.
- * @return A newly allocated XML string containing the serialized node. Must be freed by the caller.
- *         Returns NULL on error or if node is NULL.
- */
-char *wddx_node_to_xml(const WDDX_NODE *node);
+
 
 /**
  * @brief Recursively frees a WDDX packet structure and associated memory.

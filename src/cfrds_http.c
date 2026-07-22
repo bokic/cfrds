@@ -41,7 +41,7 @@ typedef int cfrds_socket;
 #endif
 #endif
 
-void cfrds_sock_cleanup(cfrds_socket* sock);
+static void cfrds_sock_cleanup(cfrds_socket* sock);
 #define cfrds_sock_defer(var) cfrds_socket var __attribute__((cleanup(cfrds_sock_cleanup))) = CFRDS_INVALID_SOCKET
 
 static bool cfrds_buffer_skip_httpheader(const char **data, size_t *remaining)
@@ -292,7 +292,7 @@ cfrds_status cfrds_http_post(cfrds_server *server, const char *command, cfrds_bu
 }
 
 #ifdef _WIN32
-void cfrds_sock_cleanup(SOCKET* sock)
+static void cfrds_sock_cleanup(SOCKET* sock)
 {
     if (sock)
     {
@@ -304,7 +304,7 @@ void cfrds_sock_cleanup(SOCKET* sock)
     }
 }
 #else
-void cfrds_sock_cleanup(int* sock)
+static void cfrds_sock_cleanup(int* sock)
 {
     if ((sock != NULL)&&(*sock != CFRDS_INVALID_SOCKET))
     {

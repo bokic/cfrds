@@ -429,57 +429,79 @@ export class Server {
    * Fetches debugger events for the specified session.
    * NOTE: This is a long-polling request on the ColdFusion server that blocks until a debugger event occurs or times out.
    */
+  private parseDebuggerEvent(raw: Buffer | null): DebuggerEvent | null {
+    if (!raw || raw.length === 0) {
+      return null;
+    }
+    const [cnt, offset] = parseNumber(raw, 0);
+    const [wddxXml] = parseString(raw, offset);
+    if (!wddxXml) {
+      return null;
+    }
+    const data: Record<string, any> = {};
+    const varMatches = wddxXml.matchAll(/<var name=['"]([^'"]+)['"]>(?:<string>([^<]*)<\/string>|<number>([^<]*)<\/number>|<boolean value=['"]([^'"]+)['"]\/>)/gi);
+    for (const m of varMatches) {
+      const key = m[1];
+      if (m[2] !== undefined) data[key] = m[2];
+      else if (m[3] !== undefined) data[key] = parseFloat(m[3]);
+      else if (m[4] !== undefined) data[key] = m[4] === "true";
+    }
+
+    const arrayVarMatches = wddxXml.matchAll(/<var name=['"]([^'"]+)['"]>\s*<array[^>]*>([\s\S]*?)<\/array>\s*<\/var>/gi);
+    for (const m of arrayVarMatches) {
+      const key = m[1];
+      const arrayContent = m[2];
+      const items: string[] = [];
+      const stringMatches = arrayContent.matchAll(/<string>([^<]*)<\/string>/gi);
+      for (const sm of stringMatches) {
+        items.push(sm[1]);
+      }
+      data[key] = items;
+    }
+
+    const evtName = data.EVENT || data.COMMAND;
+    const threadName = data.THREAD || data.THREAD_ID || data.THREAD_NAME || "main";
+    data.thread_name = threadName;
+    data.thread_id = threadName;
+
+    if (evtName === "CF_BREAKPOINT_SET") {
+      return {
+        type: CFRDS_DEBUGGER_EVENT_TYPE.BREAKPOINT_SET,
+        data: {
+          pathname: data.CFML_PATH || data.FILE || "",
+          req_line: Math.floor(data.REQ_LINE_NUM || 0),
+          act_line: Math.floor(data.ACTUAL_LINE_NUM || 0),
+          thread_name: threadName,
+          thread_id: threadName,
+          ...data,
+        },
+      };
+    } else if (evtName === "CF_BREAKPOINT_HIT" || evtName === "CF_STEP" || evtName === "BREAKPOINT" || evtName === "STEP") {
+      const type = String(evtName).includes("BREAKPOINT")
+        ? CFRDS_DEBUGGER_EVENT_TYPE.BREAKPOINT
+        : CFRDS_DEBUGGER_EVENT_TYPE.STEP;
+      return {
+        type,
+        data: {
+          source: data.CFML_PATH || data.FILE || "",
+          line: Math.floor(data.REQ_LINE_NUM || data.LINE || 0),
+          thread_name: threadName,
+          thread_id: threadName,
+          ...data,
+        },
+      };
+    }
+    return { type: CFRDS_DEBUGGER_EVENT_TYPE.UNKNOWN, data };
+  }
+
+  /**
+   * Fetches debugger events for the specified session.
+   * NOTE: This is a long-polling request on the ColdFusion server that blocks until a debugger event occurs or times out.
+   */
   async debuggerGetDebugEvents(sessionName: string): Promise<DebuggerEvent | null> {
     try {
       const raw = await sendRdsCommand(this.ctx, "DBGREQUEST", ["DBG_EVENTS", sessionName]);
-      if (!raw || raw.length === 0) {
-        return null;
-      }
-      const [cnt, offset] = parseNumber(raw, 0);
-      const [wddxXml] = parseString(raw, offset);
-      if (!wddxXml) {
-        return null;
-      }
-      const data: Record<string, any> = {};
-      const varMatches = wddxXml.matchAll(/<var name=['"]([^'"]+)['"]>(?:<string>([^<]*)<\/string>|<number>([^<]*)<\/number>|<boolean value=['"]([^'"]+)['"]\/>)/gi);
-      for (const m of varMatches) {
-        const key = m[1];
-        if (m[2] !== undefined) data[key] = m[2];
-        else if (m[3] !== undefined) data[key] = parseFloat(m[3]);
-        else if (m[4] !== undefined) data[key] = m[4] === "true";
-      }
-
-      const evtName = data.EVENT || data.COMMAND;
-      const threadName = data.THREAD || data.THREAD_ID || data.THREAD_NAME || "main";
-      data.thread_name = threadName;
-      data.thread_id = threadName;
-
-      if (evtName === "CF_BREAKPOINT_SET") {
-        return {
-          type: CFRDS_DEBUGGER_EVENT_TYPE.BREAKPOINT_SET,
-          data: {
-            pathname: data.CFML_PATH || data.FILE || "",
-            req_line: Math.floor(data.REQ_LINE_NUM || 0),
-            act_line: Math.floor(data.ACTUAL_LINE_NUM || 0),
-            thread_name: threadName,
-            thread_id: threadName,
-          },
-        };
-      } else if (evtName === "CF_BREAKPOINT_HIT" || evtName === "CF_STEP" || evtName === "BREAKPOINT" || evtName === "STEP") {
-        const type = String(evtName).includes("BREAKPOINT")
-          ? CFRDS_DEBUGGER_EVENT_TYPE.BREAKPOINT
-          : CFRDS_DEBUGGER_EVENT_TYPE.STEP;
-        return {
-          type,
-          data: {
-            source: data.CFML_PATH || data.FILE || "",
-            line: Math.floor(data.REQ_LINE_NUM || data.LINE || 0),
-            thread_name: threadName,
-            thread_id: threadName,
-          },
-        };
-      }
-      return { type: CFRDS_DEBUGGER_EVENT_TYPE.UNKNOWN, data };
+      return this.parseDebuggerEvent(raw);
     } catch (e) {
       if (e instanceof CFRDSError) {
         throw e;
@@ -499,7 +521,7 @@ export class Server {
     scopes: boolean,
     cfTrace: boolean,
     javaTrace: boolean
-  ): Promise<void> {
+  ): Promise<DebuggerEvent | null> {
     const b = (v: boolean): string => (v ? "true" : "false");
     const wddx = `<wddxPacket version='1.0'><header/><data><struct type='java.util.HashMap'>` +
       `<var name='THREADS'><boolean value='${b(threads)}'/></var>` +
@@ -508,7 +530,15 @@ export class Server {
       `<var name='CF_TRACE'><boolean value='${b(cfTrace)}'/></var>` +
       `<var name='JAVA_TRACE'><boolean value='${b(javaTrace)}'/></var>` +
       `</struct></data></wddxPacket>`;
-    await sendRdsCommand(this.ctx, "DBGREQUEST", ["DBG_EVENTS", sessionName, wddx]);
+    try {
+      const raw = await sendRdsCommand(this.ctx, "DBGREQUEST", ["DBG_EVENTS", sessionName, wddx]);
+      return this.parseDebuggerEvent(raw);
+    } catch (e) {
+      if (e instanceof CFRDSError) {
+        throw e;
+      }
+      return null;
+    }
   }
 
   async debuggerStepIn(sessionName: string, threadName: string): Promise<void> {

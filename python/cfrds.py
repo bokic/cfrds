@@ -1068,88 +1068,80 @@ class server:
     def _parse_debugger_event(self, raw: bytes) -> Optional[Dict[str, Any]]:
         if not raw:
             return None
-        try:
-            _, offset = _parse_number(raw, 0)
-            wddx_xml, _ = _parse_string(raw, offset)
-            if not wddx_xml:
-                return None
-
-            import xml.etree.ElementTree as ET
-            root = ET.fromstring(wddx_xml)
-            data: Dict[str, Any] = {}
-            for var in root.findall(".//var"):
-                name = var.attrib.get("name")
-                if not name:
-                    continue
-                str_elem = var.find("string")
-                num_elem = var.find("number")
-                bool_elem = var.find("boolean")
-                arr_elem = var.find("array")
-                if str_elem is not None and str_elem.text:
-                    data[name] = str_elem.text
-                elif num_elem is not None and num_elem.text:
-                    try:
-                        data[name] = float(num_elem.text)
-                    except ValueError:
-                        data[name] = num_elem.text
-                elif bool_elem is not None:
-                    data[name] = bool_elem.attrib.get("value") == "true"
-                elif arr_elem is not None:
-                    items = []
-                    for item_str in arr_elem.findall(".//string"):
-                        items.append(item_str.text or "")
-                    data[name] = items
-
-            evt_name = data.get("EVENT") or data.get("COMMAND")
-            thread_name = str(data.get("THREAD") or data.get("THREAD_ID") or data.get("THREAD_NAME") or "main")
-            data["thread_name"] = thread_name
-            data["thread_id"] = thread_name
-
-            def _to_int(val: Any) -> int:
-                try:
-                    return int(float(val))
-                except (ValueError, TypeError):
-                    return 0
-
-            if evt_name == "CF_BREAKPOINT_SET":
-                return {
-                    "type": CFRDS_DEBUGGER_EVENT_TYPE_BREAKPOINT_SET,
-                    "data": {
-                        "pathname": data.get("CFML_PATH") or data.get("FILE", ""),
-                        "req_line": _to_int(data.get("REQ_LINE_NUM")),
-                        "act_line": _to_int(data.get("ACTUAL_LINE_NUM")),
-                        "thread_name": thread_name,
-                        "thread_id": thread_name,
-                        **data,
-                    },
-                }
-            elif evt_name in ("CF_BREAKPOINT_HIT", "CF_STEP", "BREAKPOINT", "STEP"):
-                return {
-                    "type": CFRDS_DEBUGGER_EVENT_TYPE_BREAKPOINT if "BREAKPOINT" in str(evt_name) else CFRDS_DEBUGGER_EVENT_TYPE_STEP,
-                    "data": {
-                        "source": data.get("CFML_PATH") or data.get("FILE", ""),
-                        "line": _to_int(data.get("REQ_LINE_NUM") or data.get("LINE")),
-                        "thread_name": thread_name,
-                        "thread_id": thread_name,
-                        **data,
-                    },
-                }
-            return {"type": CFRDS_DEBUGGER_EVENT_UNKNOWN, "data": data}
-        except Exception:
+        _, offset = _parse_number(raw, 0)
+        wddx_xml, _ = _parse_string(raw, offset)
+        if not wddx_xml:
             return None
+
+        import xml.etree.ElementTree as ET
+        root = ET.fromstring(wddx_xml)
+        data: Dict[str, Any] = {}
+        for var in root.findall(".//var"):
+            name = var.attrib.get("name")
+            if not name:
+                continue
+            str_elem = var.find("string")
+            num_elem = var.find("number")
+            bool_elem = var.find("boolean")
+            arr_elem = var.find("array")
+            if str_elem is not None and str_elem.text:
+                data[name] = str_elem.text
+            elif num_elem is not None and num_elem.text:
+                try:
+                    data[name] = float(num_elem.text)
+                except ValueError:
+                    data[name] = num_elem.text
+            elif bool_elem is not None:
+                data[name] = bool_elem.attrib.get("value") == "true"
+            elif arr_elem is not None:
+                items = []
+                for item_str in arr_elem.findall(".//string"):
+                    items.append(item_str.text or "")
+                data[name] = items
+
+        evt_name = data.get("EVENT") or data.get("COMMAND")
+        thread_name = str(data.get("THREAD") or data.get("THREAD_ID") or data.get("THREAD_NAME") or "main")
+        data["thread_name"] = thread_name
+        data["thread_id"] = thread_name
+
+        def _to_int(val: Any) -> int:
+            try:
+                return int(float(val))
+            except (ValueError, TypeError):
+                return 0
+
+        if evt_name == "CF_BREAKPOINT_SET":
+            return {
+                "type": CFRDS_DEBUGGER_EVENT_TYPE_BREAKPOINT_SET,
+                "data": {
+                    "pathname": data.get("CFML_PATH") or data.get("FILE", ""),
+                    "req_line": _to_int(data.get("REQ_LINE_NUM")),
+                    "act_line": _to_int(data.get("ACTUAL_LINE_NUM")),
+                    "thread_name": thread_name,
+                    "thread_id": thread_name,
+                    **data,
+                },
+            }
+        elif evt_name in ("CF_BREAKPOINT_HIT", "CF_STEP", "BREAKPOINT", "STEP"):
+            return {
+                "type": CFRDS_DEBUGGER_EVENT_TYPE_BREAKPOINT if "BREAKPOINT" in str(evt_name) else CFRDS_DEBUGGER_EVENT_TYPE_STEP,
+                "data": {
+                    "source": data.get("CFML_PATH") or data.get("FILE", ""),
+                    "line": _to_int(data.get("REQ_LINE_NUM") or data.get("LINE")),
+                    "thread_name": thread_name,
+                    "thread_id": thread_name,
+                    **data,
+                },
+            }
+        return {"type": CFRDS_DEBUGGER_EVENT_UNKNOWN, "data": data}
 
     def debugger_get_debug_events(self, session_name: str) -> Optional[Dict[str, Any]]:
         """
         Fetches debugger events for the specified session.
         NOTE: This is a long-polling request on the ColdFusion server that blocks until a debugger event occurs or times out.
         """
-        try:
-            raw = _send_rds_command(self._ctx, "DBGREQUEST", ["DBG_EVENTS", session_name])
-            return self._parse_debugger_event(raw)
-        except CFRDSError:
-            raise
-        except Exception:
-            return None
+        raw = _send_rds_command(self._ctx, "DBGREQUEST", ["DBG_EVENTS", session_name])
+        return self._parse_debugger_event(raw)
 
     def debugger_all_fetch_flags_enabled(
         self, session_name: str, threads: bool, watch: bool, scopes: bool, cf_trace: bool, java_trace: bool
@@ -1167,13 +1159,8 @@ class server:
                 f"<var name='CF_TRACE'><boolean value='{b(cf_trace)}'/></var>"
                 f"<var name='JAVA_TRACE'><boolean value='{b(java_trace)}'/></var>"
                 f"</struct></data></wddxPacket>")
-        try:
-            raw = _send_rds_command(self._ctx, "DBGREQUEST", ["DBG_EVENTS", session_name, wddx])
-            return self._parse_debugger_event(raw)
-        except CFRDSError:
-            raise
-        except Exception:
-            return None
+        raw = _send_rds_command(self._ctx, "DBGREQUEST", ["DBG_EVENTS", session_name, wddx])
+        return self._parse_debugger_event(raw)
 
     def debugger_step_in(self, session_name: str, thread_name: str) -> None:
         wddx = f"<wddxPacket version='1.0'><header/><data><array length='1'><struct type='java.util.HashMap'><var name='COMMAND'><string>STEP_IN</string></var><var name='THREAD'><string>{thread_name}</string></var></struct></array></data></wddxPacket>"

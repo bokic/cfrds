@@ -499,15 +499,8 @@ export class Server {
    * NOTE: This is a long-polling request on the ColdFusion server that blocks until a debugger event occurs or times out.
    */
   async debuggerGetDebugEvents(sessionName: string): Promise<DebuggerEvent | null> {
-    try {
-      const raw = await sendRdsCommand(this.ctx, "DBGREQUEST", ["DBG_EVENTS", sessionName]);
-      return this.parseDebuggerEvent(raw);
-    } catch (e) {
-      if (e instanceof CFRDSError) {
-        throw e;
-      }
-      return null;
-    }
+    const raw = await sendRdsCommand(this.ctx, "DBGREQUEST", ["DBG_EVENTS", sessionName]);
+    return this.parseDebuggerEvent(raw);
   }
 
   /**
@@ -530,15 +523,8 @@ export class Server {
       `<var name='CF_TRACE'><boolean value='${b(cfTrace)}'/></var>` +
       `<var name='JAVA_TRACE'><boolean value='${b(javaTrace)}'/></var>` +
       `</struct></data></wddxPacket>`;
-    try {
-      const raw = await sendRdsCommand(this.ctx, "DBGREQUEST", ["DBG_EVENTS", sessionName, wddx]);
-      return this.parseDebuggerEvent(raw);
-    } catch (e) {
-      if (e instanceof CFRDSError) {
-        throw e;
-      }
-      return null;
-    }
+    const raw = await sendRdsCommand(this.ctx, "DBGREQUEST", ["DBG_EVENTS", sessionName, wddx]);
+    return this.parseDebuggerEvent(raw);
   }
 
   async debuggerStepIn(sessionName: string, threadName: string): Promise<void> {

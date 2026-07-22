@@ -88,7 +88,7 @@ export function buildPayload(items: (string | Buffer)[]): Buffer {
   return Buffer.concat(parts);
 }
 
-interface XmlNode {
+export interface XmlNode {
   tag: string;
   attrs: Record<string, string>;
   children: XmlNode[];
@@ -181,7 +181,7 @@ export function parseXml(xml: string): XmlNode {
   return root;
 }
 
-function parseWddxNode(node: XmlNode): any {
+export function parseWddxNode(node: XmlNode): any {
   const tag = node.tag;
   if (tag === "null") {
     return null;

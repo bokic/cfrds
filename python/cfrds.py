@@ -764,10 +764,20 @@ class cfrds_adminapi_customtagpaths:
 
 
 class cfrds_adminapi_mappings:
-    def __init__(self, mappings: Dict[str, str]):
-        self.mappings = mappings
-        self.keys_list = list(mappings.keys())
-        self.values_list = list(mappings.values())
+    def __init__(self, keys_or_mappings: Any, values_list: Optional[List[str]] = None, mappings_dict: Optional[Dict[str, str]] = None):
+        if isinstance(keys_or_mappings, dict) and values_list is None:
+            self.mappings = keys_or_mappings
+            self.keys_list = list(keys_or_mappings.keys())
+            self.values_list = list(keys_or_mappings.values())
+        else:
+            self.keys_list = list(keys_or_mappings)
+            self.values_list = list(values_list) if values_list is not None else []
+            if mappings_dict is not None:
+                self.mappings = mappings_dict
+            else:
+                self.mappings = {}
+                for k, v in zip(self.keys_list, self.values_list):
+                    self.mappings[k] = v
 
     @property
     def keys(self) -> Any:
@@ -778,7 +788,7 @@ class cfrds_adminapi_mappings:
         return self.values_list
 
     def __len__(self) -> int:
-        return len(self.mappings)
+        return len(self.keys_list)
 
     def __getitem__(self, key: Any) -> Any:
         if isinstance(key, str):
@@ -1368,17 +1378,49 @@ class server:
     def adminapi_extensions_deletemapping(self, mapping: str) -> None:
         _send_rds_command(self._ctx, "ADMINAPI", ["cfide.adminapi.extensions", "deleltemappings", mapping])
 
-    def adminapi_extensions_getmappings(self) -> Dict[str, str]:
+    def adminapi_extensions_getmappings(self) -> cfrds_adminapi_mappings:
         raw = _send_rds_command(self._ctx, "ADMINAPI", ["cfide.adminapi.extensions", "getmappings"])
         _, offset = _parse_number(raw, 0)
         xml_str, _ = _parse_string(raw, offset)
-        mappings: Dict[str, str] = {}
-        if xml_str:
-            parsed = _wddx_deserialize(xml_str)
-            if isinstance(parsed, dict):
-                for k, v in parsed.items():
-                    mappings[k] = str(v)
-        return mappings
+        keys_list: List[str] = []
+        values_list: List[str] = []
+        mappings_dict: Dict[str, str] = {}
+        if xml_str and xml_str.strip():
+            import xml.etree.ElementTree as ET
+            try:
+                root = ET.fromstring(xml_str)
+                struct_elem = None
+                def find_struct(elem):
+                    nonlocal struct_elem
+                    tag = elem.tag
+                    if "}" in tag:
+                        tag = tag.split("}", 1)[1]
+                    if tag.lower() == "struct":
+                        struct_elem = elem
+                        return
+                    for child in elem:
+                        find_struct(child)
+                        if struct_elem is not None:
+                            return
+                find_struct(root)
+                if struct_elem is not None:
+                    for var in struct_elem:
+                        var_tag = var.tag
+                        if "}" in var_tag:
+                            var_tag = var_tag.split("}", 1)[1]
+                        if var_tag.lower() == "var":
+                            name = var.attrib.get("name")
+                            if name:
+                                val_str = ""
+                                if len(var) > 0:
+                                    parsed_val = _parse_wddx_node(var[0])
+                                    val_str = str(parsed_val) if parsed_val is not None else ""
+                                keys_list.append(name)
+                                values_list.append(val_str)
+                                mappings_dict[name] = val_str
+            except Exception:
+                pass
+        return cfrds_adminapi_mappings(keys_list, values_list, mappings_dict)
 
     # Graphing Operations
     def graphing(self, chart_attributes: str, series_data: List[str]) -> bytes:
@@ -2595,7 +2637,7 @@ def cfrds_command_adminapi_extensions_getmappings(srv: cfrds_server, out_ptr: Li
         s = server(srv.host, srv.port, srv.username, srv.orig_password)
         mappings = s.adminapi_extensions_getmappings()
         if isinstance(out_ptr, list):
-            out_ptr[0] = cfrds_adminapi_mappings(mappings)
+            out_ptr[0] = mappings
         return CFRDS_STATUS_OK
     except CFRDSError as e:
         return e.status

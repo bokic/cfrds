@@ -18,7 +18,7 @@ import {
   IdeDefaultResult,
   SecurityAnalyzerStatus,
 } from "./types";
-import { encodePassword, parseNumber, parseString, parseBytearray, parseStringListItem, wddxDeserialize } from "./parser";
+import { encodePassword, parseNumber, parseString, parseBytearray, parseStringListItem, wddxDeserialize, parseXml, parseWddxNode, XmlNode } from "./parser";
 import { sendRdsCommand } from "./transport";
 
 function escapeXml(str: string): string {
@@ -678,20 +678,48 @@ export class Server {
     await sendRdsCommand(this.ctx, "ADMINAPI", ["cfide.adminapi.extensions", "deleltemappings", mapping]);
   }
 
-  async adminapiExtensionsGetmappings(): Promise<Record<string, string>> {
+  async adminapiExtensionsGetmappings(): Promise<AdminApiMappings> {
     const raw = await sendRdsCommand(this.ctx, "ADMINAPI", ["cfide.adminapi.extensions", "getmappings"]);
     const [, offset] = parseNumber(raw, 0);
     const [xml] = parseString(raw, offset);
+    const keys: string[] = [];
+    const values: string[] = [];
     const mappings: Record<string, string> = {};
     if (xml) {
-      const parsed = wddxDeserialize(xml);
-      if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) {
-        for (const [k, v] of Object.entries(parsed)) {
-          mappings[k] = String(v);
+      const root = parseXml(xml);
+      const findStruct = (node: XmlNode): XmlNode | null => {
+        if (node.tag === "struct") return node;
+        for (const child of node.children) {
+          const res = findStruct(child);
+          if (res) return res;
+        }
+        return null;
+      };
+      const structNode = findStruct(root);
+      if (structNode) {
+        for (const child of structNode.children) {
+          if (child.tag === "var") {
+            const name = child.attrs.name;
+            if (name) {
+              let val = "";
+              if (child.children.length > 0) {
+                const valNode = child.children[0];
+                const parsedVal = parseWddxNode(valNode);
+                val = parsedVal !== null && parsedVal !== undefined ? String(parsedVal) : "";
+              }
+              keys.push(name);
+              values.push(val);
+              mappings[name] = val;
+            }
+          }
         }
       }
     }
-    return mappings;
+    return {
+      mappings,
+      keys,
+      values,
+    };
   }
 
   // Graphing Operations

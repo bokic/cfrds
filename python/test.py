@@ -210,6 +210,20 @@ with patch("http.client.HTTPConnection", return_value=mock_conn):
     if isinstance(call_body, bytes):
         call_body = call_body.decode("utf-8")
     assert "<var name='map&apos;name'>" in call_body, "adminapi_extensions_setmapping name should be XML-escaped"
+
+    # Test 5b: adminapi_extensions_getmappings returns structured cfrds_adminapi_mappings (offline test)
+    mock_conn.request.reset_mock()
+    xml_data = "<wddxPacket version='1.0'><header/><data><struct><var name='k1'><string>v1</string></var><var name='k2'><string>v2</string></var><var name='k1'><string>v3</string></var></struct></data></wddxPacket>"
+    resp_body = f"1:{len(xml_data)}:{xml_data}".encode("utf-8")
+    mock_resp.read.return_value = resp_body
+    mappings = srv_mock.adminapi_extensions_getmappings()
+    assert isinstance(mappings, cfrds.cfrds_adminapi_mappings)
+    assert len(mappings) == 3
+    assert mappings.keys == ["k1", "k2", "k1"]
+    assert mappings.values == ["v1", "v2", "v3"]
+    assert mappings.mappings == {"k1": "v3", "k2": "v2"}
+    assert mappings["k2"] == "v2"
+    assert mappings[1] == ("k2", "v2")
     # Test 6: _wddx_deserialize offline validation
     wddx = """<wddxPacket version='1.0'>
       <header/>

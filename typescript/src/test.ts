@@ -263,6 +263,18 @@ async function main(): Promise<void> {
       mockResponseBody = Buffer.from("0:", "utf-8");
       await srvMock.adminapiExtensionsSetmapping("map'name", "path\"val");
       assert(lastRequestBody.includes("<var name='map&apos;name'>"), "adminapiExtensionsSetmapping name should be XML-escaped");
+
+      // Test 5b: adminapiExtensionsGetmappings returns structured AdminApiMappings (offline test)
+      lastRequestBody = "";
+      const xmlData = "<wddxPacket version='1.0'><header/><data><struct><var name='k1'><string>v1</string></var><var name='k2'><string>v2</string></var><var name='k1'><string>v3</string></var></struct></data></wddxPacket>";
+      mockResponseBody = Buffer.from(`1:${xmlData.length}:${xmlData}`, "utf-8");
+      const mappingsResult = await srvMock.adminapiExtensionsGetmappings();
+      assert(mappingsResult.keys.length === 3, "keys length should be 3");
+      assert(mappingsResult.keys[0] === "k1" && mappingsResult.keys[1] === "k2" && mappingsResult.keys[2] === "k1", "keys should preserve order and duplicates");
+      assert(mappingsResult.values.length === 3, "values length should be 3");
+      assert(mappingsResult.values[0] === "v1" && mappingsResult.values[1] === "v2" && mappingsResult.values[2] === "v3", "values should preserve order");
+      assert(mappingsResult.mappings.k1 === "v3" && mappingsResult.mappings.k2 === "v2", "mappings should collapse duplicate keys");
+
       // Test 6: wddxDeserialize offline validation
       {
         const wddx = `<wddxPacket version='1.0'>

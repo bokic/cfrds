@@ -593,6 +593,46 @@ static int test_sql_key_parsers(void)
     return PASS;
 }
 
+static int test_buffer_to_file_content(void)
+{
+    /* Test valid parsing */
+    {
+        cfrds_buffer *buf = NULL;
+        CHECK(cfrds_buffer_create(&buf) == true);
+        CHECK(cfrds_buffer_append(buf, "3:5:hello19:2026-07-22 05:00:009:read-only") == true);
+        cfrds_file_content *fc = cfrds_buffer_to_file_content(buf);
+        CHECK(fc != NULL);
+        CHECK(fc->size == 5);
+        CHECK(memcmp(fc->data, "hello", 5) == 0);
+        CHECK(strcmp(fc->modified, "2026-07-22 05:00:00") == 0);
+        CHECK(strcmp(fc->permission, "read-only") == 0);
+        cfrds_file_content_free(fc);
+        cfrds_buffer_free(buf);
+    }
+
+    /* Test invalid parsing - missing components */
+    {
+        cfrds_buffer *buf = NULL;
+        CHECK(cfrds_buffer_create(&buf) == true);
+        CHECK(cfrds_buffer_append(buf, "3:5:hello19:2026-07-22 05:00:00") == true);
+        cfrds_file_content *fc = cfrds_buffer_to_file_content(buf);
+        CHECK(fc == NULL);
+        cfrds_buffer_free(buf);
+    }
+
+    /* Test invalid parsing - wrong total elements count */
+    {
+        cfrds_buffer *buf = NULL;
+        CHECK(cfrds_buffer_create(&buf) == true);
+        CHECK(cfrds_buffer_append(buf, "2:5:hello19:2026-07-22 05:00:009:read-only") == true);
+        cfrds_file_content *fc = cfrds_buffer_to_file_content(buf);
+        CHECK(fc == NULL);
+        cfrds_buffer_free(buf);
+    }
+
+    return PASS;
+}
+
 /* ── main ──────────────────────────────────────────────────────────────── */
 
 int main(void)
@@ -654,6 +694,8 @@ int main(void)
     RUN(test_null_sentinel);
     RUN(test_command_graphing_null_guards);
     RUN(test_sql_key_parsers);
+    RUN(test_buffer_to_file_content);
+
 
     printf("\n%d test(s) failed.\n", _failures);
     return _failures ? 1 : 0;

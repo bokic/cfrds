@@ -653,6 +653,7 @@ cfrds_browse_dir *cfrds_buffer_to_browse_dir(cfrds_buffer *buffer)
 cfrds_file_content *cfrds_buffer_to_file_content(cfrds_buffer *buffer)
 {
     cfrds_file_content *ret = NULL;
+    cfrds_file_content_defer(tmp);
     int64_t total = 0;
 
     if (buffer == NULL)
@@ -667,15 +668,21 @@ cfrds_file_content *cfrds_buffer_to_file_content(cfrds_buffer *buffer)
     if (total != 3)
         return NULL;
 
-    ret = malloc(sizeof(cfrds_file_content));
-    if (ret == NULL)
+    tmp = malloc(sizeof(cfrds_file_content));
+    if (tmp == NULL)
         return NULL;
 
-    explicit_bzero(ret, sizeof(cfrds_file_content));
+    explicit_bzero(tmp, sizeof(cfrds_file_content));
 
-    cfrds_buffer_parse_bytearray(&data, &size, &ret->data, &ret->size);
-    cfrds_buffer_parse_string(&data, &size, &ret->modified);
-    cfrds_buffer_parse_string(&data, &size, &ret->permission);
+    if (!cfrds_buffer_parse_bytearray(&data, &size, &tmp->data, &tmp->size) ||
+        !cfrds_buffer_parse_string(&data, &size, &tmp->modified) ||
+        !cfrds_buffer_parse_string(&data, &size, &tmp->permission))
+    {
+        return NULL;
+    }
+
+    ret = tmp;
+    tmp = NULL;
 
     return ret;
 }

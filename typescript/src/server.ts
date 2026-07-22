@@ -104,13 +104,14 @@ export class Server {
       // Map permission flags from C source's cfrds_browse_dir_item_get_permissions semantics:
       // - 0x01: Read-only (R) -> maps to FILE_ATTRIBUTE_READONLY (1)
       // - 0x02: Hidden (H)    -> maps to FILE_ATTRIBUTE_HIDDEN (2)
-      // - 0x04: System        -> maps to FILE_ATTRIBUTE_SYSTEM (4)
-      // - 0x10: Directory     -> maps to FILE_ATTRIBUTE_DIRECTORY (16)
+      // - 0x04: System (S)    -> maps to FILE_ATTRIBUTE_SYSTEM (4)
+      // - 0x10: Directory (D) -> maps to FILE_ATTRIBUTE_DIRECTORY (16)
       // - 0x20: Archive (A)   -> maps to FILE_ATTRIBUTE_ARCHIVE (32)
       // - 0x80: Normal (N)    -> maps to FILE_ATTRIBUTE_NORMAL (128)
-      const permissions = (kind === "D" ? "D" : "-") +
+      const permissions = ((permsNum & 0x10) || kind === "D" ? "D" : "-") +
         ((permsNum & 0x01) ? "R" : "-") +
         ((permsNum & 0x02) ? "H" : "-") +
+        ((permsNum & 0x04) ? "S" : "-") +
         ((permsNum & 0x20) ? "A" : "-") +
         ((permsNum & 0x80) ? "N" : "-");
 

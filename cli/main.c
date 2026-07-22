@@ -397,12 +397,13 @@ int main(int argc, char *argv[])
                 size_t size = cfrds_browse_dir_item_get_size(dir, c);
                 uint64_t modified = cfrds_browse_dir_item_get_modified(dir, c);
 
-                char permissions_str[] = "-----";
-                if (kind == 'D') permissions_str[0] = 'D';
+                char permissions_str[] = "------";
+                if ((permissions & 0x10) || kind == 'D') permissions_str[0] = 'D';
                 if (permissions & 0x01) permissions_str[1] = 'R';
                 if (permissions & 0x02) permissions_str[2] = 'H';
-                if (permissions & 0x20) permissions_str[3] = 'A';
-                if (permissions & 0x80) permissions_str[4] = 'N';
+                if (permissions & 0x04) permissions_str[3] = 'S';
+                if (permissions & 0x20) permissions_str[4] = 'A';
+                if (permissions & 0x80) permissions_str[5] = 'N';
 
                 struct json_object *item = json_object_new_object();
                 char kind_str[2] = { kind, '\0' };
@@ -428,12 +429,13 @@ int main(int argc, char *argv[])
                 size_t size = cfrds_browse_dir_item_get_size(dir, c);
                 uint64_t modified = cfrds_browse_dir_item_get_modified(dir, c);
 
-                char permissions_str[] = "-----";
-                if (kind == 'D') permissions_str[0] = 'D';
+                char permissions_str[] = "------";
+                if ((permissions & 0x10) || kind == 'D') permissions_str[0] = 'D';
                 if (permissions & 0x01) permissions_str[1] = 'R';
                 if (permissions & 0x02) permissions_str[2] = 'H';
-                if (permissions & 0x20) permissions_str[3] = 'A';
-                if (permissions & 0x80) permissions_str[4] = 'N';
+                if (permissions & 0x04) permissions_str[3] = 'S';
+                if (permissions & 0x20) permissions_str[4] = 'A';
+                if (permissions & 0x80) permissions_str[5] = 'N';
 
                 const time_t timep = (time_t)(modified / 1000);
                 const struct tm *newtime = localtime(&timep);

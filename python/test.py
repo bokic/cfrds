@@ -167,6 +167,19 @@ assert map_container["k1"] == "v1"
 assert map_container.to_dict() == {"k1": "v1"}
 assert list(map_container) == ["k1"]
 
+# Verify permission encoding/decoding round-trip and backward compatibility
+dir_item_legacy = cfrds.cfrds_browse_dir([{"kind": "D", "permissions": "DRHAN", "name": "legacy", "size": 0, "modified": 0}])
+assert cfrds.cfrds_browse_dir_item_get_permissions(dir_item_legacy, 0) == (0x10 | 0x01 | 0x02 | 0x20 | 0x80)
+
+dir_item_new = cfrds.cfrds_browse_dir([{"kind": "D", "permissions": "DRHSAN", "name": "new", "size": 0, "modified": 0}])
+assert cfrds.cfrds_browse_dir_item_get_permissions(dir_item_new, 0) == (0x10 | 0x01 | 0x02 | 0x04 | 0x20 | 0x80)
+
+dir_item_legacy_mask = cfrds.cfrds_browse_dir([{"kind": "F", "permissions": "-R-AN", "name": "legacy_mask", "size": 0, "modified": 0}])
+assert cfrds.cfrds_browse_dir_item_get_permissions(dir_item_legacy_mask, 0) == (0x01 | 0x20 | 0x80)
+
+dir_item_new_mask = cfrds.cfrds_browse_dir([{"kind": "F", "permissions": "-R-SAN", "name": "new_mask", "size": 0, "modified": 0}])
+assert cfrds.cfrds_browse_dir_item_get_permissions(dir_item_new_mask, 0) == (0x01 | 0x04 | 0x20 | 0x80)
+
 print("Container class ready-to-use value tests passed!")
 
 # Verify browse_dir validation (offline tests using http mock)

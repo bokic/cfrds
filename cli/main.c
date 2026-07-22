@@ -401,7 +401,7 @@ int main(int argc, char *argv[])
                 if (kind == 'D') permissions_str[0] = 'D';
                 if (permissions & 0x01) permissions_str[1] = 'R';
                 if (permissions & 0x02) permissions_str[2] = 'H';
-                if (permissions & 0x10) permissions_str[3] = 'A';
+                if (permissions & 0x20) permissions_str[3] = 'A';
                 if (permissions & 0x80) permissions_str[4] = 'N';
 
                 struct json_object *item = json_object_new_object();
@@ -432,7 +432,7 @@ int main(int argc, char *argv[])
                 if (kind == 'D') permissions_str[0] = 'D';
                 if (permissions & 0x01) permissions_str[1] = 'R';
                 if (permissions & 0x02) permissions_str[2] = 'H';
-                if (permissions & 0x10) permissions_str[3] = 'A';
+                if (permissions & 0x20) permissions_str[3] = 'A';
                 if (permissions & 0x80) permissions_str[4] = 'N';
 
                 const time_t timep = (time_t)(modified / 1000);

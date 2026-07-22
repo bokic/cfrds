@@ -270,7 +270,13 @@ EXPORT_CFRDS const char *cfrds_browse_dir_item_get_name(const cfrds_browse_dir *
  * @brief Retrieves the access permissions of the item at a specific index.
  * @param value Directory listing structure.
  * @param ndx 0-based item index.
- * @return Permission byte representation.
+ * @return Permission byte representation. The returned byte is a bitmask:
+ *         - 0x01: Read-only (maps to FILE_ATTRIBUTE_READONLY)
+ *         - 0x02: Hidden (maps to FILE_ATTRIBUTE_HIDDEN)
+ *         - 0x04: System (maps to FILE_ATTRIBUTE_SYSTEM)
+ *         - 0x10: Directory (maps to FILE_ATTRIBUTE_DIRECTORY)
+ *         - 0x20: Archive (maps to FILE_ATTRIBUTE_ARCHIVE)
+ *         - 0x80: Normal (maps to FILE_ATTRIBUTE_NORMAL)
  */
 EXPORT_CFRDS uint8_t cfrds_browse_dir_item_get_permissions(const cfrds_browse_dir *value, size_t ndx);
 

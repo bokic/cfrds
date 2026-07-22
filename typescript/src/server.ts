@@ -101,17 +101,23 @@ export class Server {
         modified = Math.floor((num1 + (num2 * 0x100000000)) / 10000) - 11644473600000;
       }
 
-      const permsStr = ["-", "-", "-", "-", "-"];
-      if (kind === "D") permsStr[0] = "D";
-      if (permsNum & 0x01) permsStr[1] = "R";
-      if (permsNum & 0x02) permsStr[2] = "H";
-      if (permsNum & 0x10) permsStr[3] = "A";
-      if (permsNum & 0x80) permsStr[4] = "N";
+      // Map permission flags from C source's cfrds_browse_dir_item_get_permissions semantics:
+      // - 0x01: Read-only (R) -> maps to FILE_ATTRIBUTE_READONLY (1)
+      // - 0x02: Hidden (H)    -> maps to FILE_ATTRIBUTE_HIDDEN (2)
+      // - 0x04: System        -> maps to FILE_ATTRIBUTE_SYSTEM (4)
+      // - 0x10: Directory     -> maps to FILE_ATTRIBUTE_DIRECTORY (16)
+      // - 0x20: Archive (A)   -> maps to FILE_ATTRIBUTE_ARCHIVE (32)
+      // - 0x80: Normal (N)    -> maps to FILE_ATTRIBUTE_NORMAL (128)
+      const permissions = (kind === "D" ? "D" : "-") +
+        ((permsNum & 0x01) ? "R" : "-") +
+        ((permsNum & 0x02) ? "H" : "-") +
+        ((permsNum & 0x20) ? "A" : "-") +
+        ((permsNum & 0x80) ? "N" : "-");
 
       items.push({
         kind,
         name: filename,
-        permissions: permsStr.join(""),
+        permissions,
         size,
         modified,
       });

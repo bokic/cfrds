@@ -915,22 +915,25 @@ class server:
                 modified = num1 + (num2 << 32)
                 modified = (modified // 10000) - 11644473600000
 
-            perms_str = list("-----")
-            if kind == 'D':
-                perms_str[0] = 'D'
-            if perms_num & 0x01:
-                perms_str[1] = 'R'
-            if perms_num & 0x02:
-                perms_str[2] = 'H'
-            if perms_num & 0x10:
-                perms_str[3] = 'A'
-            if perms_num & 0x80:
-                perms_str[4] = 'N'
+            # Map permission flags from C source's cfrds_browse_dir_item_get_permissions semantics:
+            # - 0x01: Read-only (R) -> maps to FILE_ATTRIBUTE_READONLY (1)
+            # - 0x02: Hidden (H)    -> maps to FILE_ATTRIBUTE_HIDDEN (2)
+            # - 0x04: System        -> maps to FILE_ATTRIBUTE_SYSTEM (4)
+            # - 0x10: Directory     -> maps to FILE_ATTRIBUTE_DIRECTORY (16)
+            # - 0x20: Archive (A)   -> maps to FILE_ATTRIBUTE_ARCHIVE (32)
+            # - 0x80: Normal (N)    -> maps to FILE_ATTRIBUTE_NORMAL (128)
+            perms_str = (
+                ("D" if kind == 'D' else "-") +
+                ("R" if perms_num & 0x01 else "-") +
+                ("H" if perms_num & 0x02 else "-") +
+                ("A" if perms_num & 0x20 else "-") +
+                ("N" if perms_num & 0x80 else "-")
+            )
 
             items.append({
                 "kind": kind,
                 "name": filename,
-                "permissions": "".join(perms_str),
+                "permissions": perms_str,
                 "size": size,
                 "modified": modified,
             })
@@ -1725,7 +1728,7 @@ def cfrds_browse_dir_item_get_permissions(val: cfrds_browse_dir, ndx: int) -> in
     if len(perms_str) > 2 and perms_str[2] == 'H':
         res |= 0x02
     if len(perms_str) > 3 and perms_str[3] == 'A':
-        res |= 0x10
+        res |= 0x20
     if len(perms_str) > 4 and perms_str[4] == 'N':
         res |= 0x80
     return res

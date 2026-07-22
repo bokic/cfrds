@@ -186,7 +186,7 @@ static bool init_server_from_uri(const char *uri, char **hostname, uint16_t *por
 
     const char *path_start = strchr(uri, '/');
     if (path_start) {
-        size_t delta = (size_t)path_start - (size_t)uri;
+        size_t delta = (size_t)(path_start - uri);
         size_t path_strlen = uri_strlen - delta;
         _path = malloc(path_strlen + 1);
         if (!_path)
@@ -202,8 +202,8 @@ static bool init_server_from_uri(const char *uri, char **hostname, uint16_t *por
     if (login_start) {
         const char *pass_start = strchr(uri, ':');
         if ((pass_start != NULL)&&(pass_start < login_start)) {
-            size_t user_strlen = (size_t)pass_start - (size_t)uri;
-            size_t pass_strlen = (size_t)login_start - (size_t)pass_start - 1;
+            size_t user_strlen = (size_t)(pass_start - uri);
+            size_t pass_strlen = (size_t)(login_start - pass_start - 1);
 
             if (user_strlen) {
                 _username = malloc(user_strlen + 1);
@@ -220,7 +220,7 @@ static bool init_server_from_uri(const char *uri, char **hostname, uint16_t *por
                 _password[pass_strlen] = '\0';
             }
         } else {
-            size_t user_strlen = (size_t)login_start - (size_t)uri;
+            size_t user_strlen = (size_t)(login_start - uri);
             _username = malloc(user_strlen + 1);
             if (!_username)
                 return false;
@@ -232,8 +232,8 @@ static bool init_server_from_uri(const char *uri, char **hostname, uint16_t *por
 
     const char *port_start = strchr(uri, ':');
     if (port_start) {
-        size_t host_strlen = (size_t)port_start - (size_t)uri;
-        size_t port_strlen = (size_t)path_start - (size_t)port_start - 1;
+        size_t host_strlen = (size_t)(port_start - uri);
+        size_t port_strlen = (size_t)(path_start - port_start - 1);
 
         _hostname = malloc(host_strlen + 1);
         if (!_hostname)
@@ -251,7 +251,7 @@ static bool init_server_from_uri(const char *uri, char **hostname, uint16_t *por
             return false;
         _port = (uint16_t)tmp_port;
     } else {
-        size_t host_strlen = (size_t)path_start - (size_t)uri;
+        size_t host_strlen = (size_t)(path_start - uri);
         _hostname = malloc(host_strlen + 1);
         if (!_hostname)
             return false;
@@ -695,7 +695,7 @@ int main(int argc, char *argv[])
                 size_t tmp_size = 0;
                 cfrds_str_defer(schema);
 
-                tmp_size = (size_t)table_separator - (size_t)schema_separator;
+                tmp_size = (size_t)(table_separator - schema_separator);
                 schema = malloc(tmp_size + 1);
                 if (schema == NULL)
                 {
@@ -759,7 +759,7 @@ int main(int argc, char *argv[])
                 size_t tmp_size = 0;
                 cfrds_str_defer(tmp);
 
-                tmp_size = (size_t)table - (size_t)schema;
+                tmp_size = (size_t)(table - schema);
                 tmp = malloc(tmp_size + 1);
                 if (tmp == NULL)
                 {
@@ -839,7 +839,7 @@ int main(int argc, char *argv[])
                 size_t tmp_size = 0;
                 cfrds_str_defer(tmp);
 
-                tmp_size = (size_t)table - (size_t)schema;
+                tmp_size = (size_t)(table - schema);
                 tmp = malloc(tmp_size + 1);
                 if (tmp == NULL)
                 {
@@ -948,7 +948,7 @@ int main(int argc, char *argv[])
                 size_t tmp_size = 0;
                 cfrds_str_defer(tmp);
 
-                tmp_size = (size_t)table - (size_t)schema;
+                tmp_size = (size_t)(table - schema);
                 tmp = malloc(tmp_size + 1);
                 if (tmp == NULL)
                 {
@@ -1057,7 +1057,7 @@ int main(int argc, char *argv[])
                 size_t tmp_size = 0;
                 cfrds_str_defer(tmp);
 
-                tmp_size = (size_t)table - (size_t)schema;
+                tmp_size = (size_t)(table - schema);
                 tmp = malloc(tmp_size + 1);
                 if (tmp == NULL)
                 {

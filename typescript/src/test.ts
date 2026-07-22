@@ -274,11 +274,11 @@ async function main(): Promise<void> {
       assert(lastRequestBody.includes("<string>expr&amp;val</string>"), "debuggerWatchExpression expression should be XML-escaped");
       assert(lastRequestBody.includes("<string>thread&lt;1&gt;</string>"), "debuggerWatchExpression threadName should be XML-escaped");
 
-      // Test 5: WDDX XML escaping in adminapiExtensionsSetmapping
+      // Test 5: String formatting in adminapiExtensionsSetmapping
       lastRequestBody = "";
       mockResponseBody = Buffer.from("0:", "utf-8");
       await srvMock.adminapiExtensionsSetmapping("map'name", "path\"val");
-      assert(lastRequestBody.includes("<var name='map&apos;name'>"), "adminapiExtensionsSetmapping name should be XML-escaped");
+      assert(lastRequestBody.includes("name:map'name;path:path\"val"), "adminapiExtensionsSetmapping arguments should be correctly formatted and passed");
 
       // Test 5b: adminapiExtensionsGetmappings returns structured AdminApiMappings (offline test)
       lastRequestBody = "";

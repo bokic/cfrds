@@ -890,14 +890,15 @@ export class Server {
     if (path === null || path === undefined) {
       throw new CFRDSError("path is required");
     }
-    const wddx = `<wddxPacket version='1.0'><header/><data><struct><var name='${escapeXml(name)}'><string>${escapeXml(path)}</string></var></struct></data></wddxPacket>`;
-    await sendRdsCommand(this.ctx, "ADMINAPI", ["cfide.adminapi.extensions", "setmappings", wddx]);
+    const argStr = `name:${name};path:${path}`;
+    await sendRdsCommand(this.ctx, "ADMINAPI", ["cfide.adminapi.extensions", "setmappings", argStr]);
   }
 
   async adminapiExtensionsDeletemapping(mapping: string): Promise<void> {
     if (mapping === null || mapping === undefined) {
       throw new CFRDSError("mapping is required");
     }
+    // NOTE: "deleltemappings" (with the extra 'l') is a required typo hardcoded in the Adobe ColdFusion RDS backend.
     await sendRdsCommand(this.ctx, "ADMINAPI", ["cfide.adminapi.extensions", "deleltemappings", mapping]);
   }
 

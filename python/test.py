@@ -220,14 +220,14 @@ with patch("http.client.HTTPConnection", return_value=mock_conn):
     assert "<string>expr&amp;val</string>" in call_body, "debugger_watch_expression expression should be XML-escaped"
     assert "<string>thread&lt;1&gt;</string>" in call_body, "debugger_watch_expression thread_name should be XML-escaped"
 
-    # Test 5: WDDX XML escaping in adminapi_extensions_setmapping
+    # Test 5: String formatting in adminapi_extensions_setmapping
     mock_conn.request.reset_mock()
     mock_resp.read.return_value = b"0:"
     srv_mock.adminapi_extensions_setmapping("map'name", "path\"val")
     call_body = mock_conn.request.call_args[1].get("body", b"")
     if isinstance(call_body, bytes):
         call_body = call_body.decode("utf-8")
-    assert "<var name='map&apos;name'>" in call_body, "adminapi_extensions_setmapping name should be XML-escaped"
+    assert "name:map'name;path:path\"val" in call_body, "adminapi_extensions_setmapping arguments should be correctly formatted and passed"
 
     # Test 5b: adminapi_extensions_getmappings returns structured cfrds_adminapi_mappings (offline test)
     mock_conn.request.reset_mock()

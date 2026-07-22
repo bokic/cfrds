@@ -4280,6 +4280,7 @@ cfrds_status cfrds_command_adminapi_extensions_deletemapping(cfrds_server *serve
         return CFRDS_STATUS_SERVER_IS_NULL;
     }
 
+    /* NOTE: "deleltemappings" (with the extra 'l') is a required typo hardcoded in the Adobe ColdFusion RDS backend. */
     ret = cfrds_send_command(server, &response, "ADMINAPI", (const char *[]){ "cfide.adminapi.extensions", "deleltemappings", mapping, NULL});
     if (ret == CFRDS_STATUS_OK)
     {

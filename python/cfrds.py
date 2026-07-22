@@ -1555,13 +1555,13 @@ class server:
             raise CFRDSError("name is required")
         if path is None:
             raise CFRDSError("path is required")
-        # The C code serializes name+path into a WDDX struct before sending
-        wddx = f"<wddxPacket version='1.0'><header/><data><struct><var name='{_escape_xml(name)}'><string>{_escape_xml(path)}</string></var></struct></data></wddxPacket>"
-        _send_rds_command(self._ctx, "ADMINAPI", ["cfide.adminapi.extensions", "setmappings", wddx])
+        arg_str = f"name:{name};path:{path}"
+        _send_rds_command(self._ctx, "ADMINAPI", ["cfide.adminapi.extensions", "setmappings", arg_str])
 
     def adminapi_extensions_deletemapping(self, mapping: str) -> None:
         if mapping is None:
             raise CFRDSError("mapping is required")
+        # NOTE: "deleltemappings" (with the extra 'l') is a required typo hardcoded in the Adobe ColdFusion RDS backend.
         _send_rds_command(self._ctx, "ADMINAPI", ["cfide.adminapi.extensions", "deleltemappings", mapping])
 
     def adminapi_extensions_getmappings(self) -> cfrds_adminapi_mappings:

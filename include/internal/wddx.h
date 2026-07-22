@@ -55,211 +55,250 @@ typedef struct WDDX_NODE WDDX_NODE;
  *       Call `wddx_put_*()` functions to populate the data.
  * @note On error, returns `NULL` — no cleanup needed (nothing allocated).
  */
+/**
+ * @brief Creates a new, empty WDDX packet.
+ * 
+ * Allocates memory for a `WDDX` struct (containing pointer fields for `header`, `data`, and 
+ * `str` of type `xmlBufferPtr`) and clears it using explicit_bzero.
+ * 
+ * @return A newly allocated `WDDX*`, or `NULL` on allocation failure.
+ */
 WDDX *wddx_create(void);
 
 /**
  * @brief Inserts a boolean value into the WDDX data structure at the given path.
- * @param dest The target WDDX packet (must be non-`NULL`).
- * @param path Dot-separated *comma-separated* path string (e.g., `"0,foo,2"` or `"user,name"`).
- *             - Numeric segments (e.g., `"0"`, `"1"`) are treated as **0-based array indices**.
- *             - Non-numeric segments (e.g., `"foo"`) are treated as struct keys.
- *             - Paths like `""` (empty) are **not supported**; use `wddx_put_*` without path for root.
+ * 
+ * Traverses or constructs a hierarchy of nested array and struct nodes recursively based on the 
+ * comma-separated path.
+ * - If a segment is numeric (determined by checking up to 20 digits via is_string_numeric), it is 
+ *   treated as a 0-based array index. It allocates or reallocates the child items list array size
+ *   as needed to accommodate the index, zeroing the new elements.
+ * - Otherwise, the segment is treated as a struct variable name, and search is done on the existing
+ *   structure variables. If not found, a new struct element is allocated and added to the end of the items list.
+ * Values are stored under a newly allocated `WDDX_NODE` with type `WDDX_BOOLEAN` and string representation `"true"` or `"false"`.
+ * 
+ * @param dest The target WDDX packet.
+ * @param path Comma-separated path string specifying structural position (e.g. "0,foo,2").
  * @param value The boolean value to insert.
- * @return `true` on success, `false` on allocation failure or invalid path.
- * @note Internally uses `atoi()` for numeric indices; values > `INT_MAX` cause undefined behavior.
- * @warning If a path segment is a large numeric string (e.g., `"9999999999"`), `atoi()` overflow may occur.
+ * @return true on success, false on allocation failure, index out of bounds, or invalid type mismatch.
  */
 bool wddx_put_bool(WDDX *dest, const char *path, bool value);
 
 /**
- * @brief Inserts a numeric (double-precision floating-point) value at the given path.
- * @param dest Target WDDX packet (non-`NULL`).
- * @param path Path string (see @ref wddx_put_bool for format).
+ * @brief Inserts a numeric (double) value into the WDDX data structure at the given path.
+ * 
+ * Formats the number as a string via `snprintf(valueStr, sizeof(valueStr), "%.16g", value)` and 
+ * invokes path traversal to insert a `WDDX_NODE` with type `WDDX_NUMBER` containing the string.
+ * 
+ * @param dest The target WDDX packet.
+ * @param path Comma-separated path string.
  * @param value The double value to insert.
- * @return `true` on success, `false` on error.
- * @note The value is converted to a string with `snprintf(..., "%.16g", value)`.
- * @warning If `path` contains numeric segments > `INT_MAX`, behavior is undefined.
+ * @return true on success, false on traversal or allocation failure.
  */
 bool wddx_put_number(WDDX *dest, const char *path, double value);
 
 /**
- * @brief Inserts a string value at the given path.
- * @param dest Target WDDX packet (non-`NULL`).
- * @param path Path string (see @ref wddx_put_bool for format).
- * @param value The string to insert (must be null-terminated; copied internally).
- * @return `true` on success, `false` on error.
- * @note The string is copied; caller retains ownership of `value`.
- * @warning Empty paths (`""`) are rejected by internal logic.
- * @warning If `path` contains numeric segments > `INT_MAX`, undefined behavior occurs.
+ * @brief Inserts a string value into the WDDX data structure at the given path.
+ * 
+ * Invokes path traversal to insert a `WDDX_NODE` of type `WDDX_STRING` with the string copied 
+ * inside the struct's flexible string array.
+ * 
+ * @param dest The target WDDX packet.
+ * @param path Comma-separated path string.
+ * @param value Null-terminated string value to insert.
+ * @return true on success, false on traversal or allocation failure.
  */
 bool wddx_put_string(WDDX *dest, const char *path, const char *value);
 
 /**
- * @brief Serializes the WDDX packet to XML (WDDX 1.0 format).
- * @param src The WDDX packet to serialize (non-`NULL`).
- * @return A null-terminated string containing the XML, or `NULL` on error.
- * @note The returned string is owned by `src` and is **invalidated** on:
- *       - Next call to `wddx_to_xml()` on the same `src`,
- *       - Calling `wddx_cleanup()`,
- *       - Modifying `src` (e.g., via `wddx_put_*`).
- * @note The XML includes a `<wddxPacket version="1.0">` root element, with `<header>` and `<data>` children.
- * @note The `<struct>` elements are serialized with `type="java.util.HashMap"` attribute.
- * @warning This function reuses an internal buffer; copy the result immediately if persistence is needed.
+ * @brief Serializes the WDDX packet to XML format.
+ * 
+ * Frees any existing serialized buffer in `src->str`. Then uses libxml2 to build a new XML document:
+ * - `<wddxPacket version="1.0">` is created as root.
+ * - `<header>` child element is created and populated recursively from `src->header`.
+ * - `<data>` child element is created and populated recursively from `src->data`.
+ * XML node translation rules:
+ * - `WDDX_NULL` -> `<null/>`
+ * - `WDDX_BOOLEAN` -> `<boolean value="true|false"/>`
+ * - `WDDX_NUMBER` -> `<number>...</number>`
+ * - `WDDX_STRING` -> `<string>...</string>`
+ * - `WDDX_ARRAY` -> `<array length="N">...</array>`
+ * - `WDDX_STRUCT` -> `<struct type="java.util.HashMap">` containing `<var name="key">` children.
+ * Dumps the document into `src->str` and returns its contents pointer.
+ * 
+ * @param src The WDDX packet.
+ * @return Null-terminated string containing the serialized XML. Pointer is owned by `src`.
  */
 const char *wddx_to_xml(WDDX *src);
 
 /**
  * @brief Parses an XML string into a WDDX packet.
- * @param xml A null-terminated string containing WDDX XML (must start with `<wddxPacket version="1.0">`).
- * @return A newly allocated `WDDX*`, or `NULL` on parse failure or invalid XML.
- * @note The XML must contain a `<header>` and `<data>` section. Empty header is allowed.
- * @note XML elements are parsed as per `wddx_type`: `<null>`, `<boolean>`, `<number>`, `<string>`, `<array>`, `<struct>`.
- * @note Arrays must specify a `length` attribute; structs use `<var>` elements with `name` attributes.
- * @warning This function disables libxml2 error output (in non-`NDEBUG` builds) via `xmlSetGenericErrorFunc`.
- *          Not thread-safe if multiple threads call this or `xmlParseMemory()` concurrently.
- * @warning Does **not** support DTDs, external entities, or XInclude — but also does not enable them for security.
+ * 
+ * Uses libxml2's `xmlParseMemory` to parse the string. Silences error output in non-NDEBUG builds
+ * via a custom generic error handler. Traverses the document structure to verify the root 
+ * `<wddxPacket>` and its `<header>` and `<data>` children. Parses all nodes recursively mapping
+ * elements to their respective internal types (`null`, `boolean`, `number`, `string`, `array`, `struct`).
+ * - Arrays read their `length` property and parse child items up to that length.
+ * - Structs scan for `<var>` elements, extracting `name` property and parsing their inner child.
+ * 
+ * @param xml Null-terminated string containing WDDX XML data.
+ * @return A newly allocated WDDX structure containing the parsed trees, or NULL on parsing failure.
  */
 WDDX *wddx_from_xml(const char *xml);
 
 /**
  * @brief Retrieves the header node of a WDDX packet.
- * @param src The WDDX packet (non-`NULL`).
- * @return A pointer to the header `WDDX_NODE*`, or `NULL` if the packet has no header (i.e., header == NULL).
- * @note The header is read-only; modifications require creating a new header node.
- * @note Header content is ignored by `wddx_to_xml()` (but present in XML as `<header>`).
+ * 
+ * @param src The WDDX packet.
+ * @return Pointer to WDDX_NODE representing the header, or NULL if packet is NULL or has no header.
  */
 const WDDX_NODE *wddx_header(const WDDX *src);
 
 /**
- * @brief Retrieves the main data node of a WDDX packet.
- * @param src The WDDX packet (non-`NULL`).
- * @return A pointer to the data `WDDX_NODE*`, or `NULL` if no data has been inserted.
+ * @brief Retrieves the data root node of a WDDX packet.
+ * 
+ * @param src Pointer to WDDX structure (cast internally to WDDX*).
+ * @return Pointer to WDDX_NODE representing data root, or NULL if src is NULL or has no data.
  */
 const WDDX_NODE *wddx_data(const void *src);
 
 /**
  * @brief Returns the type of a WDDX node.
- * @param value The node to query (may be `NULL`; returns `WDDX_NULL` for safety).
- * @return One of `wddx_type` values.
- * @note This is the primary way to determine how to interpret the node's content.
+ * 
+ * @param value Pointer to WDDX_NODE (cast internally).
+ * @return Node type enum value (e.g. WDDX_NULL, WDDX_BOOLEAN, etc.). Returns WDDX_NULL if value is NULL.
  */
 int wddx_node_type(const void *value);
 
 /**
- * @brief Extracts the boolean value from a `WDDX_BOOLEAN` node.
- * @param value The node to query (must be of type `WDDX_BOOLEAN` or `NULL`).
- * @return `true` if the node's boolean value is `true`, `false` otherwise (including on type mismatch or `NULL`).
- * @note Returns `false` on failure — use `wddx_node_type()` first to confirm type.
+ * @brief Extracts the boolean value from a WDDX_BOOLEAN node.
+ * 
+ * @param value Pointer to the node.
+ * @return The stored boolean value. Returns false if value is NULL.
  */
 bool wddx_node_bool(const WDDX_NODE *value);
 
 /**
- * @brief Extracts the numeric value from a `WDDX_NUMBER` node.
- * @param value The node to query (must be of type `WDDX_NUMBER` or `NULL`).
- * @return The stored `double` value, or `0.0` (on `NULL` or type mismatch).
- * @note Use `isfinite()`, `isnan()` on the result to distinguish NaN/Inf.
- * @warning Returns `0.0` both when value is `0.0` and on error — always check type first.
+ * @brief Extracts the numeric value from a WDDX_NUMBER node.
+ * 
+ * Internally, number node parsing during deserialization parses the text as double via `atof`.
+ * 
+ * @param value Pointer to the node.
+ * @return The double value. Returns NaN if node is NULL.
  */
 double wddx_node_number(const WDDX_NODE *value);
 
 /**
- * @brief Extracts the string value from a `WDDX_STRING` node.
- * @param value The node to query (must be of type `WDDX_STRING` or `NULL`).
- * @return A null-terminated string, or `NULL` if node is `NULL` or not a string.
- * @note The returned string is owned by the node and must not be freed by the caller.
- * @warning Returns `NULL` for all non-string types — verify with `wddx_node_type()`.
+ * @brief Extracts the string pointer from a WDDX_STRING node.
+ * 
+ * @param value Pointer to the node.
+ * @return Const pointer to the string bytes. Pointer is owned by the node. Returns NULL if node is NULL.
  */
 const char *wddx_node_string(const WDDX_NODE *value);
 
 /**
- * @brief Returns the size (number of elements) of a `WDDX_ARRAY` node.
- * @param value The node to query (must be of type `WDDX_ARRAY` or `NULL`).
- * @return The array length (≥ 0), or `0` if node is `NULL` or not an array.
- * @note Does not distinguish between empty array and type mismatch — use `wddx_node_type()` first.
+ * @brief Returns the size of a WDDX_ARRAY node.
+ * 
+ * @param value Pointer to the array node.
+ * @return The array capacity (cnt). Returns 0 if node is NULL.
  */
 int wddx_node_array_size(const void *value);
 
 /**
- * @brief Retrieves an element from a `WDDX_ARRAY` node by index.
- * @param value The array node (must be of type `WDDX_ARRAY`).
- * @param cnt The 0-based index (must satisfy `0 <= cnt < wddx_node_array_size(value)`).
- * @return A pointer to the element node, or `NULL` on error.
- * @note Returns `NULL` for invalid index, `NULL` node, or non-array type.
- * @warning Does **not** validate `cnt` — caller must check bounds (or use `wddx_node_array_size()`).
+ * @brief Retrieves an element of a WDDX_ARRAY node by index.
+ * 
+ * Performs boundary check (`cnt < value->cnt`) and returns the child node.
+ * 
+ * @param value Pointer to the array node.
+ * @param cnt 0-based index.
+ * @return Pointer to the child node, or NULL if index is out of bounds or node is NULL.
  */
 const WDDX_NODE *wddx_node_array_at(const void *value, size_t cnt);
 
 /**
- * @brief Returns the number of fields in a `WDDX_STRUCT` node.
- * @param value The struct node (must be of type `WDDX_STRUCT` or `NULL`).
- * @return The number of struct fields (≥ 0), or `0` for non-struct or `NULL`.
- * @note Does not distinguish between empty struct and type mismatch.
+ * @brief Returns the number of variable fields in a WDDX_STRUCT node.
+ * 
+ * @param value Pointer to the struct node.
+ * @return The count of fields. Returns 0 if node is NULL.
  */
 int wddx_node_struct_size(const void *value);
 
 /**
- * @brief Retrieves a field from a `WDDX_STRUCT` node by index.
- * @param value The struct node (must be of type `WDDX_STRUCT`).
- * @param cnt The 0-based index (must satisfy `0 <= cnt < wddx_node_struct_size(value)`).
- * @param name Pointer to store the field's key name (output, may be `NULL`).
- * @return A pointer to the value node, or `NULL` on error.
- * @note If `name` is non-`NULL`, `*name` is set to the field's key (null-terminated, internal storage).
- * @warning Does not validate `cnt`; must be called with valid `cnt` < struct size.
+ * @brief Retrieves a structural key-value field of a WDDX_STRUCT node by list index.
+ * 
+ * Performs boundary checks, sets the output variable name string pointer, and returns the node value.
+ * 
+ * @param value Pointer to the struct node.
+ * @param cnt 0-based index.
+ * @param name Output pointer for the key string. Ignored if NULL.
+ * @return Pointer to the value node, or NULL if index is out of bounds or node is NULL.
  */
 const WDDX_NODE *wddx_node_struct_at(const void *value, size_t cnt, const char **name);
 
 /**
- * @brief Gets a boolean value from the data section at a given path.
- * @param src The WDDX packet (non-`NULL`).
- * @param path Path string (see @ref wddx_put_bool).
- * @param ok If non-`NULL`, set to `true` on success, `false` on failure (type mismatch, not found, etc.).
- * @return The boolean value if successful, `false` otherwise.
- * @note Always sets `*ok` to `false` on error — use `ok` parameter to disambiguate `false` vs. error.
+ * @brief Query helper to retrieve a boolean value at a specific path.
+ * 
+ * Performs recursive traversal to locate the node at `path` and verifies its type is `WDDX_BOOLEAN`.
+ * 
+ * @param src Pointer to the WDDX structure.
+ * @param path Comma-separated path.
+ * @param ok Output parameter set to true on success, false on traversal or type mismatch.
+ * @return The boolean value if successful, false otherwise.
  */
 bool wddx_get_bool(const void *src, const char *path, bool *ok);
 
 /**
- * @brief Gets a numeric value from the data section at a given path.
- * @param src The WDDX packet (non-`NULL`).
- * @param path Path string (see @ref wddx_put_bool).
- * @param ok If non-`NULL`, set to `true` on success, `false` on failure.
- * @return The `double` value if successful, `0.0` otherwise.
- * @note Always sets `*ok = false` on error — use to distinguish `0.0` vs. missing/invalid.
+ * @brief Query helper to retrieve a double value at a specific path.
+ * 
+ * Performs recursive traversal to locate the node at `path` and verifies its type is `WDDX_NUMBER`.
+ * 
+ * @param src Pointer to the WDDX structure.
+ * @param path Comma-separated path.
+ * @param ok Output parameter set to true on success, false on traversal or type mismatch.
+ * @return The double value if successful, 0.0 otherwise.
  */
 double wddx_get_number(const void *src, const char *path, bool *ok);
 
 /**
- * @brief Gets a string value from the data section at a given path.
- * @param src The WDDX packet (non-`NULL`).
- * @param path Path string (see @ref wddx_put_bool).
- * @return The string if found and of type `WDDX_STRING`, `NULL` otherwise.
- * @note Returns `NULL` for missing, wrong type, or allocation errors — use `wddx_get_var()` + `wddx_node_type()` for robustness.
+ * @brief Query helper to retrieve a string at a specific path.
+ * 
+ * Performs recursive traversal to locate the node at `path` and verifies its type is `WDDX_STRING`.
+ * 
+ * @param src Pointer to the WDDX structure.
+ * @param path Comma-separated path.
+ * @return Pointer to the null-terminated string, or NULL if not found or type mismatch.
  */
 const char *wddx_get_string(const void *src, const char *path);
 
 /**
- * @brief Retrieves the node at a given path in the data section, or `NULL`.
- * @param src The WDDX packet (non-`NULL`).
- * @param path Path string (see @ref wddx_put_bool).
- * @return A pointer to the node, or `NULL` if not found.
- * @note Allows inspection of the node (e.g., to check its type and access sub-values).
+ * @brief Query helper to retrieve a node at a specific path.
+ * 
+ * Traverses structural nodes recursively matching indexes for array items and keys for struct fields.
+ * 
+ * @param src Pointer to the WDDX structure.
+ * @param path Comma-separated path.
+ * @return Const pointer to the located WDDX_NODE, or NULL if not found.
  */
 const WDDX_NODE *wddx_get_var(const void *src, const char *path);
 
 /**
- * @brief Serializes a single WDDX node (not the full packet) into XML.
- * @param node The node to serialize (non-`NULL`).
- * @return A newly allocated string containing XML (caller must `free()`), or `NULL` on error.
- * @note Generates `<var>` root element (e.g., `<var><string>hello</string></var>`).
- * @warning Does **not** produce WDDX-compliant packets — only for debugging or substructure serialization.
- * @note The `null` type is **not supported** — `WDDX_NULL` nodes are silently ignored.
+ * @brief Serializes a single WDDX node into XML.
+ * 
+ * Generates an XML document with a root element `<var>`, dumps the serialized node 
+ * tree inside it recursively, and returns the duplicated XML string.
+ * 
+ * @param node Pointer to the node to serialize.
+ * @return A newly allocated XML string containing the serialized node. Must be freed by the caller.
+ *         Returns NULL on error or if node is NULL.
  */
 char *wddx_node_to_xml(const WDDX_NODE *node);
 
 /**
- * @brief Cleanup function for WDDX pointers (used by `WDDX_defer` macro).
- * @param value Pointer to the WDDX pointer to clean up (may be `NULL`).
- * @note Frees the packet and all associated nodes (recursively), and XML buffer.
- * @note Sets `*value = NULL` after cleanup.
+ * @brief Recursively frees a WDDX packet structure and associated memory.
+ * 
+ * Destroys all structural nodes, internal variable names, values, and XML serializer buffer.
+ * Finally, frees the WDDX container and sets the referenced pointer to NULL.
+ * 
+ * @param value Pointer to the WDDX* pointer to clean up.
  */
 void wddx_cleanup(void *value);

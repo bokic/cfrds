@@ -56,13 +56,12 @@ endif()
 if(MSVC)
     message(FATAL_ERROR "Unsupported compiler")
 endif()
-
-add_definitions(-DCFRDS_VERSION="${GIT_COMMIT_NAME}")
-add_definitions(-DCFRDS_VERSION_MAJOR=${PROJECT_VERSION_MAJOR})
-add_definitions(-DCFRDS_VERSION_MINOR=${PROJECT_VERSION_MINOR})
-add_definitions(-DCFRDS_VERSION_PATCH=${PROJECT_VERSION_PATCH})
 math(EXPR CFRDS_VERSION_INT "${PROJECT_VERSION_MAJOR}*10000 + ${PROJECT_VERSION_MINOR}*100 + ${PROJECT_VERSION_PATCH}")
-add_definitions(-DCFRDS_VERSION_INT=${CFRDS_VERSION_INT})
+configure_file(
+    "${CMAKE_CURRENT_SOURCE_DIR}/include/version.h.in"
+    "${CMAKE_CURRENT_BINARY_DIR}/include/version.h"
+    @ONLY
+)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
@@ -163,8 +162,10 @@ configure_file(
 
 target_include_directories(libcfrds PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/include>
     $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
 )
+
 
 if(WIN32)
     set_target_properties(libcfrds
@@ -195,7 +196,9 @@ endif()
 set(LIBCFRDS_PUBLIC_HEADERS
     "include/cfrds.h"
     "include/cfrds.hpp"
+    "${CMAKE_CURRENT_BINARY_DIR}/include/version.h"
 )
+
 
 set_target_properties(libcfrds PROPERTIES
     PUBLIC_HEADER "${LIBCFRDS_PUBLIC_HEADERS}"

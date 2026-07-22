@@ -21,8 +21,7 @@
  * @def CFRDS_VERSION_PATCH   Patch version number (integer)
  * @def CFRDS_VERSION_INT     Combined integer: MAJOR*10000 + MINOR*100 + PATCH
  */
-
-
+#include "version.h"
 
 #ifdef libcfrds_EXPORTS
  #if defined(_WIN32) || defined(__CYGWIN__)

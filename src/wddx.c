@@ -105,7 +105,7 @@ static struct WDDX_NODE *wddx_recursively_put(struct WDDX_NODE *node, const char
 
         if (node == NULL)
         {
-            size_t newsize = offsetof(struct WDDX_NODE, items) + (sizeof(void *) * (size_t)idx);
+            newsize = offsetof(struct WDDX_NODE, items) + (sizeof(void *) * (size_t)idx);
             node = malloc(newsize);
             if (node == NULL)
             {

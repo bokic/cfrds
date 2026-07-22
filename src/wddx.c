@@ -540,6 +540,8 @@ static struct WDDX_NODE *wddx_from_xml_element(xmlNodePtr xml_node)
 
 #ifndef NDEBUG
 static void silentErrorHandler(void *ctx, const char *msg, ...) {
+    (void)ctx;
+    (void)msg;
     // Do nothing - silencing output
 }
 #endif

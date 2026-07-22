@@ -2249,7 +2249,7 @@ int cfrds_debugger_event_get_scopes_count(const cfrds_debugger_event *event)
 
 const char *cfrds_debugger_event_get_scopes_item(const cfrds_debugger_event *event, size_t ndx)
 {
-    if ((event == NULL) )
+    if (event == NULL)
         return NULL;
 
     const WDDX_NODE *array_node = wddx_get_var(event, "0,SCOPES");
@@ -2268,7 +2268,7 @@ int cfrds_debugger_event_get_threads_count(const cfrds_debugger_event *event)
 
 const char *cfrds_debugger_event_get_threads_item(const cfrds_debugger_event *event, size_t ndx)
 {
-    if ((event == NULL) )
+    if (event == NULL)
         return NULL;
 
     const WDDX_NODE *array_node = wddx_get_var(event, "0,THREADS");
@@ -2287,7 +2287,7 @@ int cfrds_debugger_event_get_watch_count(const cfrds_debugger_event *event)
 
 const char *cfrds_debugger_event_get_watch_item(const cfrds_debugger_event *event, size_t ndx)
 {
-    if ((event == NULL) )
+    if (event == NULL)
         return NULL;
 
     const WDDX_NODE *array_node = wddx_get_var(event, "0,WATCH");
@@ -2309,7 +2309,7 @@ const char *cfrds_debugger_event_get_cf_trace_item(const cfrds_debugger_event *e
     char key[32];
     int n;
 
-    if ((event == NULL))
+    if (event == NULL)
         return NULL;
 
     n = snprintf(key, sizeof(key), "0,CF_TRACE,%zu", ndx);
@@ -2334,7 +2334,7 @@ const char *cfrds_debugger_event_get_java_trace_item(const cfrds_debugger_event 
     char key[32];
     int n;
 
-    if ((event == NULL))
+    if (event == NULL)
         return NULL;
 
     n = snprintf(key, sizeof(key), "0,JAVA_TRACE,%zu", ndx);

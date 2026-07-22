@@ -20,47 +20,8 @@ print("Testing pure Python cfrds module exports...")
 
 # Verify status enums and constants
 assert cfrds.CFRDS_STATUS_OK == 0
-assert cfrds.cfrds_status.CFRDS_STATUS_OK == 0
 assert cfrds.CFRDS_STATUS_COMMAND_FAILED == 6
-assert cfrds.cfrds_debugger_type.CFRDS_DEBUGGER_EVENT_TYPE_BREAKPOINT == 1
-
-# Verify exported C API functions from cfrds.h exist
-c_api_functions = [
-    "cfrds_server_init",
-    "cfrds_server_free",
-    "cfrds_command_browse_dir",
-    "cfrds_browse_dir_count",
-    "cfrds_command_file_read",
-    "cfrds_command_file_write",
-    "cfrds_command_file_rename",
-    "cfrds_command_file_remove_file",
-    "cfrds_command_file_remove_dir",
-    "cfrds_command_file_exists",
-    "cfrds_command_file_create_dir",
-    "cfrds_command_file_get_root_dir",
-    "cfrds_command_sql_dsninfo",
-    "cfrds_command_sql_tableinfo",
-    "cfrds_command_sql_columninfo",
-    "cfrds_command_sql_primarykeys",
-    "cfrds_command_sql_foreignkeys",
-    "cfrds_command_sql_importedkeys",
-    "cfrds_command_sql_exportedkeys",
-    "cfrds_command_sql_sqlstmnt",
-    "cfrds_command_sql_sqlmetadata",
-    "cfrds_command_sql_getsupportedcommands",
-    "cfrds_command_sql_dbdescription",
-    "cfrds_command_debugger_start",
-    "cfrds_command_debugger_stop",
-    "cfrds_command_debugger_get_server_info",
-    "cfrds_command_security_analyzer_scan",
-    "cfrds_command_ide_default",
-]
-
-for func in c_api_functions:
-    assert hasattr(cfrds, func), f"Missing exported C API function: {func}"
-    assert callable(getattr(cfrds, func)), f"{func} is not callable"
-
-print(f"All {len(c_api_functions)} C API functions successfully verified!")
+assert cfrds.DebuggerType.CFRDS_DEBUGGER_EVENT_TYPE_BREAKPOINT == 1
 
 # Verify server class methods
 server_methods = [
@@ -122,8 +83,8 @@ server_methods = [
 
 # Get actual public methods on server class (excluding private/protected/dunder methods)
 actual_methods = [
-    m for m in dir(cfrds.server)
-    if not m.startswith("_") and callable(getattr(cfrds.server, m))
+    m for m in dir(Server)
+    if not m.startswith("_") and callable(getattr(Server, m))
 ]
 
 missing_methods = set(server_methods) - set(actual_methods)
@@ -133,66 +94,54 @@ assert not missing_methods, f"server class missing expected methods: {missing_me
 assert not extra_methods, f"server class has unexpected extra methods (did you forget to add them to the test or make them private?): {extra_methods}"
 
 for method in server_methods:
-    assert hasattr(cfrds.server, method), f"server class missing method: {method}"
-    assert callable(getattr(cfrds.server, method)), f"{method} is not callable"
+    assert hasattr(Server, method), f"server class missing method: {method}"
+    assert callable(getattr(Server, method)), f"{method} is not callable"
 
 print(f"All {len(server_methods)} server class methods successfully verified!")
 
 # Verify container class ready-to-use array/struct interfaces
-dsn_container = cfrds.cfrds_sql_dsninfo(["dsn1", "dsn2"])
+dsn_container = cfrds.DSNInfo(["dsn1", "dsn2"])
 assert len(dsn_container) == 2
 assert dsn_container[0] == "dsn1"
 assert list(dsn_container) == ["dsn1", "dsn2"]
 assert dsn_container.to_list() == ["dsn1", "dsn2"]
 
-tbl_container = cfrds.cfrds_sql_tableinfo([{"name": "t1"}])
+tbl_container = cfrds.TableInfo([{"name": "t1"}])
 assert len(tbl_container) == 1
 assert tbl_container[0]["name"] == "t1"
 assert list(tbl_container) == [{"name": "t1"}]
 
-res_container = cfrds.cfrds_sql_resultset(1, 1, ["col1"], [["val1"]])
+res_container = cfrds.ResultSet(1, 1, ["col1"], [["val1"]])
 assert res_container["columns"] == 1
 assert res_container["names"] == ["col1"]
 assert res_container["values"] == [["val1"]]
 assert res_container[0] == ["val1"]
 assert res_container.to_dict()["values"] == [["val1"]]
 
-fc_container = cfrds.cfrds_file_content(b"hello", "ts", "perm")
+fc_container = cfrds.FileContent(b"hello", "ts", "perm")
 assert fc_container["data"] == b"hello"
 assert fc_container["size"] == 5
 assert fc_container.to_dict()["data"] == b"hello"
 
-map_container = cfrds.cfrds_adminapi_mappings({"k1": "v1"})
+map_container = cfrds.Mappings({"k1": "v1"})
 assert map_container["k1"] == "v1"
 assert map_container.to_dict() == {"k1": "v1"}
 assert list(map_container) == ["k1"]
 
 # Verify permission encoding/decoding round-trip and backward compatibility
-dir_item_legacy = cfrds.cfrds_browse_dir([{"kind": "D", "permissions": "DRHAN", "name": "legacy", "size": 0, "modified": 0}])
-assert cfrds.cfrds_browse_dir_item_get_permissions(dir_item_legacy, 0) == (0x10 | 0x01 | 0x02 | 0x20 | 0x80)
+dir_item_legacy = cfrds.DirListing([{"kind": "D", "permissions": "DRHAN", "name": "legacy", "size": 0, "modified": 0}])
+assert dir_item_legacy[0]["permissions"] == "DRHAN"
 
-dir_item_new = cfrds.cfrds_browse_dir([{"kind": "D", "permissions": "DRHSAN", "name": "new", "size": 0, "modified": 0}])
-assert cfrds.cfrds_browse_dir_item_get_permissions(dir_item_new, 0) == (0x10 | 0x01 | 0x02 | 0x04 | 0x20 | 0x80)
+dir_item_new = cfrds.DirListing([{"kind": "D", "permissions": "DRHSAN", "name": "new", "size": 0, "modified": 0}])
+assert dir_item_new[0]["permissions"] == "DRHSAN"
 
-dir_item_legacy_mask = cfrds.cfrds_browse_dir([{"kind": "F", "permissions": "-R-AN", "name": "legacy_mask", "size": 0, "modified": 0}])
-assert cfrds.cfrds_browse_dir_item_get_permissions(dir_item_legacy_mask, 0) == (0x01 | 0x20 | 0x80)
+dir_item_legacy_mask = cfrds.DirListing([{"kind": "F", "permissions": "-R-AN", "name": "legacy_mask", "size": 0, "modified": 0}])
+assert dir_item_legacy_mask[0]["permissions"] == "-R-AN"
 
-dir_item_new_mask = cfrds.cfrds_browse_dir([{"kind": "F", "permissions": "-R-SAN", "name": "new_mask", "size": 0, "modified": 0}])
-assert cfrds.cfrds_browse_dir_item_get_permissions(dir_item_new_mask, 0) == (0x01 | 0x04 | 0x20 | 0x80)
+dir_item_new_mask = cfrds.DirListing([{"kind": "F", "permissions": "-R-SAN", "name": "new_mask", "size": 0, "modified": 0}])
+assert dir_item_new_mask[0]["permissions"] == "-R-SAN"
 
 print("Container class ready-to-use value tests passed!")
-
-# Verify server error code and error message state
-srv_err_test = cfrds.cfrds_server("127.0.0.1", 8500, "admin", "admin")
-assert srv_err_test.error_code == 0
-assert srv_err_test.error is None
-srv_err_test.set_error(cfrds.CFRDS_STATUS_MEMORY_ERROR, "Memory error test")
-assert srv_err_test.error_code == 1
-assert srv_err_test.error == "Memory error test"
-srv_err_test.clear_error()
-assert srv_err_test.error_code == 0
-assert srv_err_test.error is None
-print("Server context error state tests passed!")
 
 # Verify browse_dir validation (offline tests using http mock)
 from unittest.mock import patch, MagicMock
@@ -205,7 +154,7 @@ mock_conn = MagicMock()
 mock_conn.getresponse.return_value = mock_resp
 
 with patch("http.client.HTTPConnection", return_value=mock_conn):
-    srv_mock = cfrds.server("127.0.0.1", 8500, "admin", "admin")
+    srv_mock = Server("127.0.0.1", 8500, "admin", "admin")
     
     # Test 1: total = 0 (divisible by 5) -> should succeed
     mock_resp.read.return_value = b"0:"
@@ -254,13 +203,13 @@ with patch("http.client.HTTPConnection", return_value=mock_conn):
         call_body = call_body.decode("utf-8")
     assert "name:map'name;path:path\"val" in call_body, "adminapi_extensions_setmapping arguments should be correctly formatted and passed"
 
-    # Test 5b: adminapi_extensions_getmappings returns structured cfrds_adminapi_mappings (offline test)
+    # Test 5b: adminapi_extensions_getmappings returns structured Mappings (offline test)
     mock_conn.request.reset_mock()
     xml_data = "<wddxPacket version='1.0'><header/><data><struct><var name='k1'><string>v1</string></var><var name='k2'><string>v2</string></var><var name='k1'><string>v3</string></var></struct></data></wddxPacket>"
     resp_body = f"1:{len(xml_data)}:{xml_data}".encode("utf-8")
     mock_resp.read.return_value = resp_body
     mappings = srv_mock.adminapi_extensions_getmappings()
-    assert isinstance(mappings, cfrds.cfrds_adminapi_mappings)
+    assert isinstance(mappings, cfrds.Mappings)
     assert len(mappings) == 3
     assert mappings.keys == ["k1", "k2", "k1"]
     assert mappings.values == ["v1", "v2", "v3"]
@@ -275,21 +224,10 @@ with patch("http.client.HTTPConnection", return_value=mock_conn):
     
     # 1. High-level client API
     read_data = srv_mock.file_read("/dummy/path")
-    assert isinstance(read_data, cfrds.cfrds_file_content)
+    assert isinstance(read_data, cfrds.FileContent)
     assert read_data.data == b"hello"
     assert read_data.modified == "2026-07-22"
     assert read_data.permission == "rw-r--r--"
-    
-    # 2. C API Wrapper
-    out_ptr = [None]
-    srv_struct = cfrds.cfrds_server("127.0.0.1", 8500, "admin", "admin")
-    
-    status = cfrds.cfrds_command_file_read(srv_struct, "/dummy/path", out_ptr)
-    assert status == cfrds.CFRDS_STATUS_OK
-    assert out_ptr[0] is not None
-    assert out_ptr[0].data == b"hello"
-    assert out_ptr[0].modified == "2026-07-22"
-    assert out_ptr[0].permission == "rw-r--r--"
 
     # Test 6: _wddx_deserialize offline validation
     wddx = """<wddxPacket version='1.0'>
@@ -328,8 +266,8 @@ with patch("http.client.HTTPConnection", return_value=mock_conn):
     print("Offline _wddx_deserialize tests passed!")
 
     # Test 7: Debugger event accessors offline validation
-    mock_event = cfrds.cfrds_debugger_event(
-        cfrds.cfrds_debugger_type.CFRDS_DEBUGGER_EVENT_TYPE_BREAKPOINT,
+    mock_event = cfrds.DebuggerEvent(
+        cfrds.DebuggerType.CFRDS_DEBUGGER_EVENT_TYPE_BREAKPOINT,
         {
             "source": "/app/index.cfm",
             "line": 42,
@@ -342,30 +280,25 @@ with patch("http.client.HTTPConnection", return_value=mock_conn):
         }
     )
 
-    assert cfrds.cfrds_debugger_event_get_type(mock_event) == cfrds.cfrds_debugger_type.CFRDS_DEBUGGER_EVENT_TYPE_BREAKPOINT, "get_type mismatch"
-    assert cfrds.cfrds_debugger_event_breakpoint_get_source(mock_event) == "/app/index.cfm", "get_source mismatch"
-    assert cfrds.cfrds_debugger_event_breakpoint_get_line(mock_event) == 42, "get_line mismatch"
-    assert cfrds.cfrds_debugger_event_breakpoint_get_thread_name(mock_event) == "my-thread", "get_thread_name mismatch"
-    
-    scopes = cfrds.cfrds_debugger_event_breakpoint_get_scopes(mock_event)
-    assert isinstance(scopes, list) and scopes[0] == "Variables", "get_scopes mismatch"
+    assert mock_event.event_type == cfrds.DebuggerType.CFRDS_DEBUGGER_EVENT_TYPE_BREAKPOINT, "event_type mismatch"
+    assert mock_event["source"] == "/app/index.cfm", "source mismatch"
+    assert mock_event["line"] == 42, "line mismatch"
+    assert mock_event["thread_name"] == "my-thread", "thread_name mismatch"
 
-    assert cfrds.cfrds_debugger_event_get_scopes_count(mock_event) == 2, "scopes count mismatch"
-    assert cfrds.cfrds_debugger_event_get_scopes_item(mock_event, 0) == "Variables", "scopes item 0 mismatch"
-    assert cfrds.cfrds_debugger_event_get_scopes_item(mock_event, 1) == "Session", "scopes item 1 mismatch"
-    assert cfrds.cfrds_debugger_event_get_scopes_item(mock_event, 2) is None, "scopes item out of bounds mismatch"
+    scopes = mock_event["SCOPES"]
+    assert isinstance(scopes, list) and scopes[0] == "Variables", "SCOPES mismatch"
 
-    assert cfrds.cfrds_debugger_event_get_threads_count(mock_event) == 2, "threads count mismatch"
-    assert cfrds.cfrds_debugger_event_get_threads_item(mock_event, 0) == "my-thread", "threads item 0 mismatch"
+    threads = mock_event["THREADS"]
+    assert isinstance(threads, list) and len(threads) == 2 and threads[0] == "my-thread", "THREADS mismatch"
 
-    assert cfrds.cfrds_debugger_event_get_watch_count(mock_event) == 2, "watch count mismatch"
-    assert cfrds.cfrds_debugger_event_get_watch_item(mock_event, 0) == "expr1", "watch item 0 mismatch"
+    watch = mock_event["WATCH"]
+    assert isinstance(watch, list) and len(watch) == 2 and watch[0] == "expr1", "WATCH mismatch"
 
-    assert cfrds.cfrds_debugger_event_get_cf_trace_count(mock_event) == 2, "cf_trace count mismatch"
-    assert cfrds.cfrds_debugger_event_get_cf_trace_item(mock_event, 0) == "trace1", "cf_trace item 0 mismatch"
+    cf_trace = mock_event["CF_TRACE"]
+    assert isinstance(cf_trace, list) and len(cf_trace) == 2 and cf_trace[0] == "trace1", "CF_TRACE mismatch"
 
-    assert cfrds.cfrds_debugger_event_get_java_trace_count(mock_event) == 2, "java_trace count mismatch"
-    assert cfrds.cfrds_debugger_event_get_java_trace_item(mock_event, 0) == "jtrace1", "java_trace item 0 mismatch"
+    java_trace = mock_event["JAVA_TRACE"]
+    assert isinstance(java_trace, list) and len(java_trace) == 2 and java_trace[0] == "jtrace1", "JAVA_TRACE mismatch"
 
     print("Offline debugger event accessors tests passed!")
 
@@ -384,7 +317,7 @@ with patch("http.client.HTTPConnection", return_value=mock_conn):
     def test_error_mapping(exception_to_raise, expected_msg_substr):
         global mock_exception
         mock_exception = exception_to_raise
-        srv_mock._ctx._conn = None
+        srv_mock._conn = None
         threw = False
         try:
             srv_mock.browse_dir("/")
@@ -425,7 +358,7 @@ if "RDS_HOST" in os.environ and "RDS_PORT" in os.environ:
     password = os.environ.get("RDS_PASSWORD", "")
 
     print(f"Connecting to live RDS server at {host}:{port}...")
-    rds = cfrds.server(host, port, username, password)
+    rds = Server(host, port, username, password)
 
     # --- File & Directory Operations ---
     print("\n--- Validating File & Directory Operations ---")

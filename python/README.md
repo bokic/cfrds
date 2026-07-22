@@ -6,7 +6,7 @@ Pure Python interface for connecting to Adobe ColdFusion Remote Development Serv
 
 - **Pure Python** implementation with zero external PyPI dependencies.
 - Full parity with `libcfrds` C library exported API (`cfrds.h`).
-- Convenient high-level Pythonic `server` API.
+- Convenient high-level Pythonic `Server` API.
 - Support for directory browsing, file read/write/rename/delete, directory creation/deletion.
 - Database metadata queries (DSN info, tables, columns, primary keys, foreign keys, imported/exported keys, SQL execution, metadata, DB description).
 - ColdFusion remote debugger session management and breakpoint control.
@@ -25,7 +25,7 @@ pip install cfrds
 import cfrds
 
 # Create ColdFusion RDS server connection
-rds = cfrds.server(
+rds = cfrds.Server(
     hostname="127.0.0.1",
     port=8500,
     username="admin",
@@ -65,7 +65,7 @@ rds.close()
 ```python
 import cfrds
 
-with cfrds.server("127.0.0.1", 8500, "admin", "password") as rds:
+with cfrds.Server("127.0.0.1", 8500, "admin", "password") as rds:
     print("ColdFusion Root Dir:", rds.cf_root_dir())
 ```
 

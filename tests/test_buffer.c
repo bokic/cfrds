@@ -389,6 +389,40 @@ static int test_parse_string_truncated(void)
     CHECK(cfrds_buffer_parse_string(&data, &remaining, &out) == false);
     return PASS;
 }
+static int test_parse_string_list_item_boundary(void)
+{
+    // String ends exactly at item boundary (with quotes)
+    const char *data1 = "\"hello\"";
+    size_t remaining1 = 7;
+    char *out1 = NULL;
+    CHECK(cfrds_buffer_parse_string_list_item(&data1, &remaining1, &out1));
+    CHECK(out1 != NULL);
+    CHECK(strcmp(out1, "hello") == 0);
+    CHECK(remaining1 == 0);
+    free(out1);
+
+    // String ends exactly at item boundary (without quotes)
+    const char *data2 = "world";
+    size_t remaining2 = 5;
+    char *out2 = NULL;
+    CHECK(cfrds_buffer_parse_string_list_item(&data2, &remaining2, &out2));
+    CHECK(out2 != NULL);
+    CHECK(strcmp(out2, "world") == 0);
+    CHECK(remaining2 == 0);
+    free(out2);
+
+    // Non-null-terminated segment matching remaining count
+    const char *data3 = "hello,world";
+    size_t remaining3 = 5;
+    char *out3 = NULL;
+    CHECK(cfrds_buffer_parse_string_list_item(&data3, &remaining3, &out3));
+    CHECK(out3 != NULL);
+    CHECK(strcmp(out3, "hello") == 0);
+    CHECK(remaining3 == 0);
+    free(out3);
+
+    return PASS;
+}
 
 /* ── Tests: parse_bytearray ────────────────────────────────────────────── */
 
@@ -685,6 +719,7 @@ int main(void)
     RUN(test_parse_string_empty);
     RUN(test_parse_string_null_out);
     RUN(test_parse_string_truncated);
+    RUN(test_parse_string_list_item_boundary);
 
     /* parse_bytearray */
     RUN(test_parse_bytearray_basic);

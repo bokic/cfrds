@@ -403,14 +403,14 @@ void cfrds_buffer_free(cfrds_buffer *buffer)
 
 bool cfrds_buffer_parse_number(const char **data, size_t *remaining, int64_t *out)
 {
-    char *end = NULL;
+    const char *end = NULL;
     char *endptr = NULL;
 
     if (data == NULL)
         return false;
 
-    end = strchr(*data, ':');
-    if ((end == NULL)||((unsigned)(end - *data) > *remaining))
+    end = memchr(*data, ':', *remaining);
+    if (end == NULL)
         return false;
 
     errno = 0;
@@ -507,16 +507,16 @@ bool cfrds_buffer_parse_string_list_item(const char **data, size_t *remaining, c
         with_quotes = true;
         (*data)++; (*remaining)--;
 
-        endstr = strchr(*data, '"');
+        endstr = memchr(*data, '"', *remaining);
         if (endstr == NULL)
             return false;
         len = (size_t)(endstr - *data);
     }
     else
     {
-        endstr = strchr(*data, ',');
+        endstr = memchr(*data, ',', *remaining);
         if (endstr == NULL)
-            len = strlen(*data);
+            len = *remaining;
         else
             len = (size_t)(endstr - *data);
     }
@@ -530,13 +530,13 @@ bool cfrds_buffer_parse_string_list_item(const char **data, size_t *remaining, c
     (*data)+=len; (*remaining)-=len;
 
     if (with_quotes) {
-        if (*data[0] != '"')
+        if (*remaining == 0 || *data[0] != '"')
             return false;
 
         (*data)++; (*remaining)--;
     }
 
-    if (*data[0] == ',') {
+    if (*remaining > 0 && *data[0] == ',') {
         (*data)++; (*remaining)--;
     }
 

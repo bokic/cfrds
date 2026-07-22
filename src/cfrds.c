@@ -2469,7 +2469,7 @@ cfrds_status cfrds_command_debugger_watch_variables(cfrds_server *server, const 
     return ret;
 }
 
-cfrds_status cfrds_command_debugger_get_output(cfrds_server *server, const char *session_id, const char *thread_name)
+cfrds_status cfrds_command_debugger_get_output(cfrds_server *server, const char *session_id, const char *thread_name, cfrds_str *output)
 {
     cfrds_status ret;
 
@@ -2480,7 +2480,7 @@ cfrds_status cfrds_command_debugger_get_output(cfrds_server *server, const char 
         return CFRDS_STATUS_SERVER_IS_NULL;
     }
 
-    if ((session_id == NULL)||(thread_name == NULL))
+    if ((session_id == NULL)||(thread_name == NULL)||(output == NULL))
     {
         return CFRDS_STATUS_PARAM_IS_NULL;
     }
@@ -2492,6 +2492,57 @@ cfrds_status cfrds_command_debugger_get_output(cfrds_server *server, const char 
     wddx_put_string(wddx, "0,THREAD", thread_name);
 
     ret = cfrds_send_command(server, &response, "DBGREQUEST", (const char *[]){ "DBG_REQUEST", session_id, wddx_to_xml(wddx), NULL});
+    if (ret == CFRDS_STATUS_OK)
+    {
+        cfrds_str_defer(xml);
+
+        const char *response_data = cfrds_buffer_data(response);
+        size_t response_size = cfrds_buffer_data_size(response);
+
+        int64_t count = 0;
+        if (!cfrds_buffer_parse_number(&response_data, &response_size, &count))
+        {
+            server->error_code = -1;
+            return CFRDS_STATUS_RESPONSE_ERROR;
+        }
+
+        if (count != 1)
+        {
+            server->error_code = -1;
+            return CFRDS_STATUS_RESPONSE_ERROR;
+        }
+
+        if (!cfrds_buffer_parse_string(&response_data, &response_size, &xml))
+        {
+            server->error_code = -1;
+            return CFRDS_STATUS_RESPONSE_ERROR;
+        }
+
+        if (strlen(xml) > 0)
+        {
+            WDDX_defer(result);
+            result = wddx_from_xml(xml);
+            if (!result)
+            {
+                server->error_code = -1;
+                return CFRDS_STATUS_RESPONSE_ERROR;
+            }
+
+            const char *val_str = wddx_get_string(result, "0,VALUE");
+            if (val_str)
+            {
+                *output = strdup(val_str);
+            }
+            else
+            {
+                *output = strdup("");
+            }
+        }
+        else
+        {
+            *output = strdup("");
+        }
+    }
 
     return ret;
 }

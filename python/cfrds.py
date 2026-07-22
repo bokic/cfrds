@@ -1185,9 +1185,32 @@ class server:
         wddx = f"<wddxPacket version='1.0'><header/><data><array length='1'><struct type='java.util.HashMap'><var name='COMMAND'><string>SET_WATCH_VARIABLES</string></var><var name='WATCH'><array length='{len(vars_list)}'>{var_tags}</array></var></struct></array></data></wddxPacket>"
         _send_rds_command(self._ctx, "DBGREQUEST", ["DBG_REQUEST", session_name, wddx])
 
-    def debugger_get_output(self, session_name: str, thread_name: str) -> None:
+    def debugger_get_output(self, session_name: str, thread_name: str) -> str:
         wddx = f"<wddxPacket version='1.0'><header/><data><array length='1'><struct type='java.util.HashMap'><var name='COMMAND'><string>GET_OUTPUT</string></var><var name='BODY_ONLY'><boolean value='true'/></var><var name='THREAD'><string>{thread_name}</string></var></struct></array></data></wddxPacket>"
-        _send_rds_command(self._ctx, "DBGREQUEST", ["DBG_REQUEST", session_name, wddx])
+        raw = _send_rds_command(self._ctx, "DBGREQUEST", ["DBG_REQUEST", session_name, wddx])
+        if not raw:
+            return ""
+        _, offset = _parse_number(raw, 0)
+        wddx_xml, _ = _parse_string(raw, offset)
+        if not wddx_xml:
+            return ""
+        try:
+            import xml.etree.ElementTree as ET
+            root = ET.fromstring(wddx_xml)
+            var = root.find(".//var[@name='VALUE']")
+            if var is not None:
+                str_elem = var.find("string")
+                if str_elem is not None:
+                    return str_elem.text or ""
+        except Exception:
+            pass
+        # Fallback regex if XML parsing fails
+        m = re.search(r"<var name=['\"]VALUE['\"]>(?:\s*<string>([\s\S]*?)</string>|\s*<string\s*/>)", wddx_xml, re.IGNORECASE)
+        if m:
+            val = m.group(1) or ""
+            val = val.replace("&lt;", "<").replace("&gt;", ">").replace("&amp;", "&").replace("&quot;", '"').replace("&apos;", "'")
+            return val
+        return ""
 
     def debugger_set_scope_filter(self, session_name: str, filter_str: str) -> None:
         wddx = f"<wddxPacket version='1.0'><header/><data><array length='1'><struct type='java.util.HashMap'><var name='COMMAND'><string>SET_SCOPE_FILTER</string></var><var name='FILTER'><string>{filter_str}</string></var></struct></array></data></wddxPacket>"
@@ -2183,10 +2206,12 @@ def cfrds_command_debugger_watch_variables(srv: cfrds_server, session_id: str, v
         srv.set_error(CFRDS_STATUS_COMMAND_FAILED, str(e))
         return CFRDS_STATUS_COMMAND_FAILED
 
-def cfrds_command_debugger_get_output(srv: cfrds_server, session_id: str, thread_name: str) -> int:
+def cfrds_command_debugger_get_output(srv: cfrds_server, session_id: str, thread_name: str, out_ptr: List[Any]) -> int:
     try:
         s = server(srv.host, srv.port, srv.username, srv.orig_password)
-        s.debugger_get_output(session_id, thread_name)
+        res = s.debugger_get_output(session_id, thread_name)
+        if isinstance(out_ptr, list):
+            out_ptr[0] = res
         return CFRDS_STATUS_OK
     except CFRDSError as e:
         return e.status

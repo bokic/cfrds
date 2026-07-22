@@ -561,8 +561,8 @@ async function main(): Promise<void> {
         }
 
         try {
-          await rds.debuggerGetOutput(sessionId, threadName);
-          log(`  debuggerGetOutput('${sessionId}', '${threadName}'): success`);
+          const output = await rds.debuggerGetOutput(sessionId, threadName);
+          log(`  debuggerGetOutput('${sessionId}', '${threadName}'): success, output='${output}'`);
         } catch (e) {
           log(`  debuggerGetOutput error: ${e}`);
         }

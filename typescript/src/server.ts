@@ -548,9 +548,28 @@ export class Server {
     await sendRdsCommand(this.ctx, "DBGREQUEST", ["DBG_REQUEST", sessionName, wddx]);
   }
 
-  async debuggerGetOutput(sessionName: string, threadName: string): Promise<void> {
+  async debuggerGetOutput(sessionName: string, threadName: string): Promise<string> {
     const wddx = `<wddxPacket version='1.0'><header/><data><array length='1'><struct type='java.util.HashMap'><var name='COMMAND'><string>GET_OUTPUT</string></var><var name='BODY_ONLY'><boolean value='true'/></var><var name='THREAD'><string>${threadName}</string></var></struct></array></data></wddxPacket>`;
-    await sendRdsCommand(this.ctx, "DBGREQUEST", ["DBG_REQUEST", sessionName, wddx]);
+    const raw = await sendRdsCommand(this.ctx, "DBGREQUEST", ["DBG_REQUEST", sessionName, wddx]);
+    if (!raw || raw.length === 0) {
+      return "";
+    }
+    const [, offset] = parseNumber(raw, 0);
+    const [wddxXml] = parseString(raw, offset);
+    if (!wddxXml) {
+      return "";
+    }
+    const match = wddxXml.match(/<var name=['"]VALUE['"]>(?:\s*<string>([\s\S]*?)<\/string>|\s*<string\s*\/>)/i);
+    if (match) {
+      const val = match[1] || "";
+      return val
+        .replace(/&lt;/g, "<")
+        .replace(/&gt;/g, ">")
+        .replace(/&amp;/g, "&")
+        .replace(/&quot;/g, '"')
+        .replace(/&apos;/g, "'");
+    }
+    return "";
   }
 
   async debuggerSetScopeFilter(sessionName: string, filterStr: string): Promise<void> {

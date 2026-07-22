@@ -1467,9 +1467,10 @@ EXPORT_CFRDS cfrds_status cfrds_command_debugger_watch_variables(cfrds_server *s
  * @param server Initialized server connection.
  * @param session_id Active session ID.
  * @param thread_name Thread context name.
+ * @param output Output pointer where retrieved output text is returned.
  * @return Status code.
  */
-EXPORT_CFRDS cfrds_status cfrds_command_debugger_get_output(cfrds_server *server, const char *session_id, const char *thread_name);
+EXPORT_CFRDS cfrds_status cfrds_command_debugger_get_output(cfrds_server *server, const char *session_id, const char *thread_name, cfrds_str *output);
 
 /**
  * @brief Configures variable scopes detail filter rules.

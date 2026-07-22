@@ -483,8 +483,8 @@ if "RDS_HOST" in os.environ and "RDS_PORT" in os.environ:
                 print(f"  debugger_set_variable error: {e}")
 
             try:
-                rds.debugger_get_output(session_id, thread_name)
-                print(f"  debugger_get_output('{session_id}', '{thread_name}'): success")
+                output = rds.debugger_get_output(session_id, thread_name)
+                print(f"  debugger_get_output('{session_id}', '{thread_name}'): success, output='{output}'")
             except cfrds.CFRDSError as e:
                 print(f"  debugger_get_output error: {e}")
 

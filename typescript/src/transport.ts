@@ -28,7 +28,7 @@ export function sendRdsCommand(
     "Accept-Encoding": "deflate",
     "Content-Type": "text/html",
     "Content-Length": payload.length.toString(),
-    Connection: "close",
+    Connection: "keep-alive",
   };
 
   return new Promise<Buffer>((resolve, reject) => {
@@ -40,6 +40,7 @@ export function sendRdsCommand(
         method: "POST",
         headers,
         timeout: 30000,
+        agent: ctx.agent,
       },
       (res) => {
         const chunks: Buffer[] = [];

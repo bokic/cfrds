@@ -19,6 +19,7 @@ import {
 } from "./types";
 import { encodePassword, parseNumber, parseString, parseBytearray, parseStringListItem, wddxDeserialize, parseXml, parseWddxNode, XmlNode } from "./parser";
 import { sendRdsCommand } from "./transport";
+import * as http from "http";
 
 function escapeXml(str: string): string {
   return str
@@ -42,6 +43,7 @@ export class Server {
       config: { host: hostname, port, username, password },
       encodedPassword: encodePassword(password),
       error: null,
+      agent: new http.Agent({ keepAlive: true }),
     };
   }
 
@@ -52,7 +54,17 @@ export class Server {
   getError(): string | null { return this.ctx.error; }
   clearError(): void { this.ctx.error = null; }
 
-  async close(): Promise<void> {}
+  async close(): Promise<void> {
+    if (this.ctx.agent) {
+      this.ctx.agent.destroy();
+      this.ctx.agent = undefined;
+    }
+    this.ctx.config.password = "";
+    this.ctx.encodedPassword = "";
+    this.ctx.config.username = "";
+    this.ctx.config.host = "";
+    this.ctx.error = null;
+  }
 
   // Browse Directory
   async browseDir(path: string): Promise<BrowseDirItem[]> {

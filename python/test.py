@@ -317,6 +317,7 @@ with patch("http.client.HTTPConnection", return_value=mock_conn):
     def test_error_mapping(exception_to_raise, expected_msg_substr):
         global mock_exception
         mock_exception = exception_to_raise
+        srv_mock._ctx._conn = None
         threw = False
         try:
             srv_mock.browse_dir("/")

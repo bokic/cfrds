@@ -191,6 +191,7 @@ class cfrds_server:
         self.encoded_password = _encode_password(password) if password else ""
         self.error_code: int = 1
         self.error: Optional[str] = None
+        self._conn: Optional[http.client.HTTPConnection] = None
 
     def clear_error(self) -> None:
         self.error_code = 1
@@ -286,19 +287,34 @@ def _send_rds_command(server_ctx: cfrds_server, command: str, args: List[Union[s
         "Accept-Encoding": "deflate",
         "Content-Type": "text/html",
         "Content-Length": str(len(payload)),
-        "Connection": "close",
+        "Connection": "keep-alive",
     }
 
+    reused = server_ctx._conn is not None
     try:
-        conn = http.client.HTTPConnection(server_ctx.host, server_ctx.port, timeout=30)
+        if server_ctx._conn is None:
+            server_ctx._conn = http.client.HTTPConnection(server_ctx.host, server_ctx.port, timeout=30)
+        conn = server_ctx._conn
         conn.request("POST", path, body=payload, headers=headers)
         resp = conn.getresponse()
         if resp.status != 200:
-            server_ctx.error_msg = f"HTTP {resp.status} {resp.reason}"
+            msg = f"HTTP {resp.status} {resp.reason}"
+            server_ctx.error = msg
+            server_ctx.error_msg = msg
             raise CFRDSError(f"HTTP_RESPONSE_NOT_FOUND: HTTP {resp.status} {resp.reason}")
         body = resp.read()
-        conn.close()
     except Exception as e:
+        if server_ctx._conn is not None:
+            try:
+                server_ctx._conn.close()
+            except Exception:
+                pass
+            server_ctx._conn = None
+        
+        if reused and not isinstance(e, CFRDSError):
+            # Retry once with a brand new connection
+            return _send_rds_command(server_ctx, command, args)
+
         if isinstance(e, CFRDSError):
             raise
         import socket
@@ -309,6 +325,7 @@ def _send_rds_command(server_ctx: cfrds_server, command: str, args: List[Union[s
         elif isinstance(e, OSError) and e.errno in (errno.EACCES, errno.EPERM, errno.EADDRNOTAVAIL, errno.EMFILE, errno.ENFILE):
             desc = "Socket creation failed"
         msg = f"{desc}: {e}"
+        server_ctx.error = msg
         server_ctx.error_msg = msg
         raise CFRDSError(msg)
 
@@ -836,7 +853,7 @@ class server:
         self._ctx = cfrds_server(hostname, port, username, password)
 
     def close(self) -> None:
-        pass
+        cfrds_server_free(self._ctx)
 
     def __enter__(self) -> "server":
         return self
@@ -1623,7 +1640,19 @@ def cfrds_server_init(server_ptr: List[Any], host: str, port: int, username: str
         return False
 
 def cfrds_server_free(srv: Optional[cfrds_server]) -> None:
-    pass
+    if srv:
+        if hasattr(srv, "_conn") and srv._conn is not None:
+            try:
+                srv._conn.close()
+            except Exception:
+                pass
+            srv._conn = None
+        srv.orig_password = ""
+        srv.encoded_password = ""
+        srv.username = ""
+        srv.host = ""
+        srv.port = 0
+        srv.error = None
 
 def cfrds_server_cleanup(server_ptr: List[Any]) -> None:
     if isinstance(server_ptr, list):

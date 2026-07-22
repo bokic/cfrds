@@ -117,6 +117,8 @@ export class CFRDSError extends Error {
   }
 }
 
+import * as http from "http";
+
 export interface ServerConfig {
   host: string;
   port: number;
@@ -128,4 +130,6 @@ export interface ServerContext {
   config: ServerConfig;
   encodedPassword: string;
   error: string | null;
+  agent?: http.Agent;
 }
+

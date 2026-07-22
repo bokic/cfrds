@@ -2745,7 +2745,7 @@ def cfrds_security_analyzer_result_filesvisitedcount(val: cfrds_security_analyze
     return val.data.get("filesvisitedcount", 0) if val and val.data else 0
 
 def cfrds_security_analyzer_result_errorsdescription_count(val: cfrds_security_analyzer_result) -> int:
-    return 0
+    return len(val.data.get("errorsdescription", [])) if val and val.data else 0
 
 def cfrds_security_analyzer_result_filesscanned_count(val: cfrds_security_analyzer_result) -> int:
     return len(val.data.get("filesscanned", [])) if val and val.data else 0
@@ -2777,10 +2777,11 @@ def cfrds_security_analyzer_result_percentage(val: cfrds_security_analyzer_resul
     return val.data.get("percentage", 0) if val and val.data else 0
 
 def cfrds_security_analyzer_result_files_count(val: cfrds_security_analyzer_result) -> int:
-    return 0
+    return len(val.data.get("files", [])) if val and val.data else 0
 
 def cfrds_security_analyzer_result_files_value(val: cfrds_security_analyzer_result, ndx: int) -> Optional[str]:
-    return None
+    files = val.data.get("files", []) if val and val.data else []
+    return files[ndx] if ndx < len(files) else None
 
 def cfrds_security_analyzer_result_lastupdated(val: cfrds_security_analyzer_result) -> int:
     return val.data.get("lastupdated", 0) if val and val.data else 0

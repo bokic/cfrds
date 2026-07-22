@@ -2136,7 +2136,7 @@ def cfrds_debugger_event_breakpoint_get_line(evt: cfrds_debugger_event) -> int:
     return evt.data.get("line", 0) if evt else 0
 
 def cfrds_debugger_event_breakpoint_get_scopes(evt: cfrds_debugger_event) -> Any:
-    return None
+    return evt.data.get("SCOPES") if evt else None
 
 def cfrds_debugger_event_breakpoint_get_thread_name(evt: cfrds_debugger_event) -> Optional[str]:
     return evt.data.get("thread_name") if evt else None

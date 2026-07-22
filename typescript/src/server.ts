@@ -701,4 +701,111 @@ export class Server {
   }
 }
 
+export function cfrds_debugger_event_get_type(evt: DebuggerEvent | null): CFRDS_DEBUGGER_EVENT_TYPE {
+  return evt ? evt.type : CFRDS_DEBUGGER_EVENT_TYPE.UNKNOWN;
+}
+
+export function cfrds_debugger_event_breakpoint_get_source(evt: DebuggerEvent | null): string | null {
+  return evt && evt.data && typeof evt.data.source === "string" ? evt.data.source : null;
+}
+
+export function cfrds_debugger_event_breakpoint_get_line(evt: DebuggerEvent | null): number {
+  return evt && evt.data && typeof evt.data.line === "number" ? evt.data.line : 0;
+}
+
+export function cfrds_debugger_event_breakpoint_get_scopes(evt: DebuggerEvent | null): any {
+  return evt && evt.data ? evt.data.SCOPES : null;
+}
+
+export function cfrds_debugger_event_breakpoint_get_thread_name(evt: DebuggerEvent | null): string | null {
+  return evt && evt.data && typeof evt.data.thread_name === "string" ? evt.data.thread_name : null;
+}
+
+export function cfrds_debugger_event_breakpoint_set_get_pathname(evt: DebuggerEvent | null): string | null {
+  return evt && evt.data && typeof evt.data.pathname === "string" ? evt.data.pathname : null;
+}
+
+export function cfrds_debugger_event_breakpoint_set_get_req_line(evt: DebuggerEvent | null): number {
+  return evt && evt.data && typeof evt.data.req_line === "number" ? evt.data.req_line : 0;
+}
+
+export function cfrds_debugger_event_breakpoint_set_get_act_line(evt: DebuggerEvent | null): number {
+  return evt && evt.data && typeof evt.data.act_line === "number" ? evt.data.act_line : 0;
+}
+
+export function cfrds_debugger_event_get_scopes_count(evt: DebuggerEvent | null): number {
+  if (evt && evt.data && Array.isArray(evt.data.SCOPES)) {
+    return evt.data.SCOPES.length;
+  }
+  return 0;
+}
+
+export function cfrds_debugger_event_get_scopes_item(evt: DebuggerEvent | null, ndx: number): string | null {
+  if (evt && evt.data && Array.isArray(evt.data.SCOPES)) {
+    const item = evt.data.SCOPES[ndx];
+    return typeof item === "string" ? item : null;
+  }
+  return null;
+}
+
+export function cfrds_debugger_event_get_threads_count(evt: DebuggerEvent | null): number {
+  if (evt && evt.data && Array.isArray(evt.data.THREADS)) {
+    return evt.data.THREADS.length;
+  }
+  return 0;
+}
+
+export function cfrds_debugger_event_get_threads_item(evt: DebuggerEvent | null, ndx: number): string | null {
+  if (evt && evt.data && Array.isArray(evt.data.THREADS)) {
+    const item = evt.data.THREADS[ndx];
+    return typeof item === "string" ? item : null;
+  }
+  return null;
+}
+
+export function cfrds_debugger_event_get_watch_count(evt: DebuggerEvent | null): number {
+  if (evt && evt.data && Array.isArray(evt.data.WATCH)) {
+    return evt.data.WATCH.length;
+  }
+  return 0;
+}
+
+export function cfrds_debugger_event_get_watch_item(evt: DebuggerEvent | null, ndx: number): string | null {
+  if (evt && evt.data && Array.isArray(evt.data.WATCH)) {
+    const item = evt.data.WATCH[ndx];
+    return typeof item === "string" ? item : null;
+  }
+  return null;
+}
+
+export function cfrds_debugger_event_get_cf_trace_count(evt: DebuggerEvent | null): number {
+  if (evt && evt.data && Array.isArray(evt.data.CF_TRACE)) {
+    return evt.data.CF_TRACE.length;
+  }
+  return 0;
+}
+
+export function cfrds_debugger_event_get_cf_trace_item(evt: DebuggerEvent | null, ndx: number): string | null {
+  if (evt && evt.data && Array.isArray(evt.data.CF_TRACE)) {
+    const item = evt.data.CF_TRACE[ndx];
+    return typeof item === "string" ? item : null;
+  }
+  return null;
+}
+
+export function cfrds_debugger_event_get_java_trace_count(evt: DebuggerEvent | null): number {
+  if (evt && evt.data && Array.isArray(evt.data.JAVA_TRACE)) {
+    return evt.data.JAVA_TRACE.length;
+  }
+  return 0;
+}
+
+export function cfrds_debugger_event_get_java_trace_item(evt: DebuggerEvent | null, ndx: number): string | null {
+  if (evt && evt.data && Array.isArray(evt.data.JAVA_TRACE)) {
+    const item = evt.data.JAVA_TRACE[ndx];
+    return typeof item === "string" ? item : null;
+  }
+  return null;
+}
+
 export { Server as ServerType };

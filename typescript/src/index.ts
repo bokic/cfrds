@@ -21,4 +21,24 @@ export {
 } from "./types";
 
 export { Server } from "./server";
+export {
+  cfrds_debugger_event_get_type,
+  cfrds_debugger_event_breakpoint_get_source,
+  cfrds_debugger_event_breakpoint_get_line,
+  cfrds_debugger_event_breakpoint_get_scopes,
+  cfrds_debugger_event_breakpoint_get_thread_name,
+  cfrds_debugger_event_breakpoint_set_get_pathname,
+  cfrds_debugger_event_breakpoint_set_get_req_line,
+  cfrds_debugger_event_breakpoint_set_get_act_line,
+  cfrds_debugger_event_get_scopes_count,
+  cfrds_debugger_event_get_scopes_item,
+  cfrds_debugger_event_get_threads_count,
+  cfrds_debugger_event_get_threads_item,
+  cfrds_debugger_event_get_watch_count,
+  cfrds_debugger_event_get_watch_item,
+  cfrds_debugger_event_get_cf_trace_count,
+  cfrds_debugger_event_get_cf_trace_item,
+  cfrds_debugger_event_get_java_trace_count,
+  cfrds_debugger_event_get_java_trace_item,
+} from "./server";
 export { VERSION } from "./version";

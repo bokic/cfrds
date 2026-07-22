@@ -4,6 +4,24 @@ import {
   CFRDSError,
   Server,
   VERSION,
+  cfrds_debugger_event_get_type,
+  cfrds_debugger_event_breakpoint_get_source,
+  cfrds_debugger_event_breakpoint_get_line,
+  cfrds_debugger_event_breakpoint_get_scopes,
+  cfrds_debugger_event_breakpoint_get_thread_name,
+  cfrds_debugger_event_breakpoint_set_get_pathname,
+  cfrds_debugger_event_breakpoint_set_get_req_line,
+  cfrds_debugger_event_breakpoint_set_get_act_line,
+  cfrds_debugger_event_get_scopes_count,
+  cfrds_debugger_event_get_scopes_item,
+  cfrds_debugger_event_get_threads_count,
+  cfrds_debugger_event_get_threads_item,
+  cfrds_debugger_event_get_watch_count,
+  cfrds_debugger_event_get_watch_item,
+  cfrds_debugger_event_get_cf_trace_count,
+  cfrds_debugger_event_get_cf_trace_item,
+  cfrds_debugger_event_get_java_trace_count,
+  cfrds_debugger_event_get_java_trace_item,
 } from "./index";
 import { encodePassword, parseStringListItem, wddxDeserialize } from "./parser";
 import * as http from "http";
@@ -281,6 +299,50 @@ async function main(): Promise<void> {
         assert(parsed.arrayVal[0] === 'item1', "arrayVal[0] should be item1");
         assert(parsed.arrayVal[1].nestedKey === 'nestedVal', "arrayVal[1].nestedKey should be nestedVal");
         log("Offline wddxDeserialize tests passed!");
+      }
+
+      // Test 7: Debugger event accessors offline validation
+      {
+        const mockEvent = {
+          type: CFRDS_DEBUGGER_EVENT_TYPE.BREAKPOINT,
+          data: {
+            source: "/app/index.cfm",
+            line: 42,
+            thread_name: "my-thread",
+            SCOPES: ["Variables", "Session"],
+            THREADS: ["my-thread", "other-thread"],
+            WATCH: ["expr1", "expr2"],
+            CF_TRACE: ["trace1", "trace2"],
+            JAVA_TRACE: ["jtrace1", "jtrace2"]
+          }
+        };
+
+        assert(cfrds_debugger_event_get_type(mockEvent) === CFRDS_DEBUGGER_EVENT_TYPE.BREAKPOINT, "get_type mismatch");
+        assert(cfrds_debugger_event_breakpoint_get_source(mockEvent) === "/app/index.cfm", "get_source mismatch");
+        assert(cfrds_debugger_event_breakpoint_get_line(mockEvent) === 42, "get_line mismatch");
+        assert(cfrds_debugger_event_breakpoint_get_thread_name(mockEvent) === "my-thread", "get_thread_name mismatch");
+        
+        const scopes = cfrds_debugger_event_breakpoint_get_scopes(mockEvent);
+        assert(Array.isArray(scopes) && scopes[0] === "Variables", "get_scopes mismatch");
+
+        assert(cfrds_debugger_event_get_scopes_count(mockEvent) === 2, "scopes count mismatch");
+        assert(cfrds_debugger_event_get_scopes_item(mockEvent, 0) === "Variables", "scopes item 0 mismatch");
+        assert(cfrds_debugger_event_get_scopes_item(mockEvent, 1) === "Session", "scopes item 1 mismatch");
+        assert(cfrds_debugger_event_get_scopes_item(mockEvent, 2) === null, "scopes item out of bounds mismatch");
+
+        assert(cfrds_debugger_event_get_threads_count(mockEvent) === 2, "threads count mismatch");
+        assert(cfrds_debugger_event_get_threads_item(mockEvent, 0) === "my-thread", "threads item 0 mismatch");
+
+        assert(cfrds_debugger_event_get_watch_count(mockEvent) === 2, "watch count mismatch");
+        assert(cfrds_debugger_event_get_watch_item(mockEvent, 0) === "expr1", "watch item 0 mismatch");
+
+        assert(cfrds_debugger_event_get_cf_trace_count(mockEvent) === 2, "cf_trace count mismatch");
+        assert(cfrds_debugger_event_get_cf_trace_item(mockEvent, 0) === "trace1", "cf_trace item 0 mismatch");
+
+        assert(cfrds_debugger_event_get_java_trace_count(mockEvent) === 2, "java_trace count mismatch");
+        assert(cfrds_debugger_event_get_java_trace_item(mockEvent, 0) === "jtrace1", "java_trace item 0 mismatch");
+
+        log("Offline debugger event accessors tests passed!");
       }
 
       log("Offline WDDX escaping validation tests passed!");

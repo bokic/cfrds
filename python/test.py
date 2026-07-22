@@ -246,6 +246,48 @@ with patch("http.client.HTTPConnection", return_value=mock_conn):
     assert parsed["arrayVal"][1]["nestedKey"] == 'nestedVal', "arrayVal[1]['nestedKey'] should be nestedVal"
     print("Offline _wddx_deserialize tests passed!")
 
+    # Test 7: Debugger event accessors offline validation
+    mock_event = cfrds.cfrds_debugger_event(
+        cfrds.cfrds_debugger_type.CFRDS_DEBUGGER_EVENT_TYPE_BREAKPOINT,
+        {
+            "source": "/app/index.cfm",
+            "line": 42,
+            "thread_name": "my-thread",
+            "SCOPES": ["Variables", "Session"],
+            "THREADS": ["my-thread", "other-thread"],
+            "WATCH": ["expr1", "expr2"],
+            "CF_TRACE": ["trace1", "trace2"],
+            "JAVA_TRACE": ["jtrace1", "jtrace2"]
+        }
+    )
+
+    assert cfrds.cfrds_debugger_event_get_type(mock_event) == cfrds.cfrds_debugger_type.CFRDS_DEBUGGER_EVENT_TYPE_BREAKPOINT, "get_type mismatch"
+    assert cfrds.cfrds_debugger_event_breakpoint_get_source(mock_event) == "/app/index.cfm", "get_source mismatch"
+    assert cfrds.cfrds_debugger_event_breakpoint_get_line(mock_event) == 42, "get_line mismatch"
+    assert cfrds.cfrds_debugger_event_breakpoint_get_thread_name(mock_event) == "my-thread", "get_thread_name mismatch"
+    
+    scopes = cfrds.cfrds_debugger_event_breakpoint_get_scopes(mock_event)
+    assert isinstance(scopes, list) and scopes[0] == "Variables", "get_scopes mismatch"
+
+    assert cfrds.cfrds_debugger_event_get_scopes_count(mock_event) == 2, "scopes count mismatch"
+    assert cfrds.cfrds_debugger_event_get_scopes_item(mock_event, 0) == "Variables", "scopes item 0 mismatch"
+    assert cfrds.cfrds_debugger_event_get_scopes_item(mock_event, 1) == "Session", "scopes item 1 mismatch"
+    assert cfrds.cfrds_debugger_event_get_scopes_item(mock_event, 2) is None, "scopes item out of bounds mismatch"
+
+    assert cfrds.cfrds_debugger_event_get_threads_count(mock_event) == 2, "threads count mismatch"
+    assert cfrds.cfrds_debugger_event_get_threads_item(mock_event, 0) == "my-thread", "threads item 0 mismatch"
+
+    assert cfrds.cfrds_debugger_event_get_watch_count(mock_event) == 2, "watch count mismatch"
+    assert cfrds.cfrds_debugger_event_get_watch_item(mock_event, 0) == "expr1", "watch item 0 mismatch"
+
+    assert cfrds.cfrds_debugger_event_get_cf_trace_count(mock_event) == 2, "cf_trace count mismatch"
+    assert cfrds.cfrds_debugger_event_get_cf_trace_item(mock_event, 0) == "trace1", "cf_trace item 0 mismatch"
+
+    assert cfrds.cfrds_debugger_event_get_java_trace_count(mock_event) == 2, "java_trace count mismatch"
+    assert cfrds.cfrds_debugger_event_get_java_trace_item(mock_event, 0) == "jtrace1", "java_trace item 0 mismatch"
+
+    print("Offline debugger event accessors tests passed!")
+
     print("Offline WDDX escaping validation tests passed!")
 
 # Live server integration test if env vars present

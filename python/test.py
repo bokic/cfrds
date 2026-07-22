@@ -182,6 +182,18 @@ assert cfrds.cfrds_browse_dir_item_get_permissions(dir_item_new_mask, 0) == (0x0
 
 print("Container class ready-to-use value tests passed!")
 
+# Verify server error code and error message state
+srv_err_test = cfrds.cfrds_server("127.0.0.1", 8500, "admin", "admin")
+assert srv_err_test.error_code == 0
+assert srv_err_test.error is None
+srv_err_test.set_error(cfrds.CFRDS_STATUS_MEMORY_ERROR, "Memory error test")
+assert srv_err_test.error_code == 1
+assert srv_err_test.error == "Memory error test"
+srv_err_test.clear_error()
+assert srv_err_test.error_code == 0
+assert srv_err_test.error is None
+print("Server context error state tests passed!")
+
 # Verify browse_dir validation (offline tests using http mock)
 from unittest.mock import patch, MagicMock
 

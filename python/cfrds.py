@@ -189,12 +189,12 @@ class cfrds_server:
         self.username = username
         self.orig_password = password
         self.encoded_password = _encode_password(password) if password else ""
-        self.error_code: int = 1
+        self.error_code: int = 0
         self.error: Optional[str] = None
         self._conn: Optional[http.client.HTTPConnection] = None
 
     def clear_error(self) -> None:
-        self.error_code = 1
+        self.error_code = 0
         self.error = None
 
     def set_error(self, code: int, msg: str) -> None:

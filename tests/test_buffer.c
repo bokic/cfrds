@@ -472,6 +472,127 @@ static int test_null_sentinel(void)
     return PASS;
 }
 
+static int test_sql_key_parsers(void)
+{
+    /* Test Primary Keys parser */
+    {
+        cfrds_buffer *buf = NULL;
+        CHECK(cfrds_buffer_create(&buf) == true);
+        /* invalid (4 items instead of 5) */
+        CHECK(cfrds_buffer_append(buf, "1:15:\"a\",\"b\",\"c\",\"d\"") == true);
+        struct cfrds_sql_primarykeys *pk = cfrds_buffer_to_sql_primarykeys(buf);
+        CHECK(pk == NULL); // should fail safely instead of crashing
+        cfrds_buffer_free(buf);
+    }
+
+    {
+        cfrds_buffer *buf = NULL;
+        CHECK(cfrds_buffer_create(&buf) == true);
+        /* valid (5 items) */
+        CHECK(cfrds_buffer_append(buf, "1:19:\"a\",\"b\",\"c\",\"d\",\"2\"") == true);
+        struct cfrds_sql_primarykeys *pk = cfrds_buffer_to_sql_primarykeys(buf);
+        CHECK(pk != NULL);
+        CHECK(pk->cnt == 1);
+        CHECK(strcmp(pk->items[0].tableCatalog, "a") == 0);
+        CHECK(strcmp(pk->items[0].tableOwner, "b") == 0);
+        CHECK(strcmp(pk->items[0].tableName, "c") == 0);
+        CHECK(strcmp(pk->items[0].colName, "d") == 0);
+        CHECK(pk->items[0].keySequence == 2);
+        cfrds_sql_primarykeys_free(pk);
+        cfrds_buffer_free(buf);
+    }
+
+    /* Test Foreign Keys parser */
+    {
+        cfrds_buffer *buf = NULL;
+        CHECK(cfrds_buffer_create(&buf) == true);
+        /* invalid (10 items instead of 11) */
+        CHECK(cfrds_buffer_append(buf, "1:39:\"a\",\"b\",\"c\",\"d\",\"e\",\"f\",\"g\",\"h\",\"1\",\"2\"") == true);
+        struct cfrds_sql_foreignkeys *fk = cfrds_buffer_to_sql_foreignkeys(buf);
+        CHECK(fk == NULL);
+        cfrds_buffer_free(buf);
+    }
+
+    {
+        cfrds_buffer *buf = NULL;
+        CHECK(cfrds_buffer_create(&buf) == true);
+        /* valid (11 items) */
+        CHECK(cfrds_buffer_append(buf, "1:43:\"a\",\"b\",\"c\",\"d\",\"e\",\"f\",\"g\",\"h\",\"1\",\"2\",\"3\"") == true);
+        struct cfrds_sql_foreignkeys *fk = cfrds_buffer_to_sql_foreignkeys(buf);
+        CHECK(fk != NULL);
+        CHECK(fk->cnt == 1);
+        CHECK(strcmp(fk->items[0].pkTableCatalog, "a") == 0);
+        CHECK(strcmp(fk->items[0].pkTableOwner, "b") == 0);
+        CHECK(strcmp(fk->items[0].pkTableName, "c") == 0);
+        CHECK(strcmp(fk->items[0].pkColName, "d") == 0);
+        CHECK(strcmp(fk->items[0].fkTableCatalog, "e") == 0);
+        CHECK(strcmp(fk->items[0].fkTableOwner, "f") == 0);
+        CHECK(strcmp(fk->items[0].fkTableName, "g") == 0);
+        CHECK(strcmp(fk->items[0].fkColName, "h") == 0);
+        CHECK(fk->items[0].keySequence == 1);
+        CHECK(fk->items[0].updateRule == 2);
+        CHECK(fk->items[0].deleteRule == 3);
+        cfrds_sql_foreignkeys_free(fk);
+        cfrds_buffer_free(buf);
+    }
+
+    /* Test Imported Keys parser */
+    {
+        cfrds_buffer *buf = NULL;
+        CHECK(cfrds_buffer_create(&buf) == true);
+        /* invalid (10 items instead of 11) */
+        CHECK(cfrds_buffer_append(buf, "1:39:\"a\",\"b\",\"c\",\"d\",\"e\",\"f\",\"g\",\"h\",\"1\",\"2\"") == true);
+        struct cfrds_sql_importedkeys *ik = cfrds_buffer_to_sql_importedkeys(buf);
+        CHECK(ik == NULL);
+        cfrds_buffer_free(buf);
+    }
+
+    {
+        cfrds_buffer *buf = NULL;
+        CHECK(cfrds_buffer_create(&buf) == true);
+        /* valid (11 items) */
+        CHECK(cfrds_buffer_append(buf, "1:43:\"a\",\"b\",\"c\",\"d\",\"e\",\"f\",\"g\",\"h\",\"1\",\"2\",\"3\"") == true);
+        struct cfrds_sql_importedkeys *ik = cfrds_buffer_to_sql_importedkeys(buf);
+        CHECK(ik != NULL);
+        CHECK(ik->cnt == 1);
+        CHECK(strcmp(ik->items[0].pkTableCatalog, "a") == 0);
+        CHECK(ik->items[0].keySequence == 1);
+        CHECK(ik->items[0].updateRule == 2);
+        CHECK(ik->items[0].deleteRule == 3);
+        cfrds_sql_importedkeys_free(ik);
+        cfrds_buffer_free(buf);
+    }
+
+    /* Test Exported Keys parser */
+    {
+        cfrds_buffer *buf = NULL;
+        CHECK(cfrds_buffer_create(&buf) == true);
+        /* invalid (10 items instead of 11) */
+        CHECK(cfrds_buffer_append(buf, "1:39:\"a\",\"b\",\"c\",\"d\",\"e\",\"f\",\"g\",\"h\",\"1\",\"2\"") == true);
+        struct cfrds_sql_exportedkeys *ek = cfrds_buffer_to_sql_exportedkeys(buf);
+        CHECK(ek == NULL);
+        cfrds_buffer_free(buf);
+    }
+
+    {
+        cfrds_buffer *buf = NULL;
+        CHECK(cfrds_buffer_create(&buf) == true);
+        /* valid (11 items) */
+        CHECK(cfrds_buffer_append(buf, "1:43:\"a\",\"b\",\"c\",\"d\",\"e\",\"f\",\"g\",\"h\",\"1\",\"2\",\"3\"") == true);
+        struct cfrds_sql_exportedkeys *ek = cfrds_buffer_to_sql_exportedkeys(buf);
+        CHECK(ek != NULL);
+        CHECK(ek->cnt == 1);
+        CHECK(strcmp(ek->items[0].pkTableCatalog, "a") == 0);
+        CHECK(ek->items[0].keySequence == 1);
+        CHECK(ek->items[0].updateRule == 2);
+        CHECK(ek->items[0].deleteRule == 3);
+        cfrds_sql_exportedkeys_free(ek);
+        cfrds_buffer_free(buf);
+    }
+
+    return PASS;
+}
+
 /* ── main ──────────────────────────────────────────────────────────────── */
 
 int main(void)
@@ -532,6 +653,7 @@ int main(void)
     RUN(test_large_append);
     RUN(test_null_sentinel);
     RUN(test_command_graphing_null_guards);
+    RUN(test_sql_key_parsers);
 
     printf("\n%d test(s) failed.\n", _failures);
     return _failures ? 1 : 0;

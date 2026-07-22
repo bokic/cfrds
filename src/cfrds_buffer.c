@@ -1039,11 +1039,18 @@ cfrds_sql_primarykeys *cfrds_buffer_to_sql_primarykeys(cfrds_buffer *buffer)
         cfrds_str_defer(colName);
         cfrds_str_defer(keySequence);
 
-        cfrds_buffer_parse_string_list_item(&column_buf, &list_remaining, &tableCatalog);
-        cfrds_buffer_parse_string_list_item(&column_buf, &list_remaining, &tableOwner);
-        cfrds_buffer_parse_string_list_item(&column_buf, &list_remaining, &tableName);
-        cfrds_buffer_parse_string_list_item(&column_buf, &list_remaining, &colName);
-        cfrds_buffer_parse_string_list_item(&column_buf, &list_remaining, &keySequence);
+        if (!cfrds_buffer_parse_string_list_item(&column_buf, &list_remaining, &tableCatalog))
+            return NULL;
+        if (!cfrds_buffer_parse_string_list_item(&column_buf, &list_remaining, &tableOwner))
+            return NULL;
+        if (!cfrds_buffer_parse_string_list_item(&column_buf, &list_remaining, &tableName))
+            return NULL;
+        if (!cfrds_buffer_parse_string_list_item(&column_buf, &list_remaining, &colName))
+            return NULL;
+        if (!cfrds_buffer_parse_string_list_item(&column_buf, &list_remaining, &keySequence))
+            return NULL;
+        if (list_remaining != 0)
+            return NULL;
 
         tmp->items[c].tableCatalog = tableCatalog; tableCatalog = NULL;
         tmp->items[c].tableOwner   = tableOwner; tableOwner = NULL;
@@ -1110,17 +1117,30 @@ cfrds_sql_foreignkeys *cfrds_buffer_to_sql_foreignkeys(cfrds_buffer *buffer)
         cfrds_str_defer(updateRule);
         cfrds_str_defer(deleteRule);
 
-        cfrds_buffer_parse_string_list_item(&column_buf, &list_remaining, &pkTableCatalog);
-        cfrds_buffer_parse_string_list_item(&column_buf, &list_remaining, &pkTableOwner);
-        cfrds_buffer_parse_string_list_item(&column_buf, &list_remaining, &pkTableName);
-        cfrds_buffer_parse_string_list_item(&column_buf, &list_remaining, &pkColName);
-        cfrds_buffer_parse_string_list_item(&column_buf, &list_remaining, &fkTableCatalog);
-        cfrds_buffer_parse_string_list_item(&column_buf, &list_remaining, &fkTableOwner);
-        cfrds_buffer_parse_string_list_item(&column_buf, &list_remaining, &fkTableName);
-        cfrds_buffer_parse_string_list_item(&column_buf, &list_remaining, &fkColName);
-        cfrds_buffer_parse_string_list_item(&column_buf, &list_remaining, &keySequence);
-        cfrds_buffer_parse_string_list_item(&column_buf, &list_remaining, &updateRule);
-        cfrds_buffer_parse_string_list_item(&column_buf, &list_remaining, &deleteRule);
+        if (!cfrds_buffer_parse_string_list_item(&column_buf, &list_remaining, &pkTableCatalog))
+            return NULL;
+        if (!cfrds_buffer_parse_string_list_item(&column_buf, &list_remaining, &pkTableOwner))
+            return NULL;
+        if (!cfrds_buffer_parse_string_list_item(&column_buf, &list_remaining, &pkTableName))
+            return NULL;
+        if (!cfrds_buffer_parse_string_list_item(&column_buf, &list_remaining, &pkColName))
+            return NULL;
+        if (!cfrds_buffer_parse_string_list_item(&column_buf, &list_remaining, &fkTableCatalog))
+            return NULL;
+        if (!cfrds_buffer_parse_string_list_item(&column_buf, &list_remaining, &fkTableOwner))
+            return NULL;
+        if (!cfrds_buffer_parse_string_list_item(&column_buf, &list_remaining, &fkTableName))
+            return NULL;
+        if (!cfrds_buffer_parse_string_list_item(&column_buf, &list_remaining, &fkColName))
+            return NULL;
+        if (!cfrds_buffer_parse_string_list_item(&column_buf, &list_remaining, &keySequence))
+            return NULL;
+        if (!cfrds_buffer_parse_string_list_item(&column_buf, &list_remaining, &updateRule))
+            return NULL;
+        if (!cfrds_buffer_parse_string_list_item(&column_buf, &list_remaining, &deleteRule))
+            return NULL;
+        if (list_remaining != 0)
+            return NULL;
 
         tmp->items[c].pkTableCatalog = pkTableCatalog; pkTableCatalog = NULL;
         tmp->items[c].pkTableOwner   = pkTableOwner; pkTableOwner = NULL;
@@ -1196,17 +1216,30 @@ cfrds_sql_importedkeys *cfrds_buffer_to_sql_importedkeys(cfrds_buffer *buffer)
         cfrds_str_defer(updateRule);
         cfrds_str_defer(deleteRule);
 
-        cfrds_buffer_parse_string_list_item(&column_buf, &list_remaining, &pkTableCatalog);
-        cfrds_buffer_parse_string_list_item(&column_buf, &list_remaining, &pkTableOwner);
-        cfrds_buffer_parse_string_list_item(&column_buf, &list_remaining, &pkTableName);
-        cfrds_buffer_parse_string_list_item(&column_buf, &list_remaining, &pkColName);
-        cfrds_buffer_parse_string_list_item(&column_buf, &list_remaining, &fkTableCatalog);
-        cfrds_buffer_parse_string_list_item(&column_buf, &list_remaining, &fkTableOwner);
-        cfrds_buffer_parse_string_list_item(&column_buf, &list_remaining, &fkTableName);
-        cfrds_buffer_parse_string_list_item(&column_buf, &list_remaining, &fkColName);
-        cfrds_buffer_parse_string_list_item(&column_buf, &list_remaining, &keySequence);
-        cfrds_buffer_parse_string_list_item(&column_buf, &list_remaining, &updateRule);
-        cfrds_buffer_parse_string_list_item(&column_buf, &list_remaining, &deleteRule);
+        if (!cfrds_buffer_parse_string_list_item(&column_buf, &list_remaining, &pkTableCatalog))
+            return NULL;
+        if (!cfrds_buffer_parse_string_list_item(&column_buf, &list_remaining, &pkTableOwner))
+            return NULL;
+        if (!cfrds_buffer_parse_string_list_item(&column_buf, &list_remaining, &pkTableName))
+            return NULL;
+        if (!cfrds_buffer_parse_string_list_item(&column_buf, &list_remaining, &pkColName))
+            return NULL;
+        if (!cfrds_buffer_parse_string_list_item(&column_buf, &list_remaining, &fkTableCatalog))
+            return NULL;
+        if (!cfrds_buffer_parse_string_list_item(&column_buf, &list_remaining, &fkTableOwner))
+            return NULL;
+        if (!cfrds_buffer_parse_string_list_item(&column_buf, &list_remaining, &fkTableName))
+            return NULL;
+        if (!cfrds_buffer_parse_string_list_item(&column_buf, &list_remaining, &fkColName))
+            return NULL;
+        if (!cfrds_buffer_parse_string_list_item(&column_buf, &list_remaining, &keySequence))
+            return NULL;
+        if (!cfrds_buffer_parse_string_list_item(&column_buf, &list_remaining, &updateRule))
+            return NULL;
+        if (!cfrds_buffer_parse_string_list_item(&column_buf, &list_remaining, &deleteRule))
+            return NULL;
+        if (list_remaining != 0)
+            return NULL;
 
         tmp->items[c].pkTableCatalog = pkTableCatalog; pkTableCatalog = NULL;
         tmp->items[c].pkTableOwner   = pkTableOwner; pkTableOwner = NULL;
@@ -1279,17 +1312,30 @@ cfrds_sql_exportedkeys *cfrds_buffer_to_sql_exportedkeys(cfrds_buffer *buffer)
         cfrds_str_defer(updateRule);
         cfrds_str_defer(deleteRule);
 
-        cfrds_buffer_parse_string_list_item(&column_buf, &list_remaining, &pkTableCatalog);
-        cfrds_buffer_parse_string_list_item(&column_buf, &list_remaining, &pkTableOwner);
-        cfrds_buffer_parse_string_list_item(&column_buf, &list_remaining, &pkTableName);
-        cfrds_buffer_parse_string_list_item(&column_buf, &list_remaining, &pkColName);
-        cfrds_buffer_parse_string_list_item(&column_buf, &list_remaining, &fkTableCatalog);
-        cfrds_buffer_parse_string_list_item(&column_buf, &list_remaining, &fkTableOwner);
-        cfrds_buffer_parse_string_list_item(&column_buf, &list_remaining, &fkTableName);
-        cfrds_buffer_parse_string_list_item(&column_buf, &list_remaining, &fkColName);
-        cfrds_buffer_parse_string_list_item(&column_buf, &list_remaining, &keySequence);
-        cfrds_buffer_parse_string_list_item(&column_buf, &list_remaining, &updateRule);
-        cfrds_buffer_parse_string_list_item(&column_buf, &list_remaining, &deleteRule);
+        if (!cfrds_buffer_parse_string_list_item(&column_buf, &list_remaining, &pkTableCatalog))
+            return NULL;
+        if (!cfrds_buffer_parse_string_list_item(&column_buf, &list_remaining, &pkTableOwner))
+            return NULL;
+        if (!cfrds_buffer_parse_string_list_item(&column_buf, &list_remaining, &pkTableName))
+            return NULL;
+        if (!cfrds_buffer_parse_string_list_item(&column_buf, &list_remaining, &pkColName))
+            return NULL;
+        if (!cfrds_buffer_parse_string_list_item(&column_buf, &list_remaining, &fkTableCatalog))
+            return NULL;
+        if (!cfrds_buffer_parse_string_list_item(&column_buf, &list_remaining, &fkTableOwner))
+            return NULL;
+        if (!cfrds_buffer_parse_string_list_item(&column_buf, &list_remaining, &fkTableName))
+            return NULL;
+        if (!cfrds_buffer_parse_string_list_item(&column_buf, &list_remaining, &fkColName))
+            return NULL;
+        if (!cfrds_buffer_parse_string_list_item(&column_buf, &list_remaining, &keySequence))
+            return NULL;
+        if (!cfrds_buffer_parse_string_list_item(&column_buf, &list_remaining, &updateRule))
+            return NULL;
+        if (!cfrds_buffer_parse_string_list_item(&column_buf, &list_remaining, &deleteRule))
+            return NULL;
+        if (list_remaining != 0)
+            return NULL;
 
         tmp->items[c].pkTableCatalog = pkTableCatalog; pkTableCatalog = NULL;
         tmp->items[c].pkTableOwner   = pkTableOwner; pkTableOwner = NULL;

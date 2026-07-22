@@ -261,7 +261,6 @@ cfrds_status cfrds_http_post(cfrds_server *server, const char *command, cfrds_bu
         return CFRDS_STATUS_HTTP_RESPONSE_NOT_FOUND;
 
     if (!cfrds_buffer_create(&swap_buf)) {
-        cfrds_buffer_free(tmp_response);
         return CFRDS_STATUS_MEMORY_ERROR;
     }
 

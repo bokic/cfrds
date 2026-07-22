@@ -183,6 +183,37 @@ with patch("http.client.HTTPConnection", return_value=mock_conn):
     
     print("Offline browse_dir validation tests passed!")
 
+    # Test 3: WDDX XML escaping in debugger_breakpoint
+    mock_conn.request.reset_mock()
+    mock_resp.read.return_value = b"0:"
+    srv_mock.debugger_breakpoint("mysession", "foo<bar>&baz", 42, True)
+    call_body = mock_conn.request.call_args[1].get("body", b"")
+    if isinstance(call_body, bytes):
+        call_body = call_body.decode("utf-8")
+    assert "<string>foo&lt;bar&gt;&amp;baz</string>" in call_body, "debugger_breakpoint filepath should be XML-escaped"
+
+    # Test 4: WDDX XML escaping in debugger_watch_expression
+    mock_conn.request.reset_mock()
+    mock_resp.read.return_value = b"0:"
+    srv_mock.debugger_watch_expression("mysession", "thread<1>", "expr&val")
+    call_body = mock_conn.request.call_args[1].get("body", b"")
+    if isinstance(call_body, bytes):
+        call_body = call_body.decode("utf-8")
+    assert "<string>expr&amp;val</string>" in call_body, "debugger_watch_expression expression should be XML-escaped"
+    assert "<string>thread&lt;1&gt;</string>" in call_body, "debugger_watch_expression thread_name should be XML-escaped"
+
+    # Test 5: WDDX XML escaping in adminapi_extensions_setmapping
+    mock_conn.request.reset_mock()
+    mock_resp.read.return_value = b"0:"
+    srv_mock.adminapi_extensions_setmapping("map'name", "path\"val")
+    call_body = mock_conn.request.call_args[1].get("body", b"")
+    if isinstance(call_body, bytes):
+        call_body = call_body.decode("utf-8")
+    assert "<var name='map&apos;name'>" in call_body, "adminapi_extensions_setmapping name should be XML-escaped"
+    assert "<string>path&quot;val</string>" in call_body, "adminapi_extensions_setmapping path should be XML-escaped"
+
+    print("Offline WDDX escaping validation tests passed!")
+
 # Live server integration test if env vars present
 if "RDS_HOST" in os.environ and "RDS_PORT" in os.environ:
     host = os.environ["RDS_HOST"]

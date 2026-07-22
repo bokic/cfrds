@@ -9,6 +9,8 @@ import { encodePassword, parseStringListItem } from "./parser";
 import * as http from "http";
 import { EventEmitter } from "events";
 
+declare const require: any;
+
 function assert(condition: boolean, message: string): void {
   if (!condition) {
     throw new Error(`ASSERT FAILED: ${message}`);
@@ -178,6 +180,7 @@ async function main(): Promise<void> {
     const httpModule = require("http");
     const originalRequest = httpModule.request;
     let mockResponseBody: Buffer = Buffer.from("0:", "utf-8");
+    let lastRequestBody = "";
 
     httpModule.request = (options: any, callback: any) => {
       const mockRes = new EventEmitter() as any;
@@ -185,7 +188,11 @@ async function main(): Promise<void> {
       mockRes.statusMessage = "OK";
       
       const mockReq = new EventEmitter() as any;
-      mockReq.write = () => {};
+      mockReq.write = (chunk: any) => {
+        if (chunk) {
+          lastRequestBody += chunk.toString();
+        }
+      };
       mockReq.end = () => {
         process.nextTick(() => {
           callback(mockRes);
@@ -219,6 +226,28 @@ async function main(): Promise<void> {
       assert(threw, "browseDir should throw CFRDSError(RESPONSE_ERROR) when total is 3");
 
       log("Offline browseDir validation tests passed!");
+
+      // Test 3: WDDX XML escaping in debuggerBreakpoint
+      lastRequestBody = "";
+      mockResponseBody = Buffer.from("0:", "utf-8");
+      await srvMock.debuggerBreakpoint("mysession", "foo<bar>&baz", 42, true);
+      assert(lastRequestBody.includes("<string>foo&lt;bar&gt;&amp;baz</string>"), "debuggerBreakpoint filepath should be XML-escaped");
+
+      // Test 4: WDDX XML escaping in debuggerWatchExpression
+      lastRequestBody = "";
+      mockResponseBody = Buffer.from("0:", "utf-8");
+      await srvMock.debuggerWatchExpression("mysession", "thread<1>", "expr&val");
+      assert(lastRequestBody.includes("<string>expr&amp;val</string>"), "debuggerWatchExpression expression should be XML-escaped");
+      assert(lastRequestBody.includes("<string>thread&lt;1&gt;</string>"), "debuggerWatchExpression threadName should be XML-escaped");
+
+      // Test 5: WDDX XML escaping in adminapiExtensionsSetmapping
+      lastRequestBody = "";
+      mockResponseBody = Buffer.from("0:", "utf-8");
+      await srvMock.adminapiExtensionsSetmapping("map'name", "path\"val");
+      assert(lastRequestBody.includes("<var name='map&apos;name'>"), "adminapiExtensionsSetmapping name should be XML-escaped");
+      assert(lastRequestBody.includes("<string>path&quot;val</string>"), "adminapiExtensionsSetmapping path should be XML-escaped");
+
+      log("Offline WDDX escaping validation tests passed!");
     } finally {
       httpModule.request = originalRequest;
     }

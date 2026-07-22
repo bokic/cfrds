@@ -21,6 +21,15 @@ import {
 import { encodePassword, parseNumber, parseString, parseBytearray, parseStringListItem } from "./parser";
 import { sendRdsCommand } from "./transport";
 
+function escapeXml(str: string): string {
+  return str
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&apos;");
+}
+
 export class Server {
   private ctx: ServerContext;
 
@@ -416,7 +425,7 @@ export class Server {
 
   async debuggerBreakpoint(sessionName: string, filepath: string, line: number, enable: boolean): Promise<void> {
     const cmd = enable ? "SET_BREAKPOINT" : "UNSET_BREAKPOINT";
-    const wddx = `<wddxPacket version='1.0'><header/><data><array length='1'><struct type='java.util.HashMap'><var name='COMMAND'><string>${cmd}</string></var><var name='FILE'><string>${filepath}</string></var><var name='Y'><number>${line}</number></var><var name='SEQ'><number>1.0</number></var></struct></array></data></wddxPacket>`;
+    const wddx = `<wddxPacket version='1.0'><header/><data><array length='1'><struct type='java.util.HashMap'><var name='COMMAND'><string>${cmd}</string></var><var name='FILE'><string>${escapeXml(filepath)}</string></var><var name='Y'><number>${line}</number></var><var name='SEQ'><number>1.0</number></var></struct></array></data></wddxPacket>`;
     await sendRdsCommand(this.ctx, "DBGREQUEST", ["DBG_REQUEST", sessionName, wddx]);
   }
 
@@ -528,44 +537,44 @@ export class Server {
   }
 
   async debuggerStepIn(sessionName: string, threadName: string): Promise<void> {
-    const wddx = `<wddxPacket version='1.0'><header/><data><array length='1'><struct type='java.util.HashMap'><var name='COMMAND'><string>STEP_IN</string></var><var name='THREAD'><string>${threadName}</string></var></struct></array></data></wddxPacket>`;
+    const wddx = `<wddxPacket version='1.0'><header/><data><array length='1'><struct type='java.util.HashMap'><var name='COMMAND'><string>STEP_IN</string></var><var name='THREAD'><string>${escapeXml(threadName)}</string></var></struct></array></data></wddxPacket>`;
     await sendRdsCommand(this.ctx, "DBGREQUEST", ["DBG_REQUEST", sessionName, wddx]);
   }
 
   async debuggerStepOver(sessionName: string, threadName: string): Promise<void> {
-    const wddx = `<wddxPacket version='1.0'><header/><data><array length='1'><struct type='java.util.HashMap'><var name='COMMAND'><string>STEP_OVER</string></var><var name='THREAD'><string>${threadName}</string></var></struct></array></data></wddxPacket>`;
+    const wddx = `<wddxPacket version='1.0'><header/><data><array length='1'><struct type='java.util.HashMap'><var name='COMMAND'><string>STEP_OVER</string></var><var name='THREAD'><string>${escapeXml(threadName)}</string></var></struct></array></data></wddxPacket>`;
     await sendRdsCommand(this.ctx, "DBGREQUEST", ["DBG_REQUEST", sessionName, wddx]);
   }
 
   async debuggerStepOut(sessionName: string, threadName: string): Promise<void> {
-    const wddx = `<wddxPacket version='1.0'><header/><data><array length='1'><struct type='java.util.HashMap'><var name='COMMAND'><string>STEP_OUT</string></var><var name='THREAD'><string>${threadName}</string></var></struct></array></data></wddxPacket>`;
+    const wddx = `<wddxPacket version='1.0'><header/><data><array length='1'><struct type='java.util.HashMap'><var name='COMMAND'><string>STEP_OUT</string></var><var name='THREAD'><string>${escapeXml(threadName)}</string></var></struct></array></data></wddxPacket>`;
     await sendRdsCommand(this.ctx, "DBGREQUEST", ["DBG_REQUEST", sessionName, wddx]);
   }
 
   async debuggerContinue(sessionName: string, threadName: string): Promise<void> {
-    const wddx = `<wddxPacket version='1.0'><header/><data><array length='1'><struct type='java.util.HashMap'><var name='COMMAND'><string>CONTINUE</string></var><var name='THREAD'><string>${threadName}</string></var></struct></array></data></wddxPacket>`;
+    const wddx = `<wddxPacket version='1.0'><header/><data><array length='1'><struct type='java.util.HashMap'><var name='COMMAND'><string>CONTINUE</string></var><var name='THREAD'><string>${escapeXml(threadName)}</string></var></struct></array></data></wddxPacket>`;
     await sendRdsCommand(this.ctx, "DBGREQUEST", ["DBG_REQUEST", sessionName, wddx]);
   }
 
   async debuggerWatchExpression(sessionName: string, threadName: string, expression: string): Promise<void> {
-    const wddx = `<wddxPacket version='1.0'><header/><data><array length='1'><struct type='java.util.HashMap'><var name='COMMAND'><string>GET_SINGLE_CF_VARIABLE</string></var><var name='VARIABLE_NAME'><string>${expression}</string></var><var name='THREAD'><string>${threadName}</string></var></struct></array></data></wddxPacket>`;
+    const wddx = `<wddxPacket version='1.0'><header/><data><array length='1'><struct type='java.util.HashMap'><var name='COMMAND'><string>GET_SINGLE_CF_VARIABLE</string></var><var name='VARIABLE_NAME'><string>${escapeXml(expression)}</string></var><var name='THREAD'><string>${escapeXml(threadName)}</string></var></struct></array></data></wddxPacket>`;
     await sendRdsCommand(this.ctx, "DBGREQUEST", ["DBG_REQUEST", sessionName, wddx]);
   }
 
   async debuggerSetVariable(sessionName: string, threadName: string, variable: string, value: string): Promise<void> {
-    const wddx = `<wddxPacket version='1.0'><header/><data><array length='1'><struct type='java.util.HashMap'><var name='COMMAND'><string>SET_VARIABLE_VALUE</string></var><var name='VARIABLE_NAME'><string>${variable}</string></var><var name='VARIABLE_VALUE'><string>${value}</string></var><var name='THREAD'><string>${threadName}</string></var></struct></array></data></wddxPacket>`;
+    const wddx = `<wddxPacket version='1.0'><header/><data><array length='1'><struct type='java.util.HashMap'><var name='COMMAND'><string>SET_VARIABLE_VALUE</string></var><var name='VARIABLE_NAME'><string>${escapeXml(variable)}</string></var><var name='VARIABLE_VALUE'><string>${escapeXml(value)}</string></var><var name='THREAD'><string>${escapeXml(threadName)}</string></var></struct></array></data></wddxPacket>`;
     await sendRdsCommand(this.ctx, "DBGREQUEST", ["DBG_REQUEST", sessionName, wddx]);
   }
 
   async debuggerWatchVariables(sessionName: string, variables: string): Promise<void> {
     const vars = variables.split(",").map((v) => v.trim()).filter((v) => v.length > 0);
-    const varTags = vars.map((v) => `<string>${v}</string>`).join("");
+    const varTags = vars.map((v) => `<string>${escapeXml(v)}</string>`).join("");
     const wddx = `<wddxPacket version='1.0'><header/><data><array length='1'><struct type='java.util.HashMap'><var name='COMMAND'><string>SET_WATCH_VARIABLES</string></var><var name='WATCH'><array length='${vars.length}'>${varTags}</array></var></struct></array></data></wddxPacket>`;
     await sendRdsCommand(this.ctx, "DBGREQUEST", ["DBG_REQUEST", sessionName, wddx]);
   }
 
   async debuggerGetOutput(sessionName: string, threadName: string): Promise<string> {
-    const wddx = `<wddxPacket version='1.0'><header/><data><array length='1'><struct type='java.util.HashMap'><var name='COMMAND'><string>GET_OUTPUT</string></var><var name='BODY_ONLY'><boolean value='true'/></var><var name='THREAD'><string>${threadName}</string></var></struct></array></data></wddxPacket>`;
+    const wddx = `<wddxPacket version='1.0'><header/><data><array length='1'><struct type='java.util.HashMap'><var name='COMMAND'><string>GET_OUTPUT</string></var><var name='BODY_ONLY'><boolean value='true'/></var><var name='THREAD'><string>${escapeXml(threadName)}</string></var></struct></array></data></wddxPacket>`;
     const raw = await sendRdsCommand(this.ctx, "DBGREQUEST", ["DBG_REQUEST", sessionName, wddx]);
     if (!raw || raw.length === 0) {
       return "";
@@ -589,7 +598,7 @@ export class Server {
   }
 
   async debuggerSetScopeFilter(sessionName: string, filterStr: string): Promise<void> {
-    const wddx = `<wddxPacket version='1.0'><header/><data><array length='1'><struct type='java.util.HashMap'><var name='COMMAND'><string>SET_SCOPE_FILTER</string></var><var name='FILTER'><string>${filterStr}</string></var></struct></array></data></wddxPacket>`;
+    const wddx = `<wddxPacket version='1.0'><header/><data><array length='1'><struct type='java.util.HashMap'><var name='COMMAND'><string>SET_SCOPE_FILTER</string></var><var name='FILTER'><string>${escapeXml(filterStr)}</string></var></struct></array></data></wddxPacket>`;
     await sendRdsCommand(this.ctx, "DBGREQUEST", ["DBG_REQUEST", sessionName, wddx]);
   }
 
@@ -685,7 +694,7 @@ export class Server {
   }
 
   async adminapiExtensionsSetmapping(name: string, path: string): Promise<void> {
-    const wddx = `<wddxPacket version='1.0'><header/><data><struct><var name='${name}'><string>${path}</string></var></struct></data></wddxPacket>`;
+    const wddx = `<wddxPacket version='1.0'><header/><data><struct><var name='${escapeXml(name)}'><string>${escapeXml(path)}</string></var></struct></data></wddxPacket>`;
     await sendRdsCommand(this.ctx, "ADMINAPI", ["cfide.adminapi.extensions", "setmappings", wddx]);
   }
 

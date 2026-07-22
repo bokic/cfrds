@@ -17,7 +17,7 @@ import {
   IdeDefaultResult,
   SecurityAnalyzerStatus,
 } from "./types";
-import { encodePassword, parseNumber, parseString, parseBytearray, parseStringListItem, wddxDeserialize, parseXml, parseWddxNode, XmlNode } from "./parser";
+import { encodePassword, parseNumber, parseString, parseBytearray, parseStringListItem, wddxDeserialize, parseXml, parseWddxNode, XmlNode, safeInt } from "./parser";
 import { sendRdsCommand } from "./transport";
 import * as http from "http";
 
@@ -249,7 +249,6 @@ export class Server {
       const [item, o] = parseString(raw, off);
       off = o;
       const fields = parseStringListItem(item);
-      const safeInt = (s: string): number => (s && /^\d+$/.test(s)) ? parseInt(s, 10) : 0;
       cols.push({
         schema: fields[0] || "",
         owner: fields[1] || "",
@@ -282,7 +281,6 @@ export class Server {
       const [item, o] = parseString(raw, off);
       off = o;
       const fields = parseStringListItem(item);
-      const safeInt = (s: string): number => (s && /^\d+$/.test(s)) ? parseInt(s, 10) : 0;
       keys.push({
         catalog: fields[0] || "",
         owner: fields[1] || "",
@@ -309,7 +307,6 @@ export class Server {
       const [item, o] = parseString(raw, off);
       off = o;
       const fields = parseStringListItem(item);
-      const safeInt = (s: string): number => (s && /^\d+$/.test(s)) ? parseInt(s, 10) : 0;
       keys.push({
         pkcatalog: fields[0] || "",
         pkowner: fields[1] || "",
@@ -342,7 +339,6 @@ export class Server {
       const [item, o] = parseString(raw, off);
       off = o;
       const fields = parseStringListItem(item);
-      const safeInt = (s: string): number => (s && /^\d+$/.test(s)) ? parseInt(s, 10) : 0;
       keys.push({
         pkcatalog: fields[0] || "",
         pkowner: fields[1] || "",
@@ -375,7 +371,6 @@ export class Server {
       const [item, o] = parseString(raw, off);
       off = o;
       const fields = parseStringListItem(item);
-      const safeInt = (s: string): number => (s && /^\d+$/.test(s)) ? parseInt(s, 10) : 0;
       keys.push({
         pkcatalog: fields[0] || "",
         pkowner: fields[1] || "",
@@ -801,7 +796,6 @@ export class Server {
     const [visStr, o2] = parseString(raw, o1);
     const [pctStr, o3] = parseString(raw, o2);
     const [updStr] = parseString(raw, o3);
-    const safeInt = (s: string): number => (/^-?\d+$/.test(s)) ? parseInt(s, 10) : 0;
     return {
       totalfiles: safeInt(totStr),
       filesvisitedcount: safeInt(visStr),
@@ -843,7 +837,6 @@ export class Server {
     const [cVer, o3] = parseString(raw, o2);
     const [n2, o4] = parseString(raw, o3);
     const [n3] = parseString(raw, o4);
-    const safeInt = (s: string): number => (/^-?\d+$/.test(s)) ? parseInt(s, 10) : 0;
     return {
       num1: safeInt(n1),
       server_version: sVer,

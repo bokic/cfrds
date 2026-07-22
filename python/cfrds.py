@@ -255,6 +255,16 @@ def _parse_string_list_item(s: str) -> List[str]:
     return items
 
 
+def _safe_int(s: Optional[str]) -> int:
+    if not s:
+        return 0
+    try:
+        return int(s)
+    except ValueError:
+        return 0
+
+
+
 # Network Transport Function
 def _send_rds_command(server_ctx: cfrds_server, command: str, args: List[Union[str, bytes]]) -> bytes:
     server_ctx.clear_error()
@@ -1031,13 +1041,13 @@ class server:
                 "owner": fields[1] if len(fields) > 1 else "",
                 "table": fields[2] if len(fields) > 2 else "",
                 "name": fields[3] if len(fields) > 3 else "",
-                "type": int(fields[4]) if len(fields) > 4 and fields[4].isdigit() else 0,
+                "type": _safe_int(fields[4]) if len(fields) > 4 else 0,
                 "typeStr": fields[5] if len(fields) > 5 else "",
-                "precision": int(fields[6]) if len(fields) > 6 and fields[6].isdigit() else 0,
-                "length": int(fields[7]) if len(fields) > 7 and fields[7].isdigit() else 0,
-                "scale": int(fields[8]) if len(fields) > 8 and fields[8].isdigit() else 0,
-                "radix": int(fields[9]) if len(fields) > 9 and fields[9].isdigit() else 0,
-                "nullable": int(fields[10]) if len(fields) > 10 and fields[10].isdigit() else 0,
+                "precision": _safe_int(fields[6]) if len(fields) > 6 else 0,
+                "length": _safe_int(fields[7]) if len(fields) > 7 else 0,
+                "scale": _safe_int(fields[8]) if len(fields) > 8 else 0,
+                "radix": _safe_int(fields[9]) if len(fields) > 9 else 0,
+                "nullable": _safe_int(fields[10]) if len(fields) > 10 else 0,
             })
         return cols
 
@@ -1057,7 +1067,7 @@ class server:
                 "owner": fields[1] if len(fields) > 1 else "",
                 "table": fields[2] if len(fields) > 2 else "",
                 "column": fields[3] if len(fields) > 3 else "",
-                "key_sequence": int(fields[4]) if len(fields) > 4 and fields[4].isdigit() else 0,
+                "key_sequence": _safe_int(fields[4]) if len(fields) > 4 else 0,
             })
         return keys
 
@@ -1081,9 +1091,9 @@ class server:
                 "fkowner": fields[5] if len(fields) > 5 else "",
                 "fktable": fields[6] if len(fields) > 6 else "",
                 "fkcolumn": fields[7] if len(fields) > 7 else "",
-                "key_sequence": int(fields[8]) if len(fields) > 8 and fields[8].isdigit() else 0,
-                "updaterule": int(fields[9]) if len(fields) > 9 and fields[9].isdigit() else 0,
-                "deleterule": int(fields[10]) if len(fields) > 10 and fields[10].isdigit() else 0,
+                "key_sequence": _safe_int(fields[8]) if len(fields) > 8 else 0,
+                "updaterule": _safe_int(fields[9]) if len(fields) > 9 else 0,
+                "deleterule": _safe_int(fields[10]) if len(fields) > 10 else 0,
             })
         return keys
 
@@ -1107,9 +1117,9 @@ class server:
                 "fkowner": fields[5] if len(fields) > 5 else "",
                 "fktable": fields[6] if len(fields) > 6 else "",
                 "fkcolumn": fields[7] if len(fields) > 7 else "",
-                "key_sequence": int(fields[8]) if len(fields) > 8 and fields[8].isdigit() else 0,
-                "updaterule": int(fields[9]) if len(fields) > 9 and fields[9].isdigit() else 0,
-                "deleterule": int(fields[10]) if len(fields) > 10 and fields[10].isdigit() else 0,
+                "key_sequence": _safe_int(fields[8]) if len(fields) > 8 else 0,
+                "updaterule": _safe_int(fields[9]) if len(fields) > 9 else 0,
+                "deleterule": _safe_int(fields[10]) if len(fields) > 10 else 0,
             })
         return keys
 
@@ -1133,9 +1143,9 @@ class server:
                 "fkowner": fields[5] if len(fields) > 5 else "",
                 "fktable": fields[6] if len(fields) > 6 else "",
                 "fkcolumn": fields[7] if len(fields) > 7 else "",
-                "key_sequence": int(fields[8]) if len(fields) > 8 and fields[8].isdigit() else 0,
-                "updaterule": int(fields[9]) if len(fields) > 9 and fields[9].isdigit() else 0,
-                "deleterule": int(fields[10]) if len(fields) > 10 and fields[10].isdigit() else 0,
+                "key_sequence": _safe_int(fields[8]) if len(fields) > 8 else 0,
+                "updaterule": _safe_int(fields[9]) if len(fields) > 9 else 0,
+                "deleterule": _safe_int(fields[10]) if len(fields) > 10 else 0,
             })
         return keys
 
@@ -1505,15 +1515,12 @@ class server:
         c_ver, offset = _parse_string(raw, offset)
         n2, offset = _parse_string(raw, offset)
         n3, offset = _parse_string(raw, offset)
-        def safe_int(s: str) -> int:
-            try: return int(s)
-            except ValueError: return 0
         return {
-            "num1": safe_int(n1),
+            "num1": _safe_int(n1),
             "server_version": s_ver,
             "client_version": c_ver,
-            "num2": safe_int(n2),
-            "num3": safe_int(n3),
+            "num2": _safe_int(n2),
+            "num3": _safe_int(n3),
         }
 
     # Admin API Operations

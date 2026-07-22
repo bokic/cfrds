@@ -238,3 +238,7 @@ export function wddxDeserialize(xml: string): any {
   }
 }
 
+export function safeInt(s: string | null | undefined): number {
+  if (!s) return 0;
+  return /^-?\d+$/.test(s) ? parseInt(s, 10) : 0;
+}

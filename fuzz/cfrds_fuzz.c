@@ -12,8 +12,7 @@
 // Silence unused warnings in clean build
 #pragma GCC diagnostic ignored "-Wunused-function"
 
-// Forward-declare cleanup helpers if not exposed in headers
-void wddx_cleanup(WDDX **p);
+// wddx_cleanup is already declared in wddx.h
 
 // Helper: ensure input is null-terminated (required by many parsers)
 static char *null_terminate(const uint8_t *Data, size_t Size) {

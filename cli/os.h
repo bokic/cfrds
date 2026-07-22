@@ -6,14 +6,14 @@
 #define WIN32_LEAN_AND_MEAN
 #include <Windows.h>
 typedef HANDLE file_hnd_fd;
-#define FILE_HND_FD_NULL NULL
-#define ERROR_FILE_HND_FD NULL
+#define FILE_HND_FD_NULL INVALID_HANDLE_VALUE
+#define ERROR_FILE_HND_FD INVALID_HANDLE_VALUE
 typedef SIZE_T size_t;
 typedef SSIZE_T ssize_t;
 #else
 #include <unistd.h>
 typedef int file_hnd_fd;
-#define FILE_HND_FD_NULL 0
+#define FILE_HND_FD_NULL -1
 #define ERROR_FILE_HND_FD -1
 #endif
 

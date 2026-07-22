@@ -1,4 +1,3 @@
-// cppcheck-suppress-file unusedFunction
 #include "os.h"
 
 
@@ -68,8 +67,8 @@ ssize_t os_write_to_terminal(const void *buffer, size_t len)
 
 void os_file_cleanup(void *fd) {
     int *fd_int = (int *) fd;
-    if (fd_int) {
-        close(*fd_int);
-        *fd_int = 0;
+    if (fd_int && *fd_int != FILE_HND_FD_NULL) {
+        os_file_close(*fd_int);
+        *fd_int = FILE_HND_FD_NULL;
     }
 }

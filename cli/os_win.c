@@ -28,16 +28,35 @@ ssize_t os_write(file_hnd_fd hnd_fd, const void *buffer, size_t len)
 
 void* os_map(const char *pathname, size_t* size)
 {
-	void* ret = NULL;
+    void* ret = NULL;
+    LARGE_INTEGER file_size;
 
-	HANDLE hnd = CreateFileA(pathname, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, 0, NULL);
-    HANDLE map_hnd = CreateFileMapping(hnd, NULL, PAGE_READONLY, 0, 1, NULL);
-    ret = MapViewOfFile(map_hnd, FILE_MAP_READ, 0, 0, 1);
+    HANDLE hnd = CreateFileA(pathname, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, 0, NULL);
+    if (hnd == INVALID_HANDLE_VALUE)
+        return NULL;
 
+    if (!GetFileSizeEx(hnd, &file_size)) {
+        CloseHandle(hnd);
+        return NULL;
+    }
+
+    *size = (size_t)file_size.QuadPart;
+    if (*size == 0) {
+        CloseHandle(hnd);
+        return NULL;
+    }
+
+    HANDLE map_hnd = CreateFileMapping(hnd, NULL, PAGE_READONLY, 0, 0, NULL);
+    if (map_hnd == NULL) {
+        CloseHandle(hnd);
+        return NULL;
+    }
+
+    ret = MapViewOfFile(map_hnd, FILE_MAP_READ, 0, 0, *size);
     CloseHandle(map_hnd);
-	CloseHandle(hnd);
+    CloseHandle(hnd);
 
-	return ret;
+    return ret;
 }
 
 void os_unmap(void* addr, size_t size)
@@ -60,8 +79,8 @@ ssize_t os_write_to_terminal(const void *buffer, size_t len)
 
 void os_file_cleanup(void *fd) {
     HANDLE *hnd = (HANDLE *) fd;
-    if (hnd) {
-        CloseHandle(*hnd);
-        *hnd = 0;
+    if (hnd && *hnd != FILE_HND_FD_NULL) {
+        os_file_close(*hnd);
+        *hnd = FILE_HND_FD_NULL;
     }
 }

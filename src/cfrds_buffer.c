@@ -1362,7 +1362,7 @@ cfrds_sql_resultset *cfrds_buffer_to_sql_sqlstmnt(cfrds_buffer *buffer)
 
     size_t ucnt = (size_t)cnt;
 
-    buf_size = offsetof(cfrds_sql_resultset, values) + sizeof(char *) * ucnt;
+    buf_size = offsetof(cfrds_sql_resultset, values) + sizeof(char *) * ucnt * (size_t)cols;
     tmp = malloc(buf_size);
     if (tmp == NULL)
         return NULL;

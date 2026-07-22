@@ -132,6 +132,18 @@ static const char FIXTURE_EMPTY_STRING[] =
     "<data><string/></data>"
     "</wddxPacket>";
 
+/* Struct with missing var name attribute — used to test robustness of cleanup */
+static const char FIXTURE_STRUCT_MISSING_VAR_NAME[] =
+    "<wddxPacket version=\"1.0\">"
+    "<header/>"
+    "<data>"
+      "<struct type=\"java.util.HashMap\">"
+        "<var name=\"host\"><string>localhost</string></var>"
+        "<var><number>8500</number></var>"
+      "</struct>"
+    "</data>"
+    "</wddxPacket>";
+
 /* ── Parse tests ───────────────────────────────────────────────────────── */
 
 static int test_parse_null_input(void)
@@ -157,6 +169,16 @@ static int test_parse_wrong_root(void)
 {
     WDDX *w = wddx_from_xml(FIXTURE_WRONG_ROOT);
     CHECK(w == NULL);
+    return PASS;
+}
+
+static int test_parse_struct_missing_var_name(void)
+{
+    WDDX_defer(w);
+    w = wddx_from_xml(FIXTURE_STRUCT_MISSING_VAR_NAME);
+    CHECK(w != NULL);
+    const WDDX_NODE *data = wddx_data(w);
+    CHECK(data == NULL);
     return PASS;
 }
 
@@ -493,6 +515,7 @@ int main(void)
     RUN(test_parse_null_input);
     RUN(test_parse_malformed);
     RUN(test_parse_wrong_root);
+    RUN(test_parse_struct_missing_var_name);
 
     /* parse — value types */
     RUN(test_parse_string_value);

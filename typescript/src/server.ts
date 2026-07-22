@@ -397,24 +397,15 @@ export class Server {
     await sendRdsCommand(this.ctx, "DBGREQUEST", ["DBG_STOP", sessionName]);
   }
 
-  async debuggerGetServerInfo(sessionName?: string): Promise<number> {
-    let autoSession = false;
-    let name = sessionName;
-    if (!name) {
-      name = await this.debuggerStart();
-      autoSession = true;
+  async debuggerGetServerInfo(sessionName: string): Promise<number> {
+    if (!sessionName) {
+      throw new CFRDSError(CFRDS_STATUS.PARAM_IS_NULL, "sessionName is required");
     }
-    try {
-      const raw = await sendRdsCommand(this.ctx, "DBGREQUEST", ["DBG_GET_DEBUG_SERVER_INFO", name]);
-      const [, offset] = parseNumber(raw, 0);
-      const [wddxXml] = parseString(raw, offset);
-      const m = wddxXml.match(/<var name=['"]DEBUG_SERVER_PORT['"]>\s*<number>(\d+(?:\.\d+)?)<\/number>/i);
-      return m ? Math.floor(parseFloat(m[1])) : 0;
-    } finally {
-      if (autoSession) {
-        await this.debuggerStop(name);
-      }
-    }
+    const raw = await sendRdsCommand(this.ctx, "DBGREQUEST", ["DBG_GET_DEBUG_SERVER_INFO", sessionName]);
+    const [, offset] = parseNumber(raw, 0);
+    const [wddxXml] = parseString(raw, offset);
+    const m = wddxXml.match(/<var name=['"]DEBUG_SERVER_PORT['"]>\s*<number>(\d+(?:\.\d+)?)<\/number>/i);
+    return m ? Math.floor(parseFloat(m[1])) : 0;
   }
 
   async debuggerBreakpointOnException(sessionName: string, enable: boolean): Promise<void> {

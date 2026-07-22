@@ -1045,20 +1045,14 @@ class server:
     def debugger_stop(self, session_name: str) -> None:
         _send_rds_command(self._ctx, "DBGREQUEST", ["DBG_STOP", session_name])
 
-    def debugger_get_server_info(self, session_name: Optional[str] = None) -> int:
-        auto_session = False
-        if session_name is None:
-            session_name = self.debugger_start()
-            auto_session = True
-        try:
-            raw = _send_rds_command(self._ctx, "DBGREQUEST", ["DBG_GET_DEBUG_SERVER_INFO", session_name])
-            _, offset = _parse_number(raw, 0)
-            wddx_xml, _ = _parse_string(raw, offset)
-            m = re.search(r"<var name=['\"]DEBUG_SERVER_PORT['\"]>\s*<number>(\d+(?:\.\d+)?)</number>", wddx_xml, re.IGNORECASE)
-            return int(float(m.group(1))) if m else 0
-        finally:
-            if auto_session:
-                self.debugger_stop(session_name)
+    def debugger_get_server_info(self, session_name: str) -> int:
+        if not session_name:
+            raise CFRDSError(CFRDS_STATUS_PARAM_IS_NULL, "session_name is required")
+        raw = _send_rds_command(self._ctx, "DBGREQUEST", ["DBG_GET_DEBUG_SERVER_INFO", session_name])
+        _, offset = _parse_number(raw, 0)
+        wddx_xml, _ = _parse_string(raw, offset)
+        m = re.search(r"<var name=['\"]DEBUG_SERVER_PORT['\"]>\s*<number>(\d+(?:\.\d+)?)</number>", wddx_xml, re.IGNORECASE)
+        return int(float(m.group(1))) if m else 0
 
     def debugger_breakpoint_on_exception(self, session_name: str, enable: bool) -> None:
         val = "true" if enable else "false"

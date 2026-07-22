@@ -1183,9 +1183,6 @@ cfrds_sql_importedkeys *cfrds_buffer_to_sql_importedkeys(cfrds_buffer *buffer)
     if (!cfrds_buffer_parse_number(&data, &size, &cnt))
         return NULL;
 
-    if (cnt < 0)
-        return NULL;
-
     if (cnt < 0 || cnt > CFRDS_MAX_PARSER_ITEMS)
         return NULL;
 
@@ -1381,10 +1378,7 @@ cfrds_sql_resultset *cfrds_buffer_to_sql_sqlstmnt(cfrds_buffer *buffer)
     if (!cfrds_buffer_parse_number(&response_data, &response_size, &cnt))
         return NULL;
 
-    if (cnt < 0)
-        return NULL;
-
-    if (cnt > CFRDS_MAX_PARSER_ITEMS)
+    if (cnt < 0 || cnt > CFRDS_MAX_PARSER_ITEMS)
         return NULL;
 
     const char *response_start_data = response_data;
@@ -1408,9 +1402,6 @@ cfrds_sql_resultset *cfrds_buffer_to_sql_sqlstmnt(cfrds_buffer *buffer)
     }
 
     if (cols < 1)
-        return NULL;
-
-    if (cnt < 0)
         return NULL;
 
     size_t ucnt = (size_t)cnt;

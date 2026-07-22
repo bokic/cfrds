@@ -1072,7 +1072,8 @@ class server:
             raw = _send_rds_command(self._ctx, "DBGREQUEST", ["DBG_EVENTS", session_name])
             if not raw:
                 return None
-            wddx_xml, _ = _parse_string(raw, 0)
+            _, offset = _parse_number(raw, 0)
+            wddx_xml, _ = _parse_string(raw, offset)
             if not wddx_xml:
                 return None
 
@@ -1264,16 +1265,21 @@ class server:
     # Admin API Operations
     def adminapi_debugging_getlogproperty(self, logdirectory: str) -> Optional[str]:
         raw = _send_rds_command(self._ctx, "ADMINAPI", ["cfide.adminapi.debugging", "getlogproperty", logdirectory])
-        prop_str, _ = _parse_string(raw, 0)
+        _, offset = _parse_number(raw, 0)
+        prop_str, _ = _parse_string(raw, offset)
         return prop_str
 
     def adminapi_extensions_getcustomtagpaths(self) -> List[str]:
         raw = _send_rds_command(self._ctx, "ADMINAPI", ["cfide.adminapi.extensions", "getcustomtagpaths"])
-        cnt, offset = _parse_number(raw, 0)
+        _, offset = _parse_number(raw, 0)
+        xml_str, _ = _parse_string(raw, offset)
         paths: List[str] = []
-        for _ in range(cnt):
-            p, offset = _parse_string(raw, offset)
-            paths.append(p)
+        if xml_str:
+            import xml.etree.ElementTree as ET
+            root = ET.fromstring(xml_str)
+            for elem in root.findall(".//string"):
+                if elem.text:
+                    paths.append(elem.text)
         return paths
 
     def adminapi_extensions_setmapping(self, name: str, path: str) -> None:
@@ -1286,12 +1292,19 @@ class server:
 
     def adminapi_extensions_getmappings(self) -> Dict[str, str]:
         raw = _send_rds_command(self._ctx, "ADMINAPI", ["cfide.adminapi.extensions", "getmappings"])
-        cnt, offset = _parse_number(raw, 0)
+        _, offset = _parse_number(raw, 0)
+        xml_str, _ = _parse_string(raw, offset)
         mappings: Dict[str, str] = {}
-        for _ in range(cnt):
-            k, offset = _parse_string(raw, offset)
-            v, offset = _parse_string(raw, offset)
-            mappings[k] = v
+        if xml_str:
+            import xml.etree.ElementTree as ET
+            root = ET.fromstring(xml_str)
+            for var in root.findall(".//var"):
+                name = var.attrib.get("name")
+                if not name:
+                    continue
+                str_elem = var.find("string")
+                if str_elem is not None and str_elem.text:
+                    mappings[name] = str_elem.text
         return mappings
 
     # Graphing Operations

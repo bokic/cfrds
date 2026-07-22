@@ -624,19 +624,21 @@ export class Server {
   // Admin API Operations
   async adminapiDebuggingGetlogproperty(logdirectory: string): Promise<string> {
     const raw = await sendRdsCommand(this.ctx, "ADMINAPI", ["cfide.adminapi.debugging", "getlogproperty", logdirectory]);
-    const [propStr] = parseString(raw, 0);
+    const [, offset] = parseNumber(raw, 0);
+    const [propStr] = parseString(raw, offset);
     return propStr;
   }
 
   async adminapiExtensionsGetcustomtagpaths(): Promise<string[]> {
     const raw = await sendRdsCommand(this.ctx, "ADMINAPI", ["cfide.adminapi.extensions", "getcustomtagpaths"]);
-    const [cnt, offset] = parseNumber(raw, 0);
+    const [, offset] = parseNumber(raw, 0);
+    const [xml] = parseString(raw, offset);
     const paths: string[] = [];
-    let off = offset;
-    for (let i = 0; i < cnt; i++) {
-      const [p, o] = parseString(raw, off);
-      off = o;
-      paths.push(p);
+    if (xml) {
+      const matches = xml.matchAll(/<string>([^<]*)<\/string>/gi);
+      for (const m of matches) {
+        paths.push(m[1]);
+      }
     }
     return paths;
   }
@@ -652,14 +654,14 @@ export class Server {
 
   async adminapiExtensionsGetmappings(): Promise<Record<string, string>> {
     const raw = await sendRdsCommand(this.ctx, "ADMINAPI", ["cfide.adminapi.extensions", "getmappings"]);
-    const [cnt, offset] = parseNumber(raw, 0);
+    const [, offset] = parseNumber(raw, 0);
+    const [xml] = parseString(raw, offset);
     const mappings: Record<string, string> = {};
-    let off = offset;
-    for (let i = 0; i < cnt; i++) {
-      const [k, o1] = parseString(raw, off);
-      const [v, o2] = parseString(raw, o1);
-      off = o2;
-      mappings[k] = v;
+    if (xml) {
+      const matches = xml.matchAll(/<var name=['"]([^'"]+)['"]>\s*<string>([^<]*)<\/string>/gi);
+      for (const m of matches) {
+        mappings[m[1]] = m[2];
+      }
     }
     return mappings;
   }

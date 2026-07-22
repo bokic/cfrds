@@ -25,9 +25,9 @@ Some of the features RDS protocol supports:
 * Remote ColdFusion server adminapi settings.
 * Remote ColdFusion server webapp security analyzer service.
 * Remote ColdFusion server graph (chart) rendering.
+* Structured JSON output support for all CLI commands via `--json` trailing argument.
 
 ## TODO
-* cfrds cli print all output in json format(--json tail argument).
 * Code cleanup.
 
 ## CLI test script usage ex:

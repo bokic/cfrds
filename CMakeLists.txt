@@ -127,7 +127,17 @@ if(WIN32)
     target_link_libraries(cfrds_cli PRIVATE
         wsock32
         ws2_32
+        json-c
     )
+    target_include_directories(cfrds_cli PRIVATE
+        ${CMAKE_CURRENT_SOURCE_DIR}/deps/json-c/include
+    )
+    target_link_directories(cfrds_cli PRIVATE
+        ${CMAKE_CURRENT_SOURCE_DIR}/deps/json-c
+    )
+else()
+    target_include_directories(cfrds_cli PRIVATE ${JSONC_INCLUDE_DIR})
+    target_link_libraries(cfrds_cli PRIVATE json-c::json-c)
 endif()
 
 if(NOT WIN32)

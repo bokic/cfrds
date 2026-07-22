@@ -310,7 +310,6 @@ def _send_rds_command(server_ctx: cfrds_server, command: str, args: List[Union[s
         if resp.status != 200:
             msg = f"HTTP {resp.status} {resp.reason}"
             server_ctx.error = msg
-            server_ctx.error_msg = msg
             raise CFRDSError(f"HTTP_RESPONSE_NOT_FOUND: HTTP {resp.status} {resp.reason}")
         body = resp.read()
     except Exception as e:
@@ -336,7 +335,6 @@ def _send_rds_command(server_ctx: cfrds_server, command: str, args: List[Union[s
             desc = "Socket creation failed"
         msg = f"{desc}: {e}"
         server_ctx.error = msg
-        server_ctx.error_msg = msg
         raise CFRDSError(msg)
 
     # Validate response status code at start of body

@@ -690,8 +690,6 @@ static const struct WDDX_NODE *wddx_recursively_get(const struct WDDX_NODE *node
             return NULL;
         }
     }
-
-    return NULL;
 }
 
 const WDDX_NODE *wddx_header(const WDDX *src)

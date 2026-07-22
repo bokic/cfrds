@@ -174,6 +174,14 @@ if "RDS_HOST" in os.environ and "RDS_PORT" in os.environ:
         target_path = cf_root or "/"
         items = rds.browse_dir(target_path)
         print(f"  browse_dir('{target_path}'): Found {len(items)} items")
+        if len(items) > 0:
+            import datetime
+            sample = items[:3]
+            print("  browse_dir sample items:")
+            for item in sample:
+                dt = datetime.datetime.fromtimestamp(item['modified'] / 1000, tz=datetime.timezone.utc)
+                print(f"    - {item['name']} ({item['kind']}, size: {item['size']}, modified: {dt.isoformat()})")
+                assert item['modified'] > 0, "parsed modified date should be positive/valid"
     except cfrds.CFRDSError as e:
         print(f"  browse_dir error: {e}")
 

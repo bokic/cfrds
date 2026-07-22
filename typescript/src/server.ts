@@ -72,7 +72,7 @@ export class Server {
         const parts = strTs.split(",");
         const num1 = parseInt(parts[0], 10);
         const num2 = parseInt(parts[1], 10);
-        modified = Math.floor((num1 + (num2 << 32)) / 10000) - 11644473600000;
+        modified = Math.floor((num1 + (num2 * 0x100000000)) / 10000) - 11644473600000;
       }
 
       const permsStr = ["-", "-", "-", "-", "-"];

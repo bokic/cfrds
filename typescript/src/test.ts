@@ -198,6 +198,14 @@ async function main(): Promise<void> {
       const items = await rds.browseDir(targetPath);
       log(`  browseDir('${targetPath}'): Found ${items.length} items`);
       assert(Array.isArray(items), "browseDir should return an array");
+      if (items.length > 0) {
+        const sample = items.slice(0, 3);
+        log(`  browseDir sample items:`);
+        for (const item of sample) {
+          log(`    - ${item.name} (${item.kind}, size: ${item.size}, modified: ${new Date(item.modified).toISOString()})`);
+          assert(item.modified > 0, "parsed modified date should be positive/valid");
+        }
+      }
     } catch (e) {
       log(`  browseDir error: ${e}`);
     }

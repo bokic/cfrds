@@ -175,11 +175,11 @@ with patch("http.client.HTTPConnection", return_value=mock_conn):
     try:
         srv_mock.browse_dir("/")
     except cfrds.CFRDSError as e:
-        if e.status == cfrds.CFRDS_STATUS_RESPONSE_ERROR:
+        if "Invalid total items count" in str(e):
             threw = True
         else:
-            raise Exception(f"Unexpected error status: {e.status}")
-    assert threw, "browse_dir should throw CFRDSError(CFRDS_STATUS_RESPONSE_ERROR) when total is 3"
+            raise Exception(f"Unexpected error: {e}")
+    assert threw, "browse_dir should throw CFRDSError containing Invalid total items count when total is 3"
     
     print("Offline browse_dir validation tests passed!")
 
@@ -301,6 +301,51 @@ with patch("http.client.HTTPConnection", return_value=mock_conn):
     assert cfrds.cfrds_debugger_event_get_java_trace_item(mock_event, 0) == "jtrace1", "java_trace item 0 mismatch"
 
     print("Offline debugger event accessors tests passed!")
+
+    # Test 8: Transport error mapping offline validation
+    import socket
+    import errno
+
+    mock_conn_err = MagicMock()
+    mock_exception = None
+    
+    def mock_request_raise(*args, **kwargs):
+        raise mock_exception
+
+    mock_conn_err.request.side_effect = mock_request_raise
+
+    def test_error_mapping(exception_to_raise, expected_msg_substr):
+        global mock_exception
+        mock_exception = exception_to_raise
+        threw = False
+        try:
+            srv_mock.browse_dir("/")
+        except cfrds.CFRDSError as e:
+            if expected_msg_substr in str(e):
+                threw = True
+            else:
+                raise Exception(f"Unexpected error for exception {exception_to_raise}: {e}")
+        assert threw, f"Should throw CFRDSError containing '{expected_msg_substr}' for {exception_to_raise}"
+
+    with patch("http.client.HTTPConnection", return_value=mock_conn_err):
+        # Test socket.gaierror -> SOCKET_HOST_NOT_FOUND
+        test_error_mapping(socket.gaierror(8, "hostname lookup failed"), "Socket host not found")
+        test_error_mapping(socket.herror(1, "host error"), "Socket host not found")
+
+        # Test specific OSErrors -> SOCKET_CREATION_FAILED
+        test_error_mapping(PermissionError(errno.EACCES, "Permission denied"), "Socket creation failed")
+        test_error_mapping(PermissionError(errno.EPERM, "Operation not permitted"), "Socket creation failed")
+        test_error_mapping(OSError(errno.EADDRNOTAVAIL, "Address not available"), "Socket creation failed")
+        test_error_mapping(OSError(errno.EMFILE, "Too many open files"), "Socket creation failed")
+        test_error_mapping(OSError(errno.ENFILE, "Too many open files in system"), "Socket creation failed")
+
+        # Test general OSError/connection errors -> CONNECTION_TO_SERVER_FAILED
+        test_error_mapping(ConnectionRefusedError(errno.ECONNREFUSED, "Connection refused"), "Connection to server failed")
+        test_error_mapping(TimeoutError(errno.ETIMEDOUT, "Connection timed out"), "Connection to server failed")
+        test_error_mapping(OSError(errno.EIO, "Input/output error"), "Connection to server failed")
+        test_error_mapping(Exception("Some other error"), "Connection to server failed")
+
+    print("Offline transport error mapping tests passed!")
 
     print("Offline WDDX escaping validation tests passed!")
 

@@ -1,5 +1,4 @@
 import {
-  CFRDS_STATUS,
   CFRDS_DEBUGGER_EVENT_TYPE,
   CFRDSError,
   ServerContext,
@@ -42,7 +41,6 @@ export class Server {
     this.ctx = {
       config: { host: hostname, port, username, password },
       encodedPassword: encodePassword(password),
-      errorCode: 1,
       error: null,
     };
   }
@@ -52,21 +50,19 @@ export class Server {
   getUsername(): string { return this.ctx.config.username; }
   getPassword(): string { return this.ctx.config.password; }
   getError(): string | null { return this.ctx.error; }
-  getErrorCode(): number { return this.ctx.errorCode; }
-  clearError(): void { this.ctx.error = null; this.ctx.errorCode = 1; }
+  clearError(): void { this.ctx.error = null; }
 
   async close(): Promise<void> {}
 
   // Browse Directory
   async browseDir(path: string): Promise<BrowseDirItem[]> {
     if (path === null || path === undefined) {
-      throw new CFRDSError(CFRDS_STATUS.PARAM_IS_NULL, "path is required");
+      throw new CFRDSError("path is required");
     }
     const raw = await sendRdsCommand(this.ctx, "BROWSEDIR", [path, ""]);
     const [total, offset] = parseNumber(raw, 0);
     if (total < 0 || (total !== 0 && total % 5 !== 0)) {
       throw new CFRDSError(
-        CFRDS_STATUS.RESPONSE_ERROR,
         "Invalid total items count in browseDir response"
       );
     }
@@ -114,7 +110,7 @@ export class Server {
   // File Operations
   async fileRead(filepath: string): Promise<FileContent> {
     if (filepath === null || filepath === undefined) {
-      throw new CFRDSError(CFRDS_STATUS.PARAM_IS_NULL, "filepath is required");
+      throw new CFRDSError("filepath is required");
     }
     const raw = await sendRdsCommand(this.ctx, "FILEIO", [filepath, "READ", ""]);
     const [, offset] = parseNumber(raw, 0);
@@ -126,10 +122,10 @@ export class Server {
 
   async fileWrite(filepath: string, content: string | Buffer): Promise<void> {
     if (filepath === null || filepath === undefined) {
-      throw new CFRDSError(CFRDS_STATUS.PARAM_IS_NULL, "filepath is required");
+      throw new CFRDSError("filepath is required");
     }
     if (content === null || content === undefined) {
-      throw new CFRDSError(CFRDS_STATUS.PARAM_IS_NULL, "content is required");
+      throw new CFRDSError("content is required");
     }
     const data = typeof content === "string" ? Buffer.from(content, "utf-8") : content;
     await sendRdsCommand(this.ctx, "FILEIO", [filepath, "WRITE", "", data]);
@@ -137,37 +133,37 @@ export class Server {
 
   async fileRename(filepathFrom: string, filepathTo: string): Promise<void> {
     if (filepathFrom === null || filepathFrom === undefined) {
-      throw new CFRDSError(CFRDS_STATUS.PARAM_IS_NULL, "filepathFrom is required");
+      throw new CFRDSError("filepathFrom is required");
     }
     if (filepathTo === null || filepathTo === undefined) {
-      throw new CFRDSError(CFRDS_STATUS.PARAM_IS_NULL, "filepathTo is required");
+      throw new CFRDSError("filepathTo is required");
     }
     await sendRdsCommand(this.ctx, "FILEIO", [filepathFrom, "RENAME", "", filepathTo]);
   }
 
   async fileRemove(filepath: string): Promise<void> {
     if (filepath === null || filepath === undefined) {
-      throw new CFRDSError(CFRDS_STATUS.PARAM_IS_NULL, "filepath is required");
+      throw new CFRDSError("filepath is required");
     }
     await sendRdsCommand(this.ctx, "FILEIO", [filepath, "REMOVE", "", "F"]);
   }
 
   async dirRemove(dirpath: string): Promise<void> {
     if (dirpath === null || dirpath === undefined) {
-      throw new CFRDSError(CFRDS_STATUS.PARAM_IS_NULL, "dirpath is required");
+      throw new CFRDSError("dirpath is required");
     }
     await sendRdsCommand(this.ctx, "FILEIO", [dirpath, "REMOVE", "", "D"]);
   }
 
   async fileExists(pathname: string): Promise<boolean> {
     if (pathname === null || pathname === undefined) {
-      throw new CFRDSError(CFRDS_STATUS.PARAM_IS_NULL, "pathname is required");
+      throw new CFRDSError("pathname is required");
     }
     try {
       await sendRdsCommand(this.ctx, "FILEIO", [pathname, "EXISTENCE", "", ""]);
       return true;
     } catch (e) {
-      if (e instanceof CFRDSError && e.status === CFRDS_STATUS.COMMAND_FAILED) {
+      if (e instanceof CFRDSError && e.message.includes("COMMAND_FAILED")) {
         return false;
       }
       throw e;
@@ -176,7 +172,7 @@ export class Server {
 
   async dirCreate(dirpath: string): Promise<void> {
     if (dirpath === null || dirpath === undefined) {
-      throw new CFRDSError(CFRDS_STATUS.PARAM_IS_NULL, "dirpath is required");
+      throw new CFRDSError("dirpath is required");
     }
     await sendRdsCommand(this.ctx, "FILEIO", [dirpath, "CREATE", "", ""]);
   }
@@ -206,7 +202,7 @@ export class Server {
 
   async sqlTableinfo(connectionName: string): Promise<SqlTableInfoItem[]> {
     if (connectionName === null || connectionName === undefined) {
-      throw new CFRDSError(CFRDS_STATUS.PARAM_IS_NULL, "connectionName is required");
+      throw new CFRDSError("connectionName is required");
     }
     const raw = await sendRdsCommand(this.ctx, "DBFUNCS", [connectionName, "TABLEINFO"]);
     const [cnt, offset] = parseNumber(raw, 0);
@@ -228,10 +224,10 @@ export class Server {
 
   async sqlColumninfo(connectionName: string, tableName: string): Promise<SqlColumnInfoItem[]> {
     if (connectionName === null || connectionName === undefined) {
-      throw new CFRDSError(CFRDS_STATUS.PARAM_IS_NULL, "connectionName is required");
+      throw new CFRDSError("connectionName is required");
     }
     if (tableName === null || tableName === undefined) {
-      throw new CFRDSError(CFRDS_STATUS.PARAM_IS_NULL, "tableName is required");
+      throw new CFRDSError("tableName is required");
     }
     const raw = await sendRdsCommand(this.ctx, "DBFUNCS", [connectionName, "COLUMNINFO", tableName]);
     const [cnt, offset] = parseNumber(raw, 0);
@@ -261,10 +257,10 @@ export class Server {
 
   async sqlPrimarykeys(connectionName: string, tableName: string): Promise<SqlPrimaryKeyItem[]> {
     if (connectionName === null || connectionName === undefined) {
-      throw new CFRDSError(CFRDS_STATUS.PARAM_IS_NULL, "connectionName is required");
+      throw new CFRDSError("connectionName is required");
     }
     if (tableName === null || tableName === undefined) {
-      throw new CFRDSError(CFRDS_STATUS.PARAM_IS_NULL, "tableName is required");
+      throw new CFRDSError("tableName is required");
     }
     const raw = await sendRdsCommand(this.ctx, "DBFUNCS", [connectionName, "PRIMARYKEYS", tableName]);
     const [cnt, offset] = parseNumber(raw, 0);
@@ -288,10 +284,10 @@ export class Server {
 
   async sqlForeignkeys(connectionName: string, tableName: string): Promise<SqlForeignKeyItem[]> {
     if (connectionName === null || connectionName === undefined) {
-      throw new CFRDSError(CFRDS_STATUS.PARAM_IS_NULL, "connectionName is required");
+      throw new CFRDSError("connectionName is required");
     }
     if (tableName === null || tableName === undefined) {
-      throw new CFRDSError(CFRDS_STATUS.PARAM_IS_NULL, "tableName is required");
+      throw new CFRDSError("tableName is required");
     }
     const raw = await sendRdsCommand(this.ctx, "DBFUNCS", [connectionName, "FOREIGNKEYS", tableName]);
     const [cnt, offset] = parseNumber(raw, 0);
@@ -321,10 +317,10 @@ export class Server {
 
   async sqlImportedkeys(connectionName: string, tableName: string): Promise<SqlForeignKeyItem[]> {
     if (connectionName === null || connectionName === undefined) {
-      throw new CFRDSError(CFRDS_STATUS.PARAM_IS_NULL, "connectionName is required");
+      throw new CFRDSError("connectionName is required");
     }
     if (tableName === null || tableName === undefined) {
-      throw new CFRDSError(CFRDS_STATUS.PARAM_IS_NULL, "tableName is required");
+      throw new CFRDSError("tableName is required");
     }
     const raw = await sendRdsCommand(this.ctx, "DBFUNCS", [connectionName, "IMPORTEDKEYS", tableName]);
     const [cnt, offset] = parseNumber(raw, 0);
@@ -354,10 +350,10 @@ export class Server {
 
   async sqlExportedkeys(connectionName: string, tableName: string): Promise<SqlForeignKeyItem[]> {
     if (connectionName === null || connectionName === undefined) {
-      throw new CFRDSError(CFRDS_STATUS.PARAM_IS_NULL, "connectionName is required");
+      throw new CFRDSError("connectionName is required");
     }
     if (tableName === null || tableName === undefined) {
-      throw new CFRDSError(CFRDS_STATUS.PARAM_IS_NULL, "tableName is required");
+      throw new CFRDSError("tableName is required");
     }
     const raw = await sendRdsCommand(this.ctx, "DBFUNCS", [connectionName, "EXPORTEDKEYS", tableName]);
     const [cnt, offset] = parseNumber(raw, 0);
@@ -387,10 +383,10 @@ export class Server {
 
   async sqlSqlstmnt(connectionName: string, sql: string): Promise<SqlResultSet> {
     if (connectionName === null || connectionName === undefined) {
-      throw new CFRDSError(CFRDS_STATUS.PARAM_IS_NULL, "connectionName is required");
+      throw new CFRDSError("connectionName is required");
     }
     if (sql === null || sql === undefined) {
-      throw new CFRDSError(CFRDS_STATUS.PARAM_IS_NULL, "sql is required");
+      throw new CFRDSError("sql is required");
     }
     const raw = await sendRdsCommand(this.ctx, "DBFUNCS", [connectionName, "SQLSTMNT", sql]);
     const [cnt, offset] = parseNumber(raw, 0);
@@ -417,10 +413,10 @@ export class Server {
 
   async sqlMetadata(connectionName: string, sql: string): Promise<SqlMetadataItem[]> {
     if (connectionName === null || connectionName === undefined) {
-      throw new CFRDSError(CFRDS_STATUS.PARAM_IS_NULL, "connectionName is required");
+      throw new CFRDSError("connectionName is required");
     }
     if (sql === null || sql === undefined) {
-      throw new CFRDSError(CFRDS_STATUS.PARAM_IS_NULL, "sql is required");
+      throw new CFRDSError("sql is required");
     }
     const raw = await sendRdsCommand(this.ctx, "DBFUNCS", [connectionName, "SQLMETADATA", sql]);
     const [cnt, offset] = parseNumber(raw, 0);
@@ -454,7 +450,7 @@ export class Server {
 
   async sqlDbdescription(connectionName: string): Promise<string> {
     if (connectionName === null || connectionName === undefined) {
-      throw new CFRDSError(CFRDS_STATUS.PARAM_IS_NULL, "connectionName is required");
+      throw new CFRDSError("connectionName is required");
     }
     const raw = await sendRdsCommand(this.ctx, "DBFUNCS", [connectionName, "DBDESCRIPTION"]);
     const [, offset] = parseNumber(raw, 0);
@@ -473,14 +469,14 @@ export class Server {
 
   async debuggerStop(sessionName: string): Promise<void> {
     if (sessionName === null || sessionName === undefined) {
-      throw new CFRDSError(CFRDS_STATUS.PARAM_IS_NULL, "sessionName is required");
+      throw new CFRDSError("sessionName is required");
     }
     await sendRdsCommand(this.ctx, "DBGREQUEST", ["DBG_STOP", sessionName]);
   }
 
   async debuggerGetServerInfo(sessionName: string): Promise<number> {
     if (sessionName === null || sessionName === undefined) {
-      throw new CFRDSError(CFRDS_STATUS.PARAM_IS_NULL, "sessionName is required");
+      throw new CFRDSError("sessionName is required");
     }
     const raw = await sendRdsCommand(this.ctx, "DBGREQUEST", ["DBG_GET_DEBUG_SERVER_INFO", sessionName]);
     const [, offset] = parseNumber(raw, 0);
@@ -491,10 +487,10 @@ export class Server {
 
   async debuggerBreakpointOnException(sessionName: string, enable: boolean): Promise<void> {
     if (sessionName === null || sessionName === undefined) {
-      throw new CFRDSError(CFRDS_STATUS.PARAM_IS_NULL, "sessionName is required");
+      throw new CFRDSError("sessionName is required");
     }
     if (enable === null || enable === undefined) {
-      throw new CFRDSError(CFRDS_STATUS.PARAM_IS_NULL, "enable is required");
+      throw new CFRDSError("enable is required");
     }
     const val = enable ? "true" : "false";
     const wddx = `<wddxPacket version='1.0'><header/><data><array length='1'><struct type='java.util.HashMap'><var name='COMMAND'><string>SESSION_BREAK_ON_EXCEPTION</string></var><var name='BREAK_ON_EXCEPTION'><boolean value='${val}'/></var></struct></array></data></wddxPacket>`;
@@ -503,16 +499,16 @@ export class Server {
 
   async debuggerBreakpoint(sessionName: string, filepath: string, line: number, enable: boolean): Promise<void> {
     if (sessionName === null || sessionName === undefined) {
-      throw new CFRDSError(CFRDS_STATUS.PARAM_IS_NULL, "sessionName is required");
+      throw new CFRDSError("sessionName is required");
     }
     if (filepath === null || filepath === undefined) {
-      throw new CFRDSError(CFRDS_STATUS.PARAM_IS_NULL, "filepath is required");
+      throw new CFRDSError("filepath is required");
     }
     if (line === null || line === undefined) {
-      throw new CFRDSError(CFRDS_STATUS.PARAM_IS_NULL, "line is required");
+      throw new CFRDSError("line is required");
     }
     if (enable === null || enable === undefined) {
-      throw new CFRDSError(CFRDS_STATUS.PARAM_IS_NULL, "enable is required");
+      throw new CFRDSError("enable is required");
     }
     const cmd = enable ? "SET_BREAKPOINT" : "UNSET_BREAKPOINT";
     const wddx = `<wddxPacket version='1.0'><header/><data><array length='1'><struct type='java.util.HashMap'><var name='COMMAND'><string>${cmd}</string></var><var name='FILE'><string>${escapeXml(filepath)}</string></var><var name='Y'><number>${line}</number></var><var name='SEQ'><number>1.0</number></var></struct></array></data></wddxPacket>`;
@@ -521,7 +517,7 @@ export class Server {
 
   async debuggerClearAllBreakpoints(sessionName: string): Promise<void> {
     if (sessionName === null || sessionName === undefined) {
-      throw new CFRDSError(CFRDS_STATUS.PARAM_IS_NULL, "sessionName is required");
+      throw new CFRDSError("sessionName is required");
     }
     const wddx = "<wddxPacket version='1.0'><header/><data><array length='1'><struct type='java.util.HashMap'><var name='COMMAND'><string>UNSET_ALL_BREAKPOINTS</string></var></struct></array></data></wddxPacket>";
     await sendRdsCommand(this.ctx, "DBGREQUEST", ["DBG_REQUEST", sessionName, wddx]);
@@ -587,7 +583,7 @@ export class Server {
    */
   async debuggerGetDebugEvents(sessionName: string): Promise<DebuggerEvent | null> {
     if (sessionName === null || sessionName === undefined) {
-      throw new CFRDSError(CFRDS_STATUS.PARAM_IS_NULL, "sessionName is required");
+      throw new CFRDSError("sessionName is required");
     }
     const raw = await sendRdsCommand(this.ctx, "DBGREQUEST", ["DBG_EVENTS", sessionName]);
     return this.parseDebuggerEvent(raw);
@@ -606,22 +602,22 @@ export class Server {
     javaTrace: boolean
   ): Promise<DebuggerEvent | null> {
     if (sessionName === null || sessionName === undefined) {
-      throw new CFRDSError(CFRDS_STATUS.PARAM_IS_NULL, "sessionName is required");
+      throw new CFRDSError("sessionName is required");
     }
     if (threads === null || threads === undefined) {
-      throw new CFRDSError(CFRDS_STATUS.PARAM_IS_NULL, "threads is required");
+      throw new CFRDSError("threads is required");
     }
     if (watch === null || watch === undefined) {
-      throw new CFRDSError(CFRDS_STATUS.PARAM_IS_NULL, "watch is required");
+      throw new CFRDSError("watch is required");
     }
     if (scopes === null || scopes === undefined) {
-      throw new CFRDSError(CFRDS_STATUS.PARAM_IS_NULL, "scopes is required");
+      throw new CFRDSError("scopes is required");
     }
     if (cfTrace === null || cfTrace === undefined) {
-      throw new CFRDSError(CFRDS_STATUS.PARAM_IS_NULL, "cfTrace is required");
+      throw new CFRDSError("cfTrace is required");
     }
     if (javaTrace === null || javaTrace === undefined) {
-      throw new CFRDSError(CFRDS_STATUS.PARAM_IS_NULL, "javaTrace is required");
+      throw new CFRDSError("javaTrace is required");
     }
     const b = (v: boolean): string => (v ? "true" : "false");
     const wddx = `<wddxPacket version='1.0'><header/><data><struct type='java.util.HashMap'>` +
@@ -637,10 +633,10 @@ export class Server {
 
   async debuggerStepIn(sessionName: string, threadName: string): Promise<void> {
     if (sessionName === null || sessionName === undefined) {
-      throw new CFRDSError(CFRDS_STATUS.PARAM_IS_NULL, "sessionName is required");
+      throw new CFRDSError("sessionName is required");
     }
     if (threadName === null || threadName === undefined) {
-      throw new CFRDSError(CFRDS_STATUS.PARAM_IS_NULL, "threadName is required");
+      throw new CFRDSError("threadName is required");
     }
     const wddx = `<wddxPacket version='1.0'><header/><data><array length='1'><struct type='java.util.HashMap'><var name='COMMAND'><string>STEP_IN</string></var><var name='THREAD'><string>${escapeXml(threadName)}</string></var></struct></array></data></wddxPacket>`;
     await sendRdsCommand(this.ctx, "DBGREQUEST", ["DBG_REQUEST", sessionName, wddx]);
@@ -648,10 +644,10 @@ export class Server {
 
   async debuggerStepOver(sessionName: string, threadName: string): Promise<void> {
     if (sessionName === null || sessionName === undefined) {
-      throw new CFRDSError(CFRDS_STATUS.PARAM_IS_NULL, "sessionName is required");
+      throw new CFRDSError("sessionName is required");
     }
     if (threadName === null || threadName === undefined) {
-      throw new CFRDSError(CFRDS_STATUS.PARAM_IS_NULL, "threadName is required");
+      throw new CFRDSError("threadName is required");
     }
     const wddx = `<wddxPacket version='1.0'><header/><data><array length='1'><struct type='java.util.HashMap'><var name='COMMAND'><string>STEP_OVER</string></var><var name='THREAD'><string>${escapeXml(threadName)}</string></var></struct></array></data></wddxPacket>`;
     await sendRdsCommand(this.ctx, "DBGREQUEST", ["DBG_REQUEST", sessionName, wddx]);
@@ -659,10 +655,10 @@ export class Server {
 
   async debuggerStepOut(sessionName: string, threadName: string): Promise<void> {
     if (sessionName === null || sessionName === undefined) {
-      throw new CFRDSError(CFRDS_STATUS.PARAM_IS_NULL, "sessionName is required");
+      throw new CFRDSError("sessionName is required");
     }
     if (threadName === null || threadName === undefined) {
-      throw new CFRDSError(CFRDS_STATUS.PARAM_IS_NULL, "threadName is required");
+      throw new CFRDSError("threadName is required");
     }
     const wddx = `<wddxPacket version='1.0'><header/><data><array length='1'><struct type='java.util.HashMap'><var name='COMMAND'><string>STEP_OUT</string></var><var name='THREAD'><string>${escapeXml(threadName)}</string></var></struct></array></data></wddxPacket>`;
     await sendRdsCommand(this.ctx, "DBGREQUEST", ["DBG_REQUEST", sessionName, wddx]);
@@ -670,10 +666,10 @@ export class Server {
 
   async debuggerContinue(sessionName: string, threadName: string): Promise<void> {
     if (sessionName === null || sessionName === undefined) {
-      throw new CFRDSError(CFRDS_STATUS.PARAM_IS_NULL, "sessionName is required");
+      throw new CFRDSError("sessionName is required");
     }
     if (threadName === null || threadName === undefined) {
-      throw new CFRDSError(CFRDS_STATUS.PARAM_IS_NULL, "threadName is required");
+      throw new CFRDSError("threadName is required");
     }
     const wddx = `<wddxPacket version='1.0'><header/><data><array length='1'><struct type='java.util.HashMap'><var name='COMMAND'><string>CONTINUE</string></var><var name='THREAD'><string>${escapeXml(threadName)}</string></var></struct></array></data></wddxPacket>`;
     await sendRdsCommand(this.ctx, "DBGREQUEST", ["DBG_REQUEST", sessionName, wddx]);
@@ -681,13 +677,13 @@ export class Server {
 
   async debuggerWatchExpression(sessionName: string, threadName: string, expression: string): Promise<void> {
     if (sessionName === null || sessionName === undefined) {
-      throw new CFRDSError(CFRDS_STATUS.PARAM_IS_NULL, "sessionName is required");
+      throw new CFRDSError("sessionName is required");
     }
     if (threadName === null || threadName === undefined) {
-      throw new CFRDSError(CFRDS_STATUS.PARAM_IS_NULL, "threadName is required");
+      throw new CFRDSError("threadName is required");
     }
     if (expression === null || expression === undefined) {
-      throw new CFRDSError(CFRDS_STATUS.PARAM_IS_NULL, "expression is required");
+      throw new CFRDSError("expression is required");
     }
     const wddx = `<wddxPacket version='1.0'><header/><data><array length='1'><struct type='java.util.HashMap'><var name='COMMAND'><string>GET_SINGLE_CF_VARIABLE</string></var><var name='VARIABLE_NAME'><string>${escapeXml(expression)}</string></var><var name='THREAD'><string>${escapeXml(threadName)}</string></var></struct></array></data></wddxPacket>`;
     await sendRdsCommand(this.ctx, "DBGREQUEST", ["DBG_REQUEST", sessionName, wddx]);
@@ -695,16 +691,16 @@ export class Server {
 
   async debuggerSetVariable(sessionName: string, threadName: string, variable: string, value: string): Promise<void> {
     if (sessionName === null || sessionName === undefined) {
-      throw new CFRDSError(CFRDS_STATUS.PARAM_IS_NULL, "sessionName is required");
+      throw new CFRDSError("sessionName is required");
     }
     if (threadName === null || threadName === undefined) {
-      throw new CFRDSError(CFRDS_STATUS.PARAM_IS_NULL, "threadName is required");
+      throw new CFRDSError("threadName is required");
     }
     if (variable === null || variable === undefined) {
-      throw new CFRDSError(CFRDS_STATUS.PARAM_IS_NULL, "variable is required");
+      throw new CFRDSError("variable is required");
     }
     if (value === null || value === undefined) {
-      throw new CFRDSError(CFRDS_STATUS.PARAM_IS_NULL, "value is required");
+      throw new CFRDSError("value is required");
     }
     const wddx = `<wddxPacket version='1.0'><header/><data><array length='1'><struct type='java.util.HashMap'><var name='COMMAND'><string>SET_VARIABLE_VALUE</string></var><var name='VARIABLE_NAME'><string>${escapeXml(variable)}</string></var><var name='VARIABLE_VALUE'><string>${escapeXml(value)}</string></var><var name='THREAD'><string>${escapeXml(threadName)}</string></var></struct></array></data></wddxPacket>`;
     await sendRdsCommand(this.ctx, "DBGREQUEST", ["DBG_REQUEST", sessionName, wddx]);
@@ -712,10 +708,10 @@ export class Server {
 
   async debuggerWatchVariables(sessionName: string, variables: string): Promise<void> {
     if (sessionName === null || sessionName === undefined) {
-      throw new CFRDSError(CFRDS_STATUS.PARAM_IS_NULL, "sessionName is required");
+      throw new CFRDSError("sessionName is required");
     }
     if (variables === null || variables === undefined) {
-      throw new CFRDSError(CFRDS_STATUS.PARAM_IS_NULL, "variables is required");
+      throw new CFRDSError("variables is required");
     }
     const vars = variables.split(",").map((v) => v.trim()).filter((v) => v.length > 0);
     const varTags = vars.map((v) => `<string>${escapeXml(v)}</string>`).join("");
@@ -725,10 +721,10 @@ export class Server {
 
   async debuggerGetOutput(sessionName: string, threadName: string): Promise<string> {
     if (sessionName === null || sessionName === undefined) {
-      throw new CFRDSError(CFRDS_STATUS.PARAM_IS_NULL, "sessionName is required");
+      throw new CFRDSError("sessionName is required");
     }
     if (threadName === null || threadName === undefined) {
-      throw new CFRDSError(CFRDS_STATUS.PARAM_IS_NULL, "threadName is required");
+      throw new CFRDSError("threadName is required");
     }
     const wddx = `<wddxPacket version='1.0'><header/><data><array length='1'><struct type='java.util.HashMap'><var name='COMMAND'><string>GET_OUTPUT</string></var><var name='BODY_ONLY'><boolean value='true'/></var><var name='THREAD'><string>${escapeXml(threadName)}</string></var></struct></array></data></wddxPacket>`;
     const raw = await sendRdsCommand(this.ctx, "DBGREQUEST", ["DBG_REQUEST", sessionName, wddx]);
@@ -749,10 +745,10 @@ export class Server {
 
   async debuggerSetScopeFilter(sessionName: string, filterStr: string): Promise<void> {
     if (sessionName === null || sessionName === undefined) {
-      throw new CFRDSError(CFRDS_STATUS.PARAM_IS_NULL, "sessionName is required");
+      throw new CFRDSError("sessionName is required");
     }
     if (filterStr === null || filterStr === undefined) {
-      throw new CFRDSError(CFRDS_STATUS.PARAM_IS_NULL, "filterStr is required");
+      throw new CFRDSError("filterStr is required");
     }
     const wddx = `<wddxPacket version='1.0'><header/><data><array length='1'><struct type='java.util.HashMap'><var name='COMMAND'><string>SET_SCOPE_FILTER</string></var><var name='FILTER'><string>${escapeXml(filterStr)}</string></var></struct></array></data></wddxPacket>`;
     await sendRdsCommand(this.ctx, "DBGREQUEST", ["DBG_REQUEST", sessionName, wddx]);
@@ -761,7 +757,7 @@ export class Server {
   // Security Analyzer Operations
   async securityAnalyzerScan(pathnames: string, recursively: boolean = true, cores: number = 1): Promise<number> {
     if (pathnames === null || pathnames === undefined) {
-      throw new CFRDSError(CFRDS_STATUS.PARAM_IS_NULL, "pathnames is required");
+      throw new CFRDSError("pathnames is required");
     }
     const raw = await sendRdsCommand(this.ctx, "SECURITYANALYZER", [
       "scan", pathnames, recursively ? "true" : "false", String(cores),
@@ -778,14 +774,14 @@ export class Server {
 
   async securityAnalyzerCancel(commandId: number): Promise<void> {
     if (commandId === null || commandId === undefined) {
-      throw new CFRDSError(CFRDS_STATUS.PARAM_IS_NULL, "commandId is required");
+      throw new CFRDSError("commandId is required");
     }
     await sendRdsCommand(this.ctx, "SECURITYANALYZER", ["cancel", String(commandId)]);
   }
 
   async securityAnalyzerStatus(commandId: number): Promise<SecurityAnalyzerStatus> {
     if (commandId === null || commandId === undefined) {
-      throw new CFRDSError(CFRDS_STATUS.PARAM_IS_NULL, "commandId is required");
+      throw new CFRDSError("commandId is required");
     }
     const raw = await sendRdsCommand(this.ctx, "SECURITYANALYZER", ["status", String(commandId)]);
     const [, offset] = parseNumber(raw, 0);
@@ -804,7 +800,7 @@ export class Server {
 
   async securityAnalyzerResult(commandId: number): Promise<Record<string, unknown> | null> {
     if (commandId === null || commandId === undefined) {
-      throw new CFRDSError(CFRDS_STATUS.PARAM_IS_NULL, "commandId is required");
+      throw new CFRDSError("commandId is required");
     }
     const raw = await sendRdsCommand(this.ctx, "SECURITYANALYZER", ["result", String(commandId)]);
     const [, offset] = parseNumber(raw, 0);
@@ -818,7 +814,7 @@ export class Server {
 
   async securityAnalyzerClean(commandId: number): Promise<void> {
     if (commandId === null || commandId === undefined) {
-      throw new CFRDSError(CFRDS_STATUS.PARAM_IS_NULL, "commandId is required");
+      throw new CFRDSError("commandId is required");
     }
     await sendRdsCommand(this.ctx, "SECURITYANALYZER", ["clean", String(commandId)]);
   }
@@ -826,7 +822,7 @@ export class Server {
   // IDE Default
   async ideDefault(version: number = 1): Promise<IdeDefaultResult> {
     if (version === null || version === undefined) {
-      throw new CFRDSError(CFRDS_STATUS.PARAM_IS_NULL, "version is required");
+      throw new CFRDSError("version is required");
     }
     const raw = await sendRdsCommand(this.ctx, "IDE_DEFAULT", ["", `${version},`]);
     const [, offset] = parseNumber(raw, 0);
@@ -848,7 +844,7 @@ export class Server {
   // Admin API Operations
   async adminapiDebuggingGetlogproperty(logdirectory: string): Promise<string> {
     if (logdirectory === null || logdirectory === undefined) {
-      throw new CFRDSError(CFRDS_STATUS.PARAM_IS_NULL, "logdirectory is required");
+      throw new CFRDSError("logdirectory is required");
     }
     const raw = await sendRdsCommand(this.ctx, "ADMINAPI", ["cfide.adminapi.debugging", "getlogproperty", logdirectory]);
     const [, offset] = parseNumber(raw, 0);
@@ -878,10 +874,10 @@ export class Server {
 
   async adminapiExtensionsSetmapping(name: string, path: string): Promise<void> {
     if (name === null || name === undefined) {
-      throw new CFRDSError(CFRDS_STATUS.PARAM_IS_NULL, "name is required");
+      throw new CFRDSError("name is required");
     }
     if (path === null || path === undefined) {
-      throw new CFRDSError(CFRDS_STATUS.PARAM_IS_NULL, "path is required");
+      throw new CFRDSError("path is required");
     }
     const wddx = `<wddxPacket version='1.0'><header/><data><struct><var name='${escapeXml(name)}'><string>${escapeXml(path)}</string></var></struct></data></wddxPacket>`;
     await sendRdsCommand(this.ctx, "ADMINAPI", ["cfide.adminapi.extensions", "setmappings", wddx]);
@@ -889,7 +885,7 @@ export class Server {
 
   async adminapiExtensionsDeletemapping(mapping: string): Promise<void> {
     if (mapping === null || mapping === undefined) {
-      throw new CFRDSError(CFRDS_STATUS.PARAM_IS_NULL, "mapping is required");
+      throw new CFRDSError("mapping is required");
     }
     await sendRdsCommand(this.ctx, "ADMINAPI", ["cfide.adminapi.extensions", "deleltemappings", mapping]);
   }
@@ -941,10 +937,10 @@ export class Server {
   // Graphing Operations
   async graphing(chartAttributes: string, seriesData: string[]): Promise<Buffer> {
     if (chartAttributes === null || chartAttributes === undefined) {
-      throw new CFRDSError(CFRDS_STATUS.PARAM_IS_NULL, "chartAttributes is required");
+      throw new CFRDSError("chartAttributes is required");
     }
     if (seriesData === null || seriesData === undefined) {
-      throw new CFRDSError(CFRDS_STATUS.PARAM_IS_NULL, "seriesData is required");
+      throw new CFRDSError("seriesData is required");
     }
     const args: (string | Buffer)[] = ["GRAPH", chartAttributes, String(seriesData.length), ...seriesData];
     return sendRdsCommand(this.ctx, "GRAPHING", args);

@@ -1,23 +1,3 @@
-export enum CFRDS_STATUS {
-  OK = 0,
-  MEMORY_ERROR = 1,
-  PARAM_IS_NULL = 2,
-  SERVER_IS_NULL = 3,
-  INVALID_INPUT_PARAMETER = 4,
-  INDEX_OUT_OF_BOUNDS = 5,
-  COMMAND_FAILED = 6,
-  RESPONSE_ERROR = 7,
-  HTTP_RESPONSE_NOT_FOUND = 8,
-  DIR_ALREADY_EXISTS = 9,
-  SOCKET_HOST_NOT_FOUND = 10,
-  SOCKET_CREATION_FAILED = 11,
-  CONNECTION_TO_SERVER_FAILED = 12,
-  WRITING_TO_SOCKET_FAILED = 13,
-  PARTIALLY_WRITE_TO_SOCKET = 14,
-  READING_FROM_SOCKET_FAILED = 15,
-  RESPONSE_TOO_LARGE = 16,
-}
-
 export enum CFRDS_DEBUGGER_EVENT_TYPE {
   BREAKPOINT_SET = 0,
   BREAKPOINT = 1,
@@ -131,18 +111,8 @@ export interface SecurityAnalyzerStatus {
 }
 
 export class CFRDSError extends Error {
-  status: CFRDS_STATUS;
-
-  constructor(status: CFRDS_STATUS, message: string = "") {
-    let statusName: string;
-    try {
-      statusName = CFRDS_STATUS[status];
-    } catch {
-      statusName = `STATUS_${status}`;
-    }
-    const fullMsg = message ? `${statusName} (${status}): ${message}` : `${statusName} (${status})`;
-    super(fullMsg);
-    this.status = status;
+  constructor(message: string = "") {
+    super(message);
     this.name = "CFRDSError";
   }
 }
@@ -157,6 +127,5 @@ export interface ServerConfig {
 export interface ServerContext {
   config: ServerConfig;
   encodedPassword: string;
-  errorCode: number;
   error: string | null;
 }

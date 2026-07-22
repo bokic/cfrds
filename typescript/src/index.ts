@@ -1,5 +1,4 @@
 export {
-  CFRDS_STATUS,
   CFRDS_DEBUGGER_EVENT_TYPE,
   CFRDSError,
   BrowseDirItem,

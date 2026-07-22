@@ -1,5 +1,5 @@
 import * as http from "http";
-import { CFRDS_STATUS, CFRDSError, ServerContext } from "./types";
+import { CFRDSError, ServerContext } from "./types";
 import { buildPayload, parseNumber } from "./parser";
 
 const MAX_RESPONSE_SIZE = 100 * 1024 * 1024;
@@ -9,7 +9,6 @@ export function sendRdsCommand(
   command: string,
   args: (string | Buffer)[]
 ): Promise<Buffer> {
-  ctx.errorCode = 1;
   ctx.error = null;
 
   const allItems = [...args];
@@ -50,11 +49,7 @@ export function sendRdsCommand(
           totalSize += chunk.length;
           if (totalSize > MAX_RESPONSE_SIZE) {
             res.destroy();
-            const err = new CFRDSError(
-              CFRDS_STATUS.RESPONSE_TOO_LARGE,
-              `Response too large: ${totalSize} bytes`
-            );
-            ctx.errorCode = CFRDS_STATUS.RESPONSE_TOO_LARGE;
+            const err = new CFRDSError(`Response too large: ${totalSize} bytes`);
             ctx.error = err.message;
             reject(err);
             return;
@@ -65,9 +60,8 @@ export function sendRdsCommand(
         res.on("end", () => {
           if (res.statusCode !== 200) {
             const msg = `HTTP ${res.statusCode} ${res.statusMessage || ""}`;
-            ctx.errorCode = CFRDS_STATUS.HTTP_RESPONSE_NOT_FOUND;
             ctx.error = msg;
-            reject(new CFRDSError(CFRDS_STATUS.HTTP_RESPONSE_NOT_FOUND, msg));
+            reject(new CFRDSError(`HTTP_RESPONSE_NOT_FOUND: ${msg}`));
             return;
           }
 
@@ -75,50 +69,51 @@ export function sendRdsCommand(
 
           try {
             const [errCode, offset] = parseNumber(body, 0);
-            ctx.errorCode = errCode;
 
             if (errCode < 0) {
               const errMsg = body.toString("utf-8", offset);
-              ctx.errorCode = CFRDS_STATUS.COMMAND_FAILED;
               ctx.error = errMsg;
-              reject(new CFRDSError(CFRDS_STATUS.COMMAND_FAILED, errMsg));
+              reject(new CFRDSError(`COMMAND_FAILED: ${errMsg}`));
               return;
             }
 
             resolve(body);
           } catch (e) {
-            if (e instanceof CFRDSError) {
-              ctx.errorCode = e.status;
-              ctx.error = e.message;
-              reject(e);
-            } else {
-              const msg = e instanceof Error ? e.message : String(e);
-              ctx.errorCode = CFRDS_STATUS.RESPONSE_ERROR;
-              ctx.error = msg;
-              reject(new CFRDSError(CFRDS_STATUS.RESPONSE_ERROR, msg));
-            }
+            const msg = e instanceof Error ? e.message : String(e);
+            ctx.error = msg;
+            reject(e instanceof CFRDSError ? e : new CFRDSError(`RESPONSE_ERROR: ${msg}`));
           }
         });
 
         res.on("error", (err) => {
-          ctx.errorCode = CFRDS_STATUS.READING_FROM_SOCKET_FAILED;
           ctx.error = err.message;
-          reject(new CFRDSError(CFRDS_STATUS.READING_FROM_SOCKET_FAILED, err.message));
+          reject(new CFRDSError(`Reading from socket failed: ${err.message}`));
         });
       }
     );
 
     req.on("timeout", () => {
       req.destroy();
-      ctx.errorCode = CFRDS_STATUS.CONNECTION_TO_SERVER_FAILED;
       ctx.error = "Connection timed out";
-      reject(new CFRDSError(CFRDS_STATUS.CONNECTION_TO_SERVER_FAILED, "Connection timed out"));
+      reject(new CFRDSError("Connection timed out"));
     });
 
-    req.on("error", (err) => {
-      ctx.errorCode = CFRDS_STATUS.CONNECTION_TO_SERVER_FAILED;
-      ctx.error = err.message;
-      reject(new CFRDSError(CFRDS_STATUS.CONNECTION_TO_SERVER_FAILED, err.message));
+    req.on("error", (err: any) => {
+      let desc = "Connection to server failed";
+      if (err && (err.code === "ENOTFOUND" || err.code === "EAI_AGAIN")) {
+        desc = "Socket host not found";
+      } else if (
+        err &&
+        (err.code === "EADDRNOTAVAIL" ||
+          err.code === "EACCES" ||
+          err.code === "EPERM" ||
+          err.code === "EMFILE" ||
+          err.code === "ENFILE")
+      ) {
+        desc = "Socket creation failed";
+      }
+      ctx.error = `${desc}: ${err.message}`;
+      reject(new CFRDSError(`${desc}: ${err.message}`));
     });
 
     req.write(payload);

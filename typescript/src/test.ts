@@ -1,5 +1,4 @@
 import {
-  CFRDS_STATUS,
   CFRDS_DEBUGGER_EVENT_TYPE,
   CFRDSError,
   Server,
@@ -63,8 +62,6 @@ async function main(): Promise<void> {
   log(`Module version: ${VERSION}`);
 
   // Verify status enums and constants
-  assert(CFRDS_STATUS.OK === 0, "CFRDS_STATUS.OK should be 0");
-  assert(CFRDS_STATUS.COMMAND_FAILED === 6, "CFRDS_STATUS.COMMAND_FAILED should be 6");
   assert(
     CFRDS_DEBUGGER_EVENT_TYPE.BREAKPOINT === 1,
     "CFRDS_DEBUGGER_EVENT_TYPE.BREAKPOINT should be 1"
@@ -75,10 +72,8 @@ async function main(): Promise<void> {
   );
 
   // Verify CFRDSError works
-  const err = new CFRDSError(CFRDS_STATUS.COMMAND_FAILED, "test error");
-  assert(err.status === CFRDS_STATUS.COMMAND_FAILED, "CFRDSError.status should match");
-  assert(err.message.includes("COMMAND_FAILED"), "CFRDSError message should contain status name");
-  assert(err.message.includes("test error"), "CFRDSError message should contain custom message");
+  const err = new CFRDSError("test error");
+  assert(err.message === "test error", "CFRDSError message should match");
   assert(err.name === "CFRDSError", "CFRDSError.name should be 'CFRDSError'");
 
   // Verify Server class exists and has all expected methods on its prototype
@@ -88,7 +83,6 @@ async function main(): Promise<void> {
     "getUsername",
     "getPassword",
     "getError",
-    "getErrorCode",
     "clearError",
     "close",
     "browseDir",
@@ -184,7 +178,6 @@ async function main(): Promise<void> {
   assert(srv.getUsername() === "testuser", "getUsername should return constructor value");
   assert(srv.getPassword() === "testpass", "getPassword should return constructor value");
   assert(srv.getError() === null, "getError should be null initially");
-  assert(srv.getErrorCode() === 1, "getErrorCode should be 1 initially");
 
   srv.clearError();
   assert(srv.getError() === null, "clearError should reset error");
@@ -235,13 +228,13 @@ async function main(): Promise<void> {
       try {
         await srvMock.browseDir("/");
       } catch (e: any) {
-        if (e instanceof CFRDSError && e.status === CFRDS_STATUS.RESPONSE_ERROR) {
+        if (e instanceof CFRDSError && e.message.includes("Invalid total items count")) {
           threw = true;
         } else {
           throw new Error(`Unexpected error thrown: ${e}`);
         }
       }
-      assert(threw, "browseDir should throw CFRDSError(RESPONSE_ERROR) when total is 3");
+      assert(threw, "browseDir should throw CFRDSError containing Invalid total items count when total is 3");
 
       log("Offline browseDir validation tests passed!");
 
@@ -355,6 +348,54 @@ async function main(): Promise<void> {
         assert(cfrds_debugger_event_get_java_trace_item(mockEvent, 0) === "jtrace1", "java_trace item 0 mismatch");
 
         log("Offline debugger event accessors tests passed!");
+      }
+
+      // Test 8: Transport error mapping offline validation
+      {
+        let mockErrorCode: string | undefined = undefined;
+
+        httpModule.request = (options: any, callback: any) => {
+          const mockReq = new EventEmitter() as any;
+          mockReq.write = () => {};
+          mockReq.end = () => {
+            process.nextTick(() => {
+              const err = new Error("Mocked network error") as any;
+              err.code = mockErrorCode;
+              mockReq.emit("error", err);
+            });
+          };
+          return mockReq;
+        };
+
+        const testErrorMapping = async (code: string | undefined, expectedMsgSubstr: string) => {
+          mockErrorCode = code;
+          let threw = false;
+          try {
+            await srvMock.browseDir("/");
+          } catch (e: any) {
+            if (e instanceof CFRDSError && e.message.includes(expectedMsgSubstr)) {
+              threw = true;
+            } else {
+              throw new Error(`Unexpected error thrown for code ${code}: ${e}`);
+            }
+          }
+          assert(threw, `Should throw CFRDSError containing "${expectedMsgSubstr}" for network error code ${code}`);
+        };
+
+        await testErrorMapping("ENOTFOUND", "Socket host not found");
+        await testErrorMapping("EAI_AGAIN", "Socket host not found");
+        
+        await testErrorMapping("EADDRNOTAVAIL", "Socket creation failed");
+        await testErrorMapping("EACCES", "Socket creation failed");
+        await testErrorMapping("EPERM", "Socket creation failed");
+        await testErrorMapping("EMFILE", "Socket creation failed");
+        await testErrorMapping("ENFILE", "Socket creation failed");
+
+        await testErrorMapping("ECONNREFUSED", "Connection to server failed");
+        await testErrorMapping("ETIMEDOUT", "Connection to server failed");
+        await testErrorMapping(undefined, "Connection to server failed");
+
+        log("Offline transport error mapping tests passed!");
       }
 
       log("Offline WDDX escaping validation tests passed!");

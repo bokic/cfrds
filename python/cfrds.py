@@ -843,6 +843,8 @@ class server:
 
     # Browse Directory
     def browse_dir(self, path: str) -> List[Dict[str, Any]]:
+        if path is None:
+            raise CFRDSError(CFRDS_STATUS_PARAM_IS_NULL, "path is required")
         raw = _send_rds_command(self._ctx, "BROWSEDIR", [path, ""])
         total, offset = _parse_number(raw, 0)
         if total < 0 or (total != 0 and total % 5 != 0):
@@ -894,6 +896,8 @@ class server:
 
     # File Operations
     def file_read(self, filepath: str) -> bytearray:
+        if filepath is None:
+            raise CFRDSError(CFRDS_STATUS_PARAM_IS_NULL, "filepath is required")
         raw = _send_rds_command(self._ctx, "FILEIO", [filepath, "READ", ""])
         total, offset = _parse_number(raw, 0)
         data_bytes, offset = _parse_bytearray(raw, offset)
@@ -902,6 +906,10 @@ class server:
         return bytearray(data_bytes)
 
     def file_write(self, filepath: str, content: Union[bytes, bytearray, str]) -> None:
+        if filepath is None:
+            raise CFRDSError(CFRDS_STATUS_PARAM_IS_NULL, "filepath is required")
+        if content is None:
+            raise CFRDSError(CFRDS_STATUS_PARAM_IS_NULL, "content is required")
         if isinstance(content, str):
             data_bytes = content.encode("utf-8")
         else:
@@ -909,15 +917,25 @@ class server:
         _send_rds_command(self._ctx, "FILEIO", [filepath, "WRITE", "", data_bytes])
 
     def file_rename(self, filepath_from: str, filepath_to: str) -> None:
+        if filepath_from is None:
+            raise CFRDSError(CFRDS_STATUS_PARAM_IS_NULL, "filepath_from is required")
+        if filepath_to is None:
+            raise CFRDSError(CFRDS_STATUS_PARAM_IS_NULL, "filepath_to is required")
         _send_rds_command(self._ctx, "FILEIO", [filepath_from, "RENAME", "", filepath_to])
 
     def file_remove(self, filepath: str) -> None:
+        if filepath is None:
+            raise CFRDSError(CFRDS_STATUS_PARAM_IS_NULL, "filepath is required")
         _send_rds_command(self._ctx, "FILEIO", [filepath, "REMOVE", "", "F"])
 
     def dir_remove(self, dirpath: str) -> None:
+        if dirpath is None:
+            raise CFRDSError(CFRDS_STATUS_PARAM_IS_NULL, "dirpath is required")
         _send_rds_command(self._ctx, "FILEIO", [dirpath, "REMOVE", "", "D"])
 
     def file_exists(self, pathname: str) -> bool:
+        if pathname is None:
+            raise CFRDSError(CFRDS_STATUS_PARAM_IS_NULL, "pathname is required")
         try:
             _send_rds_command(self._ctx, "FILEIO", [pathname, "EXISTENCE", "", ""])
             return True
@@ -927,6 +945,8 @@ class server:
             raise
 
     def dir_create(self, dirpath: str) -> None:
+        if dirpath is None:
+            raise CFRDSError(CFRDS_STATUS_PARAM_IS_NULL, "dirpath is required")
         _send_rds_command(self._ctx, "FILEIO", [dirpath, "CREATE", "", ""])
 
     def cf_root_dir(self) -> Optional[str]:
@@ -948,6 +968,8 @@ class server:
         return dsns
 
     def sql_tableinfo(self, connection_name: str) -> List[Dict[str, Optional[str]]]:
+        if connection_name is None:
+            raise CFRDSError(CFRDS_STATUS_PARAM_IS_NULL, "connection_name is required")
         raw = _send_rds_command(self._ctx, "DBFUNCS", [connection_name, "TABLEINFO"])
         cnt, offset = _parse_number(raw, 0)
         tables: List[Dict[str, Optional[str]]] = []
@@ -962,6 +984,10 @@ class server:
         return tables
 
     def sql_columninfo(self, connection_name: str, table_name: str) -> List[Dict[str, Any]]:
+        if connection_name is None:
+            raise CFRDSError(CFRDS_STATUS_PARAM_IS_NULL, "connection_name is required")
+        if table_name is None:
+            raise CFRDSError(CFRDS_STATUS_PARAM_IS_NULL, "table_name is required")
         raw = _send_rds_command(self._ctx, "DBFUNCS", [connection_name, "COLUMNINFO", table_name])
         cnt, offset = _parse_number(raw, 0)
         cols: List[Dict[str, Any]] = []
@@ -984,6 +1010,10 @@ class server:
         return cols
 
     def sql_primarykeys(self, connection_name: str, table_name: str) -> List[Dict[str, Any]]:
+        if connection_name is None:
+            raise CFRDSError(CFRDS_STATUS_PARAM_IS_NULL, "connection_name is required")
+        if table_name is None:
+            raise CFRDSError(CFRDS_STATUS_PARAM_IS_NULL, "table_name is required")
         raw = _send_rds_command(self._ctx, "DBFUNCS", [connection_name, "PRIMARYKEYS", table_name])
         cnt, offset = _parse_number(raw, 0)
         keys: List[Dict[str, Any]] = []
@@ -1000,6 +1030,10 @@ class server:
         return keys
 
     def sql_foreignkeys(self, connection_name: str, table_name: str) -> List[Dict[str, Any]]:
+        if connection_name is None:
+            raise CFRDSError(CFRDS_STATUS_PARAM_IS_NULL, "connection_name is required")
+        if table_name is None:
+            raise CFRDSError(CFRDS_STATUS_PARAM_IS_NULL, "table_name is required")
         raw = _send_rds_command(self._ctx, "DBFUNCS", [connection_name, "FOREIGNKEYS", table_name])
         cnt, offset = _parse_number(raw, 0)
         keys: List[Dict[str, Any]] = []
@@ -1022,6 +1056,10 @@ class server:
         return keys
 
     def sql_importedkeys(self, connection_name: str, table_name: str) -> List[Dict[str, Any]]:
+        if connection_name is None:
+            raise CFRDSError(CFRDS_STATUS_PARAM_IS_NULL, "connection_name is required")
+        if table_name is None:
+            raise CFRDSError(CFRDS_STATUS_PARAM_IS_NULL, "table_name is required")
         raw = _send_rds_command(self._ctx, "DBFUNCS", [connection_name, "IMPORTEDKEYS", table_name])
         cnt, offset = _parse_number(raw, 0)
         keys: List[Dict[str, Any]] = []
@@ -1044,6 +1082,10 @@ class server:
         return keys
 
     def sql_exportedkeys(self, connection_name: str, table_name: str) -> List[Dict[str, Any]]:
+        if connection_name is None:
+            raise CFRDSError(CFRDS_STATUS_PARAM_IS_NULL, "connection_name is required")
+        if table_name is None:
+            raise CFRDSError(CFRDS_STATUS_PARAM_IS_NULL, "table_name is required")
         raw = _send_rds_command(self._ctx, "DBFUNCS", [connection_name, "EXPORTEDKEYS", table_name])
         cnt, offset = _parse_number(raw, 0)
         keys: List[Dict[str, Any]] = []
@@ -1066,6 +1108,10 @@ class server:
         return keys
 
     def sql_sqlstmnt(self, connection_name: str, sql: str) -> Dict[str, Any]:
+        if connection_name is None:
+            raise CFRDSError(CFRDS_STATUS_PARAM_IS_NULL, "connection_name is required")
+        if sql is None:
+            raise CFRDSError(CFRDS_STATUS_PARAM_IS_NULL, "sql is required")
         raw = _send_rds_command(self._ctx, "DBFUNCS", [connection_name, "SQLSTMNT", sql])
         cnt, offset = _parse_number(raw, 0)
         rows = max(0, cnt - 1)
@@ -1085,6 +1131,10 @@ class server:
         return {"columns": cols, "rows": rows, "names": names, "values": data_rows}
 
     def sql_metadata(self, connection_name: str, sql: str) -> List[Dict[str, Optional[str]]]:
+        if connection_name is None:
+            raise CFRDSError(CFRDS_STATUS_PARAM_IS_NULL, "connection_name is required")
+        if sql is None:
+            raise CFRDSError(CFRDS_STATUS_PARAM_IS_NULL, "sql is required")
         raw = _send_rds_command(self._ctx, "DBFUNCS", [connection_name, "SQLMETADATA", sql])
         cnt, offset = _parse_number(raw, 0)
         meta: List[Dict[str, Optional[str]]] = []
@@ -1108,6 +1158,8 @@ class server:
         return cmds
 
     def sql_dbdescription(self, connection_name: str) -> Optional[str]:
+        if connection_name is None:
+            raise CFRDSError(CFRDS_STATUS_PARAM_IS_NULL, "connection_name is required")
         raw = _send_rds_command(self._ctx, "DBFUNCS", [connection_name, "DBDESCRIPTION"])
         _, offset = _parse_number(raw, 0)
         item, _ = _parse_string(raw, offset)
@@ -1122,10 +1174,12 @@ class server:
         return session_id
 
     def debugger_stop(self, session_name: str) -> None:
+        if session_name is None:
+            raise CFRDSError(CFRDS_STATUS_PARAM_IS_NULL, "session_name is required")
         _send_rds_command(self._ctx, "DBGREQUEST", ["DBG_STOP", session_name])
 
     def debugger_get_server_info(self, session_name: str) -> int:
-        if not session_name:
+        if session_name is None:
             raise CFRDSError(CFRDS_STATUS_PARAM_IS_NULL, "session_name is required")
         raw = _send_rds_command(self._ctx, "DBGREQUEST", ["DBG_GET_DEBUG_SERVER_INFO", session_name])
         _, offset = _parse_number(raw, 0)
@@ -1139,16 +1193,30 @@ class server:
         return 0
 
     def debugger_breakpoint_on_exception(self, session_name: str, enable: bool) -> None:
+        if session_name is None:
+            raise CFRDSError(CFRDS_STATUS_PARAM_IS_NULL, "session_name is required")
+        if enable is None:
+            raise CFRDSError(CFRDS_STATUS_PARAM_IS_NULL, "enable is required")
         val = "true" if enable else "false"
         wddx = f"<wddxPacket version='1.0'><header/><data><array length='1'><struct type='java.util.HashMap'><var name='COMMAND'><string>SESSION_BREAK_ON_EXCEPTION</string></var><var name='BREAK_ON_EXCEPTION'><boolean value='{val}'/></var></struct></array></data></wddxPacket>"
         _send_rds_command(self._ctx, "DBGREQUEST", ["DBG_REQUEST", session_name, wddx])
 
     def debugger_breakpoint(self, session_name: str, filepath: str, line: int, enable: bool) -> None:
+        if session_name is None:
+            raise CFRDSError(CFRDS_STATUS_PARAM_IS_NULL, "session_name is required")
+        if filepath is None:
+            raise CFRDSError(CFRDS_STATUS_PARAM_IS_NULL, "filepath is required")
+        if line is None:
+            raise CFRDSError(CFRDS_STATUS_PARAM_IS_NULL, "line is required")
+        if enable is None:
+            raise CFRDSError(CFRDS_STATUS_PARAM_IS_NULL, "enable is required")
         cmd = "SET_BREAKPOINT" if enable else "UNSET_BREAKPOINT"
         wddx = f"<wddxPacket version='1.0'><header/><data><array length='1'><struct type='java.util.HashMap'><var name='COMMAND'><string>{cmd}</string></var><var name='FILE'><string>{_escape_xml(filepath)}</string></var><var name='Y'><number>{line}</number></var><var name='SEQ'><number>1.0</number></var></struct></array></data></wddxPacket>"
         _send_rds_command(self._ctx, "DBGREQUEST", ["DBG_REQUEST", session_name, wddx])
 
     def debugger_clear_all_breakpoints(self, session_name: str) -> None:
+        if session_name is None:
+            raise CFRDSError(CFRDS_STATUS_PARAM_IS_NULL, "session_name is required")
         wddx = "<wddxPacket version='1.0'><header/><data><array length='1'><struct type='java.util.HashMap'><var name='COMMAND'><string>UNSET_ALL_BREAKPOINTS</string></var></struct></array></data></wddxPacket>"
         _send_rds_command(self._ctx, "DBGREQUEST", ["DBG_REQUEST", session_name, wddx])
 
@@ -1206,6 +1274,8 @@ class server:
         Fetches debugger events for the specified session.
         NOTE: This is a long-polling request on the ColdFusion server that blocks until a debugger event occurs or times out.
         """
+        if session_name is None:
+            raise CFRDSError(CFRDS_STATUS_PARAM_IS_NULL, "session_name is required")
         raw = _send_rds_command(self._ctx, "DBGREQUEST", ["DBG_EVENTS", session_name])
         return self._parse_debugger_event(raw)
 
@@ -1216,6 +1286,18 @@ class server:
         Configures fetch flags and waits for debugger events.
         NOTE: This is a long-polling request on the ColdFusion server that blocks until a debugger event occurs or times out.
         """
+        if session_name is None:
+            raise CFRDSError(CFRDS_STATUS_PARAM_IS_NULL, "session_name is required")
+        if threads is None:
+            raise CFRDSError(CFRDS_STATUS_PARAM_IS_NULL, "threads is required")
+        if watch is None:
+            raise CFRDSError(CFRDS_STATUS_PARAM_IS_NULL, "watch is required")
+        if scopes is None:
+            raise CFRDSError(CFRDS_STATUS_PARAM_IS_NULL, "scopes is required")
+        if cf_trace is None:
+            raise CFRDSError(CFRDS_STATUS_PARAM_IS_NULL, "cf_trace is required")
+        if java_trace is None:
+            raise CFRDSError(CFRDS_STATUS_PARAM_IS_NULL, "java_trace is required")
         def b(v: bool) -> str:
             return "true" if v else "false"
         wddx = (f"<wddxPacket version='1.0'><header/><data><struct type='java.util.HashMap'>"
@@ -1229,36 +1311,74 @@ class server:
         return self._parse_debugger_event(raw)
 
     def debugger_step_in(self, session_name: str, thread_name: str) -> None:
+        if session_name is None:
+            raise CFRDSError(CFRDS_STATUS_PARAM_IS_NULL, "session_name is required")
+        if thread_name is None:
+            raise CFRDSError(CFRDS_STATUS_PARAM_IS_NULL, "thread_name is required")
         wddx = f"<wddxPacket version='1.0'><header/><data><array length='1'><struct type='java.util.HashMap'><var name='COMMAND'><string>STEP_IN</string></var><var name='THREAD'><string>{_escape_xml(thread_name)}</string></var></struct></array></data></wddxPacket>"
         _send_rds_command(self._ctx, "DBGREQUEST", ["DBG_REQUEST", session_name, wddx])
 
     def debugger_step_over(self, session_name: str, thread_name: str) -> None:
+        if session_name is None:
+            raise CFRDSError(CFRDS_STATUS_PARAM_IS_NULL, "session_name is required")
+        if thread_name is None:
+            raise CFRDSError(CFRDS_STATUS_PARAM_IS_NULL, "thread_name is required")
         wddx = f"<wddxPacket version='1.0'><header/><data><array length='1'><struct type='java.util.HashMap'><var name='COMMAND'><string>STEP_OVER</string></var><var name='THREAD'><string>{_escape_xml(thread_name)}</string></var></struct></array></data></wddxPacket>"
         _send_rds_command(self._ctx, "DBGREQUEST", ["DBG_REQUEST", session_name, wddx])
 
     def debugger_step_out(self, session_name: str, thread_name: str) -> None:
+        if session_name is None:
+            raise CFRDSError(CFRDS_STATUS_PARAM_IS_NULL, "session_name is required")
+        if thread_name is None:
+            raise CFRDSError(CFRDS_STATUS_PARAM_IS_NULL, "thread_name is required")
         wddx = f"<wddxPacket version='1.0'><header/><data><array length='1'><struct type='java.util.HashMap'><var name='COMMAND'><string>STEP_OUT</string></var><var name='THREAD'><string>{_escape_xml(thread_name)}</string></var></struct></array></data></wddxPacket>"
         _send_rds_command(self._ctx, "DBGREQUEST", ["DBG_REQUEST", session_name, wddx])
 
     def debugger_continue(self, session_name: str, thread_name: str) -> None:
+        if session_name is None:
+            raise CFRDSError(CFRDS_STATUS_PARAM_IS_NULL, "session_name is required")
+        if thread_name is None:
+            raise CFRDSError(CFRDS_STATUS_PARAM_IS_NULL, "thread_name is required")
         wddx = f"<wddxPacket version='1.0'><header/><data><array length='1'><struct type='java.util.HashMap'><var name='COMMAND'><string>CONTINUE</string></var><var name='THREAD'><string>{_escape_xml(thread_name)}</string></var></struct></array></data></wddxPacket>"
         _send_rds_command(self._ctx, "DBGREQUEST", ["DBG_REQUEST", session_name, wddx])
 
     def debugger_watch_expression(self, session_name: str, thread_name: str, expression: str) -> None:
+        if session_name is None:
+            raise CFRDSError(CFRDS_STATUS_PARAM_IS_NULL, "session_name is required")
+        if thread_name is None:
+            raise CFRDSError(CFRDS_STATUS_PARAM_IS_NULL, "thread_name is required")
+        if expression is None:
+            raise CFRDSError(CFRDS_STATUS_PARAM_IS_NULL, "expression is required")
         wddx = f"<wddxPacket version='1.0'><header/><data><array length='1'><struct type='java.util.HashMap'><var name='COMMAND'><string>GET_SINGLE_CF_VARIABLE</string></var><var name='VARIABLE_NAME'><string>{_escape_xml(expression)}</string></var><var name='THREAD'><string>{_escape_xml(thread_name)}</string></var></struct></array></data></wddxPacket>"
         _send_rds_command(self._ctx, "DBGREQUEST", ["DBG_REQUEST", session_name, wddx])
 
     def debugger_set_variable(self, session_name: str, thread_name: str, variable: str, value: str) -> None:
+        if session_name is None:
+            raise CFRDSError(CFRDS_STATUS_PARAM_IS_NULL, "session_name is required")
+        if thread_name is None:
+            raise CFRDSError(CFRDS_STATUS_PARAM_IS_NULL, "thread_name is required")
+        if variable is None:
+            raise CFRDSError(CFRDS_STATUS_PARAM_IS_NULL, "variable is required")
+        if value is None:
+            raise CFRDSError(CFRDS_STATUS_PARAM_IS_NULL, "value is required")
         wddx = f"<wddxPacket version='1.0'><header/><data><array length='1'><struct type='java.util.HashMap'><var name='COMMAND'><string>SET_VARIABLE_VALUE</string></var><var name='VARIABLE_NAME'><string>{_escape_xml(variable)}</string></var><var name='VARIABLE_VALUE'><string>{_escape_xml(value)}</string></var><var name='THREAD'><string>{_escape_xml(thread_name)}</string></var></struct></array></data></wddxPacket>"
         _send_rds_command(self._ctx, "DBGREQUEST", ["DBG_REQUEST", session_name, wddx])
 
     def debugger_watch_variables(self, session_name: str, variables: str) -> None:
+        if session_name is None:
+            raise CFRDSError(CFRDS_STATUS_PARAM_IS_NULL, "session_name is required")
+        if variables is None:
+            raise CFRDSError(CFRDS_STATUS_PARAM_IS_NULL, "variables is required")
         vars_list = [v.strip() for v in variables.split(",") if v.strip()]
         var_tags = "".join([f"<string>{_escape_xml(v)}</string>" for v in vars_list])
         wddx = f"<wddxPacket version='1.0'><header/><data><array length='1'><struct type='java.util.HashMap'><var name='COMMAND'><string>SET_WATCH_VARIABLES</string></var><var name='WATCH'><array length='{len(vars_list)}'>{var_tags}</array></var></struct></array></data></wddxPacket>"
         _send_rds_command(self._ctx, "DBGREQUEST", ["DBG_REQUEST", session_name, wddx])
 
     def debugger_get_output(self, session_name: str, thread_name: str) -> str:
+        if session_name is None:
+            raise CFRDSError(CFRDS_STATUS_PARAM_IS_NULL, "session_name is required")
+        if thread_name is None:
+            raise CFRDSError(CFRDS_STATUS_PARAM_IS_NULL, "thread_name is required")
         wddx = f"<wddxPacket version='1.0'><header/><data><array length='1'><struct type='java.util.HashMap'><var name='COMMAND'><string>GET_OUTPUT</string></var><var name='BODY_ONLY'><boolean value='true'/></var><var name='THREAD'><string>{_escape_xml(thread_name)}</string></var></struct></array></data></wddxPacket>"
         raw = _send_rds_command(self._ctx, "DBGREQUEST", ["DBG_REQUEST", session_name, wddx])
         if not raw:
@@ -1274,11 +1394,17 @@ class server:
         return ""
 
     def debugger_set_scope_filter(self, session_name: str, filter_str: str) -> None:
+        if session_name is None:
+            raise CFRDSError(CFRDS_STATUS_PARAM_IS_NULL, "session_name is required")
+        if filter_str is None:
+            raise CFRDSError(CFRDS_STATUS_PARAM_IS_NULL, "filter_str is required")
         wddx = f"<wddxPacket version='1.0'><header/><data><array length='1'><struct type='java.util.HashMap'><var name='COMMAND'><string>SET_SCOPE_FILTER</string></var><var name='FILTER'><string>{_escape_xml(filter_str)}</string></var></struct></array></data></wddxPacket>"
         _send_rds_command(self._ctx, "DBGREQUEST", ["DBG_REQUEST", session_name, wddx])
 
     # Security Analyzer Operations
     def security_analyzer_scan(self, pathnames: str, recursively: bool = True, cores: int = 1) -> int:
+        if pathnames is None:
+            raise CFRDSError(CFRDS_STATUS_PARAM_IS_NULL, "pathnames is required")
         raw = _send_rds_command(
             self._ctx, "SECURITYANALYZER", ["scan", pathnames, "true" if recursively else "false", str(cores)]
         )
@@ -1292,9 +1418,13 @@ class server:
             return 0
 
     def security_analyzer_cancel(self, command_id: int) -> None:
+        if command_id is None:
+            raise CFRDSError(CFRDS_STATUS_PARAM_IS_NULL, "command_id is required")
         _send_rds_command(self._ctx, "SECURITYANALYZER", ["cancel", str(command_id)])
 
     def security_analyzer_status(self, command_id: int) -> Dict[str, Any]:
+        if command_id is None:
+            raise CFRDSError(CFRDS_STATUS_PARAM_IS_NULL, "command_id is required")
         raw = _send_rds_command(self._ctx, "SECURITYANALYZER", ["status", str(command_id)])
         _, offset = _parse_number(raw, 0)
         json_str, _ = _parse_string(raw, offset)
@@ -1316,6 +1446,8 @@ class server:
             }
 
     def security_analyzer_result(self, command_id: int) -> Optional[Dict[str, Any]]:
+        if command_id is None:
+            raise CFRDSError(CFRDS_STATUS_PARAM_IS_NULL, "command_id is required")
         raw = _send_rds_command(self._ctx, "SECURITYANALYZER", ["result", str(command_id)])
         _, offset = _parse_number(raw, 0)
         json_str, _ = _parse_string(raw, offset)
@@ -1326,10 +1458,14 @@ class server:
             return {"raw": json_str}
 
     def security_analyzer_clean(self, command_id: int) -> None:
+        if command_id is None:
+            raise CFRDSError(CFRDS_STATUS_PARAM_IS_NULL, "command_id is required")
         _send_rds_command(self._ctx, "SECURITYANALYZER", ["clean", str(command_id)])
 
     # IDE Default
     def ide_default(self, version: int = 1) -> Dict[str, Any]:
+        if version is None:
+            raise CFRDSError(CFRDS_STATUS_PARAM_IS_NULL, "version is required")
         raw = _send_rds_command(self._ctx, "IDE_DEFAULT", ["", f"{version},"])
         _, offset = _parse_number(raw, 0)
         n1, offset = _parse_string(raw, offset)
@@ -1350,6 +1486,8 @@ class server:
 
     # Admin API Operations
     def adminapi_debugging_getlogproperty(self, logdirectory: str) -> Optional[str]:
+        if logdirectory is None:
+            raise CFRDSError(CFRDS_STATUS_PARAM_IS_NULL, "logdirectory is required")
         raw = _send_rds_command(self._ctx, "ADMINAPI", ["cfide.adminapi.debugging", "getlogproperty", logdirectory])
         _, offset = _parse_number(raw, 0)
         prop_str, _ = _parse_string(raw, offset)
@@ -1371,11 +1509,17 @@ class server:
         return paths
 
     def adminapi_extensions_setmapping(self, name: str, path: str) -> None:
+        if name is None:
+            raise CFRDSError(CFRDS_STATUS_PARAM_IS_NULL, "name is required")
+        if path is None:
+            raise CFRDSError(CFRDS_STATUS_PARAM_IS_NULL, "path is required")
         # The C code serializes name+path into a WDDX struct before sending
         wddx = f"<wddxPacket version='1.0'><header/><data><struct><var name='{_escape_xml(name)}'><string>{_escape_xml(path)}</string></var></struct></data></wddxPacket>"
         _send_rds_command(self._ctx, "ADMINAPI", ["cfide.adminapi.extensions", "setmappings", wddx])
 
     def adminapi_extensions_deletemapping(self, mapping: str) -> None:
+        if mapping is None:
+            raise CFRDSError(CFRDS_STATUS_PARAM_IS_NULL, "mapping is required")
         _send_rds_command(self._ctx, "ADMINAPI", ["cfide.adminapi.extensions", "deleltemappings", mapping])
 
     def adminapi_extensions_getmappings(self) -> cfrds_adminapi_mappings:
@@ -1424,6 +1568,10 @@ class server:
 
     # Graphing Operations
     def graphing(self, chart_attributes: str, series_data: List[str]) -> bytes:
+        if chart_attributes is None:
+            raise CFRDSError(CFRDS_STATUS_PARAM_IS_NULL, "chart_attributes is required")
+        if series_data is None:
+            raise CFRDSError(CFRDS_STATUS_PARAM_IS_NULL, "series_data is required")
         args = ["GRAPH", chart_attributes, str(len(series_data))] + series_data
         raw = _send_rds_command(self._ctx, "GRAPHING", args)
         return raw
@@ -1486,7 +1634,9 @@ def cfrds_server_get_password(srv: Optional[cfrds_server]) -> Optional[str]:
     return srv.orig_password if srv else None
 
 # Low-level Command Wrappers
-def cfrds_command_browse_dir(srv: cfrds_server, path: str, out_ptr: List[Any]) -> int:
+def cfrds_command_browse_dir(srv: Optional[cfrds_server], path: Optional[str], out_ptr: Optional[List[Any]]) -> int:
+    if srv is None or path is None or out_ptr is None:
+        return CFRDS_STATUS_PARAM_IS_NULL
     try:
         s = server(srv.host, srv.port, srv.username, srv.orig_password)
         items = s.browse_dir(path)
@@ -1509,12 +1659,14 @@ def cfrds_browse_dir_count(val: cfrds_browse_dir) -> int:
     return len(val) if val else 0
 
 def cfrds_browse_dir_item_get_kind(val: cfrds_browse_dir, ndx: int) -> str:
-    return val.items[ndx]["kind"]
+    return val.items[ndx]["kind"] if val else "F"
 
 def cfrds_browse_dir_item_get_name(val: cfrds_browse_dir, ndx: int) -> Optional[str]:
-    return val.items[ndx]["name"]
+    return val.items[ndx]["name"] if val else None
 
 def cfrds_browse_dir_item_get_permissions(val: cfrds_browse_dir, ndx: int) -> int:
+    if not val:
+        return 0
     perms_str = val.items[ndx]["permissions"]
     res = 0
     if len(perms_str) > 1 and perms_str[1] == 'R':
@@ -1528,12 +1680,14 @@ def cfrds_browse_dir_item_get_permissions(val: cfrds_browse_dir, ndx: int) -> in
     return res
 
 def cfrds_browse_dir_item_get_size(val: cfrds_browse_dir, ndx: int) -> int:
-    return val.items[ndx]["size"]
+    return val.items[ndx]["size"] if val else 0
 
 def cfrds_browse_dir_item_get_modified(val: cfrds_browse_dir, ndx: int) -> int:
-    return val.items[ndx]["modified"]
+    return val.items[ndx]["modified"] if val else 0
 
-def cfrds_command_file_read(srv: cfrds_server, pathname: str, out_ptr: List[Any]) -> int:
+def cfrds_command_file_read(srv: Optional[cfrds_server], pathname: Optional[str], out_ptr: Optional[List[Any]]) -> int:
+    if srv is None or pathname is None or out_ptr is None:
+        return CFRDS_STATUS_PARAM_IS_NULL
     try:
         s = server(srv.host, srv.port, srv.username, srv.orig_password)
         data = s.file_read(pathname)
@@ -1561,7 +1715,9 @@ def cfrds_file_content_get_modified(val: cfrds_file_content) -> Optional[str]:
 def cfrds_file_content_get_permission(val: cfrds_file_content) -> Optional[str]:
     return val.permission if val else None
 
-def cfrds_command_file_write(srv: cfrds_server, pathname: str, data: bytes, length: int) -> int:
+def cfrds_command_file_write(srv: Optional[cfrds_server], pathname: Optional[str], data: Optional[bytes], length: Optional[int]) -> int:
+    if srv is None or pathname is None or data is None or length is None:
+        return CFRDS_STATUS_PARAM_IS_NULL
     try:
         s = server(srv.host, srv.port, srv.username, srv.orig_password)
         s.file_write(pathname, data[:length])
@@ -1572,7 +1728,9 @@ def cfrds_command_file_write(srv: cfrds_server, pathname: str, data: bytes, leng
         srv.set_error(CFRDS_STATUS_COMMAND_FAILED, str(e))
         return CFRDS_STATUS_COMMAND_FAILED
 
-def cfrds_command_file_rename(srv: cfrds_server, current_pathname: str, new_pathname: str) -> int:
+def cfrds_command_file_rename(srv: Optional[cfrds_server], current_pathname: Optional[str], new_pathname: Optional[str]) -> int:
+    if srv is None or current_pathname is None or new_pathname is None:
+        return CFRDS_STATUS_PARAM_IS_NULL
     try:
         s = server(srv.host, srv.port, srv.username, srv.orig_password)
         s.file_rename(current_pathname, new_pathname)
@@ -1583,7 +1741,9 @@ def cfrds_command_file_rename(srv: cfrds_server, current_pathname: str, new_path
         srv.set_error(CFRDS_STATUS_COMMAND_FAILED, str(e))
         return CFRDS_STATUS_COMMAND_FAILED
 
-def cfrds_command_file_remove_file(srv: cfrds_server, pathname: str) -> int:
+def cfrds_command_file_remove_file(srv: Optional[cfrds_server], pathname: Optional[str]) -> int:
+    if srv is None or pathname is None:
+        return CFRDS_STATUS_PARAM_IS_NULL
     try:
         s = server(srv.host, srv.port, srv.username, srv.orig_password)
         s.file_remove(pathname)
@@ -1594,7 +1754,9 @@ def cfrds_command_file_remove_file(srv: cfrds_server, pathname: str) -> int:
         srv.set_error(CFRDS_STATUS_COMMAND_FAILED, str(e))
         return CFRDS_STATUS_COMMAND_FAILED
 
-def cfrds_command_file_remove_dir(srv: cfrds_server, path: str) -> int:
+def cfrds_command_file_remove_dir(srv: Optional[cfrds_server], path: Optional[str]) -> int:
+    if srv is None or path is None:
+        return CFRDS_STATUS_PARAM_IS_NULL
     try:
         s = server(srv.host, srv.port, srv.username, srv.orig_password)
         s.dir_remove(path)
@@ -1605,7 +1767,9 @@ def cfrds_command_file_remove_dir(srv: cfrds_server, path: str) -> int:
         srv.set_error(CFRDS_STATUS_COMMAND_FAILED, str(e))
         return CFRDS_STATUS_COMMAND_FAILED
 
-def cfrds_command_file_exists(srv: cfrds_server, pathname: str, out_ptr: List[Any]) -> int:
+def cfrds_command_file_exists(srv: Optional[cfrds_server], pathname: Optional[str], out_ptr: Optional[List[Any]]) -> int:
+    if srv is None or pathname is None or out_ptr is None:
+        return CFRDS_STATUS_PARAM_IS_NULL
     try:
         s = server(srv.host, srv.port, srv.username, srv.orig_password)
         exists = s.file_exists(pathname)
@@ -1618,7 +1782,9 @@ def cfrds_command_file_exists(srv: cfrds_server, pathname: str, out_ptr: List[An
         srv.set_error(CFRDS_STATUS_COMMAND_FAILED, str(e))
         return CFRDS_STATUS_COMMAND_FAILED
 
-def cfrds_command_file_create_dir(srv: cfrds_server, path: str) -> int:
+def cfrds_command_file_create_dir(srv: Optional[cfrds_server], path: Optional[str]) -> int:
+    if srv is None or path is None:
+        return CFRDS_STATUS_PARAM_IS_NULL
     try:
         s = server(srv.host, srv.port, srv.username, srv.orig_password)
         s.dir_create(path)
@@ -1629,7 +1795,9 @@ def cfrds_command_file_create_dir(srv: cfrds_server, path: str) -> int:
         srv.set_error(CFRDS_STATUS_COMMAND_FAILED, str(e))
         return CFRDS_STATUS_COMMAND_FAILED
 
-def cfrds_command_file_get_root_dir(srv: cfrds_server, out_ptr: List[Any]) -> int:
+def cfrds_command_file_get_root_dir(srv: Optional[cfrds_server], out_ptr: Optional[List[Any]]) -> int:
+    if srv is None or out_ptr is None:
+        return CFRDS_STATUS_PARAM_IS_NULL
     try:
         s = server(srv.host, srv.port, srv.username, srv.orig_password)
         root = s.cf_root_dir()
@@ -1643,7 +1811,9 @@ def cfrds_command_file_get_root_dir(srv: cfrds_server, out_ptr: List[Any]) -> in
         return CFRDS_STATUS_COMMAND_FAILED
 
 # SQL Low-level wrappers
-def cfrds_command_sql_dsninfo(srv: cfrds_server, out_ptr: List[Any]) -> int:
+def cfrds_command_sql_dsninfo(srv: Optional[cfrds_server], out_ptr: Optional[List[Any]]) -> int:
+    if srv is None or out_ptr is None:
+        return CFRDS_STATUS_PARAM_IS_NULL
     try:
         s = server(srv.host, srv.port, srv.username, srv.orig_password)
         names = s.sql_dsninfo()
@@ -1666,9 +1836,11 @@ def cfrds_sql_dsninfo_count(val: cfrds_sql_dsninfo) -> int:
     return len(val) if val else 0
 
 def cfrds_sql_dsninfo_item_get_name(val: cfrds_sql_dsninfo, ndx: int) -> Optional[str]:
-    return val.names[ndx]
+    return val.names[ndx] if val and ndx < len(val.names) else None
 
-def cfrds_command_sql_tableinfo(srv: cfrds_server, connection_name: str, out_ptr: List[Any]) -> int:
+def cfrds_command_sql_tableinfo(srv: Optional[cfrds_server], connection_name: Optional[str], out_ptr: Optional[List[Any]]) -> int:
+    if srv is None or connection_name is None or out_ptr is None:
+        return CFRDS_STATUS_PARAM_IS_NULL
     try:
         s = server(srv.host, srv.port, srv.username, srv.orig_password)
         tbls = s.sql_tableinfo(connection_name)
@@ -1691,18 +1863,20 @@ def cfrds_sql_tableinfo_count(val: cfrds_sql_tableinfo) -> int:
     return len(val) if val else 0
 
 def cfrds_sql_tableinfo_get_column_unknown(val: cfrds_sql_tableinfo, col: int) -> Optional[str]:
-    return val.items[col]["unknown"]
+    return val.items[col]["unknown"] if val and col < len(val.items) else None
 
 def cfrds_sql_tableinfo_get_column_schema(val: cfrds_sql_tableinfo, col: int) -> Optional[str]:
-    return val.items[col]["schema"]
+    return val.items[col]["schema"] if val and col < len(val.items) else None
 
 def cfrds_sql_tableinfo_get_column_name(val: cfrds_sql_tableinfo, col: int) -> Optional[str]:
-    return val.items[col]["name"]
+    return val.items[col]["name"] if val and col < len(val.items) else None
 
 def cfrds_sql_tableinfo_get_column_type(val: cfrds_sql_tableinfo, col: int) -> Optional[str]:
-    return val.items[col]["type"]
+    return val.items[col]["type"] if val and col < len(val.items) else None
 
-def cfrds_command_sql_columninfo(srv: cfrds_server, connection_name: str, table_name: str, out_ptr: List[Any]) -> int:
+def cfrds_command_sql_columninfo(srv: Optional[cfrds_server], connection_name: Optional[str], table_name: Optional[str], out_ptr: Optional[List[Any]]) -> int:
+    if srv is None or connection_name is None or table_name is None or out_ptr is None:
+        return CFRDS_STATUS_PARAM_IS_NULL
     try:
         s = server(srv.host, srv.port, srv.username, srv.orig_password)
         cols = s.sql_columninfo(connection_name, table_name)
@@ -1725,39 +1899,41 @@ def cfrds_sql_columninfo_count(val: cfrds_sql_columninfo) -> int:
     return len(val) if val else 0
 
 def cfrds_sql_columninfo_get_schema(val: cfrds_sql_columninfo, col: int) -> Optional[str]:
-    return val.items[col]["schema"]
+    return val.items[col]["schema"] if val and col < len(val.items) else None
 
 def cfrds_sql_columninfo_get_owner(val: cfrds_sql_columninfo, col: int) -> Optional[str]:
-    return val.items[col]["owner"]
+    return val.items[col]["owner"] if val and col < len(val.items) else None
 
 def cfrds_sql_columninfo_get_table(val: cfrds_sql_columninfo, col: int) -> Optional[str]:
-    return val.items[col]["table"]
+    return val.items[col]["table"] if val and col < len(val.items) else None
 
 def cfrds_sql_columninfo_get_name(val: cfrds_sql_columninfo, col: int) -> Optional[str]:
-    return val.items[col]["name"]
+    return val.items[col]["name"] if val and col < len(val.items) else None
 
 def cfrds_sql_columninfo_get_type(val: cfrds_sql_columninfo, col: int) -> int:
-    return val.items[col]["type"]
+    return val.items[col]["type"] if val and col < len(val.items) else 0
 
 def cfrds_sql_columninfo_get_typeStr(val: cfrds_sql_columninfo, col: int) -> Optional[str]:
-    return val.items[col]["typeStr"]
+    return val.items[col]["typeStr"] if val and col < len(val.items) else None
 
 def cfrds_sql_columninfo_get_precision(val: cfrds_sql_columninfo, col: int) -> int:
-    return val.items[col]["precision"]
+    return val.items[col]["precision"] if val and col < len(val.items) else 0
 
 def cfrds_sql_columninfo_get_length(val: cfrds_sql_columninfo, col: int) -> int:
-    return val.items[col]["length"]
+    return val.items[col]["length"] if val and col < len(val.items) else 0
 
 def cfrds_sql_columninfo_get_scale(val: cfrds_sql_columninfo, col: int) -> int:
-    return val.items[col]["scale"]
+    return val.items[col]["scale"] if val and col < len(val.items) else 0
 
 def cfrds_sql_columninfo_get_radix(val: cfrds_sql_columninfo, col: int) -> int:
-    return val.items[col]["radix"]
+    return val.items[col]["radix"] if val and col < len(val.items) else 0
 
 def cfrds_sql_columninfo_get_nullable(val: cfrds_sql_columninfo, col: int) -> int:
-    return val.items[col]["nullable"]
+    return val.items[col]["nullable"] if val and col < len(val.items) else 0
 
-def cfrds_command_sql_primarykeys(srv: cfrds_server, connection_name: str, table_name: str, out_ptr: List[Any]) -> int:
+def cfrds_command_sql_primarykeys(srv: Optional[cfrds_server], connection_name: Optional[str], table_name: Optional[str], out_ptr: Optional[List[Any]]) -> int:
+    if srv is None or connection_name is None or table_name is None or out_ptr is None:
+        return CFRDS_STATUS_PARAM_IS_NULL
     try:
         s = server(srv.host, srv.port, srv.username, srv.orig_password)
         keys = s.sql_primarykeys(connection_name, table_name)
@@ -1780,21 +1956,23 @@ def cfrds_sql_primarykeys_count(val: cfrds_sql_primarykeys) -> int:
     return len(val) if val else 0
 
 def cfrds_sql_primarykeys_get_catalog(val: cfrds_sql_primarykeys, ndx: int) -> Optional[str]:
-    return val.items[ndx]["catalog"]
+    return val.items[ndx]["catalog"] if val and ndx < len(val.items) else None
 
 def cfrds_sql_primarykeys_get_owner(val: cfrds_sql_primarykeys, ndx: int) -> Optional[str]:
-    return val.items[ndx]["owner"]
+    return val.items[ndx]["owner"] if val and ndx < len(val.items) else None
 
 def cfrds_sql_primarykeys_get_table(val: cfrds_sql_primarykeys, ndx: int) -> Optional[str]:
-    return val.items[ndx]["table"]
+    return val.items[ndx]["table"] if val and ndx < len(val.items) else None
 
 def cfrds_sql_primarykeys_get_column(val: cfrds_sql_primarykeys, ndx: int) -> Optional[str]:
-    return val.items[ndx]["column"]
+    return val.items[ndx]["column"] if val and ndx < len(val.items) else None
 
 def cfrds_sql_primarykeys_get_key_sequence(val: cfrds_sql_primarykeys, ndx: int) -> int:
-    return val.items[ndx]["key_sequence"]
+    return val.items[ndx]["key_sequence"] if val and ndx < len(val.items) else 0
 
-def cfrds_command_sql_foreignkeys(srv: cfrds_server, connection_name: str, table_name: str, out_ptr: List[Any]) -> int:
+def cfrds_command_sql_foreignkeys(srv: Optional[cfrds_server], connection_name: Optional[str], table_name: Optional[str], out_ptr: Optional[List[Any]]) -> int:
+    if srv is None or connection_name is None or table_name is None or out_ptr is None:
+        return CFRDS_STATUS_PARAM_IS_NULL
     try:
         s = server(srv.host, srv.port, srv.username, srv.orig_password)
         keys = s.sql_foreignkeys(connection_name, table_name)
@@ -1817,39 +1995,41 @@ def cfrds_sql_foreignkeys_count(val: cfrds_sql_foreignkeys) -> int:
     return len(val) if val else 0
 
 def cfrds_sql_foreignkeys_get_pkcatalog(val: cfrds_sql_foreignkeys, ndx: int) -> Optional[str]:
-    return val.items[ndx]["pkcatalog"]
+    return val.items[ndx]["pkcatalog"] if val and ndx < len(val.items) else None
 
 def cfrds_sql_foreignkeys_get_pkowner(val: cfrds_sql_foreignkeys, ndx: int) -> Optional[str]:
-    return val.items[ndx]["pkowner"]
+    return val.items[ndx]["pkowner"] if val and ndx < len(val.items) else None
 
 def cfrds_sql_foreignkeys_get_pktable(val: cfrds_sql_foreignkeys, ndx: int) -> Optional[str]:
-    return val.items[ndx]["pktable"]
+    return val.items[ndx]["pktable"] if val and ndx < len(val.items) else None
 
 def cfrds_sql_foreignkeys_get_pkcolumn(val: cfrds_sql_foreignkeys, ndx: int) -> Optional[str]:
-    return val.items[ndx]["pkcolumn"]
+    return val.items[ndx]["pkcolumn"] if val and ndx < len(val.items) else None
 
 def cfrds_sql_foreignkeys_get_fkcatalog(val: cfrds_sql_foreignkeys, ndx: int) -> Optional[str]:
-    return val.items[ndx]["fkcatalog"]
+    return val.items[ndx]["fkcatalog"] if val and ndx < len(val.items) else None
 
 def cfrds_sql_foreignkeys_get_fkowner(val: cfrds_sql_foreignkeys, ndx: int) -> Optional[str]:
-    return val.items[ndx]["fkowner"]
+    return val.items[ndx]["fkowner"] if val and ndx < len(val.items) else None
 
 def cfrds_sql_foreignkeys_get_fktable(val: cfrds_sql_foreignkeys, ndx: int) -> Optional[str]:
-    return val.items[ndx]["fktable"]
+    return val.items[ndx]["fktable"] if val and ndx < len(val.items) else None
 
 def cfrds_sql_foreignkeys_get_fkcolumn(val: cfrds_sql_foreignkeys, ndx: int) -> Optional[str]:
-    return val.items[ndx]["fkcolumn"]
+    return val.items[ndx]["fkcolumn"] if val and ndx < len(val.items) else None
 
 def cfrds_sql_foreignkeys_get_key_sequence(val: cfrds_sql_foreignkeys, ndx: int) -> int:
-    return val.items[ndx]["key_sequence"]
+    return val.items[ndx]["key_sequence"] if val and ndx < len(val.items) else 0
 
 def cfrds_sql_foreignkeys_get_updaterule(val: cfrds_sql_foreignkeys, ndx: int) -> int:
-    return val.items[ndx]["updaterule"]
+    return val.items[ndx]["updaterule"] if val and ndx < len(val.items) else 0
 
 def cfrds_sql_foreignkeys_get_deleterule(val: cfrds_sql_foreignkeys, ndx: int) -> int:
-    return val.items[ndx]["deleterule"]
+    return val.items[ndx]["deleterule"] if val and ndx < len(val.items) else 0
 
-def cfrds_command_sql_importedkeys(srv: cfrds_server, connection_name: str, table_name: str, out_ptr: List[Any]) -> int:
+def cfrds_command_sql_importedkeys(srv: Optional[cfrds_server], connection_name: Optional[str], table_name: Optional[str], out_ptr: Optional[List[Any]]) -> int:
+    if srv is None or connection_name is None or table_name is None or out_ptr is None:
+        return CFRDS_STATUS_PARAM_IS_NULL
     try:
         s = server(srv.host, srv.port, srv.username, srv.orig_password)
         keys = s.sql_importedkeys(connection_name, table_name)
@@ -1872,39 +2052,41 @@ def cfrds_sql_importedkeys_count(val: cfrds_sql_importedkeys) -> int:
     return len(val) if val else 0
 
 def cfrds_sql_importedkeys_get_pkcatalog(val: cfrds_sql_importedkeys, ndx: int) -> Optional[str]:
-    return val.items[ndx]["pkcatalog"]
+    return val.items[ndx]["pkcatalog"] if val and ndx < len(val.items) else None
 
 def cfrds_sql_importedkeys_get_pkowner(val: cfrds_sql_importedkeys, ndx: int) -> Optional[str]:
-    return val.items[ndx]["pkowner"]
+    return val.items[ndx]["pkowner"] if val and ndx < len(val.items) else None
 
 def cfrds_sql_importedkeys_get_pktable(val: cfrds_sql_importedkeys, ndx: int) -> Optional[str]:
-    return val.items[ndx]["pktable"]
+    return val.items[ndx]["pktable"] if val and ndx < len(val.items) else None
 
 def cfrds_sql_importedkeys_get_pkcolumn(val: cfrds_sql_importedkeys, ndx: int) -> Optional[str]:
-    return val.items[ndx]["pkcolumn"]
+    return val.items[ndx]["pkcolumn"] if val and ndx < len(val.items) else None
 
 def cfrds_sql_importedkeys_get_fkcatalog(val: cfrds_sql_importedkeys, ndx: int) -> Optional[str]:
-    return val.items[ndx]["fkcatalog"]
+    return val.items[ndx]["fkcatalog"] if val and ndx < len(val.items) else None
 
 def cfrds_sql_importedkeys_get_fkowner(val: cfrds_sql_importedkeys, ndx: int) -> Optional[str]:
-    return val.items[ndx]["fkowner"]
+    return val.items[ndx]["fkowner"] if val and ndx < len(val.items) else None
 
 def cfrds_sql_importedkeys_get_fktable(val: cfrds_sql_importedkeys, ndx: int) -> Optional[str]:
-    return val.items[ndx]["fktable"]
+    return val.items[ndx]["fktable"] if val and ndx < len(val.items) else None
 
 def cfrds_sql_importedkeys_get_fkcolumn(val: cfrds_sql_importedkeys, ndx: int) -> Optional[str]:
-    return val.items[ndx]["fkcolumn"]
+    return val.items[ndx]["fkcolumn"] if val and ndx < len(val.items) else None
 
 def cfrds_sql_importedkeys_get_key_sequence(val: cfrds_sql_importedkeys, ndx: int) -> int:
-    return val.items[ndx]["key_sequence"]
+    return val.items[ndx]["key_sequence"] if val and ndx < len(val.items) else 0
 
 def cfrds_sql_importedkeys_get_updaterule(val: cfrds_sql_importedkeys, ndx: int) -> int:
-    return val.items[ndx]["updaterule"]
+    return val.items[ndx]["updaterule"] if val and ndx < len(val.items) else 0
 
 def cfrds_sql_importedkeys_get_deleterule(val: cfrds_sql_importedkeys, ndx: int) -> int:
-    return val.items[ndx]["deleterule"]
+    return val.items[ndx]["deleterule"] if val and ndx < len(val.items) else 0
 
-def cfrds_command_sql_exportedkeys(srv: cfrds_server, connection_name: str, table_name: str, out_ptr: List[Any]) -> int:
+def cfrds_command_sql_exportedkeys(srv: Optional[cfrds_server], connection_name: Optional[str], table_name: Optional[str], out_ptr: Optional[List[Any]]) -> int:
+    if srv is None or connection_name is None or table_name is None or out_ptr is None:
+        return CFRDS_STATUS_PARAM_IS_NULL
     try:
         s = server(srv.host, srv.port, srv.username, srv.orig_password)
         keys = s.sql_exportedkeys(connection_name, table_name)
@@ -1927,44 +2109,46 @@ def cfrds_sql_exportedkeys_count(val: cfrds_sql_exportedkeys) -> int:
     return len(val) if val else 0
 
 def cfrds_sql_exportedkeys_get_pkcatalog(val: cfrds_sql_exportedkeys, ndx: int) -> Optional[str]:
-    return val.items[ndx]["pkcatalog"]
+    return val.items[ndx]["pkcatalog"] if val and ndx < len(val.items) else None
 
 def cfrds_sql_exportedkeys_get_pkowner(val: cfrds_sql_exportedkeys, ndx: int) -> Optional[str]:
-    return val.items[ndx]["pkowner"]
+    return val.items[ndx]["pkowner"] if val and ndx < len(val.items) else None
 
 def cfrds_sql_exportedkeys_get_pktable(val: cfrds_sql_exportedkeys, ndx: int) -> Optional[str]:
-    return val.items[ndx]["pktable"]
+    return val.items[ndx]["pktable"] if val and ndx < len(val.items) else None
 
 def cfrds_sql_exportedkeys_get_pkcolumn(val: cfrds_sql_exportedkeys, ndx: int) -> Optional[str]:
-    return val.items[ndx]["pkcolumn"]
+    return val.items[ndx]["pkcolumn"] if val and ndx < len(val.items) else None
 
 def cfrds_sql_exportedkeys_get_fkcatalog(val: cfrds_sql_exportedkeys, ndx: int) -> Optional[str]:
-    return val.items[ndx]["fkcatalog"]
+    return val.items[ndx]["fkcatalog"] if val and ndx < len(val.items) else None
 
 def cfrds_sql_exportedkeys_get_fkowner(val: cfrds_sql_exportedkeys, ndx: int) -> Optional[str]:
-    return val.items[ndx]["fkowner"]
+    return val.items[ndx]["fkowner"] if val and ndx < len(val.items) else None
 
 def cfrds_sql_exportedkeys_get_fktable(val: cfrds_sql_exportedkeys, ndx: int) -> Optional[str]:
-    return val.items[ndx]["fktable"]
+    return val.items[ndx]["fktable"] if val and ndx < len(val.items) else None
 
 def cfrds_sql_exportedkeys_get_fkcolumn(val: cfrds_sql_exportedkeys, ndx: int) -> Optional[str]:
-    return val.items[ndx]["fkcolumn"]
+    return val.items[ndx]["fkcolumn"] if val and ndx < len(val.items) else None
 
 def cfrds_sql_exportedkeys_get_key_sequence(val: cfrds_sql_exportedkeys, ndx: int) -> int:
-    return val.items[ndx]["key_sequence"]
+    return val.items[ndx]["key_sequence"] if val and ndx < len(val.items) else 0
 
 def cfrds_sql_exportedkeys_get_updaterule(val: cfrds_sql_exportedkeys, ndx: int) -> int:
-    return val.items[ndx]["updaterule"]
+    return val.items[ndx]["updaterule"] if val and ndx < len(val.items) else 0
 
 def cfrds_sql_exportedkeys_get_deleterule(val: cfrds_sql_exportedkeys, ndx: int) -> int:
-    return val.items[ndx]["deleterule"]
+    return val.items[ndx]["deleterule"] if val and ndx < len(val.items) else 0
 
-def cfrds_command_sql_sqlstmnt(srv: cfrds_server, connection_name: str, sql: str, out_ptr: List[Any]) -> int:
+def cfrds_command_sql_sqlstmnt(srv: Optional[cfrds_server], connection_name: Optional[str], sql: Optional[str], out_ptr: Optional[List[Any]]) -> int:
+    if srv is None or connection_name is None or sql is None or out_ptr is None:
+        return CFRDS_STATUS_PARAM_IS_NULL
     try:
         s = server(srv.host, srv.port, srv.username, srv.orig_password)
         rs = s.sql_sqlstmnt(connection_name, sql)
         if isinstance(out_ptr, list):
-            out_ptr[0] = cfrds_sql_resultset(rs["columns"], rs["rows"], rs["names"], rs["data"])
+            out_ptr[0] = cfrds_sql_resultset(rs["columns"], rs["rows"], rs["names"], rs["values"])
         return CFRDS_STATUS_OK
     except CFRDSError as e:
         return e.status
@@ -1992,7 +2176,9 @@ def cfrds_sql_resultset_value(val: cfrds_sql_resultset, row: int, column: int) -
         return val.values[row][column]
     return None
 
-def cfrds_command_sql_sqlmetadata(srv: cfrds_server, connection_name: str, sql: str, out_ptr: List[Any]) -> int:
+def cfrds_command_sql_sqlmetadata(srv: Optional[cfrds_server], connection_name: Optional[str], sql: Optional[str], out_ptr: Optional[List[Any]]) -> int:
+    if srv is None or connection_name is None or sql is None or out_ptr is None:
+        return CFRDS_STATUS_PARAM_IS_NULL
     try:
         s = server(srv.host, srv.port, srv.username, srv.orig_password)
         meta = s.sql_metadata(connection_name, sql)
@@ -2015,15 +2201,17 @@ def cfrds_sql_metadata_count(val: cfrds_sql_metadata) -> int:
     return len(val) if val else 0
 
 def cfrds_sql_metadata_get_name(val: cfrds_sql_metadata, ndx: int) -> Optional[str]:
-    return val.items[ndx]["name"]
+    return val.items[ndx]["name"] if val and ndx < len(val.items) else None
 
 def cfrds_sql_metadata_get_type(val: cfrds_sql_metadata, ndx: int) -> Optional[str]:
-    return val.items[ndx]["type"]
+    return val.items[ndx]["type"] if val and ndx < len(val.items) else None
 
 def cfrds_sql_metadata_get_jtype(val: cfrds_sql_metadata, ndx: int) -> Optional[str]:
-    return val.items[ndx]["jtype"]
+    return val.items[ndx]["jtype"] if val and ndx < len(val.items) else None
 
-def cfrds_command_sql_getsupportedcommands(srv: cfrds_server, out_ptr: List[Any]) -> int:
+def cfrds_command_sql_getsupportedcommands(srv: Optional[cfrds_server], out_ptr: Optional[List[Any]]) -> int:
+    if srv is None or out_ptr is None:
+        return CFRDS_STATUS_PARAM_IS_NULL
     try:
         s = server(srv.host, srv.port, srv.username, srv.orig_password)
         cmds = s.sql_getsupportedcommands()
@@ -2046,9 +2234,11 @@ def cfrds_sql_supportedcommands_count(val: cfrds_sql_supportedcommands) -> int:
     return len(val) if val else 0
 
 def cfrds_sql_supportedcommands_get(val: cfrds_sql_supportedcommands, ndx: int) -> Optional[str]:
-    return val.commands[ndx]
+    return val.commands[ndx] if val and ndx < len(val.commands) else None
 
-def cfrds_command_sql_dbdescription(srv: cfrds_server, connection_name: str, out_ptr: List[Any]) -> int:
+def cfrds_command_sql_dbdescription(srv: Optional[cfrds_server], connection_name: Optional[str], out_ptr: Optional[List[Any]]) -> int:
+    if srv is None or connection_name is None or out_ptr is None:
+        return CFRDS_STATUS_PARAM_IS_NULL
     try:
         s = server(srv.host, srv.port, srv.username, srv.orig_password)
         desc = s.sql_dbdescription(connection_name)
@@ -2062,7 +2252,9 @@ def cfrds_command_sql_dbdescription(srv: cfrds_server, connection_name: str, out
         return CFRDS_STATUS_COMMAND_FAILED
 
 # Debugger Low-level Wrappers
-def cfrds_command_debugger_start(srv: cfrds_server, out_ptr: List[Any]) -> int:
+def cfrds_command_debugger_start(srv: Optional[cfrds_server], out_ptr: Optional[List[Any]]) -> int:
+    if srv is None or out_ptr is None:
+        return CFRDS_STATUS_PARAM_IS_NULL
     try:
         s = server(srv.host, srv.port, srv.username, srv.orig_password)
         sess_id = s.debugger_start()
@@ -2075,7 +2267,9 @@ def cfrds_command_debugger_start(srv: cfrds_server, out_ptr: List[Any]) -> int:
         srv.set_error(CFRDS_STATUS_COMMAND_FAILED, str(e))
         return CFRDS_STATUS_COMMAND_FAILED
 
-def cfrds_command_debugger_stop(srv: cfrds_server, session_id: str) -> int:
+def cfrds_command_debugger_stop(srv: Optional[cfrds_server], session_id: Optional[str]) -> int:
+    if srv is None or session_id is None:
+        return CFRDS_STATUS_PARAM_IS_NULL
     try:
         s = server(srv.host, srv.port, srv.username, srv.orig_password)
         s.debugger_stop(session_id)
@@ -2086,7 +2280,9 @@ def cfrds_command_debugger_stop(srv: cfrds_server, session_id: str) -> int:
         srv.set_error(CFRDS_STATUS_COMMAND_FAILED, str(e))
         return CFRDS_STATUS_COMMAND_FAILED
 
-def cfrds_command_debugger_get_server_info(srv: cfrds_server, session_id: str, out_port: List[Any]) -> int:
+def cfrds_command_debugger_get_server_info(srv: Optional[cfrds_server], session_id: Optional[str], out_port: Optional[List[Any]]) -> int:
+    if srv is None or session_id is None or out_port is None:
+        return CFRDS_STATUS_PARAM_IS_NULL
     try:
         s = server(srv.host, srv.port, srv.username, srv.orig_password)
         p = s.debugger_get_server_info(session_id)
@@ -2099,7 +2295,9 @@ def cfrds_command_debugger_get_server_info(srv: cfrds_server, session_id: str, o
         srv.set_error(CFRDS_STATUS_COMMAND_FAILED, str(e))
         return CFRDS_STATUS_COMMAND_FAILED
 
-def cfrds_command_debugger_breakpoint_on_exception(srv: cfrds_server, session_id: str, value: bool) -> int:
+def cfrds_command_debugger_breakpoint_on_exception(srv: Optional[cfrds_server], session_id: Optional[str], value: Optional[bool]) -> int:
+    if srv is None or session_id is None or value is None:
+        return CFRDS_STATUS_PARAM_IS_NULL
     try:
         s = server(srv.host, srv.port, srv.username, srv.orig_password)
         s.debugger_breakpoint_on_exception(session_id, value)
@@ -2110,7 +2308,9 @@ def cfrds_command_debugger_breakpoint_on_exception(srv: cfrds_server, session_id
         srv.set_error(CFRDS_STATUS_COMMAND_FAILED, str(e))
         return CFRDS_STATUS_COMMAND_FAILED
 
-def cfrds_command_debugger_breakpoint(srv: cfrds_server, session_id: str, filepath: str, line: int, enable: bool) -> int:
+def cfrds_command_debugger_breakpoint(srv: Optional[cfrds_server], session_id: Optional[str], filepath: Optional[str], line: Optional[int], enable: Optional[bool]) -> int:
+    if srv is None or session_id is None or filepath is None or line is None or enable is None:
+        return CFRDS_STATUS_PARAM_IS_NULL
     try:
         s = server(srv.host, srv.port, srv.username, srv.orig_password)
         s.debugger_breakpoint(session_id, filepath, line, enable)
@@ -2121,7 +2321,9 @@ def cfrds_command_debugger_breakpoint(srv: cfrds_server, session_id: str, filepa
         srv.set_error(CFRDS_STATUS_COMMAND_FAILED, str(e))
         return CFRDS_STATUS_COMMAND_FAILED
 
-def cfrds_command_debugger_clear_all_breakpoints(srv: cfrds_server, session_id: str) -> int:
+def cfrds_command_debugger_clear_all_breakpoints(srv: Optional[cfrds_server], session_id: Optional[str]) -> int:
+    if srv is None or session_id is None:
+        return CFRDS_STATUS_PARAM_IS_NULL
     try:
         s = server(srv.host, srv.port, srv.username, srv.orig_password)
         s.debugger_clear_all_breakpoints(session_id)
@@ -2132,7 +2334,9 @@ def cfrds_command_debugger_clear_all_breakpoints(srv: cfrds_server, session_id: 
         srv.set_error(CFRDS_STATUS_COMMAND_FAILED, str(e))
         return CFRDS_STATUS_COMMAND_FAILED
 
-def cfrds_command_debugger_get_debug_events(srv: cfrds_server, session_id: str, out_ptr: List[Any]) -> int:
+def cfrds_command_debugger_get_debug_events(srv: Optional[cfrds_server], session_id: Optional[str], out_ptr: Optional[List[Any]]) -> int:
+    if srv is None or session_id is None or out_ptr is None:
+        return CFRDS_STATUS_PARAM_IS_NULL
     try:
         s = server(srv.host, srv.port, srv.username, srv.orig_password)
         evt_dict = s.debugger_get_debug_events(session_id)
@@ -2147,8 +2351,10 @@ def cfrds_command_debugger_get_debug_events(srv: cfrds_server, session_id: str, 
         return CFRDS_STATUS_COMMAND_FAILED
 
 def cfrds_command_debugger_all_fetch_flags_enabled(
-    srv: cfrds_server, session_id: str, threads: bool, watch: bool, scopes: bool, cf_trace: bool, java_trace: bool, out_ptr: List[Any]
+    srv: Optional[cfrds_server], session_id: Optional[str], threads: Optional[bool], watch: Optional[bool], scopes: Optional[bool], cf_trace: Optional[bool], java_trace: Optional[bool], out_ptr: Optional[List[Any]]
 ) -> int:
+    if srv is None or session_id is None or threads is None or watch is None or scopes is None or cf_trace is None or java_trace is None or out_ptr is None:
+        return CFRDS_STATUS_PARAM_IS_NULL
     try:
         s = server(srv.host, srv.port, srv.username, srv.orig_password)
         evt_dict = s.debugger_all_fetch_flags_enabled(session_id, threads, watch, scopes, cf_trace, java_trace)
@@ -2172,25 +2378,25 @@ def cfrds_debugger_event_get_type(evt: cfrds_debugger_event) -> int:
     return evt.event_type if evt else CFRDS_DEBUGGER_EVENT_UNKNOWN
 
 def cfrds_debugger_event_breakpoint_get_source(evt: cfrds_debugger_event) -> Optional[str]:
-    return evt.data.get("source") if evt else None
+    return evt.data.get("source") if evt and evt.data else None
 
 def cfrds_debugger_event_breakpoint_get_line(evt: cfrds_debugger_event) -> int:
-    return evt.data.get("line", 0) if evt else 0
+    return evt.data.get("line", 0) if evt and evt.data else 0
 
 def cfrds_debugger_event_breakpoint_get_scopes(evt: cfrds_debugger_event) -> Any:
-    return evt.data.get("SCOPES") if evt else None
+    return evt.data.get("SCOPES") if evt and evt.data else None
 
 def cfrds_debugger_event_breakpoint_get_thread_name(evt: cfrds_debugger_event) -> Optional[str]:
-    return evt.data.get("thread_name") if evt else None
+    return evt.data.get("thread_name") if evt and evt.data else None
 
 def cfrds_debugger_event_breakpoint_set_get_pathname(evt: cfrds_debugger_event) -> Optional[str]:
-    return evt.data.get("pathname") if evt else None
+    return evt.data.get("pathname") if evt and evt.data else None
 
 def cfrds_debugger_event_breakpoint_set_get_req_line(evt: cfrds_debugger_event) -> int:
-    return evt.data.get("req_line", 0) if evt else 0
+    return evt.data.get("req_line", 0) if evt and evt.data else 0
 
 def cfrds_debugger_event_breakpoint_set_get_act_line(evt: cfrds_debugger_event) -> int:
-    return evt.data.get("act_line", 0) if evt else 0
+    return evt.data.get("act_line", 0) if evt and evt.data else 0
 
 def cfrds_debugger_event_get_scopes_count(evt: cfrds_debugger_event) -> int:
     if evt and isinstance(evt.data, dict):
@@ -2257,7 +2463,9 @@ def cfrds_debugger_event_get_java_trace_item(evt: cfrds_debugger_event, ndx: int
             return java_trace[ndx]
     return None
 
-def cfrds_command_debugger_step_in(srv: cfrds_server, session_id: str, thread_name: str) -> int:
+def cfrds_command_debugger_step_in(srv: Optional[cfrds_server], session_id: Optional[str], thread_name: Optional[str]) -> int:
+    if srv is None or session_id is None or thread_name is None:
+        return CFRDS_STATUS_PARAM_IS_NULL
     try:
         s = server(srv.host, srv.port, srv.username, srv.orig_password)
         s.debugger_step_in(session_id, thread_name)
@@ -2268,7 +2476,9 @@ def cfrds_command_debugger_step_in(srv: cfrds_server, session_id: str, thread_na
         srv.set_error(CFRDS_STATUS_COMMAND_FAILED, str(e))
         return CFRDS_STATUS_COMMAND_FAILED
 
-def cfrds_command_debugger_step_over(srv: cfrds_server, session_id: str, thread_name: str) -> int:
+def cfrds_command_debugger_step_over(srv: Optional[cfrds_server], session_id: Optional[str], thread_name: Optional[str]) -> int:
+    if srv is None or session_id is None or thread_name is None:
+        return CFRDS_STATUS_PARAM_IS_NULL
     try:
         s = server(srv.host, srv.port, srv.username, srv.orig_password)
         s.debugger_step_over(session_id, thread_name)
@@ -2279,7 +2489,9 @@ def cfrds_command_debugger_step_over(srv: cfrds_server, session_id: str, thread_
         srv.set_error(CFRDS_STATUS_COMMAND_FAILED, str(e))
         return CFRDS_STATUS_COMMAND_FAILED
 
-def cfrds_command_debugger_step_out(srv: cfrds_server, session_id: str, thread_name: str) -> int:
+def cfrds_command_debugger_step_out(srv: Optional[cfrds_server], session_id: Optional[str], thread_name: Optional[str]) -> int:
+    if srv is None or session_id is None or thread_name is None:
+        return CFRDS_STATUS_PARAM_IS_NULL
     try:
         s = server(srv.host, srv.port, srv.username, srv.orig_password)
         s.debugger_step_out(session_id, thread_name)
@@ -2290,7 +2502,9 @@ def cfrds_command_debugger_step_out(srv: cfrds_server, session_id: str, thread_n
         srv.set_error(CFRDS_STATUS_COMMAND_FAILED, str(e))
         return CFRDS_STATUS_COMMAND_FAILED
 
-def cfrds_command_debugger_continue(srv: cfrds_server, session_id: str, thread_name: str) -> int:
+def cfrds_command_debugger_continue(srv: Optional[cfrds_server], session_id: Optional[str], thread_name: Optional[str]) -> int:
+    if srv is None or session_id is None or thread_name is None:
+        return CFRDS_STATUS_PARAM_IS_NULL
     try:
         s = server(srv.host, srv.port, srv.username, srv.orig_password)
         s.debugger_continue(session_id, thread_name)
@@ -2301,7 +2515,9 @@ def cfrds_command_debugger_continue(srv: cfrds_server, session_id: str, thread_n
         srv.set_error(CFRDS_STATUS_COMMAND_FAILED, str(e))
         return CFRDS_STATUS_COMMAND_FAILED
 
-def cfrds_command_debugger_watch_expression(srv: cfrds_server, session_id: str, thread_name: str, expression: str) -> int:
+def cfrds_command_debugger_watch_expression(srv: Optional[cfrds_server], session_id: Optional[str], thread_name: Optional[str], expression: Optional[str]) -> int:
+    if srv is None or session_id is None or thread_name is None or expression is None:
+        return CFRDS_STATUS_PARAM_IS_NULL
     try:
         s = server(srv.host, srv.port, srv.username, srv.orig_password)
         s.debugger_watch_expression(session_id, thread_name, expression)
@@ -2312,7 +2528,9 @@ def cfrds_command_debugger_watch_expression(srv: cfrds_server, session_id: str, 
         srv.set_error(CFRDS_STATUS_COMMAND_FAILED, str(e))
         return CFRDS_STATUS_COMMAND_FAILED
 
-def cfrds_command_debugger_set_variable(srv: cfrds_server, session_id: str, thread_name: str, variable: str, value: str) -> int:
+def cfrds_command_debugger_set_variable(srv: Optional[cfrds_server], session_id: Optional[str], thread_name: Optional[str], variable: Optional[str], value: Optional[str]) -> int:
+    if srv is None or session_id is None or thread_name is None or variable is None or value is None:
+        return CFRDS_STATUS_PARAM_IS_NULL
     try:
         s = server(srv.host, srv.port, srv.username, srv.orig_password)
         s.debugger_set_variable(session_id, thread_name, variable, value)
@@ -2323,7 +2541,9 @@ def cfrds_command_debugger_set_variable(srv: cfrds_server, session_id: str, thre
         srv.set_error(CFRDS_STATUS_COMMAND_FAILED, str(e))
         return CFRDS_STATUS_COMMAND_FAILED
 
-def cfrds_command_debugger_watch_variables(srv: cfrds_server, session_id: str, variables: str) -> int:
+def cfrds_command_debugger_watch_variables(srv: Optional[cfrds_server], session_id: Optional[str], variables: Optional[str]) -> int:
+    if srv is None or session_id is None or variables is None:
+        return CFRDS_STATUS_PARAM_IS_NULL
     try:
         s = server(srv.host, srv.port, srv.username, srv.orig_password)
         s.debugger_watch_variables(session_id, variables)
@@ -2334,7 +2554,9 @@ def cfrds_command_debugger_watch_variables(srv: cfrds_server, session_id: str, v
         srv.set_error(CFRDS_STATUS_COMMAND_FAILED, str(e))
         return CFRDS_STATUS_COMMAND_FAILED
 
-def cfrds_command_debugger_get_output(srv: cfrds_server, session_id: str, thread_name: str, out_ptr: List[Any]) -> int:
+def cfrds_command_debugger_get_output(srv: Optional[cfrds_server], session_id: Optional[str], thread_name: Optional[str], out_ptr: Optional[List[Any]]) -> int:
+    if srv is None or session_id is None or thread_name is None or out_ptr is None:
+        return CFRDS_STATUS_PARAM_IS_NULL
     try:
         s = server(srv.host, srv.port, srv.username, srv.orig_password)
         res = s.debugger_get_output(session_id, thread_name)
@@ -2347,7 +2569,9 @@ def cfrds_command_debugger_get_output(srv: cfrds_server, session_id: str, thread
         srv.set_error(CFRDS_STATUS_COMMAND_FAILED, str(e))
         return CFRDS_STATUS_COMMAND_FAILED
 
-def cfrds_command_debugger_set_scope_filter(srv: cfrds_server, session_id: str, filter_str: str) -> int:
+def cfrds_command_debugger_set_scope_filter(srv: Optional[cfrds_server], session_id: Optional[str], filter_str: Optional[str]) -> int:
+    if srv is None or session_id is None or filter_str is None:
+        return CFRDS_STATUS_PARAM_IS_NULL
     try:
         s = server(srv.host, srv.port, srv.username, srv.orig_password)
         s.debugger_set_scope_filter(session_id, filter_str)
@@ -2359,7 +2583,9 @@ def cfrds_command_debugger_set_scope_filter(srv: cfrds_server, session_id: str, 
         return CFRDS_STATUS_COMMAND_FAILED
 
 # Security Analyzer Low-level Wrappers
-def cfrds_command_security_analyzer_scan(srv: cfrds_server, pathnames: str, recursively: bool, cores: int, out_id: List[Any]) -> int:
+def cfrds_command_security_analyzer_scan(srv: Optional[cfrds_server], pathnames: Optional[str], recursively: Optional[bool], cores: Optional[int], out_id: Optional[List[Any]]) -> int:
+    if srv is None or pathnames is None or recursively is None or cores is None or out_id is None:
+        return CFRDS_STATUS_PARAM_IS_NULL
     try:
         s = server(srv.host, srv.port, srv.username, srv.orig_password)
         cmd_id = s.security_analyzer_scan(pathnames, recursively, cores)
@@ -2372,7 +2598,9 @@ def cfrds_command_security_analyzer_scan(srv: cfrds_server, pathnames: str, recu
         srv.set_error(CFRDS_STATUS_COMMAND_FAILED, str(e))
         return CFRDS_STATUS_COMMAND_FAILED
 
-def cfrds_command_security_analyzer_cancel(srv: cfrds_server, command_id: int) -> int:
+def cfrds_command_security_analyzer_cancel(srv: Optional[cfrds_server], command_id: Optional[int]) -> int:
+    if srv is None or command_id is None:
+        return CFRDS_STATUS_PARAM_IS_NULL
     try:
         s = server(srv.host, srv.port, srv.username, srv.orig_password)
         s.security_analyzer_cancel(command_id)
@@ -2384,8 +2612,10 @@ def cfrds_command_security_analyzer_cancel(srv: cfrds_server, command_id: int) -
         return CFRDS_STATUS_COMMAND_FAILED
 
 def cfrds_command_security_analyzer_status(
-    srv: cfrds_server, command_id: int, total_ptr: List[Any], visited_ptr: List[Any], pct_ptr: List[Any], upd_ptr: List[Any]
+    srv: Optional[cfrds_server], command_id: Optional[int], total_ptr: Optional[List[Any]], visited_ptr: Optional[List[Any]], pct_ptr: Optional[List[Any]], upd_ptr: Optional[List[Any]]
 ) -> int:
+    if srv is None or command_id is None or total_ptr is None or visited_ptr is None or pct_ptr is None or upd_ptr is None:
+        return CFRDS_STATUS_PARAM_IS_NULL
     try:
         s = server(srv.host, srv.port, srv.username, srv.orig_password)
         st_dict = s.security_analyzer_status(command_id)
@@ -2404,7 +2634,9 @@ def cfrds_command_security_analyzer_status(
         srv.set_error(CFRDS_STATUS_COMMAND_FAILED, str(e))
         return CFRDS_STATUS_COMMAND_FAILED
 
-def cfrds_command_security_analyzer_result(srv: cfrds_server, command_id: int, out_ptr: List[Any]) -> int:
+def cfrds_command_security_analyzer_result(srv: Optional[cfrds_server], command_id: Optional[int], out_ptr: Optional[List[Any]]) -> int:
+    if srv is None or command_id is None or out_ptr is None:
+        return CFRDS_STATUS_PARAM_IS_NULL
     try:
         s = server(srv.host, srv.port, srv.username, srv.orig_password)
         res_dict = s.security_analyzer_result(command_id)
@@ -2417,7 +2649,9 @@ def cfrds_command_security_analyzer_result(srv: cfrds_server, command_id: int, o
         srv.set_error(CFRDS_STATUS_COMMAND_FAILED, str(e))
         return CFRDS_STATUS_COMMAND_FAILED
 
-def cfrds_command_security_analyzer_clean(srv: cfrds_server, command_id: int) -> int:
+def cfrds_command_security_analyzer_clean(srv: Optional[cfrds_server], command_id: Optional[int]) -> int:
+    if srv is None or command_id is None:
+        return CFRDS_STATUS_PARAM_IS_NULL
     try:
         s = server(srv.host, srv.port, srv.username, srv.orig_password)
         s.security_analyzer_clean(command_id)
@@ -2435,42 +2669,42 @@ def cfrds_security_analyzer_result_cleanup(val: Any) -> None:
     pass
 
 def cfrds_security_analyzer_result_totalfiles(val: cfrds_security_analyzer_result) -> int:
-    return val.data.get("totalfiles", 0) if val else 0
+    return val.data.get("totalfiles", 0) if val and val.data else 0
 
 def cfrds_security_analyzer_result_filesvisitedcount(val: cfrds_security_analyzer_result) -> int:
-    return val.data.get("filesvisitedcount", 0) if val else 0
+    return val.data.get("filesvisitedcount", 0) if val and val.data else 0
 
 def cfrds_security_analyzer_result_errorsdescription_count(val: cfrds_security_analyzer_result) -> int:
     return 0
 
 def cfrds_security_analyzer_result_filesscanned_count(val: cfrds_security_analyzer_result) -> int:
-    return len(val.data.get("filesscanned", [])) if val else 0
+    return len(val.data.get("filesscanned", [])) if val and val.data else 0
 
 def cfrds_security_analyzer_result_filesscanned_item_result(val: cfrds_security_analyzer_result, ndx: int) -> Optional[str]:
-    scanned = val.data.get("filesscanned", []) if val else []
+    scanned = val.data.get("filesscanned", []) if val and val.data else []
     return scanned[ndx].get("result") if ndx < len(scanned) else None
 
 def cfrds_security_analyzer_result_filesscanned_item_filename(val: cfrds_security_analyzer_result, ndx: int) -> Optional[str]:
-    scanned = val.data.get("filesscanned", []) if val else []
+    scanned = val.data.get("filesscanned", []) if val and val.data else []
     return scanned[ndx].get("filename") if ndx < len(scanned) else None
 
 def cfrds_security_analyzer_result_filesnotscanned_count(val: cfrds_security_analyzer_result) -> int:
-    not_scanned = val.data.get("filesnotscanned", []) if val else []
+    not_scanned = val.data.get("filesnotscanned", []) if val and val.data else []
     return len(not_scanned)
 
 def cfrds_security_analyzer_result_filesnotscanned_item_reason(val: cfrds_security_analyzer_result, ndx: int) -> Optional[str]:
-    not_scanned = val.data.get("filesnotscanned", []) if val else []
+    not_scanned = val.data.get("filesnotscanned", []) if val and val.data else []
     return not_scanned[ndx].get("reason") if ndx < len(not_scanned) else None
 
 def cfrds_security_analyzer_result_filesnotscanned_item_filename(val: cfrds_security_analyzer_result, ndx: int) -> Optional[str]:
-    not_scanned = val.data.get("filesnotscanned", []) if val else []
+    not_scanned = val.data.get("filesnotscanned", []) if val and val.data else []
     return not_scanned[ndx].get("filename") if ndx < len(not_scanned) else None
 
 def cfrds_security_analyzer_result_executorservice(val: cfrds_security_analyzer_result) -> Optional[str]:
-    return val.data.get("executorservice") if val else None
+    return val.data.get("executorservice") if val and val.data else None
 
 def cfrds_security_analyzer_result_percentage(val: cfrds_security_analyzer_result) -> int:
-    return val.data.get("percentage", 0) if val else 0
+    return val.data.get("percentage", 0) if val and val.data else 0
 
 def cfrds_security_analyzer_result_files_count(val: cfrds_security_analyzer_result) -> int:
     return 0
@@ -2479,78 +2713,80 @@ def cfrds_security_analyzer_result_files_value(val: cfrds_security_analyzer_resu
     return None
 
 def cfrds_security_analyzer_result_lastupdated(val: cfrds_security_analyzer_result) -> int:
-    return val.data.get("lastupdated", 0) if val else 0
+    return val.data.get("lastupdated", 0) if val and val.data else 0
 
 def cfrds_security_analyzer_result_filesvisited_count(val: cfrds_security_analyzer_result) -> int:
-    return val.data.get("filesvisitedcount", 0) if val else 0
+    return val.data.get("filesvisitedcount", 0) if val and val.data else 0
 
 def cfrds_security_analyzer_result_filesnotscannedcount(val: cfrds_security_analyzer_result) -> int:
-    return len(val.data.get("filesnotscanned", [])) if val else 0
+    return len(val.data.get("filesnotscanned", [])) if val and val.data else 0
 
 def cfrds_security_analyzer_result_filesscannedcount(val: cfrds_security_analyzer_result) -> int:
-    return len(val.data.get("filesscanned", [])) if val else 0
+    return len(val.data.get("filesscanned", [])) if val and val.data else 0
 
 def cfrds_security_analyzer_result_id(val: cfrds_security_analyzer_result) -> int:
-    return val.data.get("id", 0) if val else 0
+    return val.data.get("id", 0) if val and val.data else 0
 
 def cfrds_security_analyzer_result_errors_count(val: cfrds_security_analyzer_result) -> int:
-    return len(val.data.get("errors", [])) if val else 0
+    return len(val.data.get("errors", [])) if val and val.data else 0
 
 def cfrds_security_analyzer_result_errors_item_errormessage(val: cfrds_security_analyzer_result, ndx: int) -> Optional[str]:
-    errs = val.data.get("errors", []) if val else []
+    errs = val.data.get("errors", []) if val and val.data else []
     return errs[ndx].get("errormessage") if ndx < len(errs) else None
 
 def cfrds_security_analyzer_result_errors_item_endline(val: cfrds_security_analyzer_result, ndx: int) -> int:
-    errs = val.data.get("errors", []) if val else []
+    errs = val.data.get("errors", []) if val and val.data else []
     return errs[ndx].get("endline", 0) if ndx < len(errs) else 0
 
 def cfrds_security_analyzer_result_errors_item_path(val: cfrds_security_analyzer_result, ndx: int) -> Optional[str]:
-    errs = val.data.get("errors", []) if val else []
+    errs = val.data.get("errors", []) if val and val.data else []
     return errs[ndx].get("path") if ndx < len(errs) else None
 
 def cfrds_security_analyzer_result_errors_item_vulnerablecode(val: cfrds_security_analyzer_result, ndx: int) -> Optional[str]:
-    errs = val.data.get("errors", []) if val else []
+    errs = val.data.get("errors", []) if val and val.data else []
     return errs[ndx].get("vulnerablecode") if ndx < len(errs) else None
 
 def cfrds_security_analyzer_result_errors_item_filename(val: cfrds_security_analyzer_result, ndx: int) -> Optional[str]:
-    errs = val.data.get("errors", []) if val else []
+    errs = val.data.get("errors", []) if val and val.data else []
     return errs[ndx].get("filename") if ndx < len(errs) else None
 
 def cfrds_security_analyzer_result_errors_item_beginline(val: cfrds_security_analyzer_result, ndx: int) -> int:
-    errs = val.data.get("errors", []) if val else []
+    errs = val.data.get("errors", []) if val and val.data else []
     return errs[ndx].get("beginline", 0) if ndx < len(errs) else 0
 
 def cfrds_security_analyzer_result_errors_item_column(val: cfrds_security_analyzer_result, ndx: int) -> int:
-    errs = val.data.get("errors", []) if val else []
+    errs = val.data.get("errors", []) if val and val.data else []
     return errs[ndx].get("column", 0) if ndx < len(errs) else 0
 
 def cfrds_security_analyzer_result_errors_item_error(val: cfrds_security_analyzer_result, ndx: int) -> Optional[str]:
-    errs = val.data.get("errors", []) if val else []
+    errs = val.data.get("errors", []) if val and val.data else []
     return errs[ndx].get("error") if ndx < len(errs) else None
 
 def cfrds_security_analyzer_result_errors_item_begincolumn(val: cfrds_security_analyzer_result, ndx: int) -> int:
-    errs = val.data.get("errors", []) if val else []
+    errs = val.data.get("errors", []) if val and val.data else []
     return errs[ndx].get("begincolumn", 0) if ndx < len(errs) else 0
 
 def cfrds_security_analyzer_result_errors_item_type(val: cfrds_security_analyzer_result, ndx: int) -> Optional[str]:
-    errs = val.data.get("errors", []) if val else []
+    errs = val.data.get("errors", []) if val and val.data else []
     return errs[ndx].get("type") if ndx < len(errs) else None
 
 def cfrds_security_analyzer_result_errors_item_endcolumn(val: cfrds_security_analyzer_result, ndx: int) -> int:
-    errs = val.data.get("errors", []) if val else []
+    errs = val.data.get("errors", []) if val and val.data else []
     return errs[ndx].get("endcolumn", 0) if ndx < len(errs) else 0
 
 def cfrds_security_analyzer_result_errors_item_referencetype(val: cfrds_security_analyzer_result, ndx: int) -> Optional[str]:
-    errs = val.data.get("errors", []) if val else []
+    errs = val.data.get("errors", []) if val and val.data else []
     return errs[ndx].get("referencetype") if ndx < len(errs) else None
 
 def cfrds_security_analyzer_result_status(val: cfrds_security_analyzer_result) -> Optional[str]:
-    return val.data.get("status") if val else None
+    return val.data.get("status") if val and val.data else None
 
 # IDE Default Low-level Wrapper
 def cfrds_command_ide_default(
-    srv: cfrds_server, version: int, num1_ptr: List[Any], s_ver_ptr: List[Any], c_ver_ptr: List[Any], num2_ptr: List[Any], num3_ptr: List[Any]
+    srv: Optional[cfrds_server], version: Optional[int], num1_ptr: Optional[List[Any]], s_ver_ptr: Optional[List[Any]], c_ver_ptr: Optional[List[Any]], num2_ptr: Optional[List[Any]], num3_ptr: Optional[List[Any]]
 ) -> int:
+    if srv is None or version is None or num1_ptr is None or s_ver_ptr is None or c_ver_ptr is None or num2_ptr is None or num3_ptr is None:
+        return CFRDS_STATUS_PARAM_IS_NULL
     try:
         s = server(srv.host, srv.port, srv.username, srv.orig_password)
         info = s.ide_default(version)
@@ -2572,7 +2808,9 @@ def cfrds_command_ide_default(
         return CFRDS_STATUS_COMMAND_FAILED
 
 # Admin API Low-level Wrappers
-def cfrds_command_adminapi_debugging_getlogproperty(srv: cfrds_server, logdirectory: str, out_ptr: List[Any]) -> int:
+def cfrds_command_adminapi_debugging_getlogproperty(srv: Optional[cfrds_server], logdirectory: Optional[str], out_ptr: Optional[List[Any]]) -> int:
+    if srv is None or logdirectory is None or out_ptr is None:
+        return CFRDS_STATUS_PARAM_IS_NULL
     try:
         s = server(srv.host, srv.port, srv.username, srv.orig_password)
         res = s.adminapi_debugging_getlogproperty(logdirectory)
@@ -2585,7 +2823,9 @@ def cfrds_command_adminapi_debugging_getlogproperty(srv: cfrds_server, logdirect
         srv.set_error(CFRDS_STATUS_COMMAND_FAILED, str(e))
         return CFRDS_STATUS_COMMAND_FAILED
 
-def cfrds_command_adminapi_extensions_getcustomtagpaths(srv: cfrds_server, out_ptr: List[Any]) -> int:
+def cfrds_command_adminapi_extensions_getcustomtagpaths(srv: Optional[cfrds_server], out_ptr: Optional[List[Any]]) -> int:
+    if srv is None or out_ptr is None:
+        return CFRDS_STATUS_PARAM_IS_NULL
     try:
         s = server(srv.host, srv.port, srv.username, srv.orig_password)
         paths = s.adminapi_extensions_getcustomtagpaths()
@@ -2610,7 +2850,9 @@ def cfrds_adminapi_customtagpaths_count(val: cfrds_adminapi_customtagpaths) -> i
 def cfrds_adminapi_customtagpaths_at(val: cfrds_adminapi_customtagpaths, ndx: int) -> Optional[str]:
     return val.paths[ndx] if val and ndx < len(val.paths) else None
 
-def cfrds_command_adminapi_extensions_setmapping(srv: cfrds_server, name: str, path: str) -> int:
+def cfrds_command_adminapi_extensions_setmapping(srv: Optional[cfrds_server], name: Optional[str], path: Optional[str]) -> int:
+    if srv is None or name is None or path is None:
+        return CFRDS_STATUS_PARAM_IS_NULL
     try:
         s = server(srv.host, srv.port, srv.username, srv.orig_password)
         s.adminapi_extensions_setmapping(name, path)
@@ -2621,7 +2863,9 @@ def cfrds_command_adminapi_extensions_setmapping(srv: cfrds_server, name: str, p
         srv.set_error(CFRDS_STATUS_COMMAND_FAILED, str(e))
         return CFRDS_STATUS_COMMAND_FAILED
 
-def cfrds_command_adminapi_extensions_deletemapping(srv: cfrds_server, mapping: str) -> int:
+def cfrds_command_adminapi_extensions_deletemapping(srv: Optional[cfrds_server], mapping: Optional[str]) -> int:
+    if srv is None or mapping is None:
+        return CFRDS_STATUS_PARAM_IS_NULL
     try:
         s = server(srv.host, srv.port, srv.username, srv.orig_password)
         s.adminapi_extensions_deletemapping(mapping)
@@ -2632,7 +2876,9 @@ def cfrds_command_adminapi_extensions_deletemapping(srv: cfrds_server, mapping: 
         srv.set_error(CFRDS_STATUS_COMMAND_FAILED, str(e))
         return CFRDS_STATUS_COMMAND_FAILED
 
-def cfrds_command_adminapi_extensions_getmappings(srv: cfrds_server, out_ptr: List[Any]) -> int:
+def cfrds_command_adminapi_extensions_getmappings(srv: Optional[cfrds_server], out_ptr: Optional[List[Any]]) -> int:
+    if srv is None or out_ptr is None:
+        return CFRDS_STATUS_PARAM_IS_NULL
     try:
         s = server(srv.host, srv.port, srv.username, srv.orig_password)
         mappings = s.adminapi_extensions_getmappings()
@@ -2662,8 +2908,10 @@ def cfrds_adminapi_mappings_value(val: cfrds_adminapi_mappings, ndx: int) -> Opt
 
 # Graphing Low-level Wrapper
 def cfrds_command_graphing(
-    srv: cfrds_server, out_buffer_ptr: List[Any], chart_attributes: str, num_series: int, series_data: List[str]
+    srv: Optional[cfrds_server], out_buffer_ptr: Optional[List[Any]], chart_attributes: Optional[str], num_series: Optional[int], series_data: Optional[List[str]]
 ) -> int:
+    if srv is None or out_buffer_ptr is None or chart_attributes is None or num_series is None or series_data is None:
+        return CFRDS_STATUS_PARAM_IS_NULL
     try:
         s = server(srv.host, srv.port, srv.username, srv.orig_password)
         res_bytes = s.graphing(chart_attributes, series_data[:num_series])

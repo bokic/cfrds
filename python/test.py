@@ -112,7 +112,25 @@ server_methods = [
     "security_analyzer_result",
     "security_analyzer_clean",
     "ide_default",
+    "adminapi_debugging_getlogproperty",
+    "adminapi_extensions_getcustomtagpaths",
+    "adminapi_extensions_setmapping",
+    "adminapi_extensions_deletemapping",
+    "adminapi_extensions_getmappings",
+    "graphing",
 ]
+
+# Get actual public methods on server class (excluding private/protected/dunder methods)
+actual_methods = [
+    m for m in dir(cfrds.server)
+    if not m.startswith("_") and callable(getattr(cfrds.server, m))
+]
+
+missing_methods = set(server_methods) - set(actual_methods)
+extra_methods = set(actual_methods) - set(server_methods)
+
+assert not missing_methods, f"server class missing expected methods: {missing_methods}"
+assert not extra_methods, f"server class has unexpected extra methods (did you forget to add them to the test or make them private?): {extra_methods}"
 
 for method in server_methods:
     assert hasattr(cfrds.server, method), f"server class missing method: {method}"

@@ -128,7 +128,30 @@ async function main(): Promise<void> {
     "securityAnalyzerResult",
     "securityAnalyzerClean",
     "ideDefault",
+    "adminapiDebuggingGetlogproperty",
+    "adminapiExtensionsGetcustomtagpaths",
+    "adminapiExtensionsSetmapping",
+    "adminapiExtensionsDeletemapping",
+    "adminapiExtensionsGetmappings",
+    "graphing",
   ];
+
+  const privateMethods = ["parseDebuggerEvent"];
+  const actualMethods = Object.getOwnPropertyNames(Server.prototype).filter(
+    (name) => name !== "constructor" && !privateMethods.includes(name)
+  );
+
+  const missingMethods = serverMethods.filter((m) => !actualMethods.includes(m));
+  const extraMethods = actualMethods.filter((m) => !serverMethods.includes(m));
+
+  assert(
+    missingMethods.length === 0,
+    `Server.prototype is missing expected methods: ${missingMethods.join(", ")}`
+  );
+  assert(
+    extraMethods.length === 0,
+    `Server.prototype has unexpected extra methods (did you forget to add them to the test or make them private?): ${extraMethods.join(", ")}`
+  );
 
   for (const method of serverMethods) {
     assert(

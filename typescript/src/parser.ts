@@ -87,3 +87,154 @@ export function buildPayload(items: (string | Buffer)[]): Buffer {
 
   return Buffer.concat(parts);
 }
+
+interface XmlNode {
+  tag: string;
+  attrs: Record<string, string>;
+  children: XmlNode[];
+  text: string;
+}
+
+function unescapeXml(val: string): string {
+  return val
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&amp;/g, "&")
+    .replace(/&quot;/g, '"')
+    .replace(/&apos;/g, "'");
+}
+
+export function parseXml(xml: string): XmlNode {
+  xml = xml.replace(/<!--[\s\S]*?-->/g, "");
+  xml = xml.replace(/<\?[\s\S]*?\?>/g, "");
+
+  const tokenRegex = /<!\[CDATA\[([\s\S]*?)\]\]>|<(\/)?([a-zA-Z0-9_\-:]+)((?:\s+[a-zA-Z0-9_\-:]+=(?:'[^']*'|"[^"]*"|[^\s>]+))*)\s*(\/)?>/g;
+
+  let lastIndex = 0;
+  const root: XmlNode = { tag: "?root?", attrs: {}, children: [], text: "" };
+  const stack: XmlNode[] = [root];
+
+  let match;
+  while ((match = tokenRegex.exec(xml)) !== null) {
+    const textBetween = xml.slice(lastIndex, match.index);
+    if (textBetween) {
+      const parent = stack[stack.length - 1];
+      if (parent) {
+        parent.text += unescapeXml(textBetween);
+      }
+    }
+
+    const [full, cdataText, isClose, tagName, attrStr, isSelfClose] = match;
+
+    if (cdataText !== undefined) {
+      const parent = stack[stack.length - 1];
+      if (parent) {
+        parent.text += cdataText;
+      }
+    } else {
+      let tagLower = tagName.toLowerCase();
+      if (tagLower.includes(":")) {
+        tagLower = tagLower.split(":")[1];
+      }
+      if (isClose) {
+        if (stack.length > 1 && stack[stack.length - 1].tag === tagLower) {
+          stack.pop();
+        }
+      } else {
+        const attrs: Record<string, string> = {};
+        if (attrStr) {
+          const attrRegex = /([a-zA-Z0-9_\-:]+)=(?:'([^']*)'|"([^"]*)"|([^\s>]+))/g;
+          let attrMatch;
+          while ((attrMatch = attrRegex.exec(attrStr)) !== null) {
+            attrs[attrMatch[1].toLowerCase()] = attrMatch[2] !== undefined ? attrMatch[2] : (attrMatch[3] !== undefined ? attrMatch[3] : attrMatch[4]);
+          }
+        }
+
+        const node: XmlNode = {
+          tag: tagLower,
+          attrs,
+          children: [],
+          text: ""
+        };
+
+        const parent = stack[stack.length - 1];
+        if (parent) {
+          parent.children.push(node);
+        }
+
+        if (!isSelfClose) {
+          stack.push(node);
+        }
+      }
+    }
+    lastIndex = tokenRegex.lastIndex;
+  }
+
+  const textEnd = xml.slice(lastIndex);
+  if (textEnd) {
+    const parent = stack[stack.length - 1];
+    if (parent) {
+      parent.text += unescapeXml(textEnd);
+    }
+  }
+
+  return root;
+}
+
+function parseWddxNode(node: XmlNode): any {
+  const tag = node.tag;
+  if (tag === "null") {
+    return null;
+  } else if (tag === "boolean") {
+    return node.attrs.value === "true";
+  } else if (tag === "number") {
+    const numStr = node.text.trim();
+    const val = parseFloat(numStr);
+    return isNaN(val) ? numStr : val;
+  } else if (tag === "string") {
+    return node.text;
+  } else if (tag === "array") {
+    return node.children.map(parseWddxNode);
+  } else if (tag === "struct") {
+    const obj: Record<string, any> = {};
+    for (const child of node.children) {
+      if (child.tag === "var") {
+        const name = child.attrs.name;
+        if (name) {
+          obj[name] = child.children.length > 0 ? parseWddxNode(child.children[0]) : null;
+        }
+      }
+    }
+    return obj;
+  }
+  if (node.children.length > 0) {
+    return parseWddxNode(node.children[0]);
+  }
+  return node.text || null;
+}
+
+export function wddxDeserialize(xml: string): any {
+  if (!xml || !xml.trim()) return null;
+  try {
+    const root = parseXml(xml);
+    const findData = (node: XmlNode): XmlNode | null => {
+      if (node.tag === "data") return node;
+      for (const child of node.children) {
+        const res = findData(child);
+        if (res) return res;
+      }
+      return null;
+    };
+    const dataNode = findData(root);
+    if (dataNode && dataNode.children.length > 0) {
+      return parseWddxNode(dataNode.children[0]);
+    }
+    if (root.children.length > 0) {
+      return parseWddxNode(root.children[0]);
+    }
+    return null;
+  } catch {
+    return null;
+  }
+}
+

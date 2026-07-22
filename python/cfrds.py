@@ -89,6 +89,75 @@ def _escape_xml(val: str) -> str:
         .replace("'", "&apos;")
     )
 
+
+def _parse_wddx_node(elem: Any) -> Any:
+    tag = elem.tag
+    if "}" in tag:
+        tag = tag.split("}", 1)[1]
+    tag = tag.lower()
+
+    if tag == "null":
+        return None
+    elif tag == "boolean":
+        return elem.attrib.get("value") == "true"
+    elif tag == "number":
+        text = elem.text or "0"
+        try:
+            return float(text) if "." in text or "e" in text.lower() else int(text)
+        except ValueError:
+            try:
+                return float(text)
+            except ValueError:
+                return text
+    elif tag == "string":
+        return elem.text if elem.text is not None else ""
+    elif tag == "array":
+        items = []
+        for child in elem:
+            items.append(_parse_wddx_node(child))
+        return items
+    elif tag == "struct":
+        obj = {}
+        for var in elem:
+            var_tag = var.tag
+            if "}" in var_tag:
+                var_tag = var_tag.split("}", 1)[1]
+            if var_tag.lower() == "var":
+                name = var.attrib.get("name")
+                if name:
+                    val = None
+                    if len(var) > 0:
+                        val = _parse_wddx_node(var[0])
+                    obj[name] = val
+        return obj
+    else:
+        if len(elem) > 0:
+            return _parse_wddx_node(elem[0])
+        return elem.text if elem.text is not None else None
+
+
+def _wddx_deserialize(xml_str: str) -> Any:
+    if not xml_str or not xml_str.strip():
+        return None
+    import xml.etree.ElementTree as ET
+    try:
+        root = ET.fromstring(xml_str)
+        data_elem = None
+        for child in root:
+            tag = child.tag
+            if "}" in tag:
+                tag = tag.split("}", 1)[1]
+            if tag.lower() == "data":
+                data_elem = child
+                break
+        if data_elem is not None:
+            if len(data_elem) > 0:
+                return _parse_wddx_node(data_elem[0])
+            return None
+        return _parse_wddx_node(root)
+    except Exception:
+        return None
+
 # Password Obfuscation (XOR with "4p0L@r1$")
 _FILLUP_KEY = "4p0L@r1$".encode("utf-8")
 _HEX_CHARS = "0123456789abcdef"
@@ -1051,8 +1120,13 @@ class server:
         raw = _send_rds_command(self._ctx, "DBGREQUEST", ["DBG_GET_DEBUG_SERVER_INFO", session_name])
         _, offset = _parse_number(raw, 0)
         wddx_xml, _ = _parse_string(raw, offset)
-        m = re.search(r"<var name=['\"]DEBUG_SERVER_PORT['\"]>\s*<number>(\d+(?:\.\d+)?)</number>", wddx_xml, re.IGNORECASE)
-        return int(float(m.group(1))) if m else 0
+        parsed = _wddx_deserialize(wddx_xml)
+        if parsed and isinstance(parsed, dict) and "DEBUG_SERVER_PORT" in parsed:
+            try:
+                return int(float(parsed["DEBUG_SERVER_PORT"]))
+            except (ValueError, TypeError):
+                pass
+        return 0
 
     def debugger_breakpoint_on_exception(self, session_name: str, enable: bool) -> None:
         val = "true" if enable else "false"
@@ -1076,31 +1150,10 @@ class server:
         if not wddx_xml:
             return None
 
-        import xml.etree.ElementTree as ET
-        root = ET.fromstring(wddx_xml)
-        data: Dict[str, Any] = {}
-        for var in root.findall(".//var"):
-            name = var.attrib.get("name")
-            if not name:
-                continue
-            str_elem = var.find("string")
-            num_elem = var.find("number")
-            bool_elem = var.find("boolean")
-            arr_elem = var.find("array")
-            if str_elem is not None and str_elem.text:
-                data[name] = str_elem.text
-            elif num_elem is not None and num_elem.text:
-                try:
-                    data[name] = float(num_elem.text)
-                except ValueError:
-                    data[name] = num_elem.text
-            elif bool_elem is not None:
-                data[name] = bool_elem.attrib.get("value") == "true"
-            elif arr_elem is not None:
-                items = []
-                for item_str in arr_elem.findall(".//string"):
-                    items.append(item_str.text or "")
-                data[name] = items
+        parsed = _wddx_deserialize(wddx_xml)
+        if not parsed:
+            return None
+        data = parsed[0] if isinstance(parsed, list) and len(parsed) > 0 else (parsed if isinstance(parsed, dict) else {})
 
         evt_name = data.get("EVENT") or data.get("COMMAND")
         thread_name = str(data.get("THREAD") or data.get("THREAD_ID") or data.get("THREAD_NAME") or "main")
@@ -1204,22 +1257,10 @@ class server:
         wddx_xml, _ = _parse_string(raw, offset)
         if not wddx_xml:
             return ""
-        try:
-            import xml.etree.ElementTree as ET
-            root = ET.fromstring(wddx_xml)
-            var = root.find(".//var[@name='VALUE']")
-            if var is not None:
-                str_elem = var.find("string")
-                if str_elem is not None:
-                    return str_elem.text or ""
-        except Exception:
-            pass
-        # Fallback regex if XML parsing fails
-        m = re.search(r"<var name=['\"]VALUE['\"]>(?:\s*<string>([\s\S]*?)</string>|\s*<string\s*/>)", wddx_xml, re.IGNORECASE)
-        if m:
-            val = m.group(1) or ""
-            val = val.replace("&lt;", "<").replace("&gt;", ">").replace("&amp;", "&").replace("&quot;", '"').replace("&apos;", "'")
-            return val
+        parsed = _wddx_deserialize(wddx_xml)
+        if parsed and isinstance(parsed, dict) and "VALUE" in parsed:
+            val = parsed["VALUE"]
+            return str(val) if val is not None else ""
         return ""
 
     def debugger_set_scope_filter(self, session_name: str, filter_str: str) -> None:
@@ -1310,11 +1351,13 @@ class server:
         xml_str, _ = _parse_string(raw, offset)
         paths: List[str] = []
         if xml_str:
-            import xml.etree.ElementTree as ET
-            root = ET.fromstring(xml_str)
-            for elem in root.findall(".//string"):
-                if elem.text:
-                    paths.append(elem.text)
+            parsed = _wddx_deserialize(xml_str)
+            if isinstance(parsed, list):
+                for item in parsed:
+                    if isinstance(item, str):
+                        paths.append(item)
+            elif isinstance(parsed, str):
+                paths.append(parsed)
         return paths
 
     def adminapi_extensions_setmapping(self, name: str, path: str) -> None:
@@ -1331,15 +1374,10 @@ class server:
         xml_str, _ = _parse_string(raw, offset)
         mappings: Dict[str, str] = {}
         if xml_str:
-            import xml.etree.ElementTree as ET
-            root = ET.fromstring(xml_str)
-            for var in root.findall(".//var"):
-                name = var.attrib.get("name")
-                if not name:
-                    continue
-                str_elem = var.find("string")
-                if str_elem is not None and str_elem.text:
-                    mappings[name] = str_elem.text
+            parsed = _wddx_deserialize(xml_str)
+            if isinstance(parsed, dict):
+                for k, v in parsed.items():
+                    mappings[k] = str(v)
         return mappings
 
     # Graphing Operations

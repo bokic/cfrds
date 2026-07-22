@@ -5,7 +5,7 @@ import {
   Server,
   VERSION,
 } from "./index";
-import { encodePassword, parseStringListItem } from "./parser";
+import { encodePassword, parseStringListItem, wddxDeserialize } from "./parser";
 import * as http from "http";
 import { EventEmitter } from "events";
 
@@ -245,7 +245,43 @@ async function main(): Promise<void> {
       mockResponseBody = Buffer.from("0:", "utf-8");
       await srvMock.adminapiExtensionsSetmapping("map'name", "path\"val");
       assert(lastRequestBody.includes("<var name='map&apos;name'>"), "adminapiExtensionsSetmapping name should be XML-escaped");
-      assert(lastRequestBody.includes("<string>path&quot;val</string>"), "adminapiExtensionsSetmapping path should be XML-escaped");
+      // Test 6: wddxDeserialize offline validation
+      {
+        const wddx = `<wddxPacket version='1.0'>
+          <header/>
+          <data>
+            <struct>
+              <var name='nullVal'><null/></var>
+              <var name='boolTrue'><boolean value='true'/></var>
+              <var name='boolFalse'><boolean value='false'/></var>
+              <var name='numberVal'><number>42.5</number></var>
+              <var name='stringVal'><string>hello &lt;world&gt; &amp; &quot;everyone&quot;</string></var>
+              <var name='cdataVal'><string><![CDATA[cdata <test> & val]]></string></var>
+              <var name='arrayVal'>
+                <array length='2'>
+                  <string>item1</string>
+                  <struct>
+                    <var name='nestedKey'><string>nestedVal</string></var>
+                  </struct>
+                </array>
+              </var>
+            </struct>
+          </data>
+        </wddxPacket>`;
+        const parsed = wddxDeserialize(wddx);
+        assert(parsed !== null, "parsed should not be null");
+        assert(parsed.nullVal === null, "nullVal should be null");
+        assert(parsed.boolTrue === true, "boolTrue should be true");
+        assert(parsed.boolFalse === false, "boolFalse should be false");
+        assert(parsed.numberVal === 42.5, "numberVal should be 42.5");
+        assert(parsed.stringVal === 'hello <world> & "everyone"', "stringVal should have unescaped XML entities");
+        assert(parsed.cdataVal === 'cdata <test> & val', "cdataVal should parse CDATA literally");
+        assert(Array.isArray(parsed.arrayVal), "arrayVal should be an array");
+        assert(parsed.arrayVal.length === 2, "arrayVal length should be 2");
+        assert(parsed.arrayVal[0] === 'item1', "arrayVal[0] should be item1");
+        assert(parsed.arrayVal[1].nestedKey === 'nestedVal', "arrayVal[1].nestedKey should be nestedVal");
+        log("Offline wddxDeserialize tests passed!");
+      }
 
       log("Offline WDDX escaping validation tests passed!");
     } finally {

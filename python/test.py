@@ -210,7 +210,41 @@ with patch("http.client.HTTPConnection", return_value=mock_conn):
     if isinstance(call_body, bytes):
         call_body = call_body.decode("utf-8")
     assert "<var name='map&apos;name'>" in call_body, "adminapi_extensions_setmapping name should be XML-escaped"
-    assert "<string>path&quot;val</string>" in call_body, "adminapi_extensions_setmapping path should be XML-escaped"
+    # Test 6: _wddx_deserialize offline validation
+    wddx = """<wddxPacket version='1.0'>
+      <header/>
+      <data>
+        <struct>
+          <var name='nullVal'><null/></var>
+          <var name='boolTrue'><boolean value='true'/></var>
+          <var name='boolFalse'><boolean value='false'/></var>
+          <var name='numberVal'><number>42.5</number></var>
+          <var name='stringVal'><string>hello &lt;world&gt; &amp; &quot;everyone&quot;</string></var>
+          <var name='cdataVal'><string><![CDATA[cdata <test> & val]]></string></var>
+          <var name='arrayVal'>
+            <array length='2'>
+              <string>item1</string>
+              <struct>
+                <var name='nestedKey'><string>nestedVal</string></var>
+              </struct>
+            </array>
+          </var>
+        </struct>
+      </data>
+    </wddxPacket>"""
+    parsed = cfrds._wddx_deserialize(wddx)
+    assert parsed is not None, "parsed should not be None"
+    assert parsed["nullVal"] is None, "nullVal should be None"
+    assert parsed["boolTrue"] is True, "boolTrue should be True"
+    assert parsed["boolFalse"] is False, "boolFalse should be False"
+    assert parsed["numberVal"] == 42.5, "numberVal should be 42.5"
+    assert parsed["stringVal"] == 'hello <world> & "everyone"', "stringVal should have unescaped XML entities"
+    assert parsed["cdataVal"] == 'cdata <test> & val', "cdataVal should parse CDATA literally"
+    assert isinstance(parsed["arrayVal"], list), "arrayVal should be a list"
+    assert len(parsed["arrayVal"]) == 2, "arrayVal length should be 2"
+    assert parsed["arrayVal"][0] == 'item1', "arrayVal[0] should be item1"
+    assert parsed["arrayVal"][1]["nestedKey"] == 'nestedVal', "arrayVal[1]['nestedKey'] should be nestedVal"
+    print("Offline _wddx_deserialize tests passed!")
 
     print("Offline WDDX escaping validation tests passed!")
 

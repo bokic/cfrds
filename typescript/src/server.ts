@@ -18,7 +18,7 @@ import {
   IdeDefaultResult,
   SecurityAnalyzerStatus,
 } from "./types";
-import { encodePassword, parseNumber, parseString, parseBytearray, parseStringListItem } from "./parser";
+import { encodePassword, parseNumber, parseString, parseBytearray, parseStringListItem, wddxDeserialize } from "./parser";
 import { sendRdsCommand } from "./transport";
 
 function escapeXml(str: string): string {
@@ -404,8 +404,8 @@ export class Server {
     const raw = await sendRdsCommand(this.ctx, "DBGREQUEST", ["DBG_GET_DEBUG_SERVER_INFO", sessionName]);
     const [, offset] = parseNumber(raw, 0);
     const [wddxXml] = parseString(raw, offset);
-    const m = wddxXml.match(/<var name=['"]DEBUG_SERVER_PORT['"]>\s*<number>(\d+(?:\.\d+)?)<\/number>/i);
-    return m ? Math.floor(parseFloat(m[1])) : 0;
+    const parsed = wddxDeserialize(wddxXml);
+    return parsed && typeof parsed.DEBUG_SERVER_PORT === "number" ? Math.floor(parsed.DEBUG_SERVER_PORT) : 0;
   }
 
   async debuggerBreakpointOnException(sessionName: string, enable: boolean): Promise<void> {
@@ -433,31 +433,16 @@ export class Server {
     if (!raw || raw.length === 0) {
       return null;
     }
-    const [cnt, offset] = parseNumber(raw, 0);
+    const [, offset] = parseNumber(raw, 0);
     const [wddxXml] = parseString(raw, offset);
     if (!wddxXml) {
       return null;
     }
-    const data: Record<string, any> = {};
-    const varMatches = wddxXml.matchAll(/<var name=['"]([^'"]+)['"]>(?:<string>([^<]*)<\/string>|<number>([^<]*)<\/number>|<boolean value=['"]([^'"]+)['"]\/>)/gi);
-    for (const m of varMatches) {
-      const key = m[1];
-      if (m[2] !== undefined) data[key] = m[2];
-      else if (m[3] !== undefined) data[key] = parseFloat(m[3]);
-      else if (m[4] !== undefined) data[key] = m[4] === "true";
+    const parsed = wddxDeserialize(wddxXml);
+    if (!parsed) {
+      return null;
     }
-
-    const arrayVarMatches = wddxXml.matchAll(/<var name=['"]([^'"]+)['"]>\s*<array[^>]*>([\s\S]*?)<\/array>\s*<\/var>/gi);
-    for (const m of arrayVarMatches) {
-      const key = m[1];
-      const arrayContent = m[2];
-      const items: string[] = [];
-      const stringMatches = arrayContent.matchAll(/<string>([^<]*)<\/string>/gi);
-      for (const sm of stringMatches) {
-        items.push(sm[1]);
-      }
-      data[key] = items;
-    }
+    const data = Array.isArray(parsed) ? (parsed[0] || {}) : parsed;
 
     const evtName = data.EVENT || data.COMMAND;
     const threadName = data.THREAD || data.THREAD_ID || data.THREAD_NAME || "main";
@@ -575,15 +560,9 @@ export class Server {
     if (!wddxXml) {
       return "";
     }
-    const match = wddxXml.match(/<var name=['"]VALUE['"]>(?:\s*<string>([\s\S]*?)<\/string>|\s*<string\s*\/>)/i);
-    if (match) {
-      const val = match[1] || "";
-      return val
-        .replace(/&lt;/g, "<")
-        .replace(/&gt;/g, ">")
-        .replace(/&amp;/g, "&")
-        .replace(/&quot;/g, '"')
-        .replace(/&apos;/g, "'");
+    const parsed = wddxDeserialize(wddxXml);
+    if (parsed && parsed.VALUE !== undefined) {
+      return String(parsed.VALUE);
     }
     return "";
   }
@@ -676,9 +655,15 @@ export class Server {
     const [xml] = parseString(raw, offset);
     const paths: string[] = [];
     if (xml) {
-      const matches = xml.matchAll(/<string>([^<]*)<\/string>/gi);
-      for (const m of matches) {
-        paths.push(m[1]);
+      const parsed = wddxDeserialize(xml);
+      if (Array.isArray(parsed)) {
+        for (const item of parsed) {
+          if (typeof item === "string") {
+            paths.push(item);
+          }
+        }
+      } else if (typeof parsed === "string") {
+        paths.push(parsed);
       }
     }
     return paths;
@@ -699,9 +684,11 @@ export class Server {
     const [xml] = parseString(raw, offset);
     const mappings: Record<string, string> = {};
     if (xml) {
-      const matches = xml.matchAll(/<var name=['"]([^'"]+)['"]>\s*<string>([^<]*)<\/string>/gi);
-      for (const m of matches) {
-        mappings[m[1]] = m[2];
+      const parsed = wddxDeserialize(xml);
+      if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) {
+        for (const [k, v] of Object.entries(parsed)) {
+          mappings[k] = String(v);
+        }
       }
     }
     return mappings;

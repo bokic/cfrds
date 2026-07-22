@@ -55,7 +55,7 @@ static bool cfrds_buffer_skip_httpheader(const char **data, size_t *remaining)
     if (body == NULL)
         return false;
 
-    *remaining -= (unsigned)(body - *data);
+    *remaining -= (size_t)(body - *data);
     *data = body + 4;
     *remaining -= 4;
 
@@ -233,7 +233,7 @@ cfrds_status cfrds_http_post(cfrds_server *server, const char *command, cfrds_bu
             break;
         }
 
-        cfrds_buffer_expand(tmp_response, (unsigned)nread);
+        cfrds_buffer_expand(tmp_response, (size_t)nread);
 
         if (cfrds_buffer_data_size(tmp_response) > CFRDS_MAX_RESPONSE_SIZE) {
             cfrds_server_set_error(server, CFRDS_STATUS_RESPONSE_TOO_LARGE, "response exceeded maximum size");

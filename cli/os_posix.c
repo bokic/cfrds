@@ -42,12 +42,12 @@ void* os_map(const char *pathname, size_t* size)
     if (stat.st_size < 0)
         return NULL;
 
-    *size = (unsigned)stat.st_size;
+    *size = (size_t)stat.st_size;
 
     if (stat.st_size == 0)
         return NULL;
 
-    ret = mmap(NULL, (unsigned)stat.st_size, PROT_READ, MAP_PRIVATE, fd, 0);
+    ret = mmap(NULL, (size_t)stat.st_size, PROT_READ, MAP_PRIVATE, fd, 0);
     if (ret == MAP_FAILED)
         return NULL;
 

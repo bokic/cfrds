@@ -534,14 +534,13 @@ static bool cfrds_buffer_parse_string_list_item(const char **data, size_t *remai
     memcpy(tmp, *data, len);
     tmp[len] = '\0';
     (*data)+=len; (*remaining)-=len;
-
     if (with_quotes) {
-        if (*remaining == 0 || *data[0] != '"')
+        if (*remaining == 0 || (*data)[0] != '"') {
             return false;
+        }
 
         (*data)++; (*remaining)--;
     }
-
     if (*remaining > 0 && *data[0] == ',') {
         (*data)++; (*remaining)--;
     }

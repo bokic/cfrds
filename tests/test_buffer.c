@@ -667,6 +667,27 @@ static int test_buffer_to_file_content(void)
     return PASS;
 }
 
+static int test_overflow_checks(void)
+{
+    cfrds_buffer *buf = NULL;
+    CHECK(cfrds_buffer_create(&buf) == true);
+
+    /* Test overflow in cfrds_buffer_realloc_if_needed via cfrds_buffer_append_bytes */
+    CHECK(cfrds_buffer_append_bytes(buf, "A", SIZE_MAX) == false);
+    CHECK(cfrds_buffer_append_bytes(buf, "A", SIZE_MAX - 100) == false);
+
+    /* Test overflow in cfrds_buffer_reserve_above_size */
+    CHECK(cfrds_buffer_reserve_above_size(buf, SIZE_MAX) == false);
+    CHECK(cfrds_buffer_reserve_above_size(buf, SIZE_MAX - 100) == false);
+
+    /* Test overflow in cfrds_buffer_expand */
+    CHECK(cfrds_buffer_expand(buf, SIZE_MAX) == false);
+    CHECK(cfrds_buffer_expand(buf, SIZE_MAX - 100) == false);
+
+    cfrds_buffer_free(buf);
+    return PASS;
+}
+
 /* ── main ──────────────────────────────────────────────────────────────── */
 
 int main(void)
@@ -730,6 +751,7 @@ int main(void)
     RUN(test_command_graphing_null_guards);
     RUN(test_sql_key_parsers);
     RUN(test_buffer_to_file_content);
+    RUN(test_overflow_checks);
 
 
     printf("\n%d test(s) failed.\n", _failures);

@@ -141,10 +141,22 @@ static bool cfrds_buffer_realloc_if_needed(cfrds_buffer *buffer, size_t len)
 {
     void *tmp = NULL;
 
-    if (buffer->size + len > buffer->allocated)
+    if (buffer == NULL)
+        return false;
+
+    if (SIZE_MAX - buffer->size < len)
+        return false;
+
+    size_t required = buffer->size + len;
+
+    if (required > buffer->allocated)
     {
-        size_t newsize = buffer->size + len;
-        newsize = (((newsize + 512) / 1024) + 1) * 1024;
+        if (SIZE_MAX - 512 < required)
+            return false;
+
+        size_t newsize = (((required + 512) / 1024) + 1) * 1024;
+        if (newsize < required || newsize == SIZE_MAX)
+            return false;
 
         /* +1: always keep a null sentinel byte past the data */
         tmp = realloc(buffer->data, newsize + 1);
@@ -360,9 +372,17 @@ bool cfrds_buffer_reserve_above_size(cfrds_buffer *buffer, size_t size)
     if (buffer == NULL)
         return false;
 
-    if (buffer->allocated - buffer->size < size)
+    if (SIZE_MAX - buffer->size < size)
+        return false;
+
+    size_t required = buffer->size + size;
+
+    if (buffer->allocated < required)
     {
-        size_t newsize = buffer->size + size;
+        if (required == SIZE_MAX)
+            return false;
+
+        size_t newsize = required;
 
         tmp = realloc(buffer->data, newsize + 1);
         if (tmp == NULL)
@@ -380,6 +400,9 @@ bool cfrds_buffer_reserve_above_size(cfrds_buffer *buffer, size_t size)
 bool cfrds_buffer_expand(cfrds_buffer *buffer, size_t size)
 {
     if (buffer == NULL)
+        return false;
+
+    if (SIZE_MAX - buffer->size < size)
         return false;
 
     if (buffer->allocated - buffer->size < size)

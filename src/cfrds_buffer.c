@@ -744,7 +744,8 @@ cfrds_sql_dsninfo *cfrds_buffer_to_sql_dsninfo(cfrds_buffer *buffer)
       {
           cfrds_str_defer(item);
 
-          cfrds_buffer_parse_string(&response_data, &response_size, &item);
+          if (!cfrds_buffer_parse_string(&response_data, &response_size, &item))
+              return NULL;
 
           if (item)
           {
@@ -809,7 +810,8 @@ cfrds_sql_tableinfo *cfrds_buffer_to_sql_tableinfo(cfrds_buffer *buffer)
     {
         cfrds_str_defer(item);
 
-        cfrds_buffer_parse_string(&response_data, &response_size, &item);
+        if (!cfrds_buffer_parse_string(&response_data, &response_size, &item))
+            return NULL;
         if (item)
         {
             cfrds_str_defer(field1);
@@ -1056,8 +1058,7 @@ cfrds_sql_primarykeys *cfrds_buffer_to_sql_primarykeys(cfrds_buffer *buffer)
     {
         cfrds_str_defer(item);
 
-        cfrds_buffer_parse_string(&data, &size, &item);
-        if (item == NULL)
+        if (!cfrds_buffer_parse_string(&data, &size, &item))
             return NULL;
 
         const char *column_buf = item;
@@ -1128,8 +1129,7 @@ cfrds_sql_foreignkeys *cfrds_buffer_to_sql_foreignkeys(cfrds_buffer *buffer)
     {
         cfrds_str_defer(item);
 
-        cfrds_buffer_parse_string(&data, &size, &item);
-        if (item == NULL)
+        if (!cfrds_buffer_parse_string(&data, &size, &item))
             return NULL;
 
         const char *column_buf = item;
@@ -1224,8 +1224,7 @@ cfrds_sql_importedkeys *cfrds_buffer_to_sql_importedkeys(cfrds_buffer *buffer)
     {
         cfrds_str_defer(item);
 
-        cfrds_buffer_parse_string(&data, &size, &item);
-        if (item == NULL)
+        if (!cfrds_buffer_parse_string(&data, &size, &item))
             return NULL;
 
         const char *column_buf = item;
@@ -1320,8 +1319,7 @@ cfrds_sql_exportedkeys *cfrds_buffer_to_sql_exportedkeys(cfrds_buffer *buffer)
     {
         cfrds_str_defer(item);
 
-        cfrds_buffer_parse_string(&data, &size, &item);
-        if (item == NULL)
+        if (!cfrds_buffer_parse_string(&data, &size, &item))
             return NULL;
 
         const char *column_buf = item;
@@ -1411,8 +1409,7 @@ cfrds_sql_resultset *cfrds_buffer_to_sql_sqlstmnt(cfrds_buffer *buffer)
     rows = cnt - 1;
     {
         cfrds_str_defer(col_row);
-        cfrds_buffer_parse_string(&response_data, &response_size, &col_row);
-        if (col_row == NULL)
+        if (!cfrds_buffer_parse_string(&response_data, &response_size, &col_row))
             return NULL;
 
         const char *row_walker = col_row;
@@ -1420,7 +1417,8 @@ cfrds_sql_resultset *cfrds_buffer_to_sql_sqlstmnt(cfrds_buffer *buffer)
         while(row_size)
         {
             cfrds_str_defer(field);
-            cfrds_buffer_parse_string_list_item(&row_walker, &row_size, &field);
+            if (!cfrds_buffer_parse_string_list_item(&row_walker, &row_size, &field))
+                return NULL;
             cols++;
         }
     }
@@ -1446,7 +1444,8 @@ cfrds_sql_resultset *cfrds_buffer_to_sql_sqlstmnt(cfrds_buffer *buffer)
     for(int64_t r = 0; r <= rows; r++)
     {
         cfrds_str_defer(row);
-        cfrds_buffer_parse_string(&response_data, &response_size, &row);
+        if (!cfrds_buffer_parse_string(&response_data, &response_size, &row))
+            return NULL;
         const char *row_walker = row;
         size_t row_size = strlen(row_walker);
 
@@ -1454,7 +1453,8 @@ cfrds_sql_resultset *cfrds_buffer_to_sql_sqlstmnt(cfrds_buffer *buffer)
         {
             char *field = NULL;
 
-            cfrds_buffer_parse_string_list_item(&row_walker, &row_size, &field);
+            if (!cfrds_buffer_parse_string_list_item(&row_walker, &row_size, &field))
+                return NULL;
 
             tmp->values[r * cols + c] = field;
         }
@@ -1500,20 +1500,22 @@ cfrds_sql_metadata *cfrds_buffer_to_sql_metadata(cfrds_buffer *buffer)
         char *field = NULL;
         cfrds_str_defer(row);
 
-        cfrds_buffer_parse_string(&response_data, &response_size, &row);
-        if (row == NULL)
+        if (!cfrds_buffer_parse_string(&response_data, &response_size, &row))
             return NULL;
 
         const char *row_walker = row;
         size_t row_size = strlen(row_walker);
 
-        cfrds_buffer_parse_string_list_item(&row_walker, &row_size, &field);
+        if (!cfrds_buffer_parse_string_list_item(&row_walker, &row_size, &field))
+            return NULL;
         tmp->items[c].name = field;
 
-        cfrds_buffer_parse_string_list_item(&row_walker, &row_size, &field);
+        if (!cfrds_buffer_parse_string_list_item(&row_walker, &row_size, &field))
+            return NULL;
         tmp->items[c].type = field;
 
-        cfrds_buffer_parse_string_list_item(&row_walker, &row_size, &field);
+        if (!cfrds_buffer_parse_string_list_item(&row_walker, &row_size, &field))
+            return NULL;
         tmp->items[c].jtype = field;
     }
 
@@ -1557,7 +1559,8 @@ cfrds_sql_supportedcommands *cfrds_buffer_to_sql_supportedcommands(cfrds_buffer 
         while(start_size)
         {
             cfrds_str_defer(field);
-            cfrds_buffer_parse_string_list_item(&start_data, &start_size, &field);
+            if (!cfrds_buffer_parse_string_list_item(&start_data, &start_size, &field))
+                return NULL;
             cnt++;
         }
     }
@@ -1575,7 +1578,8 @@ cfrds_sql_supportedcommands *cfrds_buffer_to_sql_supportedcommands(cfrds_buffer 
     {
         char *field = NULL;
 
-        cfrds_buffer_parse_string_list_item(&data, &size, &field);
+        if (!cfrds_buffer_parse_string_list_item(&data, &size, &field))
+            return NULL;
         tmp->commands[c] = field;
     }
 
@@ -1595,18 +1599,19 @@ char *cfrds_buffer_to_sql_dbdescription(cfrds_buffer *buffer)
     const char *data = (const char *)buffer->data;
     size_t size = buffer->size;
 
-    cfrds_buffer_parse_number(&data, &size, &rows);
+    if (!cfrds_buffer_parse_number(&data, &size, &rows))
+        return NULL;
     if (rows != 1)
         return NULL;
 
-    cfrds_buffer_parse_string(&data, &size, &row);
-    if (row == NULL)
+    if (!cfrds_buffer_parse_string(&data, &size, &row))
         return NULL;
 
     data = row;
     size = strlen(data);
 
-    cfrds_buffer_parse_string_list_item(&data, &size, &ret);
+    if (!cfrds_buffer_parse_string_list_item(&data, &size, &ret))
+        return NULL;
 
     return ret;
 }

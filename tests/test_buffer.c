@@ -667,6 +667,17 @@ static int test_buffer_to_file_content(void)
     return PASS;
 }
 
+static int test_sql_sqlstmnt_cnt_zero(void)
+{
+    cfrds_buffer *buf = NULL;
+    CHECK(cfrds_buffer_create(&buf) == true);
+    CHECK(cfrds_buffer_append(buf, "0:") == true);
+    cfrds_sql_resultset *rs = cfrds_buffer_to_sql_sqlstmnt(buf);
+    CHECK(rs == NULL);
+    cfrds_buffer_free(buf);
+    return PASS;
+}
+
 static int test_overflow_checks(void)
 {
     cfrds_buffer *buf = NULL;
@@ -751,6 +762,7 @@ int main(void)
     RUN(test_command_graphing_null_guards);
     RUN(test_sql_key_parsers);
     RUN(test_buffer_to_file_content);
+    RUN(test_sql_sqlstmnt_cnt_zero);
     RUN(test_overflow_checks);
 
 

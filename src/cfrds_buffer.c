@@ -1406,7 +1406,7 @@ cfrds_sql_resultset *cfrds_buffer_to_sql_sqlstmnt(cfrds_buffer *buffer)
     if (!cfrds_buffer_parse_number(&response_data, &response_size, &cnt))
         return NULL;
 
-    if (cnt < 0 || cnt > CFRDS_MAX_PARSER_ITEMS)
+    if (cnt < 1 || cnt > CFRDS_MAX_PARSER_ITEMS)
         return NULL;
 
     const char *response_start_data = response_data;

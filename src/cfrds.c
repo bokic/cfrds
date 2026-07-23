@@ -2043,8 +2043,6 @@ cfrds_status cfrds_command_debugger_all_fetch_flags_enabled(cfrds_server *server
         *event = cfrds_buffer_to_debugger_event(response);
     }
 
-    printf("cfrds_command_debugger_all_fetch_flags_enabled - response: [%s]\n", cfrds_buffer_data(response));
-
     return ret;
 }
 

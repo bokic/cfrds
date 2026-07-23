@@ -3119,8 +3119,6 @@ cfrds_str cfrds_security_analyzer_result_filesscanned_item_result(const cfrds_se
 {
     json_object_defer(json_obj);
 
-        goto exit;
-
     json_obj = json_tokener_parse(value);
     if (json_obj == NULL)
         goto exit;
@@ -3148,7 +3146,11 @@ cfrds_str cfrds_security_analyzer_result_filesscanned_item_result(const cfrds_se
     if (result == NULL)
         goto exit;
 
-    return strdup(json_object_get_string(result));
+    const char *str = json_object_get_string(result);
+    if (str == NULL)
+        goto exit;
+
+    return strdup(str);
 
 exit:
     return NULL;

@@ -202,14 +202,10 @@ char *cfrds_buffer_data(cfrds_buffer *buffer)
 
 size_t cfrds_buffer_data_size(cfrds_buffer *buffer)
 {
-    const cfrds_buffer *ret = NULL;
-
     if (buffer == NULL)
-         return 0;
+        return 0;
 
-    ret = (cfrds_buffer *)buffer;
-
-    return ret->size;
+    return buffer->size;
 }
 
 bool cfrds_buffer_append(cfrds_buffer *buffer, const char *str)

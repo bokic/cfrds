@@ -55,9 +55,12 @@ static bool cfrds_buffer_skip_httpheader(const char **data, size_t *remaining)
     if (body == NULL)
         return false;
 
-    *remaining -= (size_t)(body - *data);
+    size_t header_len = (size_t)(body - *data);
+    if (*remaining < header_len + 4)
+        return false;
+
     *data = body + 4;
-    *remaining -= 4;
+    *remaining -= (header_len + 4);
 
     return true;
 }

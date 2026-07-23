@@ -436,7 +436,7 @@ static int test_parse_bytearray_basic(void)
 
     const char *data = input;
     size_t remaining = sizeof(input);
-    char *out = NULL;
+    cfrds_str_defer(out);
     size_t out_size = 0;
 
     CHECK(cfrds_buffer_parse_bytearray(&data, &remaining, &out, &out_size));

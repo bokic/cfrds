@@ -23,7 +23,10 @@
 #include <errno.h>
 
 
+#include <time.h>
+
 #define CFRDS_MAX_RESPONSE_SIZE (100 * 1024 * 1024)
+#define CFRDS_MAX_RESPONSE_TIMEOUT_SEC 60
 
 #ifdef _WIN32
 typedef SOCKET cfrds_socket;
@@ -227,8 +230,14 @@ cfrds_status cfrds_http_post(cfrds_server *server, const char *command, cfrds_bu
         cfrds_server_set_error(server, CFRDS_STATUS_MEMORY_ERROR, "cfrds_buffer_create failed for tmp_response");
         return CFRDS_STATUS_MEMORY_ERROR;
     }
+    time_t start_time = time(NULL);
     while(1)
     {
+        if (time(NULL) - start_time > CFRDS_MAX_RESPONSE_TIMEOUT_SEC) {
+            cfrds_server_set_error(server, CFRDS_STATUS_READING_FROM_SOCKET_FAILED, "response read timed out (overall deadline exceeded)");
+            return CFRDS_STATUS_READING_FROM_SOCKET_FAILED;
+        }
+
         if (cfrds_buffer_reserve_above_size(tmp_response, 4096) == false)
             return CFRDS_STATUS_MEMORY_ERROR;
 

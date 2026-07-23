@@ -531,7 +531,7 @@ static bool cfrds_buffer_parse_string_list_item(const char **data, size_t *remai
     if ((data == NULL)||(out == NULL)||(*remaining < 2))
         return false;
 
-    if (*data[0] == '"')
+    if ((*data)[0] == '"')
     {
         with_quotes = true;
         (*data)++; (*remaining)--;
@@ -564,7 +564,7 @@ static bool cfrds_buffer_parse_string_list_item(const char **data, size_t *remai
 
         (*data)++; (*remaining)--;
     }
-    if (*remaining > 0 && *data[0] == ',') {
+    if (*remaining > 0 && (*data)[0] == ',') {
         (*data)++; (*remaining)--;
     }
 

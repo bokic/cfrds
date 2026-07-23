@@ -89,9 +89,9 @@ cfrds_status cfrds_http_post(cfrds_server *server, const char *command, cfrds_bu
     port = cfrds_server_get_port(server);
 
     n = snprintf(datasize_str, sizeof(datasize_str), "%zu", cfrds_buffer_data_size(payload));
-    if (n < 0)
+    if (n < 0 || (size_t)n >= sizeof(datasize_str))
     {
-        cfrds_server_set_error(server, CFRDS_STATUS_MEMORY_ERROR, "snprintf() returned < 0...");
+        cfrds_server_set_error(server, CFRDS_STATUS_MEMORY_ERROR, "snprintf() returned < 0 or truncated...");
         return CFRDS_STATUS_MEMORY_ERROR;
     }
 
@@ -108,9 +108,9 @@ cfrds_status cfrds_http_post(cfrds_server *server, const char *command, cfrds_bu
         char port_str[16] = {0, };
 
         n = snprintf(port_str, sizeof(port_str), "%d", port);
-        if (n < 0)
+        if (n < 0 || (size_t)n >= sizeof(port_str))
         {
-            cfrds_server_set_error(server, CFRDS_STATUS_MEMORY_ERROR, "snprintf() returned < 0...");
+            cfrds_server_set_error(server, CFRDS_STATUS_MEMORY_ERROR, "snprintf() returned < 0 or truncated...");
             return CFRDS_STATUS_MEMORY_ERROR;
         }
         cfrds_buffer_append(send_buf, ":");

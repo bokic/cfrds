@@ -2915,6 +2915,7 @@ cfrds_status cfrds_command_security_analyzer_result(cfrds_server *server, int co
 
         if (items != 1)
         {
+            server->error_code = -1;
             return CFRDS_STATUS_RESPONSE_ERROR;
         }
 

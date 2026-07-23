@@ -21,7 +21,25 @@
  * @def CFRDS_VERSION_PATCH   Patch version number (integer)
  * @def CFRDS_VERSION_INT     Combined integer: MAJOR*10000 + MINOR*100 + PATCH
  */
+#if __has_include("version.h")
 #include "version.h"
+#endif
+
+#ifndef CFRDS_VERSION
+#define CFRDS_VERSION "unknown"
+#endif
+#ifndef CFRDS_VERSION_MAJOR
+#define CFRDS_VERSION_MAJOR 0
+#endif
+#ifndef CFRDS_VERSION_MINOR
+#define CFRDS_VERSION_MINOR 0
+#endif
+#ifndef CFRDS_VERSION_PATCH
+#define CFRDS_VERSION_PATCH 0
+#endif
+#ifndef CFRDS_VERSION_INT
+#define CFRDS_VERSION_INT 0
+#endif
 
 #ifdef libcfrds_EXPORTS
  #if defined(_WIN32) || defined(__CYGWIN__)

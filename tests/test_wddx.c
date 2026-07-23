@@ -507,6 +507,32 @@ static int test_debugger_event_getters(void)
     return PASS;
 }
 
+static int test_wddx_array_bounds(void)
+{
+    /* Test huge array length in XML */
+    {
+        const char huge_xml[] =
+            "<wddxPacket version=\"1.0\">"
+            "<header/>"
+            "<data><array length=\"99999999999999999999\"><string>a</string></array></data>"
+            "</wddxPacket>";
+        WDDX_defer(w);
+        w = wddx_from_xml(huge_xml);
+        CHECK(w != NULL);
+        CHECK(wddx_data(w) == NULL);
+    }
+
+    /* Test huge index in wddx_put_string */
+    {
+        WDDX_defer(w);
+        w = wddx_create();
+        CHECK(w != NULL);
+        CHECK(wddx_put_string(w, "99999999999999999999", "test") == false);
+    }
+
+    return PASS;
+}
+
 /* ── main ──────────────────────────────────────────────────────────────── */
 
 int main(void)
@@ -542,6 +568,7 @@ int main(void)
     RUN(test_roundtrip_struct);
     RUN(test_roundtrip_array);
     RUN(test_debugger_event_getters);
+    RUN(test_wddx_array_bounds);
 
     printf("\n%d test(s) failed.\n", _failures);
     return _failures ? 1 : 0;

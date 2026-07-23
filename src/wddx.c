@@ -12,6 +12,8 @@
 #include <limits.h>
 
 
+#define WDDX_MAX_ARRAY_LENGTH 10000
+
 #define xmlDoc_defer(var) xmlDoc* var __attribute__((cleanup(xmlDoc_cleanup))) = NULL
 
 struct WDDX_NODE {
@@ -100,8 +102,10 @@ static struct WDDX_NODE *wddx_recursively_put(struct WDDX_NODE *node, const char
 
     if(is_string_numeric(newkey))
     {
-        int idx = atoi(newkey) + 1;
-        if (idx < 1) return NULL;
+        long parsed = strtol(newkey, NULL, 10);
+        if (parsed < 0 || parsed >= WDDX_MAX_ARRAY_LENGTH) return NULL;
+        int idx = (int)parsed + 1;
+        if (idx < 1 || idx > WDDX_MAX_ARRAY_LENGTH) return NULL;
 
         if (node == NULL)
         {
@@ -458,9 +462,10 @@ static struct WDDX_NODE *wddx_from_xml_element(xmlNodePtr xml_node)
         xmlChar *lengthStr = xmlGetProp(xml_node, BAD_CAST "length");
         if (lengthStr == NULL) return NULL;
 
-        int length = atoi((char *)lengthStr);
+        long parsed_len = strtol((char *)lengthStr, NULL, 10);
         xmlFree(lengthStr); lengthStr = NULL;
-        if (length <= 0) return NULL;
+        if (parsed_len <= 0 || parsed_len > WDDX_MAX_ARRAY_LENGTH) return NULL;
+        int length = (int)parsed_len;
 
         malloc_size = offsetof(struct WDDX_NODE, items) + (size_t)length * sizeof(void *);
         ret = malloc(malloc_size);
@@ -637,10 +642,9 @@ static const struct WDDX_NODE *wddx_recursively_get(const struct WDDX_NODE *node
     {
         if(is_string_numeric(path))
         {
-            if (node->type != WDDX_ARRAY) return NULL;
-            int idx = atoi(path);
-
-            if (idx >= node->cnt) return NULL;
+            long parsed_idx = strtol(path, NULL, 10);
+            if (parsed_idx < 0 || parsed_idx >= node->cnt) return NULL;
+            int idx = (int)parsed_idx;
 
             return node->items[idx];
         }
@@ -668,10 +672,9 @@ static const struct WDDX_NODE *wddx_recursively_get(const struct WDDX_NODE *node
 
         if(is_string_numeric(tmp_path))
         {
-            if (node->type != WDDX_ARRAY) return NULL;
-            int idx = atoi(tmp_path);
-
-            if (idx >= node->cnt) return NULL;
+            long parsed_idx = strtol(tmp_path, NULL, 10);
+            if (parsed_idx < 0 || parsed_idx >= node->cnt) return NULL;
+            int idx = (int)parsed_idx;
 
             return wddx_recursively_get(node->items[idx], next + 1);
         }

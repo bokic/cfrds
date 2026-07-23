@@ -46,19 +46,27 @@ static void cfrds_sock_cleanup(cfrds_socket* sock);
 
 static bool cfrds_buffer_skip_httpheader(const char **data, size_t *remaining)
 {
-    const char *body = NULL;
-
     if ((data == NULL) || (*data == NULL) || (remaining == NULL))
         return false;
 
-    body = strstr(*data, "\r\n\r\n");
+    if (*remaining < 4)
+        return false;
+
+    const char *p = *data;
+    size_t limit = *remaining - 3;
+    const char *body = NULL;
+
+    for (size_t i = 0; i < limit; i++) {
+        if (p[i] == '\r' && p[i+1] == '\n' && p[i+2] == '\r' && p[i+3] == '\n') {
+            body = p + i;
+            break;
+        }
+    }
+
     if (body == NULL)
         return false;
 
     size_t header_len = (size_t)(body - *data);
-    if (*remaining < header_len + 4)
-        return false;
-
     *data = body + 4;
     *remaining -= (header_len + 4);
 

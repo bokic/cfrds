@@ -49,6 +49,11 @@ static void xmlDoc_cleanup(xmlDoc **value)
     }
 }
 
+/*
+ * Note: Checks if a string consists entirely of digits (0-9).
+ * Does not check for leading +/- signs. Strings with leading zeros (e.g. "007")
+ * are considered numeric and will be normalized when converted to integer indices.
+ */
 static bool is_string_numeric(const char *str)
 {
     if (str == NULL || *str == '\0')

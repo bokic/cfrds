@@ -3981,6 +3981,7 @@ cfrds_status cfrds_command_ide_default(cfrds_server *server, int version, int *n
         return CFRDS_STATUS_SERVER_IS_NULL;
     }
 
+    /* Protocol quirk: IDE_DEFAULT expects version argument formatted with a trailing comma (e.g. "N,") */
     snprintf(param, sizeof(param), "%d,", version);
 
     ret = cfrds_send_command(server, &response, "IDE_DEFAULT", (const char *[]){ "", param, NULL});

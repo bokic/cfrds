@@ -100,6 +100,11 @@ if(WIN32)
     )
 endif()
 
+if(NOT WIN32)
+    find_package(LibXml2 REQUIRED)
+    find_package(json-c REQUIRED)
+endif()
+
 ###
 if(WIN32)
     add_executable(cfrds_cli
@@ -135,7 +140,6 @@ if(WIN32)
         ${CMAKE_CURRENT_SOURCE_DIR}/deps/json-c
     )
 else()
-    target_include_directories(cfrds_cli PRIVATE ${JSONC_INCLUDE_DIR})
     target_link_libraries(cfrds_cli PRIVATE json-c::json-c)
 endif()
 
@@ -187,9 +191,6 @@ if(WIN32)
         xml2
     )
 else()
-    find_package(LibXml2 REQUIRED)
-    find_package(json-c REQUIRED)
-    target_include_directories(libcfrds PRIVATE ${LIBXML2_INCLUDE_DIR} ${JSONC_INCLUDE_DIR})
     target_link_libraries(libcfrds PRIVATE LibXml2::LibXml2 json-c::json-c)
 endif()
 

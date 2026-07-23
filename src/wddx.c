@@ -476,7 +476,7 @@ static struct WDDX_NODE *wddx_from_xml_element(xmlNodePtr xml_node)
         explicit_bzero(ret, malloc_size);
 
         ret->type = WDDX_ARRAY;
-        ret->cnt = length;
+        ret->cnt = 0;
 
         int idx = 0;
         for(xmlNodePtr child_node = xml_node->children; child_node && idx < length; child_node = child_node->next)
@@ -484,6 +484,7 @@ static struct WDDX_NODE *wddx_from_xml_element(xmlNodePtr xml_node)
             if (child_node->type != XML_ELEMENT_NODE) continue;
 
             ret->items[idx++] = wddx_from_xml_element(child_node);
+            ret->cnt = idx;
         }
     }
     else if (strcmp(name, "struct") == 0)
@@ -506,7 +507,7 @@ static struct WDDX_NODE *wddx_from_xml_element(xmlNodePtr xml_node)
         explicit_bzero(ret, malloc_size);
 
         ret->type = WDDX_STRUCT;
-        ret->cnt = length;
+        ret->cnt = 0;
 
         int idx = 0;
         for(xmlNodePtr child_node = xml_node->children; child_node && idx < length; child_node = child_node->next)
@@ -548,6 +549,7 @@ static struct WDDX_NODE *wddx_from_xml_element(xmlNodePtr xml_node)
             item->value = wddx_from_xml_element(child_node->children);
 
             ret->items[idx++] = item;
+            ret->cnt = idx;
         }
     }
 

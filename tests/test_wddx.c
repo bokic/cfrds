@@ -507,6 +507,27 @@ static int test_debugger_event_getters(void)
     return PASS;
 }
 
+static int test_wddx_put_partial_failure(void)
+{
+    /* Test recursive put partial failure when target node is not container */
+    {
+        WDDX_defer(w);
+        w = wddx_create();
+        CHECK(w != NULL);
+
+        /* Set up a structure with a string property */
+        CHECK(wddx_put_string(w, "foo", "item1") == true);
+        /* Try to insert a sub-property under foo ("foo.bar"), which attempts to traverse "foo" (WDDX_STRING).
+         * wddx_recursively_put on foo will return NULL.
+         */
+        CHECK(wddx_put_string(w, "foo,bar", "item2") == false);
+        /* wddx packet structure must remain valid and cleanable without dangling pointer or crash */
+        CHECK(wddx_data(w) != NULL);
+    }
+
+    return PASS;
+}
+
 static int test_wddx_array_bounds(void)
 {
     /* Test huge array length in XML */
@@ -569,6 +590,7 @@ int main(void)
     RUN(test_roundtrip_array);
     RUN(test_debugger_event_getters);
     RUN(test_wddx_array_bounds);
+    RUN(test_wddx_put_partial_failure);
 
     printf("\n%d test(s) failed.\n", _failures);
     return _failures ? 1 : 0;

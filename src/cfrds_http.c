@@ -265,16 +265,14 @@ cfrds_status cfrds_http_post(cfrds_server *server, const char *command, cfrds_bu
     size_t response_size = cfrds_buffer_data_size(tmp_response);
 
     static const char *good_response_http1_1 = "HTTP/1.1 200 ";
+    size_t min_resp_len = strlen(good_response_http1_1);
 
-    if (strncmp(response_data, good_response_http1_1, strlen(good_response_http1_1)) != 0)
+    if (response_size < min_resp_len ||
+        (strncmp(response_data, good_response_http1_1, min_resp_len) != 0 &&
+         strncmp(response_data, "HTTP/1.0 200 ", min_resp_len) != 0))
     {
-        static const char *good_response_http1_0 = "HTTP/1.0 200 ";
-
-        if (strncmp(response_data, good_response_http1_0, strlen(good_response_http1_0)) != 0)
-        {
-            cfrds_server_set_error(server, CFRDS_STATUS_RESPONSE_ERROR, "Invalid server response...");
-            return CFRDS_STATUS_RESPONSE_ERROR;
-        }
+        cfrds_server_set_error(server, CFRDS_STATUS_RESPONSE_ERROR, "Invalid server response...");
+        return CFRDS_STATUS_RESPONSE_ERROR;
     }
 
     if (cfrds_buffer_skip_httpheader(&response_data, &response_size) == false)

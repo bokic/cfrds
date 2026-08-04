@@ -488,20 +488,31 @@ static bool cfrds_buffer_parse_bytearray(const char **data, size_t *remaining, c
     if (out == NULL)
         return false;
 
+    const char *data_start = *data;
+    size_t rem_start = *remaining;
+
     if (!cfrds_buffer_parse_number(data, remaining, &tmp))
         return false;
 
-    if (tmp < 0)
+    if (tmp < 0) {
+        *data = data_start;
+        *remaining = rem_start;
         return false;
+    }
 
     size = (size_t)tmp;
-
-    if (size > *remaining)
+    if (size > *remaining) {
+        *data = data_start;
+        *remaining = rem_start;
         return false;
+    }
 
     *out = malloc(size + 1);
-    if (*out == NULL)
+    if (*out == NULL) {
+        *data = data_start;
+        *remaining = rem_start;
         return false;
+    }
 
     memcpy(*out, *data, size);
     (*out)[size] = 0;
@@ -509,41 +520,15 @@ static bool cfrds_buffer_parse_bytearray(const char **data, size_t *remaining, c
     *remaining -= size;
     *data += size;
 
-    *out_size = size;
+    if (out_size)
+        *out_size = size;
 
     return true;
 }
 
 bool cfrds_buffer_parse_string(const char **data, size_t *remaining, char **out)
 {
-    size_t size = 0;
-    int64_t tmp = 0;
-
-    if (out == NULL)
-        return false;
-
-    if (!cfrds_buffer_parse_number(data, remaining, &tmp))
-        return false;
-
-    if (tmp < 0)
-        return false;
-
-    size = (size_t)tmp;
-
-    if (size > *remaining)
-        return false;
-
-    *out = malloc(size + 1);
-    if(*out == NULL)
-        return false;
-
-    memcpy(*out, *data, size);
-    (*out)[size] = 0;
-
-    *remaining -= size;
-    *data += size;
-
-    return true;
+    return cfrds_buffer_parse_bytearray(data, remaining, out, NULL);
 }
 
 static bool cfrds_buffer_parse_string_list_item(const char **data, size_t *remaining, char **out)

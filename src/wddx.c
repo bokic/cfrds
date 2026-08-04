@@ -274,14 +274,7 @@ static bool wddx_put(WDDX *dest, const char *path, const char *value, enum wddx_
 
 bool wddx_put_bool(WDDX *dest, const char *path, bool value)
 {
-    const char *valueStr = NULL;
-
-    if (value)
-        valueStr = "true";
-    else
-        valueStr = "false";
-
-    return wddx_put(dest, path, valueStr, WDDX_BOOLEAN);
+    return wddx_put(dest, path, value ? "true" : "false", WDDX_BOOLEAN);
 }
 
 bool wddx_put_number(WDDX *dest, const char *path, double value)

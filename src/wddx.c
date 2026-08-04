@@ -648,74 +648,42 @@ WDDX *wddx_from_xml(const char *xml)
 
 static const struct WDDX_NODE *wddx_recursively_get(const struct WDDX_NODE *node, const char *path)
 {
-    if (node == NULL)
-        return NULL;
-
-    if (strlen(path) == 0)
-    {
+    if (node == NULL || path == NULL || strlen(path) == 0)
         return node;
-    }
 
     const char *next = strchr(path, ',');
-    if (next == NULL)
+    size_t seg_len = next ? (size_t)(next - path) : strlen(path);
+    char seg[seg_len + 1];
+    memcpy(seg, path, seg_len);
+    seg[seg_len] = '\0';
+
+    const struct WDDX_NODE *target = NULL;
+
+    if (is_string_numeric(seg))
     {
-        if(is_string_numeric(path))
-        {
-            if (node->type != WDDX_ARRAY) return NULL;
-
-            long parsed_idx = strtol(path, NULL, 10);
-            if (parsed_idx < 0 || parsed_idx >= node->cnt) return NULL;
-            int idx = (int)parsed_idx;
-
-            return node->items[idx];
-        }
-        else
-        {
-            if (node->type != WDDX_STRUCT) return NULL;
-
-            for(int c = 0; c < node->cnt; c++)
-            {
-                const WDDX_STRUCT_NODE *item = node->items[c];
-                if (item == NULL || item->name == NULL) continue;
-                if (strcmp(item->name, path) == 0)
-                    return item->value;
-            }
-
-            return NULL;
-        }
+        if (node->type != WDDX_ARRAY) return NULL;
+        long parsed_idx = strtol(seg, NULL, 10);
+        if (parsed_idx < 0 || parsed_idx >= node->cnt) return NULL;
+        target = node->items[(int)parsed_idx];
     }
     else
     {
-        size_t seg_len = (size_t)(next - path);
-        char tmp_path[seg_len + 1];
-        memcpy(tmp_path, path, seg_len);
-        tmp_path[seg_len] = 0;
-
-        if(is_string_numeric(tmp_path))
+        if (node->type != WDDX_STRUCT) return NULL;
+        for (int c = 0; c < node->cnt; c++)
         {
-            if (node->type != WDDX_ARRAY) return NULL;
-
-            long parsed_idx = strtol(tmp_path, NULL, 10);
-            if (parsed_idx < 0 || parsed_idx >= node->cnt) return NULL;
-            int idx = (int)parsed_idx;
-
-            return wddx_recursively_get(node->items[idx], next + 1);
-        }
-        else
-        {
-            if (node->type != WDDX_STRUCT) return NULL;
-
-            for(int c = 0; c < node->cnt; c++)
+            const WDDX_STRUCT_NODE *item = node->items[c];
+            if (item != NULL && item->name != NULL && strcmp(item->name, seg) == 0)
             {
-                const WDDX_STRUCT_NODE *item = node->items[c];
-                if (item == NULL || item->name == NULL) continue;
-                if (strcmp(item->name, tmp_path) == 0)
-                    return wddx_recursively_get(item->value, next + 1);
+                target = item->value;
+                break;
             }
-
-            return NULL;
         }
     }
+
+    if (target == NULL || next == NULL)
+        return target;
+
+    return wddx_recursively_get(target, next + 1);
 }
 
 static __attribute__((unused)) const WDDX_NODE *wddx_header(const WDDX *src)

@@ -12,7 +12,6 @@
 #ifdef _WIN32
 #define WIN32_LEAN_AND_MEAN
 #include <Windows.h>
-typedef SIZE_T size_t;
 typedef SSIZE_T ssize_t;
 #else
 #include <sys/socket.h>

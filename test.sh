@@ -97,9 +97,19 @@ bin/cfrds security_analyzer "${TARGET}/app" || true
 echo "5. Testing IDE Default..."
 bin/cfrds ide_default "${TARGET}/" 1 || true
 
-echo "6. Debugger Operations..."
-echo "Testing debugger start and stop..."
-bin/cfrds test_debugger "${TARGET}" || echo "  Debugger start/stop notification (expected if CF debugging disabled)"
-# TODO: Test remaining debugger operations (debugger_get_server_info, dbg_brk, step_in, step_over, step_out, continue)
+echo "6. Testing AdminAPI Extensions & Settings..."
+bin/cfrds adminapi "${TARGET}/" extensions_getcustomtagpaths || true
+bin/cfrds adminapi "${TARGET}/" extensions_getmappings || true
+bin/cfrds adminapi "${TARGET}/" extensions_setmapping "c_test_map" "/tmp" || true
+bin/cfrds adminapi "${TARGET}/" extensions_deletemapping "c_test_map" || true
+
+echo "7. Testing Graphing..."
+bin/cfrds graphing "${TARGET}/" "width=200,height=200" /tmp/c_graph.png "1,2,3" || true
+rm -f /tmp/c_graph.png 2>/dev/null || true
+
+echo "8. Debugger Operations..."
+echo "Running comprehensive debugger test routine..."
+bin/cfrds test_debugger "${TARGET}" || echo "  Debugger test notification (expected if CF line debugger disabled)"
 
 echo "C CLI (cfrds) tests completed successfully!"
+

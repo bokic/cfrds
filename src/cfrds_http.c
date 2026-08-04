@@ -88,10 +88,11 @@ static cfrds_status http_build_request(cfrds_server *server, const char *command
         return CFRDS_STATUS_MEMORY_ERROR;
     }
 
-    cfrds_buffer_append(send_buf, "POST /CFIDE/main/ide.cfm?CFSRV=IDE&ACTION=");
-    cfrds_buffer_append(send_buf, command);
-    cfrds_buffer_append(send_buf, " HTTP/1.0\r\nHost: ");
-    cfrds_buffer_append(send_buf, cfrds_server_get_host(server));
+    bool ok = true;
+    ok = ok && cfrds_buffer_append(send_buf, "POST /CFIDE/main/ide.cfm?CFSRV=IDE&ACTION=");
+    ok = ok && cfrds_buffer_append(send_buf, command);
+    ok = ok && cfrds_buffer_append(send_buf, " HTTP/1.0\r\nHost: ");
+    ok = ok && cfrds_buffer_append(send_buf, cfrds_server_get_host(server));
     if (port != 80)
     {
         char port_str[16] = {0, };
@@ -101,13 +102,19 @@ static cfrds_status http_build_request(cfrds_server *server, const char *command
             cfrds_server_set_error(server, CFRDS_STATUS_MEMORY_ERROR, "snprintf() returned < 0 or truncated...");
             return CFRDS_STATUS_MEMORY_ERROR;
         }
-        cfrds_buffer_append(send_buf, ":");
-        cfrds_buffer_append(send_buf, port_str);
+        ok = ok && cfrds_buffer_append(send_buf, ":");
+        ok = ok && cfrds_buffer_append(send_buf, port_str);
     }
-    cfrds_buffer_append(send_buf, "\r\nConnection: close\r\nUser-Agent: Mozilla/3.0 (compatible; Macromedia RDS Client)\r\nAccept: text/html, */*\r\nAccept-Encoding: deflate\r\nContent-type: text/html\r\nContent-length: ");
-    cfrds_buffer_append(send_buf, datasize_str);
-    cfrds_buffer_append(send_buf, "\r\n\r\n");
-    cfrds_buffer_append_buffer(send_buf, payload);
+    ok = ok && cfrds_buffer_append(send_buf, "\r\nConnection: close\r\nUser-Agent: Mozilla/3.0 (compatible; Macromedia RDS Client)\r\nAccept: text/html, */*\r\nAccept-Encoding: deflate\r\nContent-type: text/html\r\nContent-length: ");
+    ok = ok && cfrds_buffer_append(send_buf, datasize_str);
+    ok = ok && cfrds_buffer_append(send_buf, "\r\n\r\n");
+    ok = ok && cfrds_buffer_append_buffer(send_buf, payload);
+
+    if (!ok)
+    {
+        cfrds_server_set_error(server, CFRDS_STATUS_MEMORY_ERROR, "buffer append failed building request");
+        return CFRDS_STATUS_MEMORY_ERROR;
+    }
 
     return CFRDS_STATUS_OK;
 }

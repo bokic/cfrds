@@ -112,49 +112,30 @@ typedef struct {
     int keySequence;
     int updateRule;
     int deleteRule;
-} cfrds_sql_foreignkeysitem;
+} cfrds_sql_keyinfoitem;
+
+typedef cfrds_sql_keyinfoitem cfrds_sql_foreignkeysitem;
+typedef cfrds_sql_keyinfoitem cfrds_sql_importedkeysitem;
+typedef cfrds_sql_keyinfoitem cfrds_sql_exportedkeysitem;
+
+struct cfrds_sql_keyinfo {
+    size_t cnt;
+    cfrds_sql_keyinfoitem items[];
+};
 
 struct cfrds_sql_foreignkeys {
     size_t cnt;
-    cfrds_sql_foreignkeysitem items[];
+    cfrds_sql_keyinfoitem items[];
 };
-
-typedef struct {
-    char *pkTableCatalog;
-    char *pkTableOwner;
-    char *pkTableName;
-    char *pkColName;
-    char *fkTableCatalog;
-    char *fkTableOwner;
-    char *fkTableName;
-    char *fkColName;
-    int keySequence;
-    int updateRule;
-    int deleteRule;
-} cfrds_sql_importedkeysitem;
 
 struct cfrds_sql_importedkeys {
     size_t cnt;
-    cfrds_sql_importedkeysitem items[];
+    cfrds_sql_keyinfoitem items[];
 };
-
-typedef struct {
-    char *pkTableCatalog;
-    char *pkTableOwner;
-    char *pkTableName;
-    char *pkColName;
-    char *fkTableCatalog;
-    char *fkTableOwner;
-    char *fkTableName;
-    char *fkColName;
-    int keySequence;
-    int updateRule;
-    int deleteRule;
-} cfrds_sql_exportedkeysitem;
 
 struct cfrds_sql_exportedkeys {
     size_t cnt;
-    cfrds_sql_exportedkeysitem items[];
+    cfrds_sql_keyinfoitem items[];
 };
 
 struct cfrds_sql_resultset {

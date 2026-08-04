@@ -1034,10 +1034,9 @@ static bool cfrds_buffer_parse_keyinfo_items(const char **data_ptr, size_t *size
     return true;
 }
 
-cfrds_sql_foreignkeys *cfrds_buffer_to_sql_foreignkeys(cfrds_buffer *buffer)
+static struct cfrds_sql_keyinfo *cfrds_buffer_to_sql_keyinfo(cfrds_buffer *buffer)
 {
-    cfrds_sql_foreignkeys *ret = NULL;
-    cfrds_sql_foreignkeys_defer(tmp);
+    struct cfrds_sql_keyinfo *ret = NULL;
     int64_t cnt = 0;
 
     if (buffer == NULL)
@@ -1050,81 +1049,48 @@ cfrds_sql_foreignkeys *cfrds_buffer_to_sql_foreignkeys(cfrds_buffer *buffer)
         return NULL;
 
     size_t ucnt = (size_t)cnt;
-    size_t malloc_size = offsetof(cfrds_sql_foreignkeys, items) + sizeof(cfrds_sql_foreignkeysitem) * ucnt;
-    tmp = malloc(malloc_size);
+    size_t malloc_size = offsetof(struct cfrds_sql_keyinfo, items) + sizeof(cfrds_sql_keyinfoitem) * ucnt;
+    struct cfrds_sql_keyinfo *tmp = malloc(malloc_size);
     if (tmp == NULL)
         return NULL;
 
     explicit_bzero(tmp, malloc_size);
     tmp->cnt = ucnt;
 
-    if (!cfrds_buffer_parse_keyinfo_items(&data, &size, tmp->items, ucnt, sizeof(cfrds_sql_foreignkeysitem)))
+    if (!cfrds_buffer_parse_keyinfo_items(&data, &size, tmp->items, ucnt, sizeof(cfrds_sql_keyinfoitem)))
+    {
+        for (size_t c = 0; c < tmp->cnt; c++)
+        {
+            free(tmp->items[c].pkTableCatalog);
+            free(tmp->items[c].pkTableOwner);
+            free(tmp->items[c].pkTableName);
+            free(tmp->items[c].pkColName);
+            free(tmp->items[c].fkTableCatalog);
+            free(tmp->items[c].fkTableOwner);
+            free(tmp->items[c].fkTableName);
+            free(tmp->items[c].fkColName);
+        }
+        free(tmp);
         return NULL;
+    }
 
-    ret = tmp; tmp = NULL;
+    ret = tmp;
     return ret;
+}
+
+cfrds_sql_foreignkeys *cfrds_buffer_to_sql_foreignkeys(cfrds_buffer *buffer)
+{
+    return (cfrds_sql_foreignkeys *)cfrds_buffer_to_sql_keyinfo(buffer);
 }
 
 cfrds_sql_importedkeys *cfrds_buffer_to_sql_importedkeys(cfrds_buffer *buffer)
 {
-    cfrds_sql_importedkeys *ret = NULL;
-    cfrds_sql_importedkeys_defer(tmp);
-    int64_t cnt = 0;
-
-    if (buffer == NULL)
-        return NULL;
-
-    const char *data = (const char *)buffer->data;
-    size_t size = buffer->size;
-
-    if (!cfrds_buffer_parse_number(&data, &size, &cnt) || cnt < 0 || cnt > CFRDS_MAX_PARSER_ITEMS)
-        return NULL;
-
-    size_t ucnt = (size_t)cnt;
-    size_t malloc_size = offsetof(cfrds_sql_importedkeys, items) + sizeof(cfrds_sql_importedkeysitem) * ucnt;
-    tmp = malloc(malloc_size);
-    if (tmp == NULL)
-        return NULL;
-
-    explicit_bzero(tmp, malloc_size);
-    tmp->cnt = ucnt;
-
-    if (!cfrds_buffer_parse_keyinfo_items(&data, &size, tmp->items, ucnt, sizeof(cfrds_sql_importedkeysitem)))
-        return NULL;
-
-    ret = tmp; tmp = NULL;
-    return ret;
+    return (cfrds_sql_importedkeys *)cfrds_buffer_to_sql_keyinfo(buffer);
 }
 
 cfrds_sql_exportedkeys *cfrds_buffer_to_sql_exportedkeys(cfrds_buffer *buffer)
 {
-    cfrds_sql_exportedkeys *ret = NULL;
-    cfrds_sql_exportedkeys_defer(tmp);
-    int64_t cnt = 0;
-
-    if (buffer == NULL)
-        return NULL;
-
-    const char *data = (const char *)buffer->data;
-    size_t size = buffer->size;
-
-    if (!cfrds_buffer_parse_number(&data, &size, &cnt) || cnt < 0 || cnt > CFRDS_MAX_PARSER_ITEMS)
-        return NULL;
-
-    size_t ucnt = (size_t)cnt;
-    size_t malloc_size = offsetof(cfrds_sql_exportedkeys, items) + sizeof(cfrds_sql_exportedkeysitem) * ucnt;
-    tmp = malloc(malloc_size);
-    if (tmp == NULL)
-        return NULL;
-
-    explicit_bzero(tmp, malloc_size);
-    tmp->cnt = ucnt;
-
-    if (!cfrds_buffer_parse_keyinfo_items(&data, &size, tmp->items, ucnt, sizeof(cfrds_sql_exportedkeysitem)))
-        return NULL;
-
-    ret = tmp; tmp = NULL;
-    return ret;
+    return (cfrds_sql_exportedkeys *)cfrds_buffer_to_sql_keyinfo(buffer);
 }
 
 cfrds_sql_resultset *cfrds_buffer_to_sql_sqlstmnt(cfrds_buffer *buffer)

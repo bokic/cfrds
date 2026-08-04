@@ -861,96 +861,16 @@ cfrds_sql_tableinfo *cfrds_buffer_to_sql_tableinfo(cfrds_buffer *buffer)
             cfrds_str_defer(field3);
             cfrds_str_defer(field4);
 
-            const char *current_item = item;
-            const char *end_item = NULL;
+            const char *column_buf = item;
+            size_t list_remaining = strlen(column_buf);
 
-            if (current_item[0] != '"')
+            if (!cfrds_buffer_parse_string_list_item(&column_buf, &list_remaining, &field1) ||
+                !cfrds_buffer_parse_string_list_item(&column_buf, &list_remaining, &field2) ||
+                !cfrds_buffer_parse_string_list_item(&column_buf, &list_remaining, &field3) ||
+                !cfrds_buffer_parse_string_list_item(&column_buf, &list_remaining, &field4) ||
+                list_remaining != 0)
+            {
                 return NULL;
-            current_item++;
-            end_item = strchr(current_item, '"');
-            if (!end_item)
-                return NULL;
-            if (end_item >= current_item) {
-                size_t size = (size_t)(end_item - current_item);
-
-                field1 = malloc(size + 1);
-                if (field1 == NULL)
-                    return NULL;
-
-                memcpy(field1, current_item, size);
-                field1[size] = '\0';
-            }
-            current_item = end_item + 1;
-
-            if (current_item[0] != ',')
-                return NULL;
-            current_item++;
-
-            if (current_item[0] != '"')
-                return NULL;
-            current_item++;
-
-            end_item = strchr(current_item, '"');
-            if (!end_item)
-                return NULL;
-
-            if (end_item >= current_item) {
-                size_t size = (size_t)(end_item - current_item);
-
-                field2 = malloc(size + 1);
-                if (!field2)
-                    return NULL;
-
-                memcpy(field2, current_item, size);
-                field2[size] = '\0';
-            }
-            current_item = end_item + 1;
-
-            if (current_item[0] != ',')
-                return NULL;
-            current_item++;
-
-            if (current_item[0] != '"')
-                return NULL;
-            current_item++;
-
-            end_item = strchr(current_item, '"');
-            if (!end_item)
-                return NULL;
-
-            if (end_item >= current_item) {
-                size_t size = (size_t)(end_item - current_item);
-
-                field3 = malloc(size + 1);
-                if (!field3)
-                    return NULL;
-
-                memcpy(field3, current_item, size);
-                field3[size] = '\0';
-            }
-            current_item = end_item + 1;
-
-            if (current_item[0] != ',')
-                return NULL;
-            current_item++;
-
-            if (current_item[0] != '"')
-                return NULL;
-            current_item++;
-
-            end_item = strchr(current_item, '"');
-            if (!end_item)
-                return NULL;
-
-            if (end_item >= current_item) {
-                size_t size = (size_t)(end_item - current_item);
-
-                field4 = malloc(size + 1);
-                if (!field4)
-                    return NULL;
-
-                memcpy(field4, current_item, size);
-                field4[size] = '\0';
             }
 
             tmp->items[tmp->cnt].unknown = field1; field1 = NULL;

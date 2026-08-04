@@ -655,6 +655,8 @@ static const struct WDDX_NODE *wddx_recursively_get(const struct WDDX_NODE *node
     {
         if(is_string_numeric(path))
         {
+            if (node->type != WDDX_ARRAY) return NULL;
+
             long parsed_idx = strtol(path, NULL, 10);
             if (parsed_idx < 0 || parsed_idx >= node->cnt) return NULL;
             int idx = (int)parsed_idx;
@@ -685,6 +687,8 @@ static const struct WDDX_NODE *wddx_recursively_get(const struct WDDX_NODE *node
 
         if(is_string_numeric(tmp_path))
         {
+            if (node->type != WDDX_ARRAY) return NULL;
+
             long parsed_idx = strtol(tmp_path, NULL, 10);
             if (parsed_idx < 0 || parsed_idx >= node->cnt) return NULL;
             int idx = (int)parsed_idx;

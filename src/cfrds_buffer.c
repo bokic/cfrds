@@ -1619,6 +1619,9 @@ cfrds_sql_supportedcommands *cfrds_buffer_to_sql_supportedcommands(cfrds_buffer 
 
 char *cfrds_buffer_to_sql_dbdescription(cfrds_buffer *buffer)
 {
+    if (buffer == NULL)
+        return NULL;
+
     char *ret = NULL;
 
     int64_t rows = 0;

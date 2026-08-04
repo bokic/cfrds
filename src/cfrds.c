@@ -29,7 +29,7 @@ static void json_object_cleanup(struct json_object **handle)
 
 void cfrds_server_cleanup(cfrds_server **server)
 {
-    if (*server) {
+    if (server && *server) {
         cfrds_server_free(*server);
         *server = NULL;
     }

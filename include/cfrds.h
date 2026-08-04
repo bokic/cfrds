@@ -72,7 +72,7 @@ typedef struct cfrds_sql_resultset cfrds_sql_resultset;
 typedef struct cfrds_sql_metadata cfrds_sql_metadata;
 typedef struct cfrds_sql_supportedcommands cfrds_sql_supportedcommands;
 typedef struct WDDX cfrds_debugger_event;
-typedef char cfrds_security_analyzer_result;
+typedef struct json_object cfrds_security_analyzer_result;
 typedef struct WDDX cfrds_adminapi_customtagpaths;
 typedef struct WDDX cfrds_adminapi_mappings;
 

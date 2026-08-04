@@ -179,21 +179,7 @@ struct cfrds_sql_supportedcommands {
     char *commands[];
 };
 
-struct cfrds_security_analyzer_result {
-    int id;
-    int total_files;
-    int files_visited_count;
-    void *errors_description;
-    void *files_scanned;
-    void *files_not_scanned;
-    char *executorservice;
-    int percentage;
-    char *files;
-    int64_t last_updated;
-    int files_scanned_count;
-    int files_not_scanned_count;
-    void *errors;
-};
+
 
 /**
  * @brief Allocates and initializes a new, empty cfrds_buffer.

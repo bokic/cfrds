@@ -2902,7 +2902,7 @@ cfrds_status cfrds_command_security_analyzer_result(cfrds_server *server, int co
     {
         const char *response_data = cfrds_buffer_data(response);
         size_t response_size = cfrds_buffer_data_size(response);
-        char *json = NULL;
+        cfrds_str_defer(json_str);
         int64_t items = 0;
 
         if (!cfrds_buffer_parse_number(&response_data, &response_size, &items))
@@ -2917,13 +2917,20 @@ cfrds_status cfrds_command_security_analyzer_result(cfrds_server *server, int co
             return CFRDS_STATUS_RESPONSE_ERROR;
         }
 
-        if (!cfrds_buffer_parse_string(&response_data, &response_size, &json))
+        if (!cfrds_buffer_parse_string(&response_data, &response_size, &json_str))
         {
             server->error_code = -1;
             return CFRDS_STATUS_RESPONSE_ERROR;
         }
 
-        *result = json;
+        struct json_object *json_obj = json_tokener_parse(json_str);
+        if (json_obj == NULL)
+        {
+            server->error_code = -1;
+            return CFRDS_STATUS_RESPONSE_ERROR;
+        }
+
+        *result = (cfrds_security_analyzer_result *)json_obj;
     }
 
     return ret;
@@ -3017,7 +3024,7 @@ void cfrds_security_analyzer_result_free(cfrds_security_analyzer_result *buf)
 {
     if (buf)
     {
-        free(buf);
+        json_object_put((struct json_object *)buf);
     }
 }
 
@@ -3030,940 +3037,325 @@ void cfrds_security_analyzer_result_cleanup(cfrds_security_analyzer_result **buf
     }
 }
 
+/*
+ * Static helpers for accessing fields from the cached json_object.
+ */
+static struct json_object *sa_result_json(const cfrds_security_analyzer_result *value)
+{
+    return (struct json_object *)value;
+}
+
+static int sa_get_int(const cfrds_security_analyzer_result *value, const char *key)
+{
+    struct json_object *json_obj = sa_result_json(value);
+    if (json_obj == NULL)
+        return -1;
+
+    struct json_object *field = NULL;
+    json_object_object_get_ex(json_obj, key, &field);
+    if (field == NULL)
+        return -1;
+
+    if (json_object_get_type(field) != json_type_int)
+        return -1;
+
+    return json_object_get_int(field);
+}
+
+static int sa_get_array_length(const cfrds_security_analyzer_result *value, const char *key)
+{
+    struct json_object *json_obj = sa_result_json(value);
+    if (json_obj == NULL)
+        return -1;
+
+    struct json_object *field = NULL;
+    json_object_object_get_ex(json_obj, key, &field);
+    if (field == NULL)
+        return -1;
+
+    if (json_object_get_type(field) != json_type_array)
+        return -1;
+
+    return (int)json_object_array_length(field);
+}
+
+static cfrds_str sa_get_string(const cfrds_security_analyzer_result *value, const char *key)
+{
+    struct json_object *json_obj = sa_result_json(value);
+    if (json_obj == NULL)
+        return NULL;
+
+    struct json_object *field = NULL;
+    json_object_object_get_ex(json_obj, key, &field);
+    if (field == NULL)
+        return NULL;
+
+    if (json_object_get_type(field) != json_type_string)
+        return NULL;
+
+    return strdup(json_object_get_string(field));
+}
+
+static struct json_object *sa_get_array_item(const cfrds_security_analyzer_result *value, const char *array_key, size_t ndx)
+{
+    struct json_object *json_obj = sa_result_json(value);
+    if (json_obj == NULL)
+        return NULL;
+
+    struct json_object *array = NULL;
+    json_object_object_get_ex(json_obj, array_key, &array);
+    if (array == NULL)
+        return NULL;
+
+    if (json_object_get_type(array) != json_type_array)
+        return NULL;
+
+    size_t len = json_object_array_length(array);
+    if (ndx >= len)
+        return NULL;
+
+    struct json_object *item = json_object_array_get_idx(array, ndx);
+    if (item == NULL)
+        return NULL;
+
+    if (json_object_get_type(item) != json_type_object)
+        return NULL;
+
+    return item;
+}
+
+static cfrds_str sa_get_array_item_string(const cfrds_security_analyzer_result *value, const char *array_key, size_t ndx, const char *field_key)
+{
+    struct json_object *item = sa_get_array_item(value, array_key, ndx);
+    if (item == NULL)
+        return NULL;
+
+    struct json_object *field = NULL;
+    json_object_object_get_ex(item, field_key, &field);
+    if (field == NULL)
+        return NULL;
+
+    const char *str = json_object_get_string(field);
+    if (str == NULL)
+        return NULL;
+
+    return strdup(str);
+}
+
+static int sa_get_array_item_int(const cfrds_security_analyzer_result *value, const char *array_key, size_t ndx, const char *field_key)
+{
+    struct json_object *item = sa_get_array_item(value, array_key, ndx);
+    if (item == NULL)
+        return -1;
+
+    struct json_object *field = NULL;
+    json_object_object_get_ex(item, field_key, &field);
+    if (field == NULL)
+        return -1;
+
+    if (json_object_get_type(field) != json_type_int)
+        return -1;
+
+    return json_object_get_int(field);
+}
+
 int cfrds_security_analyzer_result_totalfiles(const cfrds_security_analyzer_result *value)
 {
-    json_object_defer(json_obj);
-    json_obj = json_tokener_parse(value);
-    if (json_obj == NULL)
-        goto exit;
-
-    struct json_object *totalfiles = NULL;
-    json_object_object_get_ex(json_obj, "totalfiles", &totalfiles);
-    if (totalfiles == NULL)
-        goto exit;
-
-    if (json_object_get_type(totalfiles) != json_type_int)
-        goto exit;
-
-    return json_object_get_int(totalfiles);
-
-exit:
-    return -1;
+    return sa_get_int(value, "totalfiles");
 }
 
 int cfrds_security_analyzer_result_filesvisitedcount(const cfrds_security_analyzer_result *value)
 {
-    json_object_defer(json_obj);
-    json_obj = json_tokener_parse(value);
-    if (json_obj == NULL)
-        goto exit;
-
-    struct json_object *filesvisitedcount = NULL;
-    json_object_object_get_ex(json_obj, "filesvisitedcount", &filesvisitedcount);
-    if (filesvisitedcount == NULL)
-        goto exit;
-
-    if (json_object_get_type(filesvisitedcount) != json_type_int)
-        goto exit;
-
-    return json_object_get_int(filesvisitedcount);
-
-exit:
-    return -1;
+    return sa_get_int(value, "filesvisitedcount");
 }
 
 int cfrds_security_analyzer_result_errorsdescription_count(const cfrds_security_analyzer_result *value)
 {
-    json_object_defer(json_obj);
-    json_obj = json_tokener_parse(value);
-    if (json_obj == NULL)
-        goto exit;
-
-    struct json_object *errorsdescription = NULL;
-    json_object_object_get_ex(json_obj, "errorsdescription", &errorsdescription);
-    if (errorsdescription == NULL)
-        goto exit;
-
-    if (json_object_get_type(errorsdescription) != json_type_array)
-        goto exit;
-
-    return (int)json_object_array_length(errorsdescription);
-
-exit:
-    return -1;
+    return sa_get_array_length(value, "errorsdescription");
 }
 
 int cfrds_security_analyzer_result_filesscanned_count(const cfrds_security_analyzer_result *value)
 {
-    json_object_defer(json_obj);
-    json_obj = json_tokener_parse(value);
-    if (json_obj == NULL)
-        goto exit;
-
-    struct json_object *filesscanned = NULL;
-    json_object_object_get_ex(json_obj, "filesscanned", &filesscanned);
-    if (filesscanned == NULL)
-        goto exit;
-
-    if (json_object_get_type(filesscanned) != json_type_array)
-        goto exit;
-
-    return (int)json_object_array_length(filesscanned);
-
-exit:
-    return -1;
+    return sa_get_array_length(value, "filesscanned");
 }
 
 cfrds_str cfrds_security_analyzer_result_filesscanned_item_result(const cfrds_security_analyzer_result *value, size_t ndx)
 {
-    json_object_defer(json_obj);
-
-    json_obj = json_tokener_parse(value);
-    if (json_obj == NULL)
-        goto exit;
-
-    struct json_object *filesscanned = NULL;
-    json_object_object_get_ex(json_obj, "filesscanned", &filesscanned);
-    if (filesscanned == NULL)
-        goto exit;
-
-    if (json_object_get_type(filesscanned) != json_type_array)
-        goto exit;
-
-    size_t len = json_object_array_length(filesscanned);
-    if (ndx >= len)
-        goto exit;
-
-    json_object *item = json_object_array_get_idx(filesscanned, ndx);
-    if (item == NULL)
-        goto exit;
-
-    if (json_object_get_type(item) != json_type_object)
-        goto exit;
-
-    json_object *result = json_object_object_get(item, "result");
-    if (result == NULL)
-        goto exit;
-
-    const char *str = json_object_get_string(result);
-    if (str == NULL)
-        goto exit;
-
-    return strdup(str);
-
-exit:
-    return NULL;
+    return sa_get_array_item_string(value, "filesscanned", ndx, "result");
 }
 
 cfrds_str cfrds_security_analyzer_result_filesscanned_item_filename(const cfrds_security_analyzer_result *value, size_t ndx)
 {
-    json_object_defer(json_obj);
-
-    json_obj = json_tokener_parse(value);
-    if (json_obj == NULL)
-        goto exit;
-
-    struct json_object *filesscanned = NULL;
-    json_object_object_get_ex(json_obj, "filesscanned", &filesscanned);
-    if (filesscanned == NULL)
-        goto exit;
-
-    if (json_object_get_type(filesscanned) != json_type_array)
-        goto exit;
-
-    size_t len = json_object_array_length(filesscanned);
-    if (ndx >= len)
-        goto exit;
-
-    json_object *item = json_object_array_get_idx(filesscanned, ndx);
-    if (item == NULL)
-        goto exit;
-
-    if (json_object_get_type(item) != json_type_object)
-        goto exit;
-
-    json_object *filename = json_object_object_get(item, "filename");
-    if (filename == NULL)
-        goto exit;
-
-    return strdup(json_object_get_string(filename));
-
-exit:
-    return NULL;
+    return sa_get_array_item_string(value, "filesscanned", ndx, "filename");
 }
 
 int cfrds_security_analyzer_result_filesnotscanned_count(const cfrds_security_analyzer_result *value)
 {
-    json_object_defer(json_obj);
-    json_obj = json_tokener_parse(value);
-    if (json_obj == NULL)
-        goto exit;
-
-    struct json_object *filesnotscanned = NULL;
-    json_object_object_get_ex(json_obj, "filesnotscanned", &filesnotscanned);
-    if (filesnotscanned == NULL)
-        goto exit;
-
-    if (json_object_get_type(filesnotscanned) != json_type_array)
-        goto exit;
-
-    return (int)json_object_array_length(filesnotscanned);
-
-exit:
-    return -1;
+    return sa_get_array_length(value, "filesnotscanned");
 }
 
 cfrds_str cfrds_security_analyzer_result_filesnotscanned_item_reason(const cfrds_security_analyzer_result *value, size_t ndx)
 {
-    json_object_defer(json_obj);
-
-    json_obj = json_tokener_parse(value);
-    if (json_obj == NULL)
-        goto exit;
-
-    struct json_object *filesscanned = NULL;
-    json_object_object_get_ex(json_obj, "filesnotscanned", &filesscanned);
-    if (filesscanned == NULL)
-        goto exit;
-
-    if (json_object_get_type(filesscanned) != json_type_array)
-        goto exit;
-
-    size_t len = json_object_array_length(filesscanned);
-    if (ndx >= len)
-        goto exit;
-
-    json_object *item = json_object_array_get_idx(filesscanned, ndx);
-    if (item == NULL)
-        goto exit;
-
-    if (json_object_get_type(item) != json_type_object)
-        goto exit;
-
-    json_object *reason = json_object_object_get(item, "reason");
-    if (reason == NULL)
-        goto exit;
-
-    return strdup(json_object_get_string(reason));
-
-exit:
-    return NULL;
+    return sa_get_array_item_string(value, "filesnotscanned", ndx, "reason");
 }
 
 cfrds_str cfrds_security_analyzer_result_filesnotscanned_item_filename(const cfrds_security_analyzer_result *value, size_t ndx)
 {
-    json_object_defer(json_obj);
-
-    json_obj = json_tokener_parse(value);
-    if (json_obj == NULL)
-        goto exit;
-
-    struct json_object *filesscanned = NULL;
-    json_object_object_get_ex(json_obj, "filesnotscanned", &filesscanned);
-    if (filesscanned == NULL)
-        goto exit;
-
-    if (json_object_get_type(filesscanned) != json_type_array)
-        goto exit;
-
-    size_t len = json_object_array_length(filesscanned);
-    if (ndx >= len)
-        goto exit;
-
-    json_object *item = json_object_array_get_idx(filesscanned, ndx);
-    if (item == NULL)
-        goto exit;
-
-    if (json_object_get_type(item) != json_type_object)
-        goto exit;
-
-    json_object *filename = json_object_object_get(item, "filename");
-    if (filename == NULL)
-        goto exit;
-
-    return strdup(json_object_get_string(filename));
-
-exit:
-    return NULL;
+    return sa_get_array_item_string(value, "filesnotscanned", ndx, "filename");
 }
 
 cfrds_str cfrds_security_analyzer_result_executorservice(const cfrds_security_analyzer_result *value)
 {
-    json_object_defer(json_obj);
-    json_obj = json_tokener_parse(value);
-    if (json_obj == NULL)
-        goto exit;
-
-    struct json_object *executorservice = NULL;
-    json_object_object_get_ex(json_obj, "executorservice", &executorservice);
-    if (executorservice == NULL)
-        goto exit;
-
-    if (json_object_get_type(executorservice) != json_type_string)
-        goto exit;
-
-    return strdup(json_object_get_string(executorservice));
-
-exit:
-    return NULL;
+    return sa_get_string(value, "executorservice");
 }
 
 int cfrds_security_analyzer_result_percentage(const cfrds_security_analyzer_result *value)
 {
-    json_object_defer(json_obj);
-    json_obj = json_tokener_parse(value);
-    if (json_obj == NULL)
-        goto exit;
-
-    struct json_object *percentage = NULL;
-    json_object_object_get_ex(json_obj, "percentage", &percentage);
-    if (percentage == NULL)
-        goto exit;
-
-    if (json_object_get_type(percentage) != json_type_int)
-        goto exit;
-
-    return json_object_get_int(percentage);
-
-exit:
-    return -1;
+    return sa_get_int(value, "percentage");
 }
 
 int cfrds_security_analyzer_result_files_count(const cfrds_security_analyzer_result *value)
 {
-    json_object_defer(json_obj);
-    json_obj = json_tokener_parse(value);
-    if (json_obj == NULL)
-        goto exit;
-
-    struct json_object *files = NULL;
-    json_object_object_get_ex(json_obj, "files", &files);
-    if (files == NULL)
-        goto exit;
-
-    if (json_object_get_type(files) != json_type_array)
-        goto exit;
-
-    return (int)json_object_array_length(files);
-
-exit:
-    return -1;
+    return sa_get_array_length(value, "files");
 }
 
 cfrds_str cfrds_security_analyzer_result_files_value(const cfrds_security_analyzer_result *value, size_t ndx)
 {
-    json_object_defer(json_obj);
-    json_obj = json_tokener_parse(value);
+    struct json_object *json_obj = sa_result_json(value);
     if (json_obj == NULL)
-        goto exit;
+        return NULL;
 
     struct json_object *files = NULL;
     json_object_object_get_ex(json_obj, "files", &files);
     if (files == NULL)
-        goto exit;
+        return NULL;
 
     if (json_object_get_type(files) != json_type_array)
-        goto exit;
+        return NULL;
 
     size_t len = json_object_array_length(files);
     if (ndx >= len)
-        goto exit;
+        return NULL;
 
     json_object *item = json_object_array_get_idx(files, ndx);
     if (item == NULL)
-        goto exit;
+        return NULL;
 
     if (json_object_get_type(item) != json_type_string)
-        goto exit;
+        return NULL;
 
     return strdup(json_object_get_string(item));
-
-exit:
-    return NULL;
 }
 
 int64_t cfrds_security_analyzer_result_lastupdated(const cfrds_security_analyzer_result *value)
 {
-    json_object_defer(json_obj);
-    json_obj = json_tokener_parse(value);
+    struct json_object *json_obj = sa_result_json(value);
     if (json_obj == NULL)
-        goto exit;
+        return -1;
 
     struct json_object *lastupdated = NULL;
     json_object_object_get_ex(json_obj, "lastupdated", &lastupdated);
     if (lastupdated == NULL)
-        goto exit;
+        return -1;
 
     if (json_object_get_type(lastupdated) != json_type_int)
-        goto exit;
+        return -1;
 
     return json_object_get_int64(lastupdated);
-
-exit:
-    return -1;
 }
 
 int cfrds_security_analyzer_result_filesvisited_count(const cfrds_security_analyzer_result *value)
 {
-    json_object_defer(json_obj);
-    json_obj = json_tokener_parse(value);
-    if (json_obj == NULL)
-        goto exit;
-
-    struct json_object *filesvisited = NULL;
-    json_object_object_get_ex(json_obj, "filesvisited", &filesvisited);
-    if (filesvisited == NULL)
-        goto exit;
-
-    if (json_object_get_type(filesvisited) != json_type_array)
-        goto exit;
-
-    return (int)json_object_array_length(filesvisited);
-
-exit:
-    return -1;
+    return sa_get_array_length(value, "filesvisited");
 }
 
 int cfrds_security_analyzer_result_filesnotscannedcount(const cfrds_security_analyzer_result *value)
 {
-    json_object_defer(json_obj);
-    json_obj = json_tokener_parse(value);
-    if (json_obj == NULL)
-        goto exit;
-
-    struct json_object *filesnotscannedcount = NULL;
-    json_object_object_get_ex(json_obj, "filesnotscannedcount", &filesnotscannedcount);
-    if (filesnotscannedcount == NULL)
-        goto exit;
-
-    if (json_object_get_type(filesnotscannedcount) != json_type_int)
-        goto exit;
-
-    return json_object_get_int(filesnotscannedcount);
-
-exit:
-    return -1;
+    return sa_get_int(value, "filesnotscannedcount");
 }
 
 int cfrds_security_analyzer_result_filesscannedcount(const cfrds_security_analyzer_result *value)
 {
-    json_object_defer(json_obj);
-    json_obj = json_tokener_parse(value);
-    if (json_obj == NULL)
-        goto exit;
-
-    struct json_object *filesscannedcount = NULL;
-    json_object_object_get_ex(json_obj, "filesscannedcount", &filesscannedcount);
-    if (filesscannedcount == NULL)
-        goto exit;
-
-    if (json_object_get_type(filesscannedcount) != json_type_int)
-        goto exit;
-
-    return json_object_get_int(filesscannedcount);
-
-exit:
-    return -1;
+    return sa_get_int(value, "filesscannedcount");
 }
 
 int cfrds_security_analyzer_result_id(const cfrds_security_analyzer_result *value)
 {
-    json_object_defer(json_obj);
-    json_obj = json_tokener_parse(value);
-    if (json_obj == NULL)
-        goto exit;
-
-    struct json_object *id = NULL;
-    json_object_object_get_ex(json_obj, "id", &id);
-    if (id == NULL)
-        goto exit;
-
-    if (json_object_get_type(id) != json_type_int)
-        goto exit;
-
-    return json_object_get_int(id);
-
-exit:
-    return -1;
+    return sa_get_int(value, "id");
 }
 
 int cfrds_security_analyzer_result_errors_count(const cfrds_security_analyzer_result *value)
 {
-    json_object_defer(json_obj);
-    json_obj = json_tokener_parse(value);
-    if (json_obj == NULL)
-        goto exit;
-
-    struct json_object *errors = NULL;
-    json_object_object_get_ex(json_obj, "errors", &errors);
-    if (errors == NULL)
-        goto exit;
-
-    if (json_object_get_type(errors) != json_type_array)
-        goto exit;
-
-    return (int)json_object_array_length(errors);
-
-exit:
-    return -1;
+    return sa_get_array_length(value, "errors");
 }
-
 
 cfrds_str cfrds_security_analyzer_result_errors_item_errormessage(const cfrds_security_analyzer_result *value, size_t ndx)
 {
-    json_object_defer(json_obj);
-    json_obj = json_tokener_parse(value);
-    if (json_obj == NULL)
-        goto exit;
-
-    struct json_object *errors = NULL;
-    json_object_object_get_ex(json_obj, "errors", &errors);
-    if (errors == NULL)
-        goto exit;
-
-    if (json_object_get_type(errors) != json_type_array)
-        goto exit;
-
-    struct json_object *error = json_object_array_get_idx(errors, ndx);
-    if (error == NULL)
-        goto exit;
-
-    if (json_object_get_type(error) != json_type_object)
-        goto exit;
-
-    struct json_object *errormessage = NULL;
-    json_object_object_get_ex(error, "errormessage", &errormessage);
-    if (errormessage == NULL)
-        goto exit;
-
-    if (json_object_get_type(errormessage) != json_type_string)
-        goto exit;
-
-    return strdup(json_object_get_string(errormessage));
-
-exit:
-    return NULL;
+    return sa_get_array_item_string(value, "errors", ndx, "errormessage");
 }
 
 int cfrds_security_analyzer_result_errors_item_endline(const cfrds_security_analyzer_result *value, size_t ndx)
 {
-    json_object_defer(json_obj);
-    json_obj = json_tokener_parse(value);
-    if (json_obj == NULL)
-        goto exit;
-
-    struct json_object *errors = NULL;
-    json_object_object_get_ex(json_obj, "errors", &errors);
-    if (errors == NULL)
-        goto exit;
-
-    if (json_object_get_type(errors) != json_type_array)
-        goto exit;
-
-    size_t len = json_object_array_length(errors);
-    if (ndx >= len)
-        goto exit;
-
-    struct json_object *error = json_object_array_get_idx(errors, ndx);
-    if (error == NULL)
-        goto exit;
-
-    if (json_object_get_type(error) != json_type_object)
-        goto exit;
-
-    struct json_object *endline = json_object_object_get(error, "endline");
-    if (endline == NULL)
-        goto exit;
-
-    if (json_object_get_type(endline) != json_type_int)
-        goto exit;
-
-    return json_object_get_int(endline);
-
-exit:
-    return -1;
+    return sa_get_array_item_int(value, "errors", ndx, "endline");
 }
 
 cfrds_str cfrds_security_analyzer_result_errors_item_path(const cfrds_security_analyzer_result *value, size_t ndx)
 {
-    json_object_defer(json_obj);
-    json_obj = json_tokener_parse(value);
-    if (json_obj == NULL)
-        goto exit;
-
-    struct json_object *errors = NULL;
-    json_object_object_get_ex(json_obj, "errors", &errors);
-    if (errors == NULL)
-        goto exit;
-
-    if (json_object_get_type(errors) != json_type_array)
-        goto exit;
-
-    struct json_object *error = json_object_array_get_idx(errors, ndx);
-    if (error == NULL)
-        goto exit;
-
-    if (json_object_get_type(error) != json_type_object)
-        goto exit;
-
-    struct json_object *path = NULL;
-    json_object_object_get_ex(error, "path", &path);
-    if (path == NULL)
-        goto exit;
-
-    if (json_object_get_type(path) != json_type_string)
-        goto exit;
-
-    return strdup(json_object_get_string(path));
-
-exit:
-    return NULL;
+    return sa_get_array_item_string(value, "errors", ndx, "path");
 }
 
 cfrds_str cfrds_security_analyzer_result_errors_item_vulnerablecode(const cfrds_security_analyzer_result *value, size_t ndx)
 {
-    json_object_defer(json_obj);
-    json_obj = json_tokener_parse(value);
-    if (json_obj == NULL)
-        goto exit;
-
-    struct json_object *errors = NULL;
-    json_object_object_get_ex(json_obj, "errors", &errors);
-    if (errors == NULL)
-        goto exit;
-
-    if (json_object_get_type(errors) != json_type_array)
-        goto exit;
-
-    struct json_object *error = json_object_array_get_idx(errors, ndx);
-    if (error == NULL)
-        goto exit;
-
-    if (json_object_get_type(error) != json_type_object)
-        goto exit;
-
-    struct json_object *vulnerablecode = NULL;
-    json_object_object_get_ex(error, "vulnerablecode", &vulnerablecode);
-    if (vulnerablecode == NULL)
-        goto exit;
-
-    if (json_object_get_type(vulnerablecode) != json_type_string)
-        goto exit;
-
-    return strdup(json_object_get_string(vulnerablecode));
-
-exit:
-    return NULL;
+    return sa_get_array_item_string(value, "errors", ndx, "vulnerablecode");
 }
 
 cfrds_str cfrds_security_analyzer_result_errors_item_filename(const cfrds_security_analyzer_result *value, size_t ndx)
 {
-    json_object_defer(json_obj);
-    json_obj = json_tokener_parse(value);
-    if (json_obj == NULL)
-        goto exit;
-
-    struct json_object *errors = NULL;
-    json_object_object_get_ex(json_obj, "errors", &errors);
-    if (errors == NULL)
-        goto exit;
-
-    if (json_object_get_type(errors) != json_type_array)
-        goto exit;
-
-    struct json_object *error = json_object_array_get_idx(errors, ndx);
-    if (error == NULL)
-        goto exit;
-
-    if (json_object_get_type(error) != json_type_object)
-        goto exit;
-
-    struct json_object *filename = NULL;
-    json_object_object_get_ex(error, "filename", &filename);
-    if (filename == NULL)
-        goto exit;
-
-    if (json_object_get_type(filename) != json_type_string)
-        goto exit;
-
-    return strdup(json_object_get_string(filename));
-
-exit:
-    return NULL;
+    return sa_get_array_item_string(value, "errors", ndx, "filename");
 }
 
 int cfrds_security_analyzer_result_errors_item_beginline(const cfrds_security_analyzer_result *value, size_t ndx)
 {
-    json_object_defer(json_obj);
-    json_obj = json_tokener_parse(value);
-    if (json_obj == NULL)
-        goto exit;
-
-    struct json_object *errors = NULL;
-    json_object_object_get_ex(json_obj, "errors", &errors);
-    if (errors == NULL)
-        goto exit;
-
-    if (json_object_get_type(errors) != json_type_array)
-        goto exit;
-
-    struct json_object *error = json_object_array_get_idx(errors, ndx);
-    if (error == NULL)
-        goto exit;
-
-    if (json_object_get_type(error) != json_type_object)
-        goto exit;
-
-    struct json_object *beginline = NULL;
-    json_object_object_get_ex(error, "beginline", &beginline);
-    if (beginline == NULL)
-        goto exit;
-
-    if (json_object_get_type(beginline) != json_type_int)
-        goto exit;
-
-    return json_object_get_int(beginline);
-
-exit:
-    return -1;
+    return sa_get_array_item_int(value, "errors", ndx, "beginline");
 }
 
 int cfrds_security_analyzer_result_errors_item_column(const cfrds_security_analyzer_result *value, size_t ndx)
 {
-    json_object_defer(json_obj);
-    json_obj = json_tokener_parse(value);
-    if (json_obj == NULL)
-        goto exit;
-
-    struct json_object *errors = NULL;
-    json_object_object_get_ex(json_obj, "errors", &errors);
-    if (errors == NULL)
-        goto exit;
-
-    if (json_object_get_type(errors) != json_type_array)
-        goto exit;
-
-    struct json_object *error = json_object_array_get_idx(errors, ndx);
-    if (error == NULL)
-        goto exit;
-
-    if (json_object_get_type(error) != json_type_object)
-        goto exit;
-
-    struct json_object *column = NULL;
-    json_object_object_get_ex(error, "column", &column);
-    if (column == NULL)
-        goto exit;
-
-    if (json_object_get_type(column) != json_type_int)
-        goto exit;
-
-    return json_object_get_int(column);
-
-exit:
-    return -1;
+    return sa_get_array_item_int(value, "errors", ndx, "column");
 }
 
 cfrds_str cfrds_security_analyzer_result_errors_item_error(const cfrds_security_analyzer_result *value, size_t ndx)
 {
-    json_object_defer(json_obj);
-    json_obj = json_tokener_parse(value);
-    if (json_obj == NULL)
-        goto exit;
-
-    struct json_object *errors = NULL;
-    json_object_object_get_ex(json_obj, "errors", &errors);
-    if (errors == NULL)
-        goto exit;
-
-    if (json_object_get_type(errors) != json_type_array)
-        goto exit;
-
-    struct json_object *error = json_object_array_get_idx(errors, ndx);
-    if (error == NULL)
-        goto exit;
-
-    if (json_object_get_type(error) != json_type_object)
-        goto exit;
-
-    struct json_object *error_str = NULL;
-    json_object_object_get_ex(error, "Error", &error_str);
-    if (error_str == NULL)
-        goto exit;
-
-    if (json_object_get_type(error_str) != json_type_string)
-        goto exit;
-
-    return strdup(json_object_get_string(error_str));
-
-exit:
-    return NULL;
+    return sa_get_array_item_string(value, "errors", ndx, "Error");
 }
 
 int cfrds_security_analyzer_result_errors_item_begincolumn(const cfrds_security_analyzer_result *value, size_t ndx)
 {
-    json_object_defer(json_obj);
-    json_obj = json_tokener_parse(value);
-    if (json_obj == NULL)
-        goto exit;
-
-    struct json_object *errors = NULL;
-    json_object_object_get_ex(json_obj, "errors", &errors);
-    if (errors == NULL)
-        goto exit;
-
-    if (json_object_get_type(errors) != json_type_array)
-        goto exit;
-
-    struct json_object *error = json_object_array_get_idx(errors, ndx);
-    if (error == NULL)
-        goto exit;
-
-    if (json_object_get_type(error) != json_type_object)
-        goto exit;
-
-    struct json_object *begincolumn = NULL;
-    json_object_object_get_ex(error, "begincolumn", &begincolumn);
-    if (begincolumn == NULL)
-        goto exit;
-
-    if (json_object_get_type(begincolumn) != json_type_int)
-        goto exit;
-
-    return json_object_get_int(begincolumn);
-
-exit:
-    return -1;
+    return sa_get_array_item_int(value, "errors", ndx, "begincolumn");
 }
 
 cfrds_str cfrds_security_analyzer_result_errors_item_type(const cfrds_security_analyzer_result *value, size_t ndx)
 {
-    json_object_defer(json_obj);
-    json_obj = json_tokener_parse(value);
-    if (json_obj == NULL)
-        goto exit;
-
-    struct json_object *errors = NULL;
-    json_object_object_get_ex(json_obj, "errors", &errors);
-    if (errors == NULL)
-        goto exit;
-
-    if (json_object_get_type(errors) != json_type_array)
-        goto exit;
-
-    struct json_object *error = json_object_array_get_idx(errors, ndx);
-    if (error == NULL)
-        goto exit;
-
-    if (json_object_get_type(error) != json_type_object)
-        goto exit;
-
-    struct json_object *type = NULL;
-    json_object_object_get_ex(error, "type", &type);
-    if (type == NULL)
-        goto exit;
-
-    if (json_object_get_type(type) != json_type_string)
-        goto exit;
-
-    return strdup(json_object_get_string(type));
-
-exit:
-    return NULL;
+    return sa_get_array_item_string(value, "errors", ndx, "type");
 }
 
 int cfrds_security_analyzer_result_errors_item_endcolumn(const cfrds_security_analyzer_result *value, size_t ndx)
 {
-    json_object_defer(json_obj);
-    json_obj = json_tokener_parse(value);
-    if (json_obj == NULL)
-        goto exit;
-
-    struct json_object *errors = NULL;
-    json_object_object_get_ex(json_obj, "errors", &errors);
-    if (errors == NULL)
-        goto exit;
-
-    if (json_object_get_type(errors) != json_type_array)
-        goto exit;
-
-    struct json_object *error = json_object_array_get_idx(errors, ndx);
-    if (error == NULL)
-        goto exit;
-
-    if (json_object_get_type(error) != json_type_object)
-        goto exit;
-
-    struct json_object *endcolumn = NULL;
-    json_object_object_get_ex(error, "endcolumn", &endcolumn);
-    if (endcolumn == NULL)
-        goto exit;
-
-    if (json_object_get_type(endcolumn) != json_type_int)
-        goto exit;
-
-    return json_object_get_int(endcolumn);
-
-exit:
-    return -1;
+    return sa_get_array_item_int(value, "errors", ndx, "endcolumn");
 }
 
 cfrds_str cfrds_security_analyzer_result_errors_item_referencetype(const cfrds_security_analyzer_result *value, size_t ndx)
 {
-    json_object_defer(json_obj);
-    json_obj = json_tokener_parse(value);
-    if (json_obj == NULL)
-        goto exit;
-
-    struct json_object *errors = NULL;
-    json_object_object_get_ex(json_obj, "errors", &errors);
-    if (errors == NULL)
-        goto exit;
-
-    if (json_object_get_type(errors) != json_type_array)
-        goto exit;
-
-    struct json_object *error = json_object_array_get_idx(errors, ndx);
-    if (error == NULL)
-        goto exit;
-
-    if (json_object_get_type(error) != json_type_object)
-        goto exit;
-
-    struct json_object *reference_type = NULL;
-    json_object_object_get_ex(error, "referencetype", &reference_type);
-    if (reference_type == NULL)
-        goto exit;
-
-    if (json_object_get_type(reference_type) != json_type_string)
-        goto exit;
-
-    return strdup(json_object_get_string(reference_type));
-
-exit:
-    return NULL;
+    return sa_get_array_item_string(value, "errors", ndx, "referencetype");
 }
-
 
 cfrds_str cfrds_security_analyzer_result_status(const cfrds_security_analyzer_result *value)
 {
-    json_object_defer(json_obj);
-    json_obj = json_tokener_parse(value);
-    if (json_obj == NULL)
-        goto exit;
+    cfrds_str ret = sa_get_string(value, "status");
+    if (ret == NULL)
+        return strdup("");
 
-    struct json_object *status = NULL;
-    json_object_object_get_ex(json_obj, "status", &status);
-    if (status == NULL)
-        goto exit;
-
-    if (json_object_get_type(status) != json_type_string)
-        goto exit;
-
-    return strdup(json_object_get_string(status));
-
-exit:
-    return strdup("");
+    return ret;
 }
 
 

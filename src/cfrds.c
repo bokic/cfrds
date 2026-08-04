@@ -1165,23 +1165,30 @@ int cfrds_sql_primarykeys_get_key_sequence(const cfrds_sql_primarykeys *value, s
     return value->items[ndx].keySequence;
 }
 
+static void cfrds_sql_keyitems_free(cfrds_sql_foreignkeysitem *items, size_t cnt)
+{
+    if (items == NULL)
+        return;
+
+    for (size_t c = 0; c < cnt; c++)
+    {
+        free(items[c].pkTableCatalog);
+        free(items[c].pkTableOwner);
+        free(items[c].pkTableName);
+        free(items[c].pkColName);
+        free(items[c].fkTableCatalog);
+        free(items[c].fkTableOwner);
+        free(items[c].fkTableName);
+        free(items[c].fkColName);
+    }
+}
+
 void cfrds_sql_foreignkeys_free(cfrds_sql_foreignkeys *value)
 {
     if (value == NULL)
         return;
 
-    for(size_t c = 0; c < value->cnt; c++)
-    {
-        if(value->items[c].pkTableCatalog) free(value->items[c].pkTableCatalog);
-        if(value->items[c].pkTableOwner) free(value->items[c].pkTableOwner);
-        if(value->items[c].pkTableName) free(value->items[c].pkTableName);
-        if(value->items[c].pkColName) free(value->items[c].pkColName);
-        if(value->items[c].fkTableCatalog) free(value->items[c].fkTableCatalog);
-        if(value->items[c].fkTableOwner) free(value->items[c].fkTableOwner);
-        if(value->items[c].fkTableName) free(value->items[c].fkTableName);
-        if(value->items[c].fkColName) free(value->items[c].fkColName);
-    }
-
+    cfrds_sql_keyitems_free(value->items, value->cnt);
     free(value);
 }
 
@@ -1319,18 +1326,7 @@ void cfrds_sql_importedkeys_free(cfrds_sql_importedkeys *value)
     if (value == NULL)
         return;
 
-    for(size_t c = 0; c < value->cnt; c++)
-    {
-        if(value->items[c].pkTableCatalog) free(value->items[c].pkTableCatalog);
-        if(value->items[c].pkTableOwner) free(value->items[c].pkTableOwner);
-        if(value->items[c].pkTableName) free(value->items[c].pkTableName);
-        if(value->items[c].pkColName) free(value->items[c].pkColName);
-        if(value->items[c].fkTableCatalog) free(value->items[c].fkTableCatalog);
-        if(value->items[c].fkTableOwner) free(value->items[c].fkTableOwner);
-        if(value->items[c].fkTableName) free(value->items[c].fkTableName);
-        if(value->items[c].fkColName) free(value->items[c].fkColName);
-    }
-
+    cfrds_sql_keyitems_free((cfrds_sql_foreignkeysitem *)value->items, value->cnt);
     free(value);
 }
 
@@ -1468,18 +1464,7 @@ void cfrds_sql_exportedkeys_free(cfrds_sql_exportedkeys *value)
     if (value == NULL)
         return;
 
-    for(size_t c = 0; c < value->cnt; c++)
-    {
-        if(value->items[c].pkTableCatalog) free(value->items[c].pkTableCatalog);
-        if(value->items[c].pkTableOwner) free(value->items[c].pkTableOwner);
-        if(value->items[c].pkTableName) free(value->items[c].pkTableName);
-        if(value->items[c].pkColName) free(value->items[c].pkColName);
-        if(value->items[c].fkTableCatalog) free(value->items[c].fkTableCatalog);
-        if(value->items[c].fkTableOwner) free(value->items[c].fkTableOwner);
-        if(value->items[c].fkTableName) free(value->items[c].fkTableName);
-        if(value->items[c].fkColName) free(value->items[c].fkColName);
-    }
-
+    cfrds_sql_keyitems_free((cfrds_sql_foreignkeysitem *)value->items, value->cnt);
     free(value);
 }
 

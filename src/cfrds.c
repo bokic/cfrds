@@ -130,8 +130,8 @@ void cfrds_server_free(cfrds_server *server)
 
     cfrds_server_clear_error(server);
 
-    if (server->host) free(server->host);
-    if (server->username) free(server->username);
+    free(server->host);
+    free(server->username);
     if (server->orig_password) {
         explicit_bzero(server->orig_password, strlen(server->orig_password));
         free(server->orig_password);

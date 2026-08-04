@@ -195,7 +195,8 @@ static __attribute__((unused)) bool cfrds_buffer_append_int(cfrds_buffer *buffer
 
     snprintf(str, sizeof(str), "%d", number);
 
-    if (cfrds_buffer_append(buffer, str) == false) return false;
+    if (cfrds_buffer_append(buffer, str) == false)
+        return false;
 
     return true;
 }

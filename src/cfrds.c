@@ -95,35 +95,13 @@ size_t cfrds_browse_dir_count(const cfrds_browse_dir *value)
             return (default_ret); \
     } while (0)
 
-char cfrds_browse_dir_item_get_kind(const cfrds_browse_dir *value, size_t ndx)
-{
-    CFRDS_CHECK_BOUNDS(value, ndx, 0);
-    return value->items[ndx].kind;
-}
+#include <internal/cfrds_accessors.h>
 
-const char *cfrds_browse_dir_item_get_name(const cfrds_browse_dir *value, size_t ndx)
-{
-    CFRDS_CHECK_BOUNDS(value, ndx, NULL);
-    return value->items[ndx].name;
-}
-
-uint8_t cfrds_browse_dir_item_get_permissions(const cfrds_browse_dir *value, size_t ndx)
-{
-    CFRDS_CHECK_BOUNDS(value, ndx, 0);
-    return value->items[ndx].permissions;
-}
-
-size_t cfrds_browse_dir_item_get_size(const cfrds_browse_dir *value, size_t ndx)
-{
-    CFRDS_CHECK_BOUNDS(value, ndx, 0);
-    return value->items[ndx].size;
-}
-
-uint64_t cfrds_browse_dir_item_get_modified(const cfrds_browse_dir *value, size_t ndx)
-{
-    CFRDS_CHECK_BOUNDS(value, ndx, 0);
-    return value->items[ndx].modified;
-}
+DEFINE_CHAR_ACCESSOR(cfrds_browse_dir_item_get_kind, cfrds_browse_dir, kind, 0)
+DEFINE_STRING_ACCESSOR(cfrds_browse_dir_item_get_name, cfrds_browse_dir, name)
+DEFINE_UINT8_ACCESSOR(cfrds_browse_dir_item_get_permissions, cfrds_browse_dir, permissions, 0)
+DEFINE_SIZE_ACCESSOR(cfrds_browse_dir_item_get_size, cfrds_browse_dir, size, 0)
+DEFINE_UINT64_ACCESSOR(cfrds_browse_dir_item_get_modified, cfrds_browse_dir, modified, 0)
 
 void cfrds_sql_dsninfo_free(cfrds_sql_dsninfo *value)
 {
@@ -181,49 +159,10 @@ size_t cfrds_sql_tableinfo_count(const cfrds_sql_tableinfo *value)
     return value->cnt;
 }
 
-const char *cfrds_sql_tableinfo_get_column_unknown(const cfrds_sql_tableinfo *value, size_t column)
-{
-    if (value == NULL)
-        return NULL;
-
-    if (column >= value->cnt)
-        return NULL;
-
-    return value->items[column].unknown;
-}
-
-const char *cfrds_sql_tableinfo_get_column_schema(const cfrds_sql_tableinfo *value, size_t column)
-{
-    if (value == NULL)
-        return NULL;
-
-    if (column >= value->cnt)
-        return NULL;
-
-    return value->items[column].schema;
-}
-
-const char *cfrds_sql_tableinfo_get_column_name(const cfrds_sql_tableinfo *value, size_t column)
-{
-    if (value == NULL)
-        return NULL;
-
-    if (column >= value->cnt)
-        return NULL;
-
-    return value->items[column].name;
-}
-
-const char *cfrds_sql_tableinfo_get_column_type(const cfrds_sql_tableinfo *value, size_t column)
-{
-    if (value == NULL)
-        return NULL;
-
-    if (column >= value->cnt)
-        return NULL;
-
-    return value->items[column].type;
-}
+DEFINE_STRING_ACCESSOR(cfrds_sql_tableinfo_get_column_unknown, cfrds_sql_tableinfo, unknown)
+DEFINE_STRING_ACCESSOR(cfrds_sql_tableinfo_get_column_schema, cfrds_sql_tableinfo, schema)
+DEFINE_STRING_ACCESSOR(cfrds_sql_tableinfo_get_column_name, cfrds_sql_tableinfo, name)
+DEFINE_STRING_ACCESSOR(cfrds_sql_tableinfo_get_column_type, cfrds_sql_tableinfo, type)
 
 void cfrds_sql_columninfo_free(cfrds_sql_columninfo *value)
 {
@@ -250,126 +189,17 @@ size_t cfrds_sql_columninfo_count(const cfrds_sql_columninfo *value)
     return value->cnt;
 }
 
-const char *cfrds_sql_columninfo_get_schema(const cfrds_sql_columninfo *value, size_t column)
-{
-    if (value == NULL)
-        return NULL;
-
-    if (column >= value->cnt)
-        return NULL;
-
-    return value->items[column].schema;
-}
-
-const char *cfrds_sql_columninfo_get_owner(const cfrds_sql_columninfo *value, size_t column)
-{
-    if (value == NULL)
-        return NULL;
-
-    if (column >= value->cnt)
-        return NULL;
-
-    return value->items[column].owner;
-}
-
-const char *cfrds_sql_columninfo_get_table(const cfrds_sql_columninfo *value, size_t column)
-{
-    if (value == NULL)
-        return NULL;
-
-    if (column >= value->cnt)
-        return NULL;
-
-    return value->items[column].table;
-}
-
-const char *cfrds_sql_columninfo_get_name(const cfrds_sql_columninfo *value, size_t column)
-{
-    if (value == NULL)
-        return NULL;
-
-    if (column >= value->cnt)
-        return NULL;
-
-    return value->items[column].name;
-}
-
-int cfrds_sql_columninfo_get_type(const cfrds_sql_columninfo *value, size_t column)
-{
-    if (value == NULL)
-        return -1;
-
-    if (column >= value->cnt)
-        return -1;
-
-    return value->items[column].type;
-}
-
-const char *cfrds_sql_columninfo_get_typeStr(const cfrds_sql_columninfo *value, size_t column)
-{
-    if (value == NULL)
-        return NULL;
-
-    if (column >= value->cnt)
-        return NULL;
-
-    return value->items[column].typeStr;
-}
-
-int cfrds_sql_columninfo_get_precision(const cfrds_sql_columninfo *value, size_t column)
-{
-    if (value == NULL)
-        return -1;
-
-    if (column >= value->cnt)
-        return -1;
-
-    return value->items[column].precision;
-}
-
-int cfrds_sql_columninfo_get_length(const cfrds_sql_columninfo *value, size_t column)
-{
-    if (value == NULL)
-        return -1;
-
-    if (column >= value->cnt)
-        return -1;
-
-    return value->items[column].length;
-}
-
-int cfrds_sql_columninfo_get_scale(const cfrds_sql_columninfo *value, size_t column)
-{
-    if (value == NULL)
-        return -1;
-
-    if (column >= value->cnt)
-        return -1;
-
-    return value->items[column].scale;
-}
-
-int cfrds_sql_columninfo_get_radix(const cfrds_sql_columninfo *value, size_t column)
-{
-    if (value == NULL)
-        return -1;
-
-    if (column >= value->cnt)
-        return -1;
-
-    return value->items[column].radix;
-}
-
-int cfrds_sql_columninfo_get_nullable(const cfrds_sql_columninfo *value, size_t column)
-{
-    if (value == NULL)
-        return -1;
-
-    if (column >= value->cnt)
-        return -1;
-
-    return value->items[column].nullable;
-}
+DEFINE_STRING_ACCESSOR(cfrds_sql_columninfo_get_schema, cfrds_sql_columninfo, schema)
+DEFINE_STRING_ACCESSOR(cfrds_sql_columninfo_get_owner, cfrds_sql_columninfo, owner)
+DEFINE_STRING_ACCESSOR(cfrds_sql_columninfo_get_table, cfrds_sql_columninfo, table)
+DEFINE_STRING_ACCESSOR(cfrds_sql_columninfo_get_name, cfrds_sql_columninfo, name)
+DEFINE_INT_ACCESSOR(cfrds_sql_columninfo_get_type, cfrds_sql_columninfo, type, -1)
+DEFINE_STRING_ACCESSOR(cfrds_sql_columninfo_get_typeStr, cfrds_sql_columninfo, typeStr)
+DEFINE_INT_ACCESSOR(cfrds_sql_columninfo_get_precision, cfrds_sql_columninfo, precision, -1)
+DEFINE_INT_ACCESSOR(cfrds_sql_columninfo_get_length, cfrds_sql_columninfo, length, -1)
+DEFINE_INT_ACCESSOR(cfrds_sql_columninfo_get_scale, cfrds_sql_columninfo, scale, -1)
+DEFINE_INT_ACCESSOR(cfrds_sql_columninfo_get_radix, cfrds_sql_columninfo, radix, -1)
+DEFINE_INT_ACCESSOR(cfrds_sql_columninfo_get_nullable, cfrds_sql_columninfo, nullable, -1)
 
 void cfrds_sql_primarykeys_free(cfrds_sql_primarykeys *value)
 {
@@ -395,60 +225,11 @@ size_t cfrds_sql_primarykeys_count(const cfrds_sql_primarykeys *value)
     return value->cnt;
 }
 
-const char *cfrds_sql_primarykeys_get_catalog(const cfrds_sql_primarykeys *value, size_t ndx)
-{
-    if (value == NULL)
-        return NULL;
-
-    if (ndx >= value->cnt)
-        return NULL;
-
-    return value->items[ndx].tableCatalog;
-}
-
-const char *cfrds_sql_primarykeys_get_owner(const cfrds_sql_primarykeys *value, size_t ndx)
-{
-    if (value == NULL)
-        return NULL;
-
-    if (ndx >= value->cnt)
-        return NULL;
-
-    return value->items[ndx].tableOwner;
-}
-
-const char *cfrds_sql_primarykeys_get_table(const cfrds_sql_primarykeys *value, size_t ndx)
-{
-    if (value == NULL)
-        return NULL;
-
-    if (ndx >= value->cnt)
-        return NULL;
-
-    return value->items[ndx].tableName;
-}
-
-const char *cfrds_sql_primarykeys_get_column(const cfrds_sql_primarykeys *value, size_t ndx)
-{
-    if (value == NULL)
-        return NULL;
-
-    if (ndx >= value->cnt)
-        return NULL;
-
-    return value->items[ndx].colName;
-}
-
-int cfrds_sql_primarykeys_get_key_sequence(const cfrds_sql_primarykeys *value, size_t ndx)
-{
-    if (value == NULL)
-        return -1;
-
-    if (ndx >= value->cnt)
-        return -1;
-
-    return value->items[ndx].keySequence;
-}
+DEFINE_STRING_ACCESSOR(cfrds_sql_primarykeys_get_catalog, cfrds_sql_primarykeys, tableCatalog)
+DEFINE_STRING_ACCESSOR(cfrds_sql_primarykeys_get_owner, cfrds_sql_primarykeys, tableOwner)
+DEFINE_STRING_ACCESSOR(cfrds_sql_primarykeys_get_table, cfrds_sql_primarykeys, tableName)
+DEFINE_STRING_ACCESSOR(cfrds_sql_primarykeys_get_column, cfrds_sql_primarykeys, colName)
+DEFINE_INT_ACCESSOR(cfrds_sql_primarykeys_get_key_sequence, cfrds_sql_primarykeys, keySequence, -1)
 
 static void cfrds_sql_keyitems_free(cfrds_sql_foreignkeysitem *items, size_t cnt)
 {
@@ -485,126 +266,17 @@ size_t cfrds_sql_foreignkeys_count(const cfrds_sql_foreignkeys *value)
     return value->cnt;
 }
 
-const char *cfrds_sql_foreignkeys_get_pkcatalog(const cfrds_sql_foreignkeys *value, size_t ndx)
-{
-    if (value == NULL)
-        return NULL;
-
-    if (ndx >= value->cnt)
-        return NULL;
-
-    return value->items[ndx].pkTableCatalog;
-}
-
-const char *cfrds_sql_foreignkeys_get_pkowner(const cfrds_sql_foreignkeys *value, size_t ndx)
-{
-    if (value == NULL)
-        return NULL;
-
-    if (ndx >= value->cnt)
-        return NULL;
-
-    return value->items[ndx].pkTableOwner;
-}
-
-const char *cfrds_sql_foreignkeys_get_pktable(const cfrds_sql_foreignkeys *value, size_t ndx)
-{
-    if (value == NULL)
-        return NULL;
-
-    if (ndx >= value->cnt)
-        return NULL;
-
-    return value->items[ndx].pkTableName;
-}
-
-const char *cfrds_sql_foreignkeys_get_pkcolumn(const cfrds_sql_foreignkeys *value, size_t ndx)
-{
-    if (value == NULL)
-        return NULL;
-
-    if (ndx >= value->cnt)
-        return NULL;
-
-    return value->items[ndx].pkColName;
-}
-
-const char *cfrds_sql_foreignkeys_get_fkcatalog(const cfrds_sql_foreignkeys *value, size_t ndx)
-{
-    if (value == NULL)
-        return NULL;
-
-    if (ndx >= value->cnt)
-        return NULL;
-
-    return value->items[ndx].fkTableCatalog;
-}
-
-const char *cfrds_sql_foreignkeys_get_fkowner(const cfrds_sql_foreignkeys *value, size_t ndx)
-{
-    if (value == NULL)
-        return NULL;
-
-    if (ndx >= value->cnt)
-        return NULL;
-
-    return value->items[ndx].fkTableOwner;
-}
-
-const char *cfrds_sql_foreignkeys_get_fktable(const cfrds_sql_foreignkeys *value, size_t ndx)
-{
-    if (value == NULL)
-        return NULL;
-
-    if (ndx >= value->cnt)
-        return NULL;
-
-    return value->items[ndx].fkTableName;
-}
-
-const char *cfrds_sql_foreignkeys_get_fkcolumn(const cfrds_sql_foreignkeys *value, size_t ndx)
-{
-    if (value == NULL)
-        return NULL;
-
-    if (ndx >= value->cnt)
-        return NULL;
-
-    return value->items[ndx].fkColName;
-}
-
-int cfrds_sql_foreignkeys_get_key_sequence(const cfrds_sql_foreignkeys *value, size_t ndx)
-{
-    if (value == NULL)
-        return -1;
-
-    if (ndx >= value->cnt)
-        return -1;
-
-    return value->items[ndx].keySequence;
-}
-
-int cfrds_sql_foreignkeys_get_updaterule(const cfrds_sql_foreignkeys *value, size_t ndx)
-{
-    if (value == NULL)
-        return -1;
-
-    if (ndx >= value->cnt)
-        return -1;
-
-    return value->items[ndx].updateRule;
-}
-
-int cfrds_sql_foreignkeys_get_deleterule(const cfrds_sql_foreignkeys *value, size_t ndx)
-{
-    if (value == NULL)
-        return -1;
-
-    if (ndx >= value->cnt)
-        return -1;
-
-    return value->items[ndx].deleteRule;
-}
+DEFINE_STRING_ACCESSOR(cfrds_sql_foreignkeys_get_pkcatalog, cfrds_sql_foreignkeys, pkTableCatalog)
+DEFINE_STRING_ACCESSOR(cfrds_sql_foreignkeys_get_pkowner, cfrds_sql_foreignkeys, pkTableOwner)
+DEFINE_STRING_ACCESSOR(cfrds_sql_foreignkeys_get_pktable, cfrds_sql_foreignkeys, pkTableName)
+DEFINE_STRING_ACCESSOR(cfrds_sql_foreignkeys_get_pkcolumn, cfrds_sql_foreignkeys, pkColName)
+DEFINE_STRING_ACCESSOR(cfrds_sql_foreignkeys_get_fkcatalog, cfrds_sql_foreignkeys, fkTableCatalog)
+DEFINE_STRING_ACCESSOR(cfrds_sql_foreignkeys_get_fkowner, cfrds_sql_foreignkeys, fkTableOwner)
+DEFINE_STRING_ACCESSOR(cfrds_sql_foreignkeys_get_fktable, cfrds_sql_foreignkeys, fkTableName)
+DEFINE_STRING_ACCESSOR(cfrds_sql_foreignkeys_get_fkcolumn, cfrds_sql_foreignkeys, fkColName)
+DEFINE_INT_ACCESSOR(cfrds_sql_foreignkeys_get_key_sequence, cfrds_sql_foreignkeys, keySequence, -1)
+DEFINE_INT_ACCESSOR(cfrds_sql_foreignkeys_get_updaterule, cfrds_sql_foreignkeys, updateRule, -1)
+DEFINE_INT_ACCESSOR(cfrds_sql_foreignkeys_get_deleterule, cfrds_sql_foreignkeys, deleteRule, -1)
 
 void cfrds_sql_importedkeys_free(cfrds_sql_importedkeys *value)
 {
@@ -623,126 +295,17 @@ size_t cfrds_sql_importedkeys_count(const cfrds_sql_importedkeys *value)
     return value->cnt;
 }
 
-const char *cfrds_sql_importedkeys_get_pkcatalog(const cfrds_sql_importedkeys *value, size_t ndx)
-{
-    if (value == NULL)
-        return NULL;
-
-    if (ndx >= value->cnt)
-        return NULL;
-
-    return value->items[ndx].pkTableCatalog;
-}
-
-const char *cfrds_sql_importedkeys_get_pkowner(const cfrds_sql_importedkeys *value, size_t ndx)
-{
-    if (value == NULL)
-        return NULL;
-
-    if (ndx >= value->cnt)
-        return NULL;
-
-    return value->items[ndx].pkTableOwner;
-}
-
-const char *cfrds_sql_importedkeys_get_pktable(const cfrds_sql_importedkeys *value, size_t ndx)
-{
-    if (value == NULL)
-        return NULL;
-
-    if (ndx >= value->cnt)
-        return NULL;
-
-    return value->items[ndx].pkTableName;
-}
-
-const char *cfrds_sql_importedkeys_get_pkcolumn(const cfrds_sql_importedkeys *value, size_t ndx)
-{
-    if (value == NULL)
-        return NULL;
-
-    if (ndx >= value->cnt)
-        return NULL;
-
-    return value->items[ndx].pkColName;
-}
-
-const char *cfrds_sql_importedkeys_get_fkcatalog(const cfrds_sql_importedkeys *value, size_t ndx)
-{
-    if (value == NULL)
-        return NULL;
-
-    if (ndx >= value->cnt)
-        return NULL;
-
-    return value->items[ndx].fkTableCatalog;
-}
-
-const char *cfrds_sql_importedkeys_get_fkowner(const cfrds_sql_importedkeys *value, size_t ndx)
-{
-    if (value == NULL)
-        return NULL;
-
-    if (ndx >= value->cnt)
-        return NULL;
-
-    return value->items[ndx].fkTableOwner;
-}
-
-const char *cfrds_sql_importedkeys_get_fktable(const cfrds_sql_importedkeys *value, size_t ndx)
-{
-    if (value == NULL)
-        return NULL;
-
-    if (ndx >= value->cnt)
-        return NULL;
-
-    return value->items[ndx].fkTableName;
-}
-
-const char *cfrds_sql_importedkeys_get_fkcolumn(const cfrds_sql_importedkeys *value, size_t ndx)
-{
-    if (value == NULL)
-        return NULL;
-
-    if (ndx >= value->cnt)
-        return NULL;
-
-    return value->items[ndx].fkColName;
-}
-
-int cfrds_sql_importedkeys_get_key_sequence(const cfrds_sql_importedkeys *value, size_t ndx)
-{
-    if (value == NULL)
-        return -1;
-
-    if (ndx >= value->cnt)
-        return -1;
-
-    return value->items[ndx].keySequence;
-}
-
-int cfrds_sql_importedkeys_get_updaterule(const cfrds_sql_importedkeys *value, size_t ndx)
-{
-    if (value == NULL)
-        return -1;
-
-    if (ndx >= value->cnt)
-        return -1;
-
-    return value->items[ndx].updateRule;
-}
-
-int cfrds_sql_importedkeys_get_deleterule(const cfrds_sql_importedkeys *value, size_t ndx)
-{
-    if (value == NULL)
-        return -1;
-
-    if (ndx >= value->cnt)
-        return -1;
-
-    return value->items[ndx].deleteRule;
-}
+DEFINE_STRING_ACCESSOR(cfrds_sql_importedkeys_get_pkcatalog, cfrds_sql_importedkeys, pkTableCatalog)
+DEFINE_STRING_ACCESSOR(cfrds_sql_importedkeys_get_pkowner, cfrds_sql_importedkeys, pkTableOwner)
+DEFINE_STRING_ACCESSOR(cfrds_sql_importedkeys_get_pktable, cfrds_sql_importedkeys, pkTableName)
+DEFINE_STRING_ACCESSOR(cfrds_sql_importedkeys_get_pkcolumn, cfrds_sql_importedkeys, pkColName)
+DEFINE_STRING_ACCESSOR(cfrds_sql_importedkeys_get_fkcatalog, cfrds_sql_importedkeys, fkTableCatalog)
+DEFINE_STRING_ACCESSOR(cfrds_sql_importedkeys_get_fkowner, cfrds_sql_importedkeys, fkTableOwner)
+DEFINE_STRING_ACCESSOR(cfrds_sql_importedkeys_get_fktable, cfrds_sql_importedkeys, fkTableName)
+DEFINE_STRING_ACCESSOR(cfrds_sql_importedkeys_get_fkcolumn, cfrds_sql_importedkeys, fkColName)
+DEFINE_INT_ACCESSOR(cfrds_sql_importedkeys_get_key_sequence, cfrds_sql_importedkeys, keySequence, -1)
+DEFINE_INT_ACCESSOR(cfrds_sql_importedkeys_get_updaterule, cfrds_sql_importedkeys, updateRule, -1)
+DEFINE_INT_ACCESSOR(cfrds_sql_importedkeys_get_deleterule, cfrds_sql_importedkeys, deleteRule, -1)
 
 void cfrds_sql_exportedkeys_free(cfrds_sql_exportedkeys *value)
 {
@@ -761,126 +324,17 @@ size_t cfrds_sql_exportedkeys_count(const cfrds_sql_exportedkeys *value)
     return value->cnt;
 }
 
-const char *cfrds_sql_exportedkeys_get_pkcatalog(const cfrds_sql_exportedkeys *value, size_t ndx)
-{
-    if (value == NULL)
-        return NULL;
-
-    if (ndx >= value->cnt)
-        return NULL;
-
-    return value->items[ndx].pkTableCatalog;
-}
-
-const char *cfrds_sql_exportedkeys_get_pkowner(const cfrds_sql_exportedkeys *value, size_t ndx)
-{
-    if (value == NULL)
-        return NULL;
-
-    if (ndx >= value->cnt)
-        return NULL;
-
-    return value->items[ndx].pkTableOwner;
-}
-
-const char *cfrds_sql_exportedkeys_get_pktable(const cfrds_sql_exportedkeys *value, size_t ndx)
-{
-    if (value == NULL)
-        return NULL;
-
-    if (ndx >= value->cnt)
-        return NULL;
-
-    return value->items[ndx].pkTableName;
-}
-
-const char *cfrds_sql_exportedkeys_get_pkcolumn(const cfrds_sql_exportedkeys *value, size_t ndx)
-{
-    if (value == NULL)
-        return NULL;
-
-    if (ndx >= value->cnt)
-        return NULL;
-
-    return value->items[ndx].pkColName;
-}
-
-const char *cfrds_sql_exportedkeys_get_fkcatalog(const cfrds_sql_exportedkeys *value, size_t ndx)
-{
-    if (value == NULL)
-        return NULL;
-
-    if (ndx >= value->cnt)
-        return NULL;
-
-    return value->items[ndx].fkTableCatalog;
-}
-
-const char *cfrds_sql_exportedkeys_get_fkowner(const cfrds_sql_exportedkeys *value, size_t ndx)
-{
-    if (value == NULL)
-        return NULL;
-
-    if (ndx >= value->cnt)
-        return NULL;
-
-    return value->items[ndx].fkTableOwner;
-}
-
-const char *cfrds_sql_exportedkeys_get_fktable(const cfrds_sql_exportedkeys *value, size_t ndx)
-{
-    if (value == NULL)
-        return NULL;
-
-    if (ndx >= value->cnt)
-        return NULL;
-
-    return value->items[ndx].fkTableName;
-}
-
-const char *cfrds_sql_exportedkeys_get_fkcolumn(const cfrds_sql_exportedkeys *value, size_t ndx)
-{
-    if (value == NULL)
-        return NULL;
-
-    if (ndx >= value->cnt)
-        return NULL;
-
-    return value->items[ndx].fkColName;
-}
-
-int cfrds_sql_exportedkeys_get_key_sequence(const cfrds_sql_exportedkeys *value, size_t ndx)
-{
-    if (value == NULL)
-        return -1;
-
-    if (ndx >= value->cnt)
-        return -1;
-
-    return value->items[ndx].keySequence;
-}
-
-int cfrds_sql_exportedkeys_get_updaterule(const cfrds_sql_exportedkeys *value, size_t ndx)
-{
-    if (value == NULL)
-        return -1;
-
-    if (ndx >= value->cnt)
-        return -1;
-
-    return value->items[ndx].updateRule;
-}
-
-int cfrds_sql_exportedkeys_get_deleterule(const cfrds_sql_exportedkeys *value, size_t ndx)
-{
-    if (value == NULL)
-        return -1;
-
-    if (ndx >= value->cnt)
-        return -1;
-
-    return value->items[ndx].deleteRule;
-}
+DEFINE_STRING_ACCESSOR(cfrds_sql_exportedkeys_get_pkcatalog, cfrds_sql_exportedkeys, pkTableCatalog)
+DEFINE_STRING_ACCESSOR(cfrds_sql_exportedkeys_get_pkowner, cfrds_sql_exportedkeys, pkTableOwner)
+DEFINE_STRING_ACCESSOR(cfrds_sql_exportedkeys_get_pktable, cfrds_sql_exportedkeys, pkTableName)
+DEFINE_STRING_ACCESSOR(cfrds_sql_exportedkeys_get_pkcolumn, cfrds_sql_exportedkeys, pkColName)
+DEFINE_STRING_ACCESSOR(cfrds_sql_exportedkeys_get_fkcatalog, cfrds_sql_exportedkeys, fkTableCatalog)
+DEFINE_STRING_ACCESSOR(cfrds_sql_exportedkeys_get_fkowner, cfrds_sql_exportedkeys, fkTableOwner)
+DEFINE_STRING_ACCESSOR(cfrds_sql_exportedkeys_get_fktable, cfrds_sql_exportedkeys, fkTableName)
+DEFINE_STRING_ACCESSOR(cfrds_sql_exportedkeys_get_fkcolumn, cfrds_sql_exportedkeys, fkColName)
+DEFINE_INT_ACCESSOR(cfrds_sql_exportedkeys_get_key_sequence, cfrds_sql_exportedkeys, keySequence, -1)
+DEFINE_INT_ACCESSOR(cfrds_sql_exportedkeys_get_updaterule, cfrds_sql_exportedkeys, updateRule, -1)
+DEFINE_INT_ACCESSOR(cfrds_sql_exportedkeys_get_deleterule, cfrds_sql_exportedkeys, deleteRule, -1)
 
 void cfrds_sql_resultset_free(cfrds_sql_resultset *value)
 {

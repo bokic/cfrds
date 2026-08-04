@@ -2576,7 +2576,7 @@ cfrds_status cfrds_command_security_analyzer_scan(cfrds_server *server, const ch
     cfrds_status ret;
 
     char cores_str[32];
-    char *recursively_str = NULL;
+    const char *recursively_str = NULL;
 
     cfrds_buffer_defer(response);
 

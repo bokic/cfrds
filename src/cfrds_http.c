@@ -134,7 +134,11 @@ cfrds_status cfrds_http_post(cfrds_server *server, const char *command, cfrds_bu
         hints.ai_socktype = SOCK_STREAM;
         hints.ai_protocol = IPPROTO_TCP;
 
-        snprintf(port_str, sizeof(port_str), "%u", port);
+        int n = snprintf(port_str, sizeof(port_str), "%u", port);
+        if (n < 0 || (size_t)n >= sizeof(port_str)) {
+            cfrds_server_set_error(server, CFRDS_STATUS_MEMORY_ERROR, "failed to format port string");
+            return CFRDS_STATUS_MEMORY_ERROR;
+        }
 
         trace_net_start("getaddrinfo");
         int gai_err = getaddrinfo(cfrds_server_get_host(server), port_str, &hints, &result);

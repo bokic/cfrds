@@ -151,10 +151,12 @@ void cfrds_server_set_error(cfrds_server *server, int64_t error_code, const char
 
     server->error_code = error_code;
 
-    if(server->error)
-        free(server->error);
+    free(server->error);
 
-    server->error = strdup(error);
+    if (error)
+        server->error = strdup(error);
+    else
+        server->error = NULL;
 }
 
 const char *cfrds_server_get_error(const cfrds_server *server)

@@ -443,7 +443,14 @@ static struct WDDX_NODE *wddx_from_xml_element(xmlNodePtr xml_node)
 
         ret->type = WDDX_NUMBER;
 
-        ret->number = atof((const char *)xml_node->children->content);
+        char *endptr = NULL;
+        const char *num_str = (const char *)xml_node->children->content;
+        ret->number = strtod(num_str, &endptr);
+        if (endptr == num_str || *endptr != '\0')
+        {
+            free(ret);
+            return NULL;
+        }
     }
     else if (strcmp(name, "string") == 0)
     {

@@ -48,13 +48,7 @@ typedef struct WDDX_NODE WDDX_NODE;
  */
 #define WDDX_defer(var) WDDX* var __attribute__((cleanup(wddx_cleanup))) = NULL
 
-/**
- * @brief Creates a new, empty WDDX packet.
- * @return A newly allocated `WDDX*`, or `NULL` on allocation failure.
- * @note The returned packet has `header = NULL` and `data = NULL`.
- *       Call `wddx_put_*()` functions to populate the data.
- * @note On error, returns `NULL` — no cleanup needed (nothing allocated).
- */
+
 /**
  * @brief Creates a new, empty WDDX packet.
  * 

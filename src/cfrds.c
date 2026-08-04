@@ -212,7 +212,7 @@ static cfrds_status cfrds_send_command(cfrds_server *server, cfrds_buffer **resp
 
     server->_errno = 0;
 
-    for(size_t c = 0; ; c++)
+    for(size_t c = 0; c < 1024; c++)
     {
         if (list[c] == NULL)
         {
@@ -220,6 +220,9 @@ static cfrds_status cfrds_send_command(cfrds_server *server, cfrds_buffer **resp
             break;
         }
     }
+
+    if (list[list_cnt] != NULL)
+        return CFRDS_STATUS_INVALID_INPUT_PARAMETER;
 
     total_cnt = list_cnt;
 

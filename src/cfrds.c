@@ -106,6 +106,7 @@ bool cfrds_server_init(cfrds_server **server, const char *host, uint16_t port, c
     if (ret->orig_password == NULL)
         return false;
 
+    /* Encode password if non-empty; empty passwords leave ret->password as NULL */
     if (strlen(ret->orig_password) > 0)
     {
         ret->password = cfrds_server_encode_password(password);

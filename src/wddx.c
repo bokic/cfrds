@@ -245,9 +245,6 @@ static struct WDDX_NODE *wddx_recursively_put(struct WDDX_NODE *node, const char
             return NULL;
         }
     }
-
-    if (created_node) wddx_node_free(node);
-    return NULL;
 }
 
 WDDX *wddx_create(void)

@@ -76,40 +76,25 @@ static bool cfrds_buffer_skip_httpheader(const char **data, size_t *remaining)
     return true;
 }
 
-cfrds_status cfrds_http_post(cfrds_server *server, const char *command, cfrds_buffer *payload, cfrds_buffer **response)
+static cfrds_status http_build_request(cfrds_server *server, const char *command, cfrds_buffer *payload, cfrds_buffer *send_buf)
 {
-
-    cfrds_buffer_defer(tmp_response);
-    cfrds_buffer_defer(swap_buf);
-    cfrds_buffer_defer(send_buf);
     char datasize_str[16] = {0, };
-    ssize_t sock_written = 0;
-    uint16_t port = 0;
-    cfrds_sock_defer(sockfd);
+    uint16_t port = cfrds_server_get_port(server);
 
-    int n = 0;
-
-    port = cfrds_server_get_port(server);
-
-    n = snprintf(datasize_str, sizeof(datasize_str), "%zu", cfrds_buffer_data_size(payload));
+    int n = snprintf(datasize_str, sizeof(datasize_str), "%zu", cfrds_buffer_data_size(payload));
     if (n < 0 || (size_t)n >= sizeof(datasize_str))
     {
         cfrds_server_set_error(server, CFRDS_STATUS_MEMORY_ERROR, "snprintf() returned < 0 or truncated...");
         return CFRDS_STATUS_MEMORY_ERROR;
     }
 
-    if (!cfrds_buffer_create(&send_buf)) {
-        cfrds_server_set_error(server, CFRDS_STATUS_MEMORY_ERROR, "cfrds_buffer_create failed for send_buf");
-        return CFRDS_STATUS_MEMORY_ERROR;
-    }
     cfrds_buffer_append(send_buf, "POST /CFIDE/main/ide.cfm?CFSRV=IDE&ACTION=");
     cfrds_buffer_append(send_buf, command);
     cfrds_buffer_append(send_buf, " HTTP/1.0\r\nHost: ");
     cfrds_buffer_append(send_buf, cfrds_server_get_host(server));
-    if(port != 80)
+    if (port != 80)
     {
         char port_str[16] = {0, };
-
         n = snprintf(port_str, sizeof(port_str), "%d", port);
         if (n < 0 || (size_t)n >= sizeof(port_str))
         {
@@ -124,121 +109,119 @@ cfrds_status cfrds_http_post(cfrds_server *server, const char *command, cfrds_bu
     cfrds_buffer_append(send_buf, "\r\n\r\n");
     cfrds_buffer_append_buffer(send_buf, payload);
 
-    {
-        struct addrinfo hints;
-        struct addrinfo *result = NULL;
-        char port_str[16] = {0, };
+    return CFRDS_STATUS_OK;
+}
 
-        explicit_bzero(&hints, sizeof(hints));
-        hints.ai_family = AF_UNSPEC;
-        hints.ai_socktype = SOCK_STREAM;
-        hints.ai_protocol = IPPROTO_TCP;
+static cfrds_status http_connect(cfrds_server *server, cfrds_socket *out_sockfd)
+{
+    struct addrinfo hints;
+    struct addrinfo *result = NULL;
+    char port_str[16] = {0, };
+    uint16_t port = cfrds_server_get_port(server);
 
-        int n = snprintf(port_str, sizeof(port_str), "%u", port);
-        if (n < 0 || (size_t)n >= sizeof(port_str)) {
-            cfrds_server_set_error(server, CFRDS_STATUS_MEMORY_ERROR, "failed to format port string");
-            return CFRDS_STATUS_MEMORY_ERROR;
-        }
+    explicit_bzero(&hints, sizeof(hints));
+    hints.ai_family = AF_UNSPEC;
+    hints.ai_socktype = SOCK_STREAM;
+    hints.ai_protocol = IPPROTO_TCP;
 
-        trace_net_start("getaddrinfo");
-        int gai_err = getaddrinfo(cfrds_server_get_host(server), port_str, &hints, &result);
-        trace_net_end();
-        if (gai_err != 0) {
-            cfrds_server_set_error(server, CFRDS_STATUS_SOCKET_HOST_NOT_FOUND, "failed to resolve hostname...");
-            return CFRDS_STATUS_SOCKET_HOST_NOT_FOUND;
-        }
-
-        int saved_errno = 0;
-
-        for (struct addrinfo *rp = result; rp != NULL; rp = rp->ai_next)
-        {
-            trace_net_start("socket");
-            cfrds_socket fd = socket(rp->ai_family, rp->ai_socktype, rp->ai_protocol);
-            trace_net_end();
-            if (fd == CFRDS_INVALID_SOCKET)
-                continue;
-
-            trace_net_start("connect");
-            int res = connect(fd, rp->ai_addr, rp->ai_addrlen);
-            trace_net_end();
-            if (res == 0) {
-                sockfd = fd;
-                break;
-            }
-
-            saved_errno = GET_SOCKET_ERRNO();
-
-            cfrds_sock_cleanup(&fd);
-        }
-
-        freeaddrinfo(result);
-
-        if (sockfd == CFRDS_INVALID_SOCKET) {
-            server->_errno = saved_errno;
-            cfrds_server_set_error(server, CFRDS_STATUS_CONNECTION_TO_SERVER_FAILED, "failed to establish connection to the server...");
-            return CFRDS_STATUS_CONNECTION_TO_SERVER_FAILED;
-        }
-
-        {
-#ifdef _WIN32
-            DWORD tv = 30000;
-            if (setsockopt(sockfd, SOL_SOCKET, SO_RCVTIMEO, (const char *)&tv, sizeof(tv)) < 0) {
-                server->_errno = GET_SOCKET_ERRNO();
-                cfrds_server_set_error(server, CFRDS_STATUS_CONNECTION_TO_SERVER_FAILED, "failed to set socket receive timeout");
-                return CFRDS_STATUS_CONNECTION_TO_SERVER_FAILED;
-            }
-            if (setsockopt(sockfd, SOL_SOCKET, SO_SNDTIMEO, (const char *)&tv, sizeof(tv)) < 0) {
-                server->_errno = GET_SOCKET_ERRNO();
-                cfrds_server_set_error(server, CFRDS_STATUS_CONNECTION_TO_SERVER_FAILED, "failed to set socket send timeout");
-                return CFRDS_STATUS_CONNECTION_TO_SERVER_FAILED;
-            }
-#else
-            struct timeval tv;
-            tv.tv_sec = 30;
-            tv.tv_usec = 0;
-            if (setsockopt(sockfd, SOL_SOCKET, SO_RCVTIMEO, &tv, sizeof(tv)) < 0) {
-                server->_errno = GET_SOCKET_ERRNO();
-                cfrds_server_set_error(server, CFRDS_STATUS_CONNECTION_TO_SERVER_FAILED, "failed to set socket receive timeout");
-                return CFRDS_STATUS_CONNECTION_TO_SERVER_FAILED;
-            }
-            if (setsockopt(sockfd, SOL_SOCKET, SO_SNDTIMEO, &tv, sizeof(tv)) < 0) {
-                server->_errno = GET_SOCKET_ERRNO();
-                cfrds_server_set_error(server, CFRDS_STATUS_CONNECTION_TO_SERVER_FAILED, "failed to set socket send timeout");
-                return CFRDS_STATUS_CONNECTION_TO_SERVER_FAILED;
-            }
-#endif
-        }
-    }
-
-    {
-        const char *send_ptr = cfrds_buffer_data(send_buf);
-        size_t send_remaining = cfrds_buffer_data_size(send_buf);
-
-        while (send_remaining > 0)
-        {
-            trace_net_start("send");
-            sock_written = send(sockfd, send_ptr, send_remaining, 0);
-            trace_net_end();
-            if (sock_written < 0)
-            {
-                int err = GET_SOCKET_ERRNO();
-                if (IS_SOCKET_EINTR(err))
-                    continue;
-                server->_errno = err;
-                cfrds_server_set_error(server, CFRDS_STATUS_WRITING_TO_SOCKET_FAILED, "failed to write to socket...");
-                return CFRDS_STATUS_WRITING_TO_SOCKET_FAILED;
-            }
-            send_ptr += sock_written;
-            send_remaining -= (size_t)sock_written;
-        }
-    }
-
-    if (!cfrds_buffer_create(&tmp_response)) {
-        cfrds_server_set_error(server, CFRDS_STATUS_MEMORY_ERROR, "cfrds_buffer_create failed for tmp_response");
+    int n = snprintf(port_str, sizeof(port_str), "%u", port);
+    if (n < 0 || (size_t)n >= sizeof(port_str)) {
+        cfrds_server_set_error(server, CFRDS_STATUS_MEMORY_ERROR, "failed to format port string");
         return CFRDS_STATUS_MEMORY_ERROR;
     }
+
+    trace_net_start("getaddrinfo");
+    int gai_err = getaddrinfo(cfrds_server_get_host(server), port_str, &hints, &result);
+    trace_net_end();
+    if (gai_err != 0) {
+        cfrds_server_set_error(server, CFRDS_STATUS_SOCKET_HOST_NOT_FOUND, "failed to resolve hostname...");
+        return CFRDS_STATUS_SOCKET_HOST_NOT_FOUND;
+    }
+
+    int saved_errno = 0;
+    cfrds_socket sockfd = CFRDS_INVALID_SOCKET;
+
+    for (struct addrinfo *rp = result; rp != NULL; rp = rp->ai_next)
+    {
+        trace_net_start("socket");
+        cfrds_socket fd = socket(rp->ai_family, rp->ai_socktype, rp->ai_protocol);
+        trace_net_end();
+        if (fd == CFRDS_INVALID_SOCKET)
+            continue;
+
+        trace_net_start("connect");
+        int res = connect(fd, rp->ai_addr, rp->ai_addrlen);
+        trace_net_end();
+        if (res == 0) {
+            sockfd = fd;
+            break;
+        }
+
+        saved_errno = GET_SOCKET_ERRNO();
+        cfrds_sock_cleanup(&fd);
+    }
+
+    freeaddrinfo(result);
+
+    if (sockfd == CFRDS_INVALID_SOCKET) {
+        server->_errno = saved_errno;
+        cfrds_server_set_error(server, CFRDS_STATUS_CONNECTION_TO_SERVER_FAILED, "failed to establish connection to the server...");
+        return CFRDS_STATUS_CONNECTION_TO_SERVER_FAILED;
+    }
+
+#ifdef _WIN32
+    DWORD tv = 30000;
+    if (setsockopt(sockfd, SOL_SOCKET, SO_RCVTIMEO, (const char *)&tv, sizeof(tv)) < 0 ||
+        setsockopt(sockfd, SOL_SOCKET, SO_SNDTIMEO, (const char *)&tv, sizeof(tv)) < 0) {
+        server->_errno = GET_SOCKET_ERRNO();
+        cfrds_sock_cleanup(&sockfd);
+        cfrds_server_set_error(server, CFRDS_STATUS_CONNECTION_TO_SERVER_FAILED, "failed to set socket timeout");
+        return CFRDS_STATUS_CONNECTION_TO_SERVER_FAILED;
+    }
+#else
+    struct timeval tv = { .tv_sec = 30, .tv_usec = 0 };
+    if (setsockopt(sockfd, SOL_SOCKET, SO_RCVTIMEO, &tv, sizeof(tv)) < 0 ||
+        setsockopt(sockfd, SOL_SOCKET, SO_SNDTIMEO, &tv, sizeof(tv)) < 0) {
+        server->_errno = GET_SOCKET_ERRNO();
+        cfrds_sock_cleanup(&sockfd);
+        cfrds_server_set_error(server, CFRDS_STATUS_CONNECTION_TO_SERVER_FAILED, "failed to set socket timeout");
+        return CFRDS_STATUS_CONNECTION_TO_SERVER_FAILED;
+    }
+#endif
+
+    *out_sockfd = sockfd;
+    return CFRDS_STATUS_OK;
+}
+
+static cfrds_status http_send_all(cfrds_server *server, cfrds_socket sockfd, cfrds_buffer *send_buf)
+{
+    const char *send_ptr = cfrds_buffer_data(send_buf);
+    size_t send_remaining = cfrds_buffer_data_size(send_buf);
+
+    while (send_remaining > 0)
+    {
+        trace_net_start("send");
+        ssize_t sock_written = send(sockfd, send_ptr, send_remaining, 0);
+        trace_net_end();
+        if (sock_written < 0)
+        {
+            int err = GET_SOCKET_ERRNO();
+            if (IS_SOCKET_EINTR(err))
+                continue;
+            server->_errno = err;
+            cfrds_server_set_error(server, CFRDS_STATUS_WRITING_TO_SOCKET_FAILED, "failed to write to socket...");
+            return CFRDS_STATUS_WRITING_TO_SOCKET_FAILED;
+        }
+        send_ptr += sock_written;
+        send_remaining -= (size_t)sock_written;
+    }
+    return CFRDS_STATUS_OK;
+}
+
+static cfrds_status http_receive_response(cfrds_server *server, cfrds_socket sockfd, cfrds_buffer *tmp_response)
+{
     time_t start_time = time(NULL);
-    while(1)
+    while (1)
     {
         if (time(NULL) - start_time > CFRDS_MAX_RESPONSE_TIMEOUT_SEC) {
             cfrds_server_set_error(server, CFRDS_STATUS_READING_FROM_SOCKET_FAILED, "response read timed out (overall deadline exceeded)");
@@ -266,6 +249,42 @@ cfrds_status cfrds_http_post(cfrds_server *server, const char *command, cfrds_bu
             return CFRDS_STATUS_RESPONSE_TOO_LARGE;
         }
     }
+    return CFRDS_STATUS_OK;
+}
+
+cfrds_status cfrds_http_post(cfrds_server *server, const char *command, cfrds_buffer *payload, cfrds_buffer **response)
+{
+    cfrds_buffer_defer(tmp_response);
+    cfrds_buffer_defer(swap_buf);
+    cfrds_buffer_defer(send_buf);
+    cfrds_sock_defer(sockfd);
+    cfrds_status status;
+
+    if (!cfrds_buffer_create(&send_buf)) {
+        cfrds_server_set_error(server, CFRDS_STATUS_MEMORY_ERROR, "cfrds_buffer_create failed for send_buf");
+        return CFRDS_STATUS_MEMORY_ERROR;
+    }
+
+    status = http_build_request(server, command, payload, send_buf);
+    if (status != CFRDS_STATUS_OK)
+        return status;
+
+    status = http_connect(server, &sockfd);
+    if (status != CFRDS_STATUS_OK)
+        return status;
+
+    status = http_send_all(server, sockfd, send_buf);
+    if (status != CFRDS_STATUS_OK)
+        return status;
+
+    if (!cfrds_buffer_create(&tmp_response)) {
+        cfrds_server_set_error(server, CFRDS_STATUS_MEMORY_ERROR, "cfrds_buffer_create failed for tmp_response");
+        return CFRDS_STATUS_MEMORY_ERROR;
+    }
+
+    status = http_receive_response(server, sockfd, tmp_response);
+    if (status != CFRDS_STATUS_OK)
+        return status;
 
     const char *response_data = cfrds_buffer_data(tmp_response);
     size_t response_size = cfrds_buffer_data_size(tmp_response);

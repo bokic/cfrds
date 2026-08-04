@@ -619,58 +619,39 @@ size_t cfrds_browse_dir_count(const cfrds_browse_dir *value)
     return value->cnt;
 }
 
+#define CFRDS_CHECK_BOUNDS(value, ndx, default_ret) \
+    do { \
+        if ((value) == NULL || (ndx) >= (value)->cnt) \
+            return (default_ret); \
+    } while (0)
+
 char cfrds_browse_dir_item_get_kind(const cfrds_browse_dir *value, size_t ndx)
 {
-    if (value == NULL)
-        return 0;
-
-    if (ndx >= value->cnt)
-        return 0;
-
+    CFRDS_CHECK_BOUNDS(value, ndx, 0);
     return value->items[ndx].kind;
 }
 
 const char *cfrds_browse_dir_item_get_name(const cfrds_browse_dir *value, size_t ndx)
 {
-    if (value == NULL)
-        return NULL;
-
-    if (ndx >= value->cnt)
-        return NULL;
-
+    CFRDS_CHECK_BOUNDS(value, ndx, NULL);
     return value->items[ndx].name;
 }
 
 uint8_t cfrds_browse_dir_item_get_permissions(const cfrds_browse_dir *value, size_t ndx)
 {
-    if (value == NULL)
-        return 0;
-
-    if (ndx >= value->cnt)
-        return 0;
-
+    CFRDS_CHECK_BOUNDS(value, ndx, 0);
     return value->items[ndx].permissions;
 }
 
 size_t cfrds_browse_dir_item_get_size(const cfrds_browse_dir *value, size_t ndx)
 {
-    if (value == NULL)
-        return 0;
-
-    if (ndx >= value->cnt)
-        return 0;
-
+    CFRDS_CHECK_BOUNDS(value, ndx, 0);
     return value->items[ndx].size;
 }
 
 uint64_t cfrds_browse_dir_item_get_modified(const cfrds_browse_dir *value, size_t ndx)
 {
-    if (value == NULL)
-        return 0;
-
-    if (ndx >= value->cnt)
-        return 0;
-
+    CFRDS_CHECK_BOUNDS(value, ndx, 0);
     return value->items[ndx].modified;
 }
 

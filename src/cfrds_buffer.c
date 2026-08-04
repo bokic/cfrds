@@ -46,96 +46,27 @@ void cfrds_buffer_cleanup(cfrds_buffer **buf) {
     }
 }
 
-void cfrds_file_content_cleanup(cfrds_file_content **buf) {
-    if (*buf) {
-        cfrds_file_content_free(*buf);
-        *buf = NULL;
+#define CFRDS_DEFINE_CLEANUP(type, free_fn) \
+    void type##_cleanup(type **buf) { \
+        if (buf && *buf) { \
+            free_fn(*buf); \
+            *buf = NULL; \
+        } \
     }
-}
 
-void cfrds_browse_dir_cleanup(cfrds_browse_dir **buf) {
-    if (*buf) {
-        cfrds_browse_dir_free(*buf);
-        *buf = NULL;
-    }
-}
-
-void cfrds_sql_dsninfo_cleanup(cfrds_sql_dsninfo **buf) {
-    if (*buf) {
-        cfrds_sql_dsninfo_free(*buf);
-        *buf = NULL;
-    }
-}
-
-void cfrds_sql_tableinfo_cleanup(cfrds_sql_tableinfo **buf) {
-    if (*buf) {
-        cfrds_sql_tableinfo_free(*buf);
-        *buf = NULL;
-    }
-}
-
-void cfrds_sql_columninfo_cleanup(cfrds_sql_columninfo **buf) {
-    if (*buf) {
-        cfrds_sql_columninfo_free(*buf);
-        *buf = NULL;
-    }
-}
-
-void cfrds_sql_primarykeys_cleanup(cfrds_sql_primarykeys **buf) {
-    if (*buf) {
-        cfrds_sql_primarykeys_free(*buf);
-        *buf = NULL;
-    }
-}
-
-void cfrds_sql_foreignkeys_cleanup(cfrds_sql_foreignkeys **buf) {
-    if (*buf) {
-        cfrds_sql_foreignkeys_free(*buf);
-        *buf = NULL;
-    }
-}
-
-void cfrds_sql_importedkeys_cleanup(cfrds_sql_importedkeys **buf) {
-    if (*buf) {
-        cfrds_sql_importedkeys_free(*buf);
-        *buf = NULL;
-    }
-}
-
-void cfrds_sql_exportedkeys_cleanup(cfrds_sql_exportedkeys **buf) {
-    if (*buf) {
-        cfrds_sql_exportedkeys_free(*buf);
-        *buf = NULL;
-    }
-}
-
-void cfrds_sql_resultset_cleanup(cfrds_sql_resultset **buf) {
-    if (*buf) {
-        cfrds_sql_resultset_free(*buf);
-        *buf = NULL;
-    }
-}
-
-void cfrds_sql_metadata_cleanup(cfrds_sql_metadata **buf) {
-    if (*buf) {
-        cfrds_sql_metadata_free(*buf);
-        *buf = NULL;
-    }
-}
-
-void cfrds_sql_supportedcommands_cleanup(cfrds_sql_supportedcommands **buf) {
-    if (*buf) {
-        cfrds_sql_supportedcommands_free(*buf);
-        *buf = NULL;
-    }
-}
-
-void cfrds_debugger_event_cleanup(cfrds_debugger_event **buf) {
-    if (*buf) {
-        cfrds_debugger_event_free(*buf);
-        *buf = NULL;
-    }
-}
+CFRDS_DEFINE_CLEANUP(cfrds_file_content, cfrds_file_content_free)
+CFRDS_DEFINE_CLEANUP(cfrds_browse_dir, cfrds_browse_dir_free)
+CFRDS_DEFINE_CLEANUP(cfrds_sql_dsninfo, cfrds_sql_dsninfo_free)
+CFRDS_DEFINE_CLEANUP(cfrds_sql_tableinfo, cfrds_sql_tableinfo_free)
+CFRDS_DEFINE_CLEANUP(cfrds_sql_columninfo, cfrds_sql_columninfo_free)
+CFRDS_DEFINE_CLEANUP(cfrds_sql_primarykeys, cfrds_sql_primarykeys_free)
+CFRDS_DEFINE_CLEANUP(cfrds_sql_foreignkeys, cfrds_sql_foreignkeys_free)
+CFRDS_DEFINE_CLEANUP(cfrds_sql_importedkeys, cfrds_sql_importedkeys_free)
+CFRDS_DEFINE_CLEANUP(cfrds_sql_exportedkeys, cfrds_sql_exportedkeys_free)
+CFRDS_DEFINE_CLEANUP(cfrds_sql_resultset, cfrds_sql_resultset_free)
+CFRDS_DEFINE_CLEANUP(cfrds_sql_metadata, cfrds_sql_metadata_free)
+CFRDS_DEFINE_CLEANUP(cfrds_sql_supportedcommands, cfrds_sql_supportedcommands_free)
+CFRDS_DEFINE_CLEANUP(cfrds_debugger_event, cfrds_debugger_event_free)
 
 static bool cfrds_buffer_realloc_if_needed(cfrds_buffer *buffer, size_t len)
 {

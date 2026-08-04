@@ -298,6 +298,8 @@ bool cfrds_buffer_append_buffer(cfrds_buffer *buffer, cfrds_buffer *new)
         return false;
 
     size_t len = new->size;
+    if (len == 0)
+        return true;
 
     if (cfrds_buffer_realloc_if_needed(buffer, len) == false)
     {

@@ -298,6 +298,12 @@ bool wddx_put_string(WDDX *dest, const char *path, const char *value)
     return wddx_put(dest, path, value, WDDX_STRING);
 }
 
+/**
+ * @brief Recursively serializes a WDDX_NODE tree into LibXML2 nodes matching the WDDX 1.0 DTD specification.
+ *
+ * Maps internal WDDX types (WDDX_NULL, WDDX_BOOLEAN, WDDX_NUMBER, WDDX_STRING, WDDX_ARRAY, WDDX_STRUCT)
+ * to standard WDDX 1.0 XML elements (`<null/>`, `<boolean value="...">`, `<number>`, `<string>`, `<array length="...">`, `<struct type="...">`).
+ */
 static void wddx_to_xml_node(xmlNode *xml_node, const struct WDDX_NODE *node)
 {
     xmlNode *child_node = NULL;

@@ -507,7 +507,7 @@ char *cfrds_buffer_to_sql_dbdescription(cfrds_buffer *buffer);
  * @param buffer Server response buffer.
  * @return Allocated string with response value. Must be freed by caller. Returns NULL on error.
  */
-char *cfrds_buffer_to_debugger_start(cfrds_buffer *buffer);
+EXPORT_CFRDS char *cfrds_buffer_to_debugger_start(cfrds_buffer *buffer);
 
 /**
  * @brief Parses debugger stop response.
@@ -517,7 +517,7 @@ char *cfrds_buffer_to_debugger_start(cfrds_buffer *buffer);
  * @param buffer Server response buffer.
  * @return true if successful and status is RDS_OK, false otherwise.
  */
-bool cfrds_buffer_to_debugger_stop(cfrds_buffer *buffer);
+EXPORT_CFRDS bool cfrds_buffer_to_debugger_stop(cfrds_buffer *buffer);
 
 /**
  * @brief Parses debugger info response to extract debug port.
@@ -528,7 +528,7 @@ bool cfrds_buffer_to_debugger_stop(cfrds_buffer *buffer);
  * @param buffer Server response buffer.
  * @return The port number on success, -1 on parsing/status error.
  */
-int cfrds_buffer_to_debugger_info(cfrds_buffer *buffer);
+EXPORT_CFRDS int cfrds_buffer_to_debugger_info(cfrds_buffer *buffer);
 
 /**
  * @brief Parses debugger events.
@@ -538,4 +538,5 @@ int cfrds_buffer_to_debugger_info(cfrds_buffer *buffer);
  * @param buffer Server response buffer.
  * @return A parsed `cfrds_debugger_event` pointer (which maps to a WDDX structure), or NULL on failure.
  */
-cfrds_debugger_event *cfrds_buffer_to_debugger_event(cfrds_buffer *buffer);
+EXPORT_CFRDS cfrds_debugger_event *cfrds_buffer_to_debugger_event(cfrds_buffer *buffer);
+

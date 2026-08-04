@@ -1,7 +1,9 @@
 #pragma once
 
+#include <cfrds.h>
 #include <stdbool.h>
 #include <stddef.h>
+
 
 
 /**
@@ -76,7 +78,7 @@ WDDX *wddx_create(void);
  * @param value The boolean value to insert.
  * @return true on success, false on allocation failure, index out of bounds, or invalid type mismatch.
  */
-bool wddx_put_bool(WDDX *dest, const char *path, bool value);
+EXPORT_CFRDS bool wddx_put_bool(WDDX *dest, const char *path, bool value);
 
 /**
  * @brief Inserts a numeric (double) value into the WDDX data structure at the given path.
@@ -89,7 +91,7 @@ bool wddx_put_bool(WDDX *dest, const char *path, bool value);
  * @param value The double value to insert.
  * @return true on success, false on traversal or allocation failure.
  */
-bool wddx_put_number(WDDX *dest, const char *path, double value);
+EXPORT_CFRDS bool wddx_put_number(WDDX *dest, const char *path, double value);
 
 /**
  * @brief Inserts a string value into the WDDX data structure at the given path.
@@ -138,7 +140,7 @@ const char *wddx_to_xml(WDDX *src);
  * @param xml Null-terminated string containing WDDX XML data.
  * @return A newly allocated WDDX structure containing the parsed trees, or NULL on parsing failure.
  */
-WDDX *wddx_from_xml(const char *xml);
+EXPORT_CFRDS WDDX *wddx_from_xml(const char *xml);
 
 
 
@@ -148,7 +150,7 @@ WDDX *wddx_from_xml(const char *xml);
  * @param src Pointer to WDDX structure (cast internally to WDDX*).
  * @return Pointer to WDDX_NODE representing data root, or NULL if src is NULL or has no data.
  */
-const WDDX_NODE *wddx_data(const void *src);
+EXPORT_CFRDS const WDDX_NODE *wddx_data(const void *src);
 
 /**
  * @brief Returns the type of a WDDX node.
@@ -156,7 +158,7 @@ const WDDX_NODE *wddx_data(const void *src);
  * @param value Pointer to WDDX_NODE (cast internally).
  * @return Node type enum value (e.g. WDDX_NULL, WDDX_BOOLEAN, etc.). Returns WDDX_NULL if value is NULL.
  */
-int wddx_node_type(const void *value);
+EXPORT_CFRDS int wddx_node_type(const void *value);
 
 
 
@@ -168,7 +170,7 @@ int wddx_node_type(const void *value);
  * @param value Pointer to the node.
  * @return Const pointer to the string bytes. Pointer is owned by the node. Returns NULL if node is NULL.
  */
-const char *wddx_node_string(const WDDX_NODE *value);
+EXPORT_CFRDS const char *wddx_node_string(const WDDX_NODE *value);
 
 /**
  * @brief Returns the size of a WDDX_ARRAY node.
@@ -176,7 +178,7 @@ const char *wddx_node_string(const WDDX_NODE *value);
  * @param value Pointer to the array node.
  * @return The array capacity (cnt). Returns 0 if node is NULL.
  */
-int wddx_node_array_size(const void *value);
+EXPORT_CFRDS int wddx_node_array_size(const void *value);
 
 /**
  * @brief Retrieves an element of a WDDX_ARRAY node by index.
@@ -187,7 +189,7 @@ int wddx_node_array_size(const void *value);
  * @param cnt 0-based index.
  * @return Pointer to the child node, or NULL if index is out of bounds or node is NULL.
  */
-const WDDX_NODE *wddx_node_array_at(const void *value, size_t cnt);
+EXPORT_CFRDS const WDDX_NODE *wddx_node_array_at(const void *value, size_t cnt);
 
 /**
  * @brief Returns the number of variable fields in a WDDX_STRUCT node.
@@ -195,7 +197,7 @@ const WDDX_NODE *wddx_node_array_at(const void *value, size_t cnt);
  * @param value Pointer to the struct node.
  * @return The count of fields. Returns 0 if node is NULL.
  */
-int wddx_node_struct_size(const void *value);
+EXPORT_CFRDS int wddx_node_struct_size(const void *value);
 
 /**
  * @brief Retrieves a structural key-value field of a WDDX_STRUCT node by list index.
@@ -207,7 +209,7 @@ int wddx_node_struct_size(const void *value);
  * @param name Output pointer for the key string. Ignored if NULL.
  * @return Pointer to the value node, or NULL if index is out of bounds or node is NULL.
  */
-const WDDX_NODE *wddx_node_struct_at(const void *value, size_t cnt, const char **name);
+EXPORT_CFRDS const WDDX_NODE *wddx_node_struct_at(const void *value, size_t cnt, const char **name);
 
 
 
@@ -221,7 +223,7 @@ const WDDX_NODE *wddx_node_struct_at(const void *value, size_t cnt, const char *
  * @param ok Output parameter set to true on success, false on traversal or type mismatch.
  * @return The double value if successful, 0.0 otherwise.
  */
-double wddx_get_number(const void *src, const char *path, bool *ok);
+EXPORT_CFRDS double wddx_get_number(const void *src, const char *path, bool *ok);
 
 /**
  * @brief Query helper to retrieve a string at a specific path.
@@ -232,7 +234,7 @@ double wddx_get_number(const void *src, const char *path, bool *ok);
  * @param path Comma-separated path.
  * @return Pointer to the null-terminated string, or NULL if not found or type mismatch.
  */
-const char *wddx_get_string(const void *src, const char *path);
+EXPORT_CFRDS const char *wddx_get_string(const void *src, const char *path);
 
 /**
  * @brief Query helper to retrieve a node at a specific path.
@@ -243,7 +245,7 @@ const char *wddx_get_string(const void *src, const char *path);
  * @param path Comma-separated path.
  * @return Const pointer to the located WDDX_NODE, or NULL if not found.
  */
-const WDDX_NODE *wddx_get_var(const void *src, const char *path);
+EXPORT_CFRDS const WDDX_NODE *wddx_get_var(const void *src, const char *path);
 
 
 
@@ -255,4 +257,4 @@ const WDDX_NODE *wddx_get_var(const void *src, const char *path);
  * 
  * @param value Pointer to the WDDX* pointer to clean up.
  */
-void wddx_cleanup(void *value);
+EXPORT_CFRDS void wddx_cleanup(void *value);

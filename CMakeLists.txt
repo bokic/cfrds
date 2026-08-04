@@ -109,11 +109,19 @@ endif()
 if(WIN32)
     add_executable(cfrds_cli
         cli/main.c
+        cli/cmd_file.c
+        cli/cmd_sql.c
+        cli/cmd_debugger.c
+        cli/cmd_security.c
         cli/os_win.c cli/os.h
     )
 else()
     add_executable(cfrds_cli
         cli/main.c
+        cli/cmd_file.c
+        cli/cmd_sql.c
+        cli/cmd_debugger.c
+        cli/cmd_security.c
         cli/os_posix.c cli/os.h
     )
 endif()
@@ -152,7 +160,13 @@ install(TARGETS cfrds_cli
 )
 ###
 add_library(libcfrds SHARED
-    src/cfrds.c        include/cfrds.h
+    src/cfrds.c
+    src/cfrds_server.c
+    src/cfrds_file.c
+    src/cfrds_sql.c
+    src/cfrds_debugger.c
+    src/cfrds_security_analyzer.c
+    include/cfrds.h
     src/wddx.c         include/internal/wddx.h
     src/cfrds_buffer.c include/internal/cfrds_buffer.h
     src/cfrds_http.c   include/internal/cfrds_http.h

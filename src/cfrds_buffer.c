@@ -666,24 +666,37 @@ cfrds_browse_dir *cfrds_buffer_to_browse_dir(cfrds_buffer *buffer)
         }
 
         if (str_permissions)
-            permissions = atol(str_permissions);
+        {
+            char *endptr = NULL;
+            permissions = strtol(str_permissions, &endptr, 10);
+            if (endptr == str_permissions || *endptr != '\0')
+                return NULL;
+        }
 
         if (str_filesize)
-            filesize = atol(str_filesize);
+        {
+            char *endptr = NULL;
+            filesize = strtol(str_filesize, &endptr, 10);
+            if (endptr == str_filesize || *endptr != '\0')
+                return NULL;
+        }
 
         if (str_timestamp)
         {
-            uint32_t num1 = (uint32_t)strtoul(str_timestamp, NULL, 10);
+            char *endptr = NULL;
+            uint32_t num1 = (uint32_t)strtoul(str_timestamp, &endptr, 10);
+            if (endptr == str_timestamp || *endptr != ',')
+                return NULL;
 
-            const char *str_num2 = strchr(str_timestamp, ',');
-            if (str_num2)
-            {
-                str_num2++;
-                uint32_t num2 = (uint32_t)atol(str_num2);
-                modified = num1 + ((uint64_t)num2 << 32);
-                modified /= 10000;
-                modified -= 11644473600000L;
-            }
+            const char *str_num2 = endptr + 1;
+            endptr = NULL;
+            uint32_t num2 = (uint32_t)strtoul(str_num2, &endptr, 10);
+            if (endptr == str_num2 || *endptr != '\0')
+                return NULL;
+
+            modified = num1 + ((uint64_t)num2 << 32);
+            modified /= 10000;
+            modified -= 11644473600000L;
         }
 
         if(((file_type != 'D')&&(file_type != 'F'))||(!filename)||(permissions < 0)||(permissions > 0xff)||(filesize < 0))

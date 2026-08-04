@@ -1851,25 +1851,20 @@ cfrds_status cfrds_command_debugger_all_fetch_flags_enabled(cfrds_server *server
     return ret;
 }
 
-cfrds_status cfrds_command_debugger_step_in(cfrds_server *server, const char *session_id, const char *thread_name)
+static cfrds_status cfrds_command_debugger_thread_action(cfrds_server *server, const char *session_id, const char *thread_name, const char *action)
 {
     cfrds_status ret;
-
     cfrds_buffer_defer(response);
 
     if (server == NULL)
-    {
         return CFRDS_STATUS_SERVER_IS_NULL;
-    }
 
-    if ((session_id == NULL)||(thread_name == NULL))
-    {
+    if (session_id == NULL || thread_name == NULL)
         return CFRDS_STATUS_PARAM_IS_NULL;
-    }
 
     WDDX_defer(wddx);
     wddx = wddx_create();
-    wddx_put_string(wddx, "0,COMMAND", "STEP_IN");
+    wddx_put_string(wddx, "0,COMMAND", action);
     wddx_put_string(wddx, "0,THREAD", thread_name);
 
     ret = cfrds_send_command(server, &response, "DBGREQUEST", (const char *[]){ "DBG_REQUEST", session_id, wddx_to_xml(wddx), NULL});
@@ -1883,108 +1878,26 @@ cfrds_status cfrds_command_debugger_step_in(cfrds_server *server, const char *se
     }
 
     return ret;
+}
+
+cfrds_status cfrds_command_debugger_step_in(cfrds_server *server, const char *session_id, const char *thread_name)
+{
+    return cfrds_command_debugger_thread_action(server, session_id, thread_name, "STEP_IN");
 }
 
 cfrds_status cfrds_command_debugger_step_over(cfrds_server *server, const char *session_id, const char *thread_name)
 {
-    cfrds_status ret;
-
-    cfrds_buffer_defer(response);
-
-    if (server == NULL)
-    {
-        return CFRDS_STATUS_SERVER_IS_NULL;
-    }
-
-    if ((session_id == NULL)||(thread_name == NULL))
-    {
-        return CFRDS_STATUS_PARAM_IS_NULL;
-    }
-
-    WDDX_defer(wddx);
-    wddx = wddx_create();
-    wddx_put_string(wddx, "0,COMMAND", "STEP_OVER");
-    wddx_put_string(wddx, "0,THREAD", thread_name);
-
-    ret = cfrds_send_command(server, &response, "DBGREQUEST", (const char *[]){ "DBG_REQUEST", session_id, wddx_to_xml(wddx), NULL});
-    if (ret == CFRDS_STATUS_OK)
-    {
-        if (!cfrds_buffer_to_debugger_response_ok(response))
-        {
-            server->error_code = -1;
-            return CFRDS_STATUS_RESPONSE_ERROR;
-        }
-    }
-
-    return ret;
+    return cfrds_command_debugger_thread_action(server, session_id, thread_name, "STEP_OVER");
 }
 
 cfrds_status cfrds_command_debugger_step_out(cfrds_server *server, const char *session_id, const char *thread_name)
 {
-    cfrds_status ret;
-
-    cfrds_buffer_defer(response);
-
-    if (server == NULL)
-    {
-        return CFRDS_STATUS_SERVER_IS_NULL;
-    }
-
-    if ((session_id == NULL)||(thread_name == NULL))
-    {
-        return CFRDS_STATUS_PARAM_IS_NULL;
-    }
-
-    WDDX_defer(wddx);
-    wddx = wddx_create();
-    wddx_put_string(wddx, "0,COMMAND", "STEP_OUT");
-    wddx_put_string(wddx, "0,THREAD", thread_name);
-
-    ret = cfrds_send_command(server, &response, "DBGREQUEST", (const char *[]){ "DBG_REQUEST", session_id, wddx_to_xml(wddx), NULL});
-    if (ret == CFRDS_STATUS_OK)
-    {
-        if (!cfrds_buffer_to_debugger_response_ok(response))
-        {
-            server->error_code = -1;
-            return CFRDS_STATUS_RESPONSE_ERROR;
-        }
-    }
-
-    return ret;
+    return cfrds_command_debugger_thread_action(server, session_id, thread_name, "STEP_OUT");
 }
 
 cfrds_status cfrds_command_debugger_continue(cfrds_server *server, const char *session_id, const char *thread_name)
 {
-    cfrds_status ret;
-
-    cfrds_buffer_defer(response);
-
-    if (server == NULL)
-    {
-        return CFRDS_STATUS_SERVER_IS_NULL;
-    }
-
-    if ((session_id == NULL)||(thread_name == NULL))
-    {
-        return CFRDS_STATUS_PARAM_IS_NULL;
-    }
-
-    WDDX_defer(wddx);
-    wddx = wddx_create();
-    wddx_put_string(wddx, "0,COMMAND", "CONTINUE");
-    wddx_put_string(wddx, "0,THREAD", thread_name);
-
-    ret = cfrds_send_command(server, &response, "DBGREQUEST", (const char *[]){ "DBG_REQUEST", session_id, wddx_to_xml(wddx), NULL});
-    if (ret == CFRDS_STATUS_OK)
-    {
-        if (!cfrds_buffer_to_debugger_response_ok(response))
-        {
-            server->error_code = -1;
-            return CFRDS_STATUS_RESPONSE_ERROR;
-        }
-    }
-
-    return ret;
+    return cfrds_command_debugger_thread_action(server, session_id, thread_name, "CONTINUE");
 }
 
 void cfrds_debugger_event_free(cfrds_debugger_event *event)

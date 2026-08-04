@@ -14,6 +14,9 @@
  * @param s Pointer to the start of the memory block to be zeroed.
  * @param n Size of the memory block in bytes.
  */
+#if defined(__GNUC__) || defined(__clang__)
+__attribute__((always_inline)) inline
+#endif
 static void explicit_bzero(void *s, size_t n) {
     volatile unsigned char *ptr = (volatile unsigned char *)s;
     while (n--) {

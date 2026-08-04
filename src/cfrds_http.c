@@ -266,7 +266,7 @@ cfrds_status cfrds_http_post(cfrds_server *server, const char *command, cfrds_bu
     const char *response_data = cfrds_buffer_data(tmp_response);
     size_t response_size = cfrds_buffer_data_size(tmp_response);
 
-    static const char *good_response_http1_1 = "HTTP/1.1 200 ";
+    const char good_response_http1_1[] = "HTTP/1.1 200 ";
     size_t min_resp_len = strlen(good_response_http1_1);
 
     if (response_size < min_resp_len ||

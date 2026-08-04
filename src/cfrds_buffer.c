@@ -233,6 +233,27 @@ bool cfrds_buffer_append(cfrds_buffer *buffer, const char *str)
     return true;
 }
 
+bool cfrds_buffer_append_escaped(cfrds_buffer *buffer, const char *str)
+{
+    if ((!buffer) || (!str))
+    {
+        return false;
+    }
+
+    for (const char *p = str; *p != '\0'; p++)
+    {
+        if (*p == ':' || *p == ';')
+        {
+            if (!cfrds_buffer_append_char(buffer, '\\'))
+                return false;
+        }
+        if (!cfrds_buffer_append_char(buffer, *p))
+            return false;
+    }
+
+    return true;
+}
+
 static __attribute__((unused)) bool cfrds_buffer_append_int(cfrds_buffer *buffer, int number)
 {
     char str[16];

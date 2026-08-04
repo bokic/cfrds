@@ -699,6 +699,19 @@ static int test_overflow_checks(void)
     return PASS;
 }
 
+static int test_append_escaped(void)
+{
+    cfrds_buffer *buf = NULL;
+    CHECK(cfrds_buffer_create(&buf));
+
+    CHECK(cfrds_buffer_append_escaped(buf, "foo:bar;baz\\qux"));
+    CHECK(cfrds_buffer_data_size(buf) == strlen("foo\\:bar\\;baz\\qux"));
+    CHECK(strcmp(cfrds_buffer_data(buf), "foo\\:bar\\;baz\\qux") == 0);
+
+    cfrds_buffer_free(buf);
+    return PASS;
+}
+
 /* ── main ──────────────────────────────────────────────────────────────── */
 
 int main(void)
@@ -734,6 +747,7 @@ int main(void)
     RUN(test_append_buffer_null);
 
     /* RDS helpers */
+    RUN(test_append_escaped);
     RUN(test_append_rds_count);
     RUN(test_append_rds_string);
     RUN(test_append_rds_string_empty);

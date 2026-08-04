@@ -4227,11 +4227,11 @@ cfrds_status cfrds_command_adminapi_extensions_setmapping(cfrds_server *server, 
         return CFRDS_STATUS_MEMORY_ERROR;
     if (!cfrds_buffer_append(arg, "name:"))
         return CFRDS_STATUS_MEMORY_ERROR;
-    if (!cfrds_buffer_append(arg, name)) // TODO: format string with escape characters!
+    if (!cfrds_buffer_append_escaped(arg, name))
         return CFRDS_STATUS_MEMORY_ERROR;
     if (!cfrds_buffer_append(arg, ";path:"))
         return CFRDS_STATUS_MEMORY_ERROR;
-    if (!cfrds_buffer_append(arg, path)) // TODO: format string with escape characters!
+    if (!cfrds_buffer_append_escaped(arg, path))
         return CFRDS_STATUS_MEMORY_ERROR;
 
     ret = cfrds_send_command(server, &response, "ADMINAPI", (const char *[]){ "cfide.adminapi.extensions", "setmappings", cfrds_buffer_data(arg), NULL});

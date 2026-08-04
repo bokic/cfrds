@@ -234,6 +234,17 @@ size_t cfrds_buffer_data_size(cfrds_buffer *buffer);
  */
 bool cfrds_buffer_append(cfrds_buffer *buffer, const char *str);
 
+/**
+ * @brief Appends a string to the buffer, escaping special delimiters (colon and semicolon).
+ * 
+ * Replaces ':' with "\:" and ';' with "\;" so key-value argument strings remain unambiguous.
+ * 
+ * @param buffer Destination buffer.
+ * @param str Null-terminated string to append.
+ * @return true on success, false if buffer/str is NULL or appending fails.
+ */
+bool cfrds_buffer_append_escaped(cfrds_buffer *buffer, const char *str);
+
 
 
 /**

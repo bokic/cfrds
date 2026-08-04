@@ -262,7 +262,6 @@ static cfrds_status http_receive_response(cfrds_server *server, cfrds_socket soc
 cfrds_status cfrds_http_post(cfrds_server *server, const char *command, cfrds_buffer *payload, cfrds_buffer **response)
 {
     cfrds_buffer_defer(tmp_response);
-    cfrds_buffer_defer(swap_buf);
     cfrds_buffer_defer(send_buf);
     cfrds_sock_defer(sockfd);
     cfrds_status status;
@@ -309,16 +308,6 @@ cfrds_status cfrds_http_post(cfrds_server *server, const char *command, cfrds_bu
 
     if (cfrds_buffer_skip_httpheader(&response_data, &response_size) == false)
         return CFRDS_STATUS_HTTP_RESPONSE_NOT_FOUND;
-
-    if (!cfrds_buffer_create(&swap_buf)) {
-        return CFRDS_STATUS_MEMORY_ERROR;
-    }
-
-    cfrds_buffer_append_bytes(swap_buf, response_data, response_size);
-    response_data = cfrds_buffer_data(swap_buf);
-    response_size = cfrds_buffer_data_size(swap_buf);
-    cfrds_buffer_free(tmp_response);
-    tmp_response = swap_buf; swap_buf = NULL;
 
     if (!cfrds_buffer_parse_number(&response_data, &response_size, &server->error_code))
     {

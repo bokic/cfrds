@@ -2,6 +2,7 @@
 
 int handle_cmd_sql(cfrds_server *server, const char *command, const char *path, int argc, char *argv[])
 {
+    (void)argc;
     cfrds_status res;
 
     if (strcmp(command, "dsninfo") == 0) {

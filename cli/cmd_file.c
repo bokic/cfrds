@@ -2,6 +2,7 @@
 
 int handle_cmd_file(cfrds_server *server, const char *command, const char *path, int argc, char *argv[], cfrds_str *cfroot)
 {
+    (void)argc;
     cfrds_status res;
     cfrds_file_content_defer(content);
 

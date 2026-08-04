@@ -15,15 +15,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 
-#define json_object_defer(var) struct json_object * var __attribute__((cleanup(json_object_cleanup))) = NULL
-static void json_object_cleanup(struct json_object **handle)
-{
-    if (handle)
-    {
-        json_object_put(*handle);
-        *handle = NULL;
-    }
-}
+
 
 void cfrds_file_content_free(cfrds_file_content *value)
 {

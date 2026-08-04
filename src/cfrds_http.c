@@ -144,6 +144,8 @@ cfrds_status cfrds_http_post(cfrds_server *server, const char *command, cfrds_bu
             return CFRDS_STATUS_SOCKET_HOST_NOT_FOUND;
         }
 
+        int saved_errno = 0;
+
         for (struct addrinfo *rp = result; rp != NULL; rp = rp->ai_next)
         {
             trace_net_start("socket");
@@ -160,10 +162,11 @@ cfrds_status cfrds_http_post(cfrds_server *server, const char *command, cfrds_bu
                 break;
             }
 
+            saved_errno = GET_SOCKET_ERRNO();
+
             cfrds_sock_cleanup(&fd);
         }
 
-        int saved_errno = GET_SOCKET_ERRNO();
         freeaddrinfo(result);
 
         if (sockfd == CFRDS_INVALID_SOCKET) {

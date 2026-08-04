@@ -472,7 +472,7 @@ cfrds_status cfrds_command_sql_tableinfo(cfrds_server *server, const char *conne
 
     cfrds_buffer_defer(response);
 
-    if ((server == NULL)||(tableinfo == NULL))
+    if ((server == NULL)||(connection_name == NULL)||(tableinfo == NULL))
     {
         return CFRDS_STATUS_PARAM_IS_NULL;
     }
@@ -4227,11 +4227,11 @@ cfrds_status cfrds_command_adminapi_extensions_setmapping(cfrds_server *server, 
         return CFRDS_STATUS_MEMORY_ERROR;
     if (!cfrds_buffer_append(arg, "name:"))
         return CFRDS_STATUS_MEMORY_ERROR;
-    if (!cfrds_buffer_append(arg, name))
+    if (!cfrds_buffer_append(arg, name)) // TODO: format string with escape characters!
         return CFRDS_STATUS_MEMORY_ERROR;
     if (!cfrds_buffer_append(arg, ";path:"))
         return CFRDS_STATUS_MEMORY_ERROR;
-    if (!cfrds_buffer_append(arg, path))
+    if (!cfrds_buffer_append(arg, path)) // TODO: format string with escape characters!
         return CFRDS_STATUS_MEMORY_ERROR;
 
     ret = cfrds_send_command(server, &response, "ADMINAPI", (const char *[]){ "cfide.adminapi.extensions", "setmappings", cfrds_buffer_data(arg), NULL});

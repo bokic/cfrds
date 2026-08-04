@@ -249,7 +249,12 @@ static __attribute__((unused)) bool cfrds_buffer_append_int(cfrds_buffer *buffer
 
 bool cfrds_buffer_append_bytes(cfrds_buffer *buffer, const void *data, size_t length)
 {
-    if ((!buffer)||(!data)||(length == 0))
+    if (length == 0)
+    {
+        return true;
+    }
+
+    if ((!buffer)||(!data))
     {
         return false;
     }
@@ -1445,6 +1450,8 @@ cfrds_sql_resultset *cfrds_buffer_to_sql_sqlstmnt(cfrds_buffer *buffer)
     {
         cfrds_str_defer(row);
         if (!cfrds_buffer_parse_string(&response_data, &response_size, &row))
+            return NULL;
+        if (row == NULL)
             return NULL;
         const char *row_walker = row;
         size_t row_size = strlen(row_walker);

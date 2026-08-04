@@ -151,10 +151,11 @@ static bool cfrds_buffer_realloc_if_needed(cfrds_buffer *buffer, size_t len)
 
     if (required > buffer->allocated)
     {
-        if (SIZE_MAX - 512 < required)
-            return false;
-
+        size_t double_size = buffer->allocated * 2;
         size_t newsize = (((required + 512) / 1024) + 1) * 1024;
+        if (double_size > newsize)
+            newsize = double_size;
+
         if (newsize < required || newsize == SIZE_MAX)
             return false;
 

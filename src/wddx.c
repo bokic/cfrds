@@ -565,7 +565,7 @@ static struct WDDX_NODE *wddx_from_xml_element(xmlNodePtr xml_node)
     return ret;
 }
 
-#ifndef NDEBUG
+#ifdef NDEBUG
 static void silentErrorHandler(void *ctx, const char *msg, ...) {
     (void)ctx;
     (void)msg;
@@ -584,7 +584,7 @@ WDDX *wddx_from_xml(const char *xml)
 
     if (xml_len == 0) return NULL;
 
-#ifndef NDEBUG
+#ifdef NDEBUG
     xmlSetGenericErrorFunc(NULL, silentErrorHandler);
 #endif
 

@@ -3142,6 +3142,11 @@ cfrds_status cfrds_command_adminapi_extensions_getcustomtagpaths(cfrds_server *s
         }
 
         *result = wddx_from_xml(xml);
+        if (!*result)
+        {
+            server->error_code = -1;
+            return CFRDS_STATUS_RESPONSE_ERROR;
+        }
     }
 
     return ret;

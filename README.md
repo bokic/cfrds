@@ -97,3 +97,30 @@ Some of the features RDS protocol supports:
     > `cd cfrds`
     > 
     > `brew install --build-from-source ./MacOS/cfrds.rb`
+
+### Docker
+
+Ready-to-run images are published to Docker Hub:
+
+```bash
+docker pull bokic/cfrds:latest
+```
+
+The image is Alpine-based (musl), contains the `cfrds` CLI (entry point), and supports both `linux/amd64` and `linux/arm64`. Mount your files and run:
+
+```bash
+# List remote directory
+docker run --rm bokic/cfrds ls rds://username:password@host:port/path
+
+# Emit response as JSON
+docker run --rm bokic/cfrds ls rds://username:password@host:port/path --json
+```
+
+To build the image locally:
+
+```bash
+docker build -t cfrds .
+```
+
+Images are published automatically by the [docker-publish.yml](.github/workflows/docker-publish.yml) workflow on pushes to `master` (as `latest`) and on version tags (as `<version>`, `<major>.<minor>` and `latest`). Publishing requires the `DOCKERHUB_USERNAME` and `DOCKERHUB_TOKEN` repository secrets to be set.
+

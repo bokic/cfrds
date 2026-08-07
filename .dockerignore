@@ -1,0 +1,13 @@
+.cache/
+.vscode/
+.qtcreator/
+.ropeproject/
+__pycache__/
+build/
+build_asan/
+bin/
+compile_commands.json
+CMakeLists.txt.user
+*.json.h
+tmp/
+Testing/

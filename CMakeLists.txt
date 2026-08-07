@@ -30,12 +30,18 @@ if(EXISTS ${GIT_DIR_PATH})
             ERROR_QUIET
         )
     endif()
-else()
-    if( CFRDS_GIT_TAG STREQUAL "")
-        message(FATAL_ERROR "Git tag is not set!")
-    endif()
+endif()
+
+if(DEFINED ENV{CFRDS_VERSION} AND NOT "$ENV{CFRDS_VERSION}" STREQUAL "")
+    set(CFRDS_GIT_TAG "$ENV{CFRDS_VERSION}")
     set(CFRDS_GIT_REVISION "0")
     set(GIT_COMMIT_NAME "${CFRDS_GIT_TAG}")
+endif()
+
+if(NOT CFRDS_GIT_TAG STREQUAL "")
+    # valid git tag or env override
+else()
+    message(FATAL_ERROR "Git tag is not set!")
 endif()
 
 if(NOT CFRDS_GIT_TAG MATCHES "^[0-9]+\\.[0-9]+\\.[0-9]+$")

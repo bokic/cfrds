@@ -103,17 +103,17 @@ Some of the features RDS protocol supports:
 Ready-to-run images are published to Docker Hub:
 
 ```bash
-docker pull bokic/cfrds:latest
+docker pull bokic78/cfrds:latest
 ```
 
 The image is Alpine-based (musl), contains the `cfrds` CLI (entry point), and supports both `linux/amd64` and `linux/arm64`. Mount your files and run:
 
 ```bash
 # List remote directory
-docker run --rm bokic/cfrds ls rds://username:password@host:port/path
+docker run --rm bokic78/cfrds ls rds://username:password@host:port/path
 
 # Emit response as JSON
-docker run --rm bokic/cfrds ls rds://username:password@host:port/path --json
+docker run --rm bokic78/cfrds ls rds://username:password@host:port/path --json
 ```
 
 To build the image locally:

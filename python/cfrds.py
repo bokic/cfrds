@@ -853,21 +853,16 @@ class Server:
             raise CFRDSError("path is required")
         raw = self._send_rds_command("BROWSEDIR", [path, ""])
         offset = [0]
-        total = _parse_number(raw, offset)
-        if total < 0 or (total != 0 and total % 5 != 0):
-            raise CFRDSError("Invalid total items count in browse_dir response")
-        cnt = total // 5
+        _parse_number(raw, offset)
         items: List[Dict[str, Any]] = []
-        for _ in range(cnt):
+        while offset[0] < len(raw):
             str_kind = _parse_string(raw, offset)
             filename = _parse_string(raw, offset)
             str_perms = _parse_string(raw, offset)
             str_size = _parse_string(raw, offset)
             str_ts = _parse_string(raw, offset)
 
-            kind = 'F'
-            if str_kind == "D:":
-                kind = 'D'
+            kind = 'D' if str_kind in ("D:", "D") else 'F'
 
             perms_num = int(str_perms) if str_perms else 0
             size = int(str_size) if str_size else 0
@@ -875,7 +870,7 @@ class Server:
             modified = 0
             if str_ts and "," in str_ts:
                 parts = str_ts.split(",")
-                num1 = int(parts[0])
+                num1 = int(parts[0]) & 0xFFFFFFFF
                 num2 = int(parts[1])
                 modified = num1 + (num2 << 32)
                 modified = (modified // 10000) - 11644473600000

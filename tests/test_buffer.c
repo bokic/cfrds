@@ -627,6 +627,42 @@ static int test_sql_key_parsers(void)
     return PASS;
 }
 
+static int test_buffer_to_browse_dir(void)
+{
+    /* Test valid directory listing parsing */
+    {
+        cfrds_buffer *buf = NULL;
+        CHECK(cfrds_buffer_create(&buf) == true);
+        CHECK(cfrds_buffer_append(buf, "2:F:10:MyComp.cfc2:322:9619:-288538128,312708172:D:7:models12:161:019:-288538128,31270817") == true);
+        cfrds_browse_dir *bd = cfrds_buffer_to_browse_dir(buf);
+        CHECK(bd != NULL);
+        CHECK(bd->cnt == 2);
+        CHECK(bd->items[0].kind == 'F');
+        CHECK(strcmp(bd->items[0].name, "MyComp.cfc") == 0);
+        CHECK(bd->items[0].permissions == 32);
+        CHECK(bd->items[0].size == 96);
+        CHECK(bd->items[1].kind == 'D');
+        CHECK(strcmp(bd->items[1].name, "models1") == 0);
+        CHECK(bd->items[1].permissions == 16);
+        CHECK(bd->items[1].size == 0);
+        cfrds_browse_dir_free(bd);
+        cfrds_buffer_free(buf);
+    }
+
+    /* Test empty response */
+    {
+        cfrds_buffer *buf = NULL;
+        CHECK(cfrds_buffer_create(&buf) == true);
+        cfrds_browse_dir *bd = cfrds_buffer_to_browse_dir(buf);
+        CHECK(bd != NULL);
+        CHECK(bd->cnt == 0);
+        cfrds_browse_dir_free(bd);
+        cfrds_buffer_free(buf);
+    }
+
+    return PASS;
+}
+
 static int test_buffer_to_file_content(void)
 {
     /* Test valid parsing */
@@ -775,6 +811,7 @@ int main(void)
     RUN(test_null_sentinel);
     RUN(test_command_graphing_null_guards);
     RUN(test_sql_key_parsers);
+    RUN(test_buffer_to_browse_dir);
     RUN(test_buffer_to_file_content);
     RUN(test_sql_sqlstmnt_cnt_zero);
     RUN(test_overflow_checks);

@@ -325,7 +325,17 @@ cfrds_status cfrds_http_post(cfrds_server *server, const char *command, cfrds_bu
 
     if (response)
     {
-        *response = tmp_response; tmp_response = NULL;
+        cfrds_buffer *payload_buf = NULL;
+        if (!cfrds_buffer_create(&payload_buf)) {
+            cfrds_server_set_error(server, CFRDS_STATUS_MEMORY_ERROR, "cfrds_buffer_create failed for response payload");
+            return CFRDS_STATUS_MEMORY_ERROR;
+        }
+        if (response_size > 0 && !cfrds_buffer_append_bytes(payload_buf, response_data, response_size)) {
+            cfrds_buffer_free(payload_buf);
+            cfrds_server_set_error(server, CFRDS_STATUS_MEMORY_ERROR, "cfrds_buffer_append_bytes failed for response payload");
+            return CFRDS_STATUS_MEMORY_ERROR;
+        }
+        *response = payload_buf;
     }
 
     return CFRDS_STATUS_OK;

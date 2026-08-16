@@ -184,12 +184,6 @@ cfrds_status cfrds_command_file_get_root_dir(cfrds_server *server, cfrds_str *ou
         const char *response_data = cfrds_buffer_data(response);
         size_t response_size = cfrds_buffer_data_size(response);
 
-        if (!cfrds_buffer_parse_number(&response_data, &response_size, &server->error_code))
-        {
-            server->error_code = -1;
-            return CFRDS_STATUS_RESPONSE_ERROR;
-        }
-
         if (!cfrds_buffer_parse_string(&response_data, &response_size, out))
         {
             server->error_code = -1;

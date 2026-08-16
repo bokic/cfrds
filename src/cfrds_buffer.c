@@ -517,42 +517,20 @@ static bool cfrds_buffer_parse_string_list_item(const char **data, size_t *remai
 
 cfrds_browse_dir *cfrds_buffer_to_browse_dir(cfrds_buffer *buffer)
 {
-    cfrds_browse_dir *ret = NULL;
-
-    cfrds_browse_dir_defer(tmp);
-    size_t malloc_size = 0;
-    int64_t total = 0;
-    int64_t cnt = 0;
-
     if (buffer == NULL)
         return NULL;
 
     const char *data = (const char *)buffer->data;
     size_t size = buffer->size;
 
-    if (!cfrds_buffer_parse_number(&data, &size, &total))
-        return NULL;
-
-    if ((total < 0)||(total != 0 && total % 5))
-        return NULL;
-
-    cnt = total / 5;
-
-    if (cnt < 0 || cnt > CFRDS_MAX_PARSER_ITEMS)
-        return NULL;
-
-    size_t ucnt = (size_t)cnt;
-    malloc_size = offsetof(cfrds_browse_dir, items) + ucnt * sizeof(cfrds_browse_dir_item);
-
-    tmp = malloc(malloc_size);
+    size_t capacity = 16;
+    cfrds_browse_dir *tmp = malloc(offsetof(cfrds_browse_dir, items) + capacity * sizeof(cfrds_browse_dir_item));
     if (tmp == NULL)
         return NULL;
 
-    explicit_bzero(tmp, malloc_size);
+    tmp->cnt = 0;
 
-    tmp->cnt = ucnt;
-
-    for(int64_t c = 0; c < cnt; c++)
+    while (size > 0)
     {
         cfrds_str_defer(str_kind);
         cfrds_str_defer(filename);
@@ -566,22 +544,21 @@ cfrds_browse_dir *cfrds_buffer_to_browse_dir(cfrds_buffer *buffer)
         uint64_t modified = UINT64_MAX;
 
         if (!cfrds_buffer_parse_string(&data, &size, &str_kind))
-            return NULL;
+            goto error;
         if (!cfrds_buffer_parse_string(&data, &size, &filename))
-            return NULL;
+            goto error;
         if (!cfrds_buffer_parse_string(&data, &size, &str_permissions))
-            return NULL;
+            goto error;
         if (!cfrds_buffer_parse_string(&data, &size, &str_filesize))
-            return NULL;
+            goto error;
         if (!cfrds_buffer_parse_string(&data, &size, &str_timestamp))
-            return NULL;
+            goto error;
 
         if (str_kind)
         {
-            if (strcmp(str_kind, "F:") == 0)
-              file_type = 'F';
-            else
-              if (strcmp(str_kind, "D:") == 0)
+            if (strcmp(str_kind, "F:") == 0 || strcmp(str_kind, "F") == 0)
+                file_type = 'F';
+            else if (strcmp(str_kind, "D:") == 0 || strcmp(str_kind, "D") == 0)
                 file_type = 'D';
         }
 
@@ -590,7 +567,7 @@ cfrds_browse_dir *cfrds_buffer_to_browse_dir(cfrds_buffer *buffer)
             char *endptr = NULL;
             permissions = strtol(str_permissions, &endptr, 10);
             if (endptr == str_permissions || *endptr != '\0')
-                return NULL;
+                goto error;
         }
 
         if (str_filesize)
@@ -598,39 +575,60 @@ cfrds_browse_dir *cfrds_buffer_to_browse_dir(cfrds_buffer *buffer)
             char *endptr = NULL;
             filesize = strtol(str_filesize, &endptr, 10);
             if (endptr == str_filesize || *endptr != '\0')
-                return NULL;
+                goto error;
         }
 
         if (str_timestamp)
         {
             char *endptr = NULL;
-            uint32_t num1 = (uint32_t)strtoul(str_timestamp, &endptr, 10);
+            int64_t n1 = strtoll(str_timestamp, &endptr, 10);
             if (endptr == str_timestamp || *endptr != ',')
-                return NULL;
+                goto error;
 
             const char *str_num2 = endptr + 1;
             endptr = NULL;
-            uint32_t num2 = (uint32_t)strtoul(str_num2, &endptr, 10);
+            int64_t n2 = strtoll(str_num2, &endptr, 10);
             if (endptr == str_num2 || *endptr != '\0')
-                return NULL;
+                goto error;
 
-            modified = num1 + ((uint64_t)num2 << 32);
+            uint32_t num1 = (uint32_t)(uint64_t)n1;
+            uint64_t num2 = (uint64_t)n2;
+
+            modified = num1 + (num2 << 32);
             modified /= 10000;
             modified -= 11644473600000L;
         }
 
-        if(((file_type != 'D')&&(file_type != 'F'))||(!filename)||(permissions < 0)||(permissions > 0xff)||(filesize < 0))
-            return NULL;
+        if (((file_type != 'D') && (file_type != 'F')) || (!filename) || (permissions < 0) || (permissions > 0xff) || (filesize < 0))
+            goto error;
 
-        tmp->items[c].kind = file_type;
-        tmp->items[c].name = filename; filename = NULL;
-        tmp->items[c].permissions = (uint8_t)permissions;
-        tmp->items[c].size = (size_t)filesize;
-        tmp->items[c].modified = modified;
+        if (tmp->cnt >= capacity)
+        {
+            size_t new_capacity = capacity * 2;
+            cfrds_browse_dir *new_tmp = realloc(tmp, offsetof(cfrds_browse_dir, items) + new_capacity * sizeof(cfrds_browse_dir_item));
+            if (new_tmp == NULL)
+                goto error;
+            tmp = new_tmp;
+            capacity = new_capacity;
+        }
+
+        tmp->items[tmp->cnt].kind = file_type;
+        tmp->items[tmp->cnt].name = filename;
+        filename = NULL;
+        tmp->items[tmp->cnt].permissions = (uint8_t)permissions;
+        tmp->items[tmp->cnt].size = (size_t)filesize;
+        tmp->items[tmp->cnt].modified = modified;
+        tmp->cnt++;
+
+        if (tmp->cnt > CFRDS_MAX_PARSER_ITEMS)
+            goto error;
     }
 
-    ret = tmp; tmp = NULL;
-    return ret;
+    return tmp;
+
+error:
+    cfrds_browse_dir_free(tmp);
+    return NULL;
 }
 
 cfrds_file_content *cfrds_buffer_to_file_content(cfrds_buffer *buffer)

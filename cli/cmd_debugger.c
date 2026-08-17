@@ -107,8 +107,8 @@ int handle_cmd_debugger(cfrds_server *server, const char *command, int argc, cha
         printf("scopes_count: %d\n", scopes_count);
         for(int c = 0; c < scopes_count; c++)
         {
-            const char *scopes_item = cfrds_debugger_event_get_scopes_item(event, (size_t)c);
-            printf("scopes_item: %s\n", scopes_item ? scopes_item : "(null)");
+            const char *scopes_item_name = cfrds_debugger_event_get_scopes_item_name(event, (size_t)c);
+            printf("scopes_item_name: %s\n", scopes_item_name ? scopes_item_name : "(null)");
         }
 
         int threads_count = cfrds_debugger_event_get_threads_count(event);

@@ -4,6 +4,9 @@
 #include <stdint.h>
 #include <stddef.h>
 
+
+typedef struct WDDX_NODE WDDX_NODE;
+
 /**
  * @defgroup version Version Macros
  * @brief Compile-time version information, injected by CMake from the git tag (X.Y.Z).
@@ -1353,12 +1356,20 @@ EXPORT_CFRDS int cfrds_debugger_event_breakpoint_set_get_act_line(const cfrds_de
 EXPORT_CFRDS int cfrds_debugger_event_get_scopes_count(const cfrds_debugger_event *event);
 
 /**
- * @brief Retrieves serialized scope variable detail item.
+ * @brief Retrieves serialized scope variable name.
  * @param event Debugger event.
  * @param ndx 0-based index.
- * @return Detail string.
+ * @return name string.
  */
-EXPORT_CFRDS const char *cfrds_debugger_event_get_scopes_item(const cfrds_debugger_event *event, size_t ndx);
+EXPORT_CFRDS const char *cfrds_debugger_event_get_scopes_item_name(const cfrds_debugger_event *event, size_t ndx);
+
+/**
+ * @brief Retrieves serialized scope variable value.
+ * @param event Debugger event.
+ * @param ndx 0-based index.
+ * @return value WDDX_NODE.
+ */
+EXPORT_CFRDS const WDDX_NODE *cfrds_debugger_event_get_scopes_item_value(const cfrds_debugger_event *event, size_t ndx);
 
 /**
  * @brief Returns execution thread counts inside debugger event.

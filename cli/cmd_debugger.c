@@ -44,6 +44,14 @@ int handle_cmd_debugger(cfrds_server *server, const char *command, int argc, cha
             return EXIT_FAILURE;
         }
 
+        cfrds_debugger_event_defer(event1);
+        res = cfrds_command_debugger_all_fetch_flags_enabled(server, debugger_session_id, true, true, true, true, true, &event1);
+        if (res != CFRDS_STATUS_OK)
+        {
+            fprintf(stderr, "cfrds_command_debugger_all_fetch_flags_enabled FAILED with error: %s\n", cfrds_server_get_error(server));
+            return EXIT_FAILURE;
+        }
+
         cfrds_debugger_event_defer(event);
         res = cfrds_command_debugger_all_fetch_flags_enabled(server, debugger_session_id, true, true, true, true, true, &event);
         if (res != CFRDS_STATUS_OK)
@@ -69,21 +77,24 @@ int handle_cmd_debugger(cfrds_server *server, const char *command, int argc, cha
         }
 
         const char *thread_name = cfrds_debugger_event_breakpoint_get_thread_name(event);
-        if (thread_name == NULL) thread_name = "main";
+        if (thread_name == NULL)
+        {
+            goto test_debugger_exit;
+        }
         printf("thread_name: %s\n", thread_name);
 
         res = cfrds_command_debugger_watch_expression(server, debugger_session_id, thread_name, "arrayNew(1)");
         if (res != CFRDS_STATUS_OK)
         {
             fprintf(stderr, "cfrds_command_debugger_watch_expression FAILED with error: %s\n", cfrds_server_get_error(server));
-            return EXIT_FAILURE;
+            goto test_debugger_exit;
         }
 
         res = cfrds_command_debugger_set_variable(server, debugger_session_id, thread_name, "VARIABLES.A", "200");
         if (res != CFRDS_STATUS_OK)
         {
             fprintf(stderr, "cfrds_command_debugger_set_variable FAILED with error: %s\n", cfrds_server_get_error(server));
-            return EXIT_FAILURE;
+            goto test_debugger_exit;
         }
 
         const char *source = cfrds_debugger_event_breakpoint_get_source(event);
@@ -120,44 +131,67 @@ int handle_cmd_debugger(cfrds_server *server, const char *command, int argc, cha
         if (res != CFRDS_STATUS_OK)
         {
             fprintf(stderr, "cfrds_command_debugger_step_over FAILED with error: %s\n", cfrds_server_get_error(server));
-            return EXIT_FAILURE;
+            goto test_debugger_exit;
         }
 
         res = cfrds_command_debugger_step_in(server, debugger_session_id, thread_name);
         if (res != CFRDS_STATUS_OK)
         {
             fprintf(stderr, "cfrds_command_debugger_step_in FAILED with error: %s\n", cfrds_server_get_error(server));
-            return EXIT_FAILURE;
+            goto test_debugger_exit;
         }
 
         res = cfrds_command_debugger_step_out(server, debugger_session_id, thread_name);
         if (res != CFRDS_STATUS_OK)
         {
             fprintf(stderr, "cfrds_command_debugger_step_out FAILED with error: %s\n", cfrds_server_get_error(server));
-            return EXIT_FAILURE;
-        }
-
-        res = cfrds_command_debugger_continue(server, debugger_session_id, thread_name);
-        if (res != CFRDS_STATUS_OK)
-        {
-            fprintf(stderr, "cfrds_command_debugger_continue FAILED with error: %s\n", cfrds_server_get_error(server));
-            return EXIT_FAILURE;
+            goto test_debugger_exit;
         }
 
         res = cfrds_command_debugger_breakpoint(server, debugger_session_id, "/app/test.cfm", 3, false);
         if (res != CFRDS_STATUS_OK)
         {
             fprintf(stderr, "cfrds_command_debugger_breakpoint FAILED with error: %s\n", cfrds_server_get_error(server));
-            return EXIT_FAILURE;
+            goto test_debugger_exit;
+        }
+
+        res = cfrds_command_debugger_clear_all_breakpoints(server, debugger_session_id);
+        if (res != CFRDS_STATUS_OK)
+        {
+            fprintf(stderr, "cfrds_command_debugger_clear_all_breakpoints FAILED with error: %s\n", cfrds_server_get_error(server));
+            goto test_debugger_exit;
+        }
+
+        res = cfrds_command_debugger_continue(server, debugger_session_id, thread_name);
+        thread_name = NULL;
+        if (res != CFRDS_STATUS_OK)
+        {
+            fprintf(stderr, "cfrds_command_debugger_continue FAILED with error: %s\n", cfrds_server_get_error(server));
+            goto test_debugger_exit;
         }
 
         res = cfrds_command_debugger_stop(server, debugger_session_id);
         if (res != CFRDS_STATUS_OK)
         {
             fprintf(stderr, "cfrds_command_debugger_stop FAILED with error: %s\n", cfrds_server_get_error(server));
-            return EXIT_FAILURE;
+            goto test_debugger_exit;
         }
+
         return EXIT_SUCCESS;
+
+test_debugger_exit:
+        if (debugger_session_id)
+        {
+            if (thread_name)
+            {
+                cfrds_command_debugger_continue(server, debugger_session_id, thread_name);
+            }
+            cfrds_command_debugger_clear_all_breakpoints(server, debugger_session_id);
+            cfrds_command_debugger_stop(server, debugger_session_id);
+        }
+
+        return EXIT_FAILURE;
+
     } else if (strcmp(command, "step_in") == 0)
     {
         const char *session_id = argv[3];

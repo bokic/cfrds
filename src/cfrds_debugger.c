@@ -95,17 +95,50 @@ int cfrds_debugger_event_get_threads_count(const cfrds_debugger_event *event)
     return wddx_node_array_size(wddx_get_var(event, "0,THREADS"));
 }
 
-const char *cfrds_debugger_event_get_threads_item(const cfrds_debugger_event *event, size_t ndx)
+const char *cfrds_debugger_event_get_threads_item_name(const cfrds_debugger_event *event, size_t ndx)
 {
-    const char *ret = NULL;
+    char key[32];
+    int n;
 
     if (event == NULL)
         return NULL;
 
-    const WDDX_NODE *struct_node = wddx_get_var(event, "0,THREADS");
-    wddx_node_struct_at(struct_node, ndx, &ret);
+    n = snprintf(key, sizeof(key), "0,THREADS,%zu,0", ndx);
+    if (n < 0)
+        return NULL;
 
-    return ret;
+    const WDDX_NODE *node = wddx_get_var(event, key);
+
+    if (node == NULL)
+        return NULL;
+
+    if (wddx_node_type(node) != WDDX_STRING)
+        return NULL;
+
+    return wddx_node_string(node);
+}
+
+const char *cfrds_debugger_event_get_threads_item_state(const cfrds_debugger_event *event, size_t ndx)
+{
+    char key[32];
+    int n;
+
+    if (event == NULL)
+        return NULL;
+
+    n = snprintf(key, sizeof(key), "0,THREADS,%zu,1", ndx);
+    if (n < 0)
+        return NULL;
+
+    const WDDX_NODE *node = wddx_get_var(event, key);
+
+    if (node == NULL)
+        return NULL;
+
+    if (wddx_node_type(node) != WDDX_STRING)
+        return NULL;
+
+    return wddx_node_string(node);
 }
 
 int cfrds_debugger_event_get_watch_count(const cfrds_debugger_event *event)
@@ -118,9 +151,18 @@ const char *cfrds_debugger_event_get_watch_item(const cfrds_debugger_event *even
     if (event == NULL)
         return NULL;
 
-    const WDDX_NODE *array_node = wddx_get_var(event, "0,WATCH");
-    const WDDX_NODE *item = wddx_node_array_at(array_node, ndx);
+    const WDDX_NODE *node = wddx_get_var(event, "0,WATCH");
+    if (node == NULL)
+        return NULL;
 
+    if (wddx_node_type(node) == WDDX_STRUCT)
+    {
+        const char *ret = NULL;
+        wddx_node_struct_at(node, ndx, &ret);
+        return ret;
+    }
+
+    const WDDX_NODE *item = wddx_node_array_at(node, ndx);
     if (wddx_node_type(item) != WDDX_STRING)
         return NULL;
 

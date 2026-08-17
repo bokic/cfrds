@@ -1418,7 +1418,6 @@ cfrds_debugger_event *cfrds_buffer_to_debugger_event(cfrds_buffer *buffer)
 
     const char *data = (const char *)buffer->data;
     size_t size = buffer->size;
-
     cfrds_buffer_parse_number(&data, &size, &rows);
     if (rows != 1)
         return NULL;

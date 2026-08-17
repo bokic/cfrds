@@ -1368,12 +1368,20 @@ EXPORT_CFRDS const char *cfrds_debugger_event_get_scopes_item(const cfrds_debugg
 EXPORT_CFRDS int cfrds_debugger_event_get_threads_count(const cfrds_debugger_event *event);
 
 /**
- * @brief Retrieves execution thread identifier name string at an index.
+ * @brief Retrieves execution thread name at an index.
  * @param event Debugger event.
  * @param ndx 0-based index.
  * @return Thread name string.
  */
-EXPORT_CFRDS const char *cfrds_debugger_event_get_threads_item(const cfrds_debugger_event *event, size_t ndx);
+EXPORT_CFRDS const char *cfrds_debugger_event_get_threads_item_name(const cfrds_debugger_event *event, size_t ndx);
+
+/**
+ * @brief Retrieves execution thread state at an index.
+ * @param event Debugger event.
+ * @param ndx 0-based index.
+ * @return Thread state string.
+ */
+EXPORT_CFRDS const char *cfrds_debugger_event_get_threads_item_state(const cfrds_debugger_event *event, size_t ndx);
 
 /**
  * @brief Returns counts of watch variables tracked in event context.

@@ -115,8 +115,9 @@ int handle_cmd_debugger(cfrds_server *server, const char *command, int argc, cha
         printf("threads_count: %d\n", threads_count);
         for(int c = 0; c < threads_count; c++)
         {
-            const char *threads_item = cfrds_debugger_event_get_threads_item(event, (size_t)c);
-            printf("threads_item: %s\n", threads_item ? threads_item : "(null)");
+            const char *threads_name = cfrds_debugger_event_get_threads_item_name(event, (size_t)c);
+            const char *threads_state = cfrds_debugger_event_get_threads_item_state(event, (size_t)c);
+            printf("threads: name: %s, state: %s\n", threads_name ? threads_name : "(null)", threads_state ? threads_state : "(null)");
         }
 
         int watch_count = cfrds_debugger_event_get_watch_count(event);

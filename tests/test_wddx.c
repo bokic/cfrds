@@ -474,6 +474,8 @@ static int test_debugger_event_getters(void)
               "<var name=\"SCOPES\"><array length=\"2\"><string>SCOPE_A</string><string>SCOPE_B</string></array></var>"
               "<var name=\"THREADS\"><array length=\"1\"><string>THREAD_1</string></array></var>"
               "<var name=\"WATCH\"><array length=\"1\"><string>EXPR_1</string></array></var>"
+              "<var name=\"CF_TRACE\"><array length=\"1\"><string>CF_TRACE_1</string></array></var>"
+              "<var name=\"JAVA_TRACE\"><array length=\"1\"><string>JAVA_TRACE_1</string></array></var>"
             "</struct>"
           "</array>"
         "</data>"
@@ -503,6 +505,18 @@ static int test_debugger_event_getters(void)
     CHECK(cfrds_debugger_event_get_watch_item(event, 0) != NULL);
     CHECK(strcmp(cfrds_debugger_event_get_watch_item(event, 0), "EXPR_1") == 0);
     CHECK(cfrds_debugger_event_get_watch_item(event, 1) == NULL);
+
+    /* Test CF_TRACE */
+    CHECK(cfrds_debugger_event_get_cf_trace_count(event) == 1);
+    CHECK(cfrds_debugger_event_get_cf_trace_item(event, 0) != NULL);
+    CHECK(strcmp(cfrds_debugger_event_get_cf_trace_item(event, 0), "CF_TRACE_1") == 0);
+    CHECK(cfrds_debugger_event_get_cf_trace_item(event, 1) == NULL);
+
+    /* Test JAVA_TRACE */
+    CHECK(cfrds_debugger_event_get_java_trace_count(event) == 1);
+    CHECK(cfrds_debugger_event_get_java_trace_item(event, 0) != NULL);
+    CHECK(strcmp(cfrds_debugger_event_get_java_trace_item(event, 0), "JAVA_TRACE_1") == 0);
+    CHECK(cfrds_debugger_event_get_java_trace_item(event, 1) == NULL);
 
     return PASS;
 }

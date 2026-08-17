@@ -79,16 +79,15 @@ int cfrds_debugger_event_get_scopes_count(const cfrds_debugger_event *event)
 
 const char *cfrds_debugger_event_get_scopes_item(const cfrds_debugger_event *event, size_t ndx)
 {
+    const char *ret = NULL;
+
     if (event == NULL)
         return NULL;
 
-    const WDDX_NODE *array_node = wddx_get_var(event, "0,SCOPES");
-    const WDDX_NODE *item = wddx_node_array_at(array_node, ndx);
+    const WDDX_NODE *struct_node = wddx_get_var(event, "0,SCOPES");
+    wddx_node_struct_at(struct_node, ndx, &ret);
 
-    if (wddx_node_type(item) != WDDX_STRING)
-        return NULL;
-
-    return wddx_node_string(item);
+    return ret;
 }
 
 int cfrds_debugger_event_get_threads_count(const cfrds_debugger_event *event)
@@ -98,16 +97,15 @@ int cfrds_debugger_event_get_threads_count(const cfrds_debugger_event *event)
 
 const char *cfrds_debugger_event_get_threads_item(const cfrds_debugger_event *event, size_t ndx)
 {
+    const char *ret = NULL;
+
     if (event == NULL)
         return NULL;
 
-    const WDDX_NODE *array_node = wddx_get_var(event, "0,THREADS");
-    const WDDX_NODE *item = wddx_node_array_at(array_node, ndx);
+    const WDDX_NODE *struct_node = wddx_get_var(event, "0,THREADS");
+    wddx_node_struct_at(struct_node, ndx, &ret);
 
-    if (wddx_node_type(item) != WDDX_STRING)
-        return NULL;
-
-    return wddx_node_string(item);
+    return ret;
 }
 
 int cfrds_debugger_event_get_watch_count(const cfrds_debugger_event *event)

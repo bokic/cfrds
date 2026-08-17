@@ -12,3 +12,8 @@ target_include_directories(test_wddx PRIVATE ../include ${CMAKE_BINARY_DIR}/incl
 target_link_libraries(test_wddx PRIVATE libcfrds cmocka LibXml2::LibXml2 json-c::json-c)
 add_test(NAME test_wddx COMMAND test_wddx)
 
+add_executable(test_cpp test_cpp.cpp)
+target_include_directories(test_cpp PRIVATE ../include ${CMAKE_BINARY_DIR}/include)
+target_link_libraries(test_cpp PRIVATE libcfrds)
+add_test(NAME test_cpp COMMAND test_cpp)
+

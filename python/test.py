@@ -269,33 +269,81 @@ with patch("http.client.HTTPConnection", return_value=mock_conn):
             "source": "/app/index.cfm",
             "line": 42,
             "thread_name": "my-thread",
-            "SCOPES": ["Variables", "Session"],
-            "THREADS": ["my-thread", "other-thread"],
-            "WATCH": ["expr1", "expr2"],
+            "SCOPES": {"VARIABLES": {"A": "10"}, "SESSION": {"ID": "123"}},
+            "THREADS": [["my-thread", "RUNNING"], ["other-thread", "WAITING"]],
+            "WATCH": {"expr1": "100", "expr2": "200"},
             "CF_TRACE": ["trace1", "trace2"],
             "JAVA_TRACE": ["jtrace1", "jtrace2"]
         }
     )
 
     assert mock_event.event_type == cfrds.DebuggerType.CFRDS_DEBUGGER_EVENT_TYPE_BREAKPOINT, "event_type mismatch"
+    assert mock_event.get_type() == cfrds.DebuggerType.CFRDS_DEBUGGER_EVENT_TYPE_BREAKPOINT, "get_type mismatch"
+    assert cfrds.cfrds_debugger_event_get_type(mock_event) == cfrds.DebuggerType.CFRDS_DEBUGGER_EVENT_TYPE_BREAKPOINT, "cfrds_debugger_event_get_type mismatch"
+
     assert mock_event["source"] == "/app/index.cfm", "source mismatch"
+    assert mock_event.get_source() == "/app/index.cfm", "get_source mismatch"
+    assert cfrds.cfrds_debugger_event_breakpoint_get_source(mock_event) == "/app/index.cfm", "cfrds_debugger_event_breakpoint_get_source mismatch"
+
     assert mock_event["line"] == 42, "line mismatch"
+    assert mock_event.get_line() == 42, "get_line mismatch"
+
     assert mock_event["thread_name"] == "my-thread", "thread_name mismatch"
+    assert mock_event.get_thread_name() == "my-thread", "get_thread_name mismatch"
 
     scopes = mock_event["SCOPES"]
-    assert isinstance(scopes, list) and scopes[0] == "Variables", "SCOPES mismatch"
+    assert isinstance(scopes, dict) and "VARIABLES" in scopes, "SCOPES mismatch"
+    assert mock_event.get_scopes_count() == 2, "scopes count mismatch"
+    assert mock_event.get_scopes_item_name(0) == "VARIABLES", "scopes item name 0 mismatch"
+    assert mock_event.get_scopes_item_name(1) == "SESSION", "scopes item name 1 mismatch"
+    assert mock_event.get_scopes_item_name(2) is None, "scopes item name 2 mismatch"
+    assert mock_event.get_scopes_item_value(0) == {"A": "10"}, "scopes item value 0 mismatch"
+    assert cfrds.cfrds_debugger_event_get_scopes_item_name(mock_event, 0) == "VARIABLES", "cfrds_debugger_event_get_scopes_item_name mismatch"
 
     threads = mock_event["THREADS"]
-    assert isinstance(threads, list) and len(threads) == 2 and threads[0] == "my-thread", "THREADS mismatch"
+    assert isinstance(threads, list) and len(threads) == 2, "THREADS mismatch"
+    assert mock_event.get_threads_count() == 2, "threads count mismatch"
+    assert mock_event.get_threads_item_name(0) == "my-thread", "threads item name 0 mismatch"
+    assert mock_event.get_threads_item_state(0) == "RUNNING", "threads item state 0 mismatch"
+    assert mock_event.get_threads_item_name(1) == "other-thread", "threads item name 1 mismatch"
+    assert mock_event.get_threads_item_state(1) == "WAITING", "threads item state 1 mismatch"
+    assert cfrds.cfrds_debugger_event_get_threads_item_name(mock_event, 0) == "my-thread", "cfrds_debugger_event_get_threads_item_name mismatch"
+    assert cfrds.cfrds_debugger_event_get_threads_item_state(mock_event, 0) == "RUNNING", "cfrds_debugger_event_get_threads_item_state mismatch"
 
     watch = mock_event["WATCH"]
-    assert isinstance(watch, list) and len(watch) == 2 and watch[0] == "expr1", "WATCH mismatch"
+    assert isinstance(watch, dict) and len(watch) == 2, "WATCH mismatch"
+    assert mock_event.get_watch_count() == 2, "watch count mismatch"
+    assert mock_event.get_watch_item(0) == "expr1", "watch item 0 mismatch"
+    assert mock_event.get_watch_item(1) == "expr2", "watch item 1 mismatch"
+    assert cfrds.cfrds_debugger_event_get_watch_item(mock_event, 0) == "expr1", "cfrds_debugger_event_get_watch_item mismatch"
 
     cf_trace = mock_event["CF_TRACE"]
     assert isinstance(cf_trace, list) and len(cf_trace) == 2 and cf_trace[0] == "trace1", "CF_TRACE mismatch"
+    assert mock_event.get_cf_trace_count() == 2, "cf_trace count mismatch"
+    assert mock_event.get_cf_trace_item(0) == "trace1", "cf_trace item 0 mismatch"
+    assert cfrds.cfrds_debugger_event_get_cf_trace_item(mock_event, 0) == "trace1", "cfrds_debugger_event_get_cf_trace_item mismatch"
 
     java_trace = mock_event["JAVA_TRACE"]
     assert isinstance(java_trace, list) and len(java_trace) == 2 and java_trace[0] == "jtrace1", "JAVA_TRACE mismatch"
+    assert mock_event.get_java_trace_count() == 2, "java_trace count mismatch"
+    assert mock_event.get_java_trace_item(0) == "jtrace1", "java_trace item 0 mismatch"
+    assert cfrds.cfrds_debugger_event_get_java_trace_item(mock_event, 0) == "jtrace1", "cfrds_debugger_event_get_java_trace_item mismatch"
+
+    # Also test array formats for backwards compatibility
+    mock_array_event = cfrds.DebuggerEvent(
+        cfrds.DebuggerType.CFRDS_DEBUGGER_EVENT_TYPE_BREAKPOINT,
+        {
+            "SCOPES": ["Variables", "Session"],
+            "THREADS": ["my-thread", "other-thread"],
+            "WATCH": ["expr1", "expr2"],
+        }
+    )
+    assert mock_array_event.get_scopes_count() == 2, "array scopes count mismatch"
+    assert mock_array_event.get_scopes_item_name(0) == "Variables", "array scopes item name 0 mismatch"
+    assert mock_array_event.get_threads_count() == 2, "array threads count mismatch"
+    assert mock_array_event.get_threads_item_name(0) == "my-thread", "array threads item name 0 mismatch"
+    assert mock_array_event.get_watch_count() == 2, "array watch count mismatch"
+    assert mock_array_event.get_watch_item(0) == "expr1", "array watch item 0 mismatch"
 
     print("Offline debugger event accessors tests passed!")
 

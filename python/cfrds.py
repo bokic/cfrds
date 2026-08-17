@@ -600,8 +600,28 @@ class DebuggerEvent:
         keys = ["event_type", "data"]
         return getattr(self, keys[key])
 
+    def get(self, key: str, default: Any = None) -> Any:
+        if key in ("event_type", "type"):
+            return self.event_type
+        if key == "data":
+            return self.data
+        if self.data and key in self.data:
+            return self.data[key]
+        return default
+
+    def __contains__(self, key: Any) -> bool:
+        if key in ("event_type", "type", "data"):
+            return True
+        return self.data is not None and key in self.data
+
     def keys(self) -> List[str]:
         return ["event_type", "type", "data"]
+
+    def values(self) -> List[Any]:
+        return [self.event_type, self.event_type, self.data]
+
+    def items(self) -> List[Tuple[str, Any]]:
+        return [("event_type", self.event_type), ("type", self.event_type), ("data", self.data)]
 
     def __iter__(self) -> Iterator[str]:
         return iter(self.keys())
@@ -615,6 +635,309 @@ class DebuggerEvent:
         if isinstance(other, dict):
             return self.to_dict() == other
         return False
+
+    def get_type(self) -> int:
+        return self.event_type
+
+    def get_source(self) -> Optional[str]:
+        return cfrds_debugger_event_breakpoint_get_source(self)
+
+    def get_line(self) -> int:
+        return cfrds_debugger_event_breakpoint_get_line(self)
+
+    def get_scopes(self) -> Any:
+        return cfrds_debugger_event_breakpoint_get_scopes(self)
+
+    def get_thread_name(self) -> Optional[str]:
+        return cfrds_debugger_event_breakpoint_get_thread_name(self)
+
+    def get_pathname(self) -> Optional[str]:
+        return cfrds_debugger_event_breakpoint_set_get_pathname(self)
+
+    def get_req_line(self) -> int:
+        return cfrds_debugger_event_breakpoint_set_get_req_line(self)
+
+    def get_act_line(self) -> int:
+        return cfrds_debugger_event_breakpoint_set_get_act_line(self)
+
+    def get_scopes_count(self) -> int:
+        return cfrds_debugger_event_get_scopes_count(self)
+
+    def get_scopes_item_name(self, ndx: int) -> Optional[str]:
+        return cfrds_debugger_event_get_scopes_item_name(self, ndx)
+
+    def get_scopes_item_value(self, ndx: int) -> Any:
+        return cfrds_debugger_event_get_scopes_item_value(self, ndx)
+
+    def get_scopes_item(self, ndx: int) -> Optional[str]:
+        return cfrds_debugger_event_get_scopes_item(self, ndx)
+
+    def get_threads_count(self) -> int:
+        return cfrds_debugger_event_get_threads_count(self)
+
+    def get_threads_item_name(self, ndx: int) -> Optional[str]:
+        return cfrds_debugger_event_get_threads_item_name(self, ndx)
+
+    def get_threads_item_state(self, ndx: int) -> Optional[str]:
+        return cfrds_debugger_event_get_threads_item_state(self, ndx)
+
+    def get_threads_item(self, ndx: int) -> Optional[str]:
+        return cfrds_debugger_event_get_threads_item(self, ndx)
+
+    def get_watch_count(self) -> int:
+        return cfrds_debugger_event_get_watch_count(self)
+
+    def get_watch_item(self, ndx: int) -> Optional[str]:
+        return cfrds_debugger_event_get_watch_item(self, ndx)
+
+    def get_cf_trace_count(self) -> int:
+        return cfrds_debugger_event_get_cf_trace_count(self)
+
+    def get_cf_trace_item(self, ndx: int) -> Optional[str]:
+        return cfrds_debugger_event_get_cf_trace_item(self, ndx)
+
+    def get_java_trace_count(self) -> int:
+        return cfrds_debugger_event_get_java_trace_count(self)
+
+    def get_java_trace_item(self, ndx: int) -> Optional[str]:
+        return cfrds_debugger_event_get_java_trace_item(self, ndx)
+
+
+def _extract_event_data(evt: Any) -> Optional[Dict[str, Any]]:
+    if evt is None:
+        return None
+    if isinstance(evt, DebuggerEvent):
+        return evt.data
+    if isinstance(evt, dict):
+        return evt.get("data", evt) if "data" in evt and isinstance(evt["data"], dict) else evt
+    return None
+
+
+def _extract_event_type(evt: Any) -> int:
+    if evt is None:
+        return CFRDS_DEBUGGER_EVENT_UNKNOWN
+    if isinstance(evt, DebuggerEvent):
+        return evt.event_type
+    if isinstance(evt, dict):
+        return evt.get("type", evt.get("event_type", CFRDS_DEBUGGER_EVENT_UNKNOWN))
+    return CFRDS_DEBUGGER_EVENT_UNKNOWN
+
+
+def cfrds_debugger_event_get_type(evt: Any) -> int:
+    return _extract_event_type(evt)
+
+
+def cfrds_debugger_event_breakpoint_get_source(evt: Any) -> Optional[str]:
+    data = _extract_event_data(evt)
+    if data and isinstance(data.get("source"), str):
+        return data["source"]
+    return None
+
+
+def cfrds_debugger_event_breakpoint_get_line(evt: Any) -> int:
+    data = _extract_event_data(evt)
+    if data and isinstance(data.get("line"), (int, float)):
+        return int(data["line"])
+    return 0
+
+
+def cfrds_debugger_event_breakpoint_get_scopes(evt: Any) -> Any:
+    data = _extract_event_data(evt)
+    if data:
+        return data.get("SCOPES")
+    return None
+
+
+def cfrds_debugger_event_breakpoint_get_thread_name(evt: Any) -> Optional[str]:
+    data = _extract_event_data(evt)
+    if data and isinstance(data.get("thread_name"), str):
+        return data["thread_name"]
+    return None
+
+
+def cfrds_debugger_event_breakpoint_set_get_pathname(evt: Any) -> Optional[str]:
+    data = _extract_event_data(evt)
+    if data and isinstance(data.get("pathname"), str):
+        return data["pathname"]
+    return None
+
+
+def cfrds_debugger_event_breakpoint_set_get_req_line(evt: Any) -> int:
+    data = _extract_event_data(evt)
+    if data and isinstance(data.get("req_line"), (int, float)):
+        return int(data["req_line"])
+    return 0
+
+
+def cfrds_debugger_event_breakpoint_set_get_act_line(evt: Any) -> int:
+    data = _extract_event_data(evt)
+    if data and isinstance(data.get("act_line"), (int, float)):
+        return int(data["act_line"])
+    return 0
+
+
+def cfrds_debugger_event_get_scopes_count(evt: Any) -> int:
+    data = _extract_event_data(evt)
+    if data and "SCOPES" in data:
+        scopes = data["SCOPES"]
+        if isinstance(scopes, (list, dict)):
+            return len(scopes)
+    return 0
+
+
+def cfrds_debugger_event_get_scopes_item_name(evt: Any, ndx: int) -> Optional[str]:
+    data = _extract_event_data(evt)
+    if data and "SCOPES" in data:
+        scopes = data["SCOPES"]
+        if isinstance(scopes, list):
+            if 0 <= ndx < len(scopes):
+                item = scopes[ndx]
+                if isinstance(item, str):
+                    return item
+                if isinstance(item, dict) and len(item) > 0:
+                    return list(item.keys())[0]
+            return None
+        if isinstance(scopes, dict):
+            keys = list(scopes.keys())
+            if 0 <= ndx < len(keys):
+                return keys[ndx]
+    return None
+
+
+def cfrds_debugger_event_get_scopes_item_value(evt: Any, ndx: int) -> Any:
+    data = _extract_event_data(evt)
+    if data and "SCOPES" in data:
+        scopes = data["SCOPES"]
+        if isinstance(scopes, list):
+            if 0 <= ndx < len(scopes):
+                item = scopes[ndx]
+                if isinstance(item, dict) and len(item) > 0:
+                    return list(item.values())[0]
+                return item
+            return None
+        if isinstance(scopes, dict):
+            values = list(scopes.values())
+            if 0 <= ndx < len(values):
+                return values[ndx]
+    return None
+
+
+def cfrds_debugger_event_get_scopes_item(evt: Any, ndx: int) -> Optional[str]:
+    return cfrds_debugger_event_get_scopes_item_name(evt, ndx)
+
+
+def cfrds_debugger_event_get_threads_count(evt: Any) -> int:
+    data = _extract_event_data(evt)
+    if data and "THREADS" in data:
+        threads = data["THREADS"]
+        if isinstance(threads, (list, dict)):
+            return len(threads)
+    return 0
+
+
+def cfrds_debugger_event_get_threads_item_name(evt: Any, ndx: int) -> Optional[str]:
+    data = _extract_event_data(evt)
+    if data and "THREADS" in data:
+        threads = data["THREADS"]
+        if isinstance(threads, list):
+            if 0 <= ndx < len(threads):
+                item = threads[ndx]
+                if isinstance(item, (list, tuple)) and len(item) > 0:
+                    return str(item[0]) if item[0] is not None else None
+                if isinstance(item, str):
+                    return item
+                if isinstance(item, dict):
+                    return item.get("name", list(item.keys())[0] if len(item) > 0 else None)
+            return None
+        if isinstance(threads, dict):
+            keys = list(threads.keys())
+            if 0 <= ndx < len(keys):
+                return keys[ndx]
+    return None
+
+
+def cfrds_debugger_event_get_threads_item_state(evt: Any, ndx: int) -> Optional[str]:
+    data = _extract_event_data(evt)
+    if data and "THREADS" in data:
+        threads = data["THREADS"]
+        if isinstance(threads, list):
+            if 0 <= ndx < len(threads):
+                item = threads[ndx]
+                if isinstance(item, (list, tuple)) and len(item) > 1:
+                    return str(item[1]) if item[1] is not None else None
+                if isinstance(item, dict):
+                    return item.get("state", list(item.values())[0] if len(item) > 0 else None)
+            return None
+        if isinstance(threads, dict):
+            values = list(threads.values())
+            if 0 <= ndx < len(values):
+                return str(values[ndx]) if values[ndx] is not None else None
+    return None
+
+
+def cfrds_debugger_event_get_threads_item(evt: Any, ndx: int) -> Optional[str]:
+    return cfrds_debugger_event_get_threads_item_name(evt, ndx)
+
+
+def cfrds_debugger_event_get_watch_count(evt: Any) -> int:
+    data = _extract_event_data(evt)
+    if data and "WATCH" in data:
+        watch = data["WATCH"]
+        if isinstance(watch, (list, dict)):
+            return len(watch)
+    return 0
+
+
+def cfrds_debugger_event_get_watch_item(evt: Any, ndx: int) -> Optional[str]:
+    data = _extract_event_data(evt)
+    if data and "WATCH" in data:
+        watch = data["WATCH"]
+        if isinstance(watch, dict):
+            keys = list(watch.keys())
+            if 0 <= ndx < len(keys):
+                return keys[ndx]
+            return None
+        if isinstance(watch, list):
+            if 0 <= ndx < len(watch):
+                item = watch[ndx]
+                if isinstance(item, str):
+                    return item
+                if isinstance(item, dict) and len(item) > 0:
+                    return list(item.keys())[0]
+            return None
+    return None
+
+
+def cfrds_debugger_event_get_cf_trace_count(evt: Any) -> int:
+    data = _extract_event_data(evt)
+    if data and "CF_TRACE" in data and isinstance(data["CF_TRACE"], list):
+        return len(data["CF_TRACE"])
+    return 0
+
+
+def cfrds_debugger_event_get_cf_trace_item(evt: Any, ndx: int) -> Optional[str]:
+    data = _extract_event_data(evt)
+    if data and "CF_TRACE" in data and isinstance(data["CF_TRACE"], list):
+        if 0 <= ndx < len(data["CF_TRACE"]):
+            item = data["CF_TRACE"][ndx]
+            return str(item) if item is not None else None
+    return None
+
+
+def cfrds_debugger_event_get_java_trace_count(evt: Any) -> int:
+    data = _extract_event_data(evt)
+    if data and "JAVA_TRACE" in data and isinstance(data["JAVA_TRACE"], list):
+        return len(data["JAVA_TRACE"])
+    return 0
+
+
+def cfrds_debugger_event_get_java_trace_item(evt: Any, ndx: int) -> Optional[str]:
+    data = _extract_event_data(evt)
+    if data and "JAVA_TRACE" in data and isinstance(data["JAVA_TRACE"], list):
+        if 0 <= ndx < len(data["JAVA_TRACE"]):
+            item = data["JAVA_TRACE"][ndx]
+            return str(item) if item is not None else None
+    return None
 
 
 class SecurityAnalyzerResult:
@@ -778,9 +1101,9 @@ class Server:
             else:
                 all_items.append(a)
 
-        if self.username is not None:
+        if self.username and len(self.username) > 0:
             all_items.append(self.username.encode("utf-8"))
-        if self.orig_password is not None:
+        if self.orig_password and len(self.orig_password) > 0:
             all_items.append(self.encoded_password.encode("utf-8"))
 
         total_cnt = len(all_items)
@@ -1252,7 +1575,7 @@ class Server:
         wddx = "<wddxPacket version='1.0'><header/><data><array length='1'><struct type='java.util.HashMap'><var name='COMMAND'><string>UNSET_ALL_BREAKPOINTS</string></var></struct></array></data></wddxPacket>"
         self._send_rds_command("DBGREQUEST", ["DBG_REQUEST", session_name, wddx])
 
-    def _parse_debugger_event(self, raw: bytes) -> Optional[Dict[str, Any]]:
+    def _parse_debugger_event(self, raw: bytes) -> Optional[DebuggerEvent]:
         if not raw:
             return None
         offset = [0]
@@ -1278,9 +1601,9 @@ class Server:
                 return 0
 
         if evt_name == "CF_BREAKPOINT_SET":
-            return {
-                "type": CFRDS_DEBUGGER_EVENT_TYPE_BREAKPOINT_SET,
-                "data": {
+            return DebuggerEvent(
+                CFRDS_DEBUGGER_EVENT_TYPE_BREAKPOINT_SET,
+                {
                     "pathname": data.get("CFML_PATH") or data.get("FILE", ""),
                     "req_line": _to_int(data.get("REQ_LINE_NUM")),
                     "act_line": _to_int(data.get("ACTUAL_LINE_NUM")),
@@ -1288,21 +1611,21 @@ class Server:
                     "thread_id": thread_name,
                     **data,
                 },
-            }
+            )
         elif evt_name in ("CF_BREAKPOINT_HIT", "CF_STEP", "BREAKPOINT", "STEP"):
-            return {
-                "type": CFRDS_DEBUGGER_EVENT_TYPE_BREAKPOINT if "BREAKPOINT" in str(evt_name) else CFRDS_DEBUGGER_EVENT_TYPE_STEP,
-                "data": {
+            return DebuggerEvent(
+                CFRDS_DEBUGGER_EVENT_TYPE_BREAKPOINT if "BREAKPOINT" in str(evt_name) else CFRDS_DEBUGGER_EVENT_TYPE_STEP,
+                {
                     "source": data.get("CFML_PATH") or data.get("FILE", ""),
                     "line": _to_int(data.get("REQ_LINE_NUM") or data.get("LINE")),
                     "thread_name": thread_name,
                     "thread_id": thread_name,
                     **data,
                 },
-            }
-        return {"type": CFRDS_DEBUGGER_EVENT_UNKNOWN, "data": data}
+            )
+        return DebuggerEvent(CFRDS_DEBUGGER_EVENT_UNKNOWN, data)
 
-    def debugger_get_debug_events(self, session_name: str) -> Optional[Dict[str, Any]]:
+    def debugger_get_debug_events(self, session_name: str) -> Optional[DebuggerEvent]:
         """
         Fetches debugger events for the specified session.
         NOTE: This is a long-polling request on the ColdFusion server that blocks until a debugger event occurs or times out.
@@ -1314,7 +1637,7 @@ class Server:
 
     def debugger_all_fetch_flags_enabled(
         self, session_name: str, threads: bool, watch: bool, scopes: bool, cf_trace: bool, java_trace: bool
-    ) -> Optional[Dict[str, Any]]:
+    ) -> Optional[DebuggerEvent]:
         """
         Configures fetch flags and waits for debugger events.
         NOTE: This is a long-polling request on the ColdFusion server that blocks until a debugger event occurs or times out.

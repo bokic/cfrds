@@ -89,7 +89,7 @@ export class Server {
       const [strTs, o5] = parseString(raw, o4);
       off = o5;
 
-      const kind = strKind === "D:" ? "D" : "F";
+      const kind = (strKind === "D:" || strKind === "D") ? "D" : "F";
       const permsNum = strPerms ? parseInt(strPerms, 10) : 0;
       const size = strSize ? parseInt(strSize, 10) : 0;
 
@@ -993,46 +993,142 @@ export function cfrds_debugger_event_breakpoint_set_get_act_line(evt: DebuggerEv
 }
 
 export function cfrds_debugger_event_get_scopes_count(evt: DebuggerEvent | null): number {
-  if (evt && evt.data && Array.isArray(evt.data.SCOPES)) {
-    return evt.data.SCOPES.length;
+  if (evt && evt.data && evt.data.SCOPES) {
+    if (Array.isArray(evt.data.SCOPES)) {
+      return evt.data.SCOPES.length;
+    }
+    if (typeof evt.data.SCOPES === "object") {
+      return Object.keys(evt.data.SCOPES).length;
+    }
   }
   return 0;
+}
+
+export function cfrds_debugger_event_get_scopes_item_name(evt: DebuggerEvent | null, ndx: number): string | null {
+  if (evt && evt.data && evt.data.SCOPES) {
+    if (Array.isArray(evt.data.SCOPES)) {
+      const item = evt.data.SCOPES[ndx];
+      if (typeof item === "string") return item;
+      if (item && typeof item === "object") {
+        const keys = Object.keys(item);
+        return keys.length > 0 ? keys[0] : null;
+      }
+      return null;
+    }
+    if (typeof evt.data.SCOPES === "object") {
+      const keys = Object.keys(evt.data.SCOPES);
+      return ndx < keys.length ? keys[ndx] : null;
+    }
+  }
+  return null;
+}
+
+export function cfrds_debugger_event_get_scopes_item_value(evt: DebuggerEvent | null, ndx: number): any {
+  if (evt && evt.data && evt.data.SCOPES) {
+    if (Array.isArray(evt.data.SCOPES)) {
+      const item = evt.data.SCOPES[ndx];
+      if (item && typeof item === "object") {
+        const values = Object.values(item);
+        return values.length > 0 ? values[0] : null;
+      }
+      return item ?? null;
+    }
+    if (typeof evt.data.SCOPES === "object") {
+      const values = Object.values(evt.data.SCOPES);
+      return ndx < values.length ? values[ndx] : null;
+    }
+  }
+  return null;
 }
 
 export function cfrds_debugger_event_get_scopes_item(evt: DebuggerEvent | null, ndx: number): string | null {
-  if (evt && evt.data && Array.isArray(evt.data.SCOPES)) {
-    const item = evt.data.SCOPES[ndx];
-    return typeof item === "string" ? item : null;
-  }
-  return null;
+  return cfrds_debugger_event_get_scopes_item_name(evt, ndx);
 }
 
 export function cfrds_debugger_event_get_threads_count(evt: DebuggerEvent | null): number {
-  if (evt && evt.data && Array.isArray(evt.data.THREADS)) {
-    return evt.data.THREADS.length;
+  if (evt && evt.data && evt.data.THREADS) {
+    if (Array.isArray(evt.data.THREADS)) {
+      return evt.data.THREADS.length;
+    }
+    if (typeof evt.data.THREADS === "object") {
+      return Object.keys(evt.data.THREADS).length;
+    }
   }
   return 0;
 }
 
-export function cfrds_debugger_event_get_threads_item(evt: DebuggerEvent | null, ndx: number): string | null {
-  if (evt && evt.data && Array.isArray(evt.data.THREADS)) {
-    const item = evt.data.THREADS[ndx];
-    return typeof item === "string" ? item : null;
+export function cfrds_debugger_event_get_threads_item_name(evt: DebuggerEvent | null, ndx: number): string | null {
+  if (evt && evt.data && evt.data.THREADS) {
+    if (Array.isArray(evt.data.THREADS)) {
+      const item = evt.data.THREADS[ndx];
+      if (Array.isArray(item)) {
+        return item[0] !== undefined ? String(item[0]) : null;
+      }
+      if (typeof item === "string") return item;
+      if (item && typeof item === "object") {
+        return (item as any).name ?? Object.keys(item)[0] ?? null;
+      }
+      return null;
+    }
+    if (typeof evt.data.THREADS === "object") {
+      const keys = Object.keys(evt.data.THREADS);
+      return ndx < keys.length ? keys[ndx] : null;
+    }
   }
   return null;
 }
 
+export function cfrds_debugger_event_get_threads_item_state(evt: DebuggerEvent | null, ndx: number): string | null {
+  if (evt && evt.data && evt.data.THREADS) {
+    if (Array.isArray(evt.data.THREADS)) {
+      const item = evt.data.THREADS[ndx];
+      if (Array.isArray(item)) {
+        return item[1] !== undefined ? String(item[1]) : null;
+      }
+      if (item && typeof item === "object") {
+        return (item as any).state ?? Object.values(item)[0] ?? null;
+      }
+      return null;
+    }
+    if (typeof evt.data.THREADS === "object") {
+      const values = Object.values(evt.data.THREADS);
+      return ndx < values.length ? String(values[ndx]) : null;
+    }
+  }
+  return null;
+}
+
+export function cfrds_debugger_event_get_threads_item(evt: DebuggerEvent | null, ndx: number): string | null {
+  return cfrds_debugger_event_get_threads_item_name(evt, ndx);
+}
+
 export function cfrds_debugger_event_get_watch_count(evt: DebuggerEvent | null): number {
-  if (evt && evt.data && Array.isArray(evt.data.WATCH)) {
-    return evt.data.WATCH.length;
+  if (evt && evt.data && evt.data.WATCH) {
+    if (typeof evt.data.WATCH === "object" && !Array.isArray(evt.data.WATCH)) {
+      return Object.keys(evt.data.WATCH).length;
+    }
+    if (Array.isArray(evt.data.WATCH)) {
+      return evt.data.WATCH.length;
+    }
   }
   return 0;
 }
 
 export function cfrds_debugger_event_get_watch_item(evt: DebuggerEvent | null, ndx: number): string | null {
-  if (evt && evt.data && Array.isArray(evt.data.WATCH)) {
-    const item = evt.data.WATCH[ndx];
-    return typeof item === "string" ? item : null;
+  if (evt && evt.data && evt.data.WATCH) {
+    if (typeof evt.data.WATCH === "object" && !Array.isArray(evt.data.WATCH)) {
+      const keys = Object.keys(evt.data.WATCH);
+      return ndx < keys.length ? keys[ndx] : null;
+    }
+    if (Array.isArray(evt.data.WATCH)) {
+      const item = evt.data.WATCH[ndx];
+      if (typeof item === "string") return item;
+      if (item && typeof item === "object") {
+        const keys = Object.keys(item);
+        return keys.length > 0 ? keys[0] : null;
+      }
+      return null;
+    }
   }
   return null;
 }

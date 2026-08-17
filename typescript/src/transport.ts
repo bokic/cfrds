@@ -12,10 +12,10 @@ export function sendRdsCommand(
   ctx.error = null;
 
   const allItems = [...args];
-  if (ctx.config.username !== undefined) {
+  if (ctx.config.username !== undefined && ctx.config.username.length > 0) {
     allItems.push(ctx.config.username);
   }
-  if (ctx.config.password !== undefined) {
+  if (ctx.config.password !== undefined && ctx.config.password.length > 0) {
     allItems.push(ctx.encodedPassword);
   }
 

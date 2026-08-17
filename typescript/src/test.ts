@@ -12,8 +12,12 @@ import {
   cfrds_debugger_event_breakpoint_set_get_req_line,
   cfrds_debugger_event_breakpoint_set_get_act_line,
   cfrds_debugger_event_get_scopes_count,
+  cfrds_debugger_event_get_scopes_item_name,
+  cfrds_debugger_event_get_scopes_item_value,
   cfrds_debugger_event_get_scopes_item,
   cfrds_debugger_event_get_threads_count,
+  cfrds_debugger_event_get_threads_item_name,
+  cfrds_debugger_event_get_threads_item_state,
   cfrds_debugger_event_get_threads_item,
   cfrds_debugger_event_get_watch_count,
   cfrds_debugger_event_get_watch_item,
@@ -337,9 +341,9 @@ async function main(): Promise<void> {
             source: "/app/index.cfm",
             line: 42,
             thread_name: "my-thread",
-            SCOPES: ["Variables", "Session"],
-            THREADS: ["my-thread", "other-thread"],
-            WATCH: ["expr1", "expr2"],
+            SCOPES: { "VARIABLES": { "A": "10" }, "SESSION": { "ID": "123" } },
+            THREADS: [["my-thread", "RUNNING"], ["other-thread", "WAITING"]],
+            WATCH: { "expr1": "100", "expr2": "200" },
             CF_TRACE: ["trace1", "trace2"],
             JAVA_TRACE: ["jtrace1", "jtrace2"]
           }
@@ -351,24 +355,47 @@ async function main(): Promise<void> {
         assert(cfrds_debugger_event_breakpoint_get_thread_name(mockEvent) === "my-thread", "get_thread_name mismatch");
         
         const scopes = cfrds_debugger_event_breakpoint_get_scopes(mockEvent);
-        assert(Array.isArray(scopes) && scopes[0] === "Variables", "get_scopes mismatch");
+        assert(scopes && typeof scopes === "object", "get_scopes mismatch");
 
         assert(cfrds_debugger_event_get_scopes_count(mockEvent) === 2, "scopes count mismatch");
-        assert(cfrds_debugger_event_get_scopes_item(mockEvent, 0) === "Variables", "scopes item 0 mismatch");
-        assert(cfrds_debugger_event_get_scopes_item(mockEvent, 1) === "Session", "scopes item 1 mismatch");
-        assert(cfrds_debugger_event_get_scopes_item(mockEvent, 2) === null, "scopes item out of bounds mismatch");
+        assert(cfrds_debugger_event_get_scopes_item_name(mockEvent, 0) === "VARIABLES", "scopes item name 0 mismatch");
+        assert(cfrds_debugger_event_get_scopes_item_name(mockEvent, 1) === "SESSION", "scopes item name 1 mismatch");
+        assert(cfrds_debugger_event_get_scopes_item_name(mockEvent, 2) === null, "scopes item name out of bounds mismatch");
+        assert(cfrds_debugger_event_get_scopes_item_value(mockEvent, 0) !== null, "scopes item value 0 mismatch");
+        assert(cfrds_debugger_event_get_scopes_item(mockEvent, 0) === "VARIABLES", "scopes item 0 mismatch");
 
         assert(cfrds_debugger_event_get_threads_count(mockEvent) === 2, "threads count mismatch");
+        assert(cfrds_debugger_event_get_threads_item_name(mockEvent, 0) === "my-thread", "threads item name 0 mismatch");
+        assert(cfrds_debugger_event_get_threads_item_state(mockEvent, 0) === "RUNNING", "threads item state 0 mismatch");
+        assert(cfrds_debugger_event_get_threads_item_name(mockEvent, 1) === "other-thread", "threads item name 1 mismatch");
+        assert(cfrds_debugger_event_get_threads_item_state(mockEvent, 1) === "WAITING", "threads item state 1 mismatch");
         assert(cfrds_debugger_event_get_threads_item(mockEvent, 0) === "my-thread", "threads item 0 mismatch");
 
         assert(cfrds_debugger_event_get_watch_count(mockEvent) === 2, "watch count mismatch");
         assert(cfrds_debugger_event_get_watch_item(mockEvent, 0) === "expr1", "watch item 0 mismatch");
+        assert(cfrds_debugger_event_get_watch_item(mockEvent, 1) === "expr2", "watch item 1 mismatch");
 
         assert(cfrds_debugger_event_get_cf_trace_count(mockEvent) === 2, "cf_trace count mismatch");
         assert(cfrds_debugger_event_get_cf_trace_item(mockEvent, 0) === "trace1", "cf_trace item 0 mismatch");
 
         assert(cfrds_debugger_event_get_java_trace_count(mockEvent) === 2, "java_trace count mismatch");
         assert(cfrds_debugger_event_get_java_trace_item(mockEvent, 0) === "jtrace1", "java_trace item 0 mismatch");
+
+        // Also test array formats for backwards compatibility
+        const mockArrayEvent = {
+          type: CFRDS_DEBUGGER_EVENT_TYPE.BREAKPOINT,
+          data: {
+            SCOPES: ["Variables", "Session"],
+            THREADS: ["my-thread", "other-thread"],
+            WATCH: ["expr1", "expr2"],
+          }
+        };
+        assert(cfrds_debugger_event_get_scopes_count(mockArrayEvent) === 2, "array scopes count mismatch");
+        assert(cfrds_debugger_event_get_scopes_item_name(mockArrayEvent, 0) === "Variables", "array scopes item name 0 mismatch");
+        assert(cfrds_debugger_event_get_threads_count(mockArrayEvent) === 2, "array threads count mismatch");
+        assert(cfrds_debugger_event_get_threads_item_name(mockArrayEvent, 0) === "my-thread", "array threads item name 0 mismatch");
+        assert(cfrds_debugger_event_get_watch_count(mockArrayEvent) === 2, "array watch count mismatch");
+        assert(cfrds_debugger_event_get_watch_item(mockArrayEvent, 0) === "expr1", "array watch item 0 mismatch");
 
         log("Offline debugger event accessors tests passed!");
       }

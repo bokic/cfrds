@@ -471,8 +471,8 @@ static int test_debugger_event_getters(void)
         "<data>"
           "<array length=\"1\">"
             "<struct>"
-              "<var name=\"SCOPES\"><array length=\"2\"><string>SCOPE_A</string><string>SCOPE_B</string></array></var>"
-              "<var name=\"THREADS\"><array length=\"1\"><string>THREAD_1</string></array></var>"
+              "<var name=\"SCOPES\"><struct><var name=\"SCOPE_A\"><string>VAL_A</string></var><var name=\"SCOPE_B\"><string>VAL_B</string></var></struct></var>"
+              "<var name=\"THREADS\"><array length=\"1\"><array length=\"2\"><string>THREAD_1</string><string>RUNNING</string></array></array></var>"
               "<var name=\"WATCH\"><array length=\"1\"><string>EXPR_1</string></array></var>"
               "<var name=\"CF_TRACE\"><array length=\"1\"><string>CF_TRACE_1</string></array></var>"
               "<var name=\"JAVA_TRACE\"><array length=\"1\"><string>JAVA_TRACE_1</string></array></var>"
@@ -489,16 +489,19 @@ static int test_debugger_event_getters(void)
 
     /* Test SCOPES */
     CHECK(cfrds_debugger_event_get_scopes_count(event) == 2);
-    CHECK(cfrds_debugger_event_get_scopes_item(event, 0) != NULL);
-    CHECK(strcmp(cfrds_debugger_event_get_scopes_item(event, 0), "SCOPE_A") == 0);
-    CHECK(strcmp(cfrds_debugger_event_get_scopes_item(event, 1), "SCOPE_B") == 0);
-    CHECK(cfrds_debugger_event_get_scopes_item(event, 2) == NULL);
+    CHECK(cfrds_debugger_event_get_scopes_item_name(event, 0) != NULL);
+    CHECK(strcmp(cfrds_debugger_event_get_scopes_item_name(event, 0), "SCOPE_A") == 0);
+    CHECK(strcmp(cfrds_debugger_event_get_scopes_item_name(event, 1), "SCOPE_B") == 0);
+    CHECK(cfrds_debugger_event_get_scopes_item_name(event, 2) == NULL);
+    CHECK(cfrds_debugger_event_get_scopes_item_value(event, 0) != NULL);
 
     /* Test THREADS */
     CHECK(cfrds_debugger_event_get_threads_count(event) == 1);
-    CHECK(cfrds_debugger_event_get_threads_item(event, 0) != NULL);
-    CHECK(strcmp(cfrds_debugger_event_get_threads_item(event, 0), "THREAD_1") == 0);
-    CHECK(cfrds_debugger_event_get_threads_item(event, 1) == NULL);
+    CHECK(cfrds_debugger_event_get_threads_item_name(event, 0) != NULL);
+    CHECK(strcmp(cfrds_debugger_event_get_threads_item_name(event, 0), "THREAD_1") == 0);
+    CHECK(cfrds_debugger_event_get_threads_item_state(event, 0) != NULL);
+    CHECK(strcmp(cfrds_debugger_event_get_threads_item_state(event, 0), "RUNNING") == 0);
+    CHECK(cfrds_debugger_event_get_threads_item_name(event, 1) == NULL);
 
     /* Test WATCH */
     CHECK(cfrds_debugger_event_get_watch_count(event) == 1);

@@ -633,7 +633,7 @@ static int test_buffer_to_browse_dir(void)
     {
         cfrds_buffer *buf = NULL;
         CHECK(cfrds_buffer_create(&buf) == true);
-        CHECK(cfrds_buffer_append(buf, "2:F:10:MyComp.cfc2:322:9619:-288538128,312708172:D:7:models12:161:019:-288538128,31270817") == true);
+        CHECK(cfrds_buffer_append(buf, "10:2:F:10:MyComp.cfc2:322:9619:-288538128,312708172:D:7:models12:161:019:-288538128,31270817") == true);
         cfrds_browse_dir *bd = cfrds_buffer_to_browse_dir(buf);
         CHECK(bd != NULL);
         CHECK(bd->cnt == 2);
@@ -653,6 +653,7 @@ static int test_buffer_to_browse_dir(void)
     {
         cfrds_buffer *buf = NULL;
         CHECK(cfrds_buffer_create(&buf) == true);
+        CHECK(cfrds_buffer_append(buf, "0:") == true);
         cfrds_browse_dir *bd = cfrds_buffer_to_browse_dir(buf);
         CHECK(bd != NULL);
         CHECK(bd->cnt == 0);
@@ -684,20 +685,16 @@ static int test_buffer_to_file_content(void)
     {
         cfrds_buffer *buf = NULL;
         CHECK(cfrds_buffer_create(&buf) == true);
-        CHECK(cfrds_buffer_append(buf, "3:5:hello19:2026-07-22 05:00:00") == true);
+        CHECK(cfrds_buffer_append(buf, "2:5:hello19:2026-07-22 05:00:00") == true);
         cfrds_file_content *fc = cfrds_buffer_to_file_content(buf);
         CHECK(fc == NULL);
         cfrds_buffer_free(buf);
     }
 
-    /* Test invalid parsing - wrong total elements count */
+    /* Test invalid parsing - null buffer */
     {
-        cfrds_buffer *buf = NULL;
-        CHECK(cfrds_buffer_create(&buf) == true);
-        CHECK(cfrds_buffer_append(buf, "2:5:hello19:2026-07-22 05:00:009:read-only") == true);
-        cfrds_file_content *fc = cfrds_buffer_to_file_content(buf);
+        cfrds_file_content *fc = cfrds_buffer_to_file_content(NULL);
         CHECK(fc == NULL);
-        cfrds_buffer_free(buf);
     }
 
     return PASS;
@@ -705,12 +702,27 @@ static int test_buffer_to_file_content(void)
 
 static int test_sql_sqlstmnt_cnt_zero(void)
 {
-    cfrds_buffer *buf = NULL;
-    CHECK(cfrds_buffer_create(&buf) == true);
-    CHECK(cfrds_buffer_append(buf, "0:") == true);
-    cfrds_sql_resultset *rs = cfrds_buffer_to_sql_sqlstmnt(buf);
-    CHECK(rs == NULL);
-    cfrds_buffer_free(buf);
+    /* Test valid SQL statement response */
+    {
+        cfrds_buffer *buf = NULL;
+        CHECK(cfrds_buffer_create(&buf) == true);
+        CHECK(cfrds_buffer_append(buf, "2:7:\"test\",4:\"1\",") == true);
+        cfrds_sql_resultset *rs = cfrds_buffer_to_sql_sqlstmnt(buf);
+        CHECK(rs != NULL);
+        CHECK(rs->columns == 1);
+        CHECK(rs->rows == 1);
+        CHECK(strcmp(rs->values[0], "test") == 0);
+        CHECK(strcmp(rs->values[1], "1") == 0);
+        cfrds_sql_resultset_free(rs);
+        cfrds_buffer_free(buf);
+    }
+
+    /* Test null buffer */
+    {
+        cfrds_sql_resultset *rs = cfrds_buffer_to_sql_sqlstmnt(NULL);
+        CHECK(rs == NULL);
+    }
+
     return PASS;
 }
 

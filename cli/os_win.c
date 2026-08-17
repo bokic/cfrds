@@ -7,7 +7,7 @@
 
 file_hnd_fd os_creat_file(const char* pathname)
 {
-    return CreateFileA(pathname, GENERIC_WRITE, FILE_SHARE_READ, NULL, TRUNCATE_EXISTING, 0, NULL);
+    return CreateFileA(pathname, GENERIC_WRITE, FILE_SHARE_READ, NULL, CREATE_ALWAYS, 0, NULL);
 }
 
 void os_file_close(file_hnd_fd hnd_fd)
@@ -67,14 +67,14 @@ void os_unmap(void* addr, size_t size)
 ssize_t os_write_to_terminal(const void *buffer, size_t len)
 {
     DWORD written = 0;
-
-    HANDLE hnd = CreateConsoleScreenBuffer(GENERIC_WRITE, 0, NULL, CONSOLE_TEXTMODE_BUFFER, NULL);
-    if (hnd != INVALID_HANDLE_VALUE) {
-        WriteConsole(hnd, buffer, len, &written, NULL);
-        CloseHandle(hnd);
+    HANDLE hnd = GetStdHandle(STD_OUTPUT_HANDLE);
+    if (hnd != INVALID_HANDLE_VALUE && hnd != NULL) {
+        if (WriteFile(hnd, buffer, (DWORD)len, &written, NULL)) {
+            return (ssize_t)written;
+        }
     }
 
-    return written;
+    return -1;
 }
 
 void os_file_cleanup(void *fd) {

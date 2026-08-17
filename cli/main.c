@@ -33,9 +33,9 @@ char *base64_encode(const unsigned char *data, size_t input_length) {
 
 static void usage(void)
 {
-    printf("Usage: cfrds <command> [options] <url> [options]\n");
+    printf("Usage: cfrds <command> <url> [arguments...] [--json]\n");
     printf("options:\n");
-    printf("  --json       - Output result in JSON format.\n");
+    printf("  --json       - Output result in JSON format (tail argument only).\n");
     printf("\n");
     printf("commands:\n");
     printf("  - 'ls', 'dir' - List a server directory.\n");

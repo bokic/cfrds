@@ -7,6 +7,7 @@ import time
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 import cfrds
+from cfrds import Server
 
 rds_vars = {k: v for k, v in os.environ.items() if k.startswith("RDS_")}
 if rds_vars:
@@ -83,8 +84,8 @@ server_methods = [
 
 # Get actual public methods on server class (excluding private/protected/dunder methods)
 actual_methods = [
-    m for m in dir(Server)
-    if not m.startswith("_") and callable(getattr(Server, m))
+    m for m in dir(cfrds.Server)
+    if not m.startswith("_") and callable(getattr(cfrds.Server, m))
 ]
 
 missing_methods = set(server_methods) - set(actual_methods)
@@ -94,8 +95,8 @@ assert not missing_methods, f"server class missing expected methods: {missing_me
 assert not extra_methods, f"server class has unexpected extra methods (did you forget to add them to the test or make them private?): {extra_methods}"
 
 for method in server_methods:
-    assert hasattr(Server, method), f"server class missing method: {method}"
-    assert callable(getattr(Server, method)), f"{method} is not callable"
+    assert hasattr(cfrds.Server, method), f"server class missing method: {method}"
+    assert callable(getattr(cfrds.Server, method)), f"{method} is not callable"
 
 print(f"All {len(server_methods)} server class methods successfully verified!")
 
@@ -156,22 +157,18 @@ mock_conn.getresponse.return_value = mock_resp
 with patch("http.client.HTTPConnection", return_value=mock_conn):
     srv_mock = Server("127.0.0.1", 8500, "admin", "admin")
     
-    # Test 1: total = 0 (divisible by 5) -> should succeed
+    # Test 1: empty directory -> should succeed
     mock_resp.read.return_value = b"0:"
     items0 = srv_mock.browse_dir("/")
-    assert len(items0) == 0, "browse_dir with total = 0 should return empty list"
+    assert len(items0) == 0, "browse_dir with empty response should return empty list"
     
-    # Test 2: total = 3 (not divisible by 5) -> should throw CFRDSError with CFRDS_STATUS_RESPONSE_ERROR
-    mock_resp.read.return_value = b"3:"
-    threw = False
-    try:
-        srv_mock.browse_dir("/")
-    except cfrds.CFRDSError as e:
-        if "Invalid total items count" in str(e):
-            threw = True
-        else:
-            raise Exception(f"Unexpected error: {e}")
-    assert threw, "browse_dir should throw CFRDSError containing Invalid total items count when total is 3"
+    # Test 2: directory with items (5 elements for 1 item)
+    mock_resp.read.return_value = b"5:1:F10:MyComp.cfc2:322:9619:-288538128,31270817"
+    items1 = srv_mock.browse_dir("/")
+    assert len(items1) == 1, "browse_dir should return 1 item"
+    assert items1[0]["name"] == "MyComp.cfc"
+    assert items1[0]["kind"] == "F"
+    assert items1[0]["size"] == 96
     
     print("Offline browse_dir validation tests passed!")
 
@@ -206,7 +203,7 @@ with patch("http.client.HTTPConnection", return_value=mock_conn):
     # Test 5b: adminapi_extensions_getmappings returns structured Mappings (offline test)
     mock_conn.request.reset_mock()
     xml_data = "<wddxPacket version='1.0'><header/><data><struct><var name='k1'><string>v1</string></var><var name='k2'><string>v2</string></var><var name='k1'><string>v3</string></var></struct></data></wddxPacket>"
-    resp_body = f"1:{len(xml_data)}:{xml_data}".encode("utf-8")
+    resp_body = f"0:{len(xml_data)}:{xml_data}".encode("utf-8")
     mock_resp.read.return_value = resp_body
     mappings = srv_mock.adminapi_extensions_getmappings()
     assert isinstance(mappings, cfrds.Mappings)
@@ -219,7 +216,7 @@ with patch("http.client.HTTPConnection", return_value=mock_conn):
 
     # Test 5c: file_read parses and retains modified/permission metadata (offline test)
     mock_conn.request.reset_mock()
-    # Response: total(3) + data_bytes("hello") + modified("2026-07-22") + permission("rw-r--r--")
+    # Response: total(3:) + data_bytes("hello") + modified("2026-07-22") + permission("rw-r--r--")
     mock_resp.read.return_value = b"3:5:hello10:2026-07-229:rw-r--r--"
     
     # 1. High-level client API

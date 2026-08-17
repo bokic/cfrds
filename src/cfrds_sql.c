@@ -5,6 +5,7 @@
 
 #include <stdlib.h>
 #include <stddef.h>
+#include <stdio.h>
 
 cfrds_status cfrds_execute_sql_cmd(cfrds_server *server, const char *params[], cfrds_sql_parser_fn parser, void **out_result)
 {

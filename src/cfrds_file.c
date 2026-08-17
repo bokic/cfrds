@@ -62,8 +62,8 @@ cfrds_status cfrds_command_file_write(cfrds_server *server, const char *pathname
 
     total_cnt = 4;
 
-    if (server->username) total_cnt++;
-    if (server->password) total_cnt++;
+    if (server->username && strlen(server->username) > 0) total_cnt++;
+    if (server->password && strlen(server->password) > 0) total_cnt++;
 
     cfrds_server_clear_error(server);
 
@@ -81,9 +81,9 @@ cfrds_status cfrds_command_file_write(cfrds_server *server, const char *pathname
     if (!cfrds_buffer_append_rds_bytes(post, data, length))
         return CFRDS_STATUS_MEMORY_ERROR;
 
-    if (server->username && !cfrds_buffer_append_rds_string(post, server->username))
+    if (server->username && strlen(server->username) > 0 && !cfrds_buffer_append_rds_string(post, server->username))
         return CFRDS_STATUS_MEMORY_ERROR;
-    if (server->password && !cfrds_buffer_append_rds_string(post, server->password))
+    if (server->password && strlen(server->password) > 0 && !cfrds_buffer_append_rds_string(post, server->password))
         return CFRDS_STATUS_MEMORY_ERROR;
 
     ret = cfrds_http_post(server, "FILEIO", post, NULL);
@@ -183,6 +183,13 @@ cfrds_status cfrds_command_file_get_root_dir(cfrds_server *server, cfrds_str *ou
     {
         const char *response_data = cfrds_buffer_data(response);
         size_t response_size = cfrds_buffer_data_size(response);
+
+        int64_t count = 0;
+        if (!cfrds_buffer_parse_number(&response_data, &response_size, &count))
+        {
+            server->error_code = -1;
+            return CFRDS_STATUS_RESPONSE_ERROR;
+        }
 
         if (!cfrds_buffer_parse_string(&response_data, &response_size, out))
         {

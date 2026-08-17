@@ -842,20 +842,22 @@ class Server:
             raise CFRDSError(f"RESPONSE_ERROR: {str(e)}")
 
         if err_code < 0:
-            err_msg = body[offset:].decode("utf-8", errors="replace")
+            err_msg = body[offset[0]:].decode("utf-8", errors="replace")
             raise CFRDSError(f"COMMAND_FAILED: {err_msg}")
 
         return body
-
     # Browse Directory
     def browse_dir(self, path: str) -> List[Dict[str, Any]]:
         if path is None:
             raise CFRDSError("path is required")
         raw = self._send_rds_command("BROWSEDIR", [path, ""])
         offset = [0]
-        _parse_number(raw, offset)
+        total_elements = _parse_number(raw, offset)
+        if total_elements < 0 or total_elements % 5 != 0:
+            raise CFRDSError(f"Invalid total items count: {total_elements}")
+        item_count = total_elements // 5
         items: List[Dict[str, Any]] = []
-        while offset[0] < len(raw):
+        for _ in range(item_count):
             str_kind = _parse_string(raw, offset)
             filename = _parse_string(raw, offset)
             str_perms = _parse_string(raw, offset)
@@ -898,6 +900,8 @@ class Server:
                 "size": size,
                 "modified": modified,
             })
+        if offset[0] != len(raw):
+            raise CFRDSError(f"Response size mismatch: expected {item_count} items, leftover bytes in response")
         return items
 
     # File Operations
@@ -907,9 +911,13 @@ class Server:
         raw = self._send_rds_command("FILEIO", [filepath, "READ", ""])
         offset = [0]
         total = _parse_number(raw, offset)
+        if total != 3:
+            raise CFRDSError(f"Invalid FILEIO READ field count: {total}")
         data_bytes = _parse_bytearray(raw, offset)
         modified = _parse_string(raw, offset)
         permission = _parse_string(raw, offset)
+        if offset[0] != len(raw):
+            raise CFRDSError("Leftover bytes in FILEIO READ response")
         return FileContent(data_bytes, modified, permission)
 
     def file_write(self, filepath: str, content: Union[bytes, bytearray, str]) -> None:
@@ -932,7 +940,7 @@ class Server:
 
     def file_remove(self, filepath: str) -> None:
         if filepath is None:
-            raise CFRDSError("filepath is required")
+            raise CFRDSError("filepath_from is required")
         self._send_rds_command("FILEIO", [filepath, "REMOVE", "", "F"])
 
     def dir_remove(self, dirpath: str) -> None:
@@ -968,12 +976,16 @@ class Server:
         raw = self._send_rds_command("DBFUNCS", ["", "DSNINFO"])
         offset = [0]
         cnt = _parse_number(raw, offset)
+        if cnt < 0:
+            raise CFRDSError(f"Invalid DSNINFO count: {cnt}")
         dsns: List[str] = []
         for _ in range(cnt):
             item = _parse_string(raw, offset)
             fields = _parse_string_list_item(item)
             name = fields[0] if fields else item
             dsns.append(name)
+        if offset[0] != len(raw):
+            raise CFRDSError(f"Response size mismatch: expected {cnt} DSNs, leftover bytes in response")
         return dsns
 
     def sql_tableinfo(self, connection_name: str) -> List[Dict[str, Optional[str]]]:
@@ -982,6 +994,8 @@ class Server:
         raw = self._send_rds_command("DBFUNCS", [connection_name, "TABLEINFO"])
         offset = [0]
         cnt = _parse_number(raw, offset)
+        if cnt < 0:
+            raise CFRDSError(f"Invalid TABLEINFO count: {cnt}")
         tables: List[Dict[str, Optional[str]]] = []
         for _ in range(cnt):
             item = _parse_string(raw, offset)
@@ -991,6 +1005,8 @@ class Server:
             f3 = fields[2] if len(fields) > 2 else ""
             f4 = fields[3] if len(fields) > 3 else ""
             tables.append({"unknown": f1, "schema": f2, "name": f3, "type": f4})
+        if offset[0] != len(raw):
+            raise CFRDSError(f"Response size mismatch: expected {cnt} tables, leftover bytes in response")
         return tables
 
     def sql_columninfo(self, connection_name: str, table_name: str) -> List[Dict[str, Any]]:
@@ -1001,6 +1017,8 @@ class Server:
         raw = self._send_rds_command("DBFUNCS", [connection_name, "COLUMNINFO", table_name])
         offset = [0]
         cnt = _parse_number(raw, offset)
+        if cnt < 0:
+            raise CFRDSError(f"Invalid COLUMNINFO count: {cnt}")
         cols: List[Dict[str, Any]] = []
         for _ in range(cnt):
             item = _parse_string(raw, offset)
@@ -1018,6 +1036,8 @@ class Server:
                 "radix": _safe_int(fields[9]) if len(fields) > 9 else 0,
                 "nullable": _safe_int(fields[10]) if len(fields) > 10 else 0,
             })
+        if offset[0] != len(raw):
+            raise CFRDSError(f"Response size mismatch: expected {cnt} columns, leftover bytes in response")
         return cols
 
     def sql_primarykeys(self, connection_name: str, table_name: str) -> List[Dict[str, Any]]:
@@ -1028,6 +1048,8 @@ class Server:
         raw = self._send_rds_command("DBFUNCS", [connection_name, "PRIMARYKEYS", table_name])
         offset = [0]
         cnt = _parse_number(raw, offset)
+        if cnt < 0:
+            raise CFRDSError(f"Invalid PRIMARYKEYS count: {cnt}")
         keys: List[Dict[str, Any]] = []
         for _ in range(cnt):
             item = _parse_string(raw, offset)
@@ -1045,7 +1067,43 @@ class Server:
                 "updaterule": _safe_int(fields[9]) if len(fields) > 9 else 0,
                 "deleterule": _safe_int(fields[10]) if len(fields) > 10 else 0,
             })
+        if offset[0] != len(raw):
+            raise CFRDSError(f"Response size mismatch: expected {cnt} keys, leftover bytes in response")
         return keys
+
+    def _parse_keys_response(self, raw: bytes, cmd_name: str) -> List[Dict[str, Any]]:
+        offset = [0]
+        cnt = _parse_number(raw, offset)
+        if cnt < 0:
+            raise CFRDSError(f"Invalid {cmd_name} count: {cnt}")
+        keys: List[Dict[str, Any]] = []
+        for _ in range(cnt):
+            item = _parse_string(raw, offset)
+            fields = _parse_string_list_item(item)
+            keys.append({
+                "pkcatalog": fields[0] if len(fields) > 0 else "",
+                "pkowner": fields[1] if len(fields) > 1 else "",
+                "pktable": fields[2] if len(fields) > 2 else "",
+                "pkcolumn": fields[3] if len(fields) > 3 else "",
+                "fkcatalog": fields[4] if len(fields) > 4 else "",
+                "fkowner": fields[5] if len(fields) > 5 else "",
+                "fktable": fields[6] if len(fields) > 6 else "",
+                "fkcolumn": fields[7] if len(fields) > 7 else "",
+                "key_sequence": _safe_int(fields[8]) if len(fields) > 8 else 0,
+                "updaterule": _safe_int(fields[9]) if len(fields) > 9 else 0,
+                "deleterule": _safe_int(fields[10]) if len(fields) > 10 else 0,
+            })
+        if offset[0] != len(raw):
+            raise CFRDSError(f"Response size mismatch: expected {cnt} keys, leftover bytes in response")
+        return keys
+
+    def sql_foreignkeys(self, connection_name: str, table_name: str) -> List[Dict[str, Any]]:
+        if connection_name is None:
+            raise CFRDSError("connection_name is required")
+        if table_name is None:
+            raise CFRDSError("table_name is required")
+        raw = self._send_rds_command("DBFUNCS", [connection_name, "FOREIGNKEYS", table_name])
+        return self._parse_keys_response(raw, "FOREIGNKEYS")
 
     def sql_importedkeys(self, connection_name: str, table_name: str) -> List[Dict[str, Any]]:
         if connection_name is None:
@@ -1053,26 +1111,7 @@ class Server:
         if table_name is None:
             raise CFRDSError("table_name is required")
         raw = self._send_rds_command("DBFUNCS", [connection_name, "IMPORTEDKEYS", table_name])
-        offset = [0]
-        cnt = _parse_number(raw, offset)
-        keys: List[Dict[str, Any]] = []
-        for _ in range(cnt):
-            item = _parse_string(raw, offset)
-            fields = _parse_string_list_item(item)
-            keys.append({
-                "pkcatalog": fields[0] if len(fields) > 0 else "",
-                "pkowner": fields[1] if len(fields) > 1 else "",
-                "pktable": fields[2] if len(fields) > 2 else "",
-                "pkcolumn": fields[3] if len(fields) > 3 else "",
-                "fkcatalog": fields[4] if len(fields) > 4 else "",
-                "fkowner": fields[5] if len(fields) > 5 else "",
-                "fktable": fields[6] if len(fields) > 6 else "",
-                "fkcolumn": fields[7] if len(fields) > 7 else "",
-                "key_sequence": _safe_int(fields[8]) if len(fields) > 8 else 0,
-                "updaterule": _safe_int(fields[9]) if len(fields) > 9 else 0,
-                "deleterule": _safe_int(fields[10]) if len(fields) > 10 else 0,
-            })
-        return keys
+        return self._parse_keys_response(raw, "IMPORTEDKEYS")
 
     def sql_exportedkeys(self, connection_name: str, table_name: str) -> List[Dict[str, Any]]:
         if connection_name is None:
@@ -1080,26 +1119,7 @@ class Server:
         if table_name is None:
             raise CFRDSError("table_name is required")
         raw = self._send_rds_command("DBFUNCS", [connection_name, "EXPORTEDKEYS", table_name])
-        offset = [0]
-        cnt = _parse_number(raw, offset)
-        keys: List[Dict[str, Any]] = []
-        for _ in range(cnt):
-            item = _parse_string(raw, offset)
-            fields = _parse_string_list_item(item)
-            keys.append({
-                "pkcatalog": fields[0] if len(fields) > 0 else "",
-                "pkowner": fields[1] if len(fields) > 1 else "",
-                "pktable": fields[2] if len(fields) > 2 else "",
-                "pkcolumn": fields[3] if len(fields) > 3 else "",
-                "fkcatalog": fields[4] if len(fields) > 4 else "",
-                "fkowner": fields[5] if len(fields) > 5 else "",
-                "fktable": fields[6] if len(fields) > 6 else "",
-                "fkcolumn": fields[7] if len(fields) > 7 else "",
-                "key_sequence": _safe_int(fields[8]) if len(fields) > 8 else 0,
-                "updaterule": _safe_int(fields[9]) if len(fields) > 9 else 0,
-                "deleterule": _safe_int(fields[10]) if len(fields) > 10 else 0,
-            })
-        return keys
+        return self._parse_keys_response(raw, "EXPORTEDKEYS")
 
     def sql_sqlstmnt(self, connection_name: str, sql: str) -> Dict[str, Any]:
         if connection_name is None:
@@ -1109,10 +1129,10 @@ class Server:
         raw = self._send_rds_command("DBFUNCS", [connection_name, "SQLSTMNT", sql])
         offset = [0]
         cnt = _parse_number(raw, offset)
-        rows = max(0, cnt - 1)
-        if cnt <= 0:
+        if cnt < 1:
             return {"columns": 0, "rows": 0, "names": [], "values": []}
 
+        rows = cnt - 1
         col_str = _parse_string(raw, offset)
         names = _parse_string_list_item(col_str)
         cols = len(names)
@@ -1122,6 +1142,9 @@ class Server:
             r_str = _parse_string(raw, offset)
             r_vals = _parse_string_list_item(r_str)
             data_rows.append(r_vals)
+
+        if offset[0] != len(raw):
+            raise CFRDSError(f"Response size mismatch: expected {rows} rows, leftover bytes in response")
 
         return {"columns": cols, "rows": rows, "names": names, "values": data_rows}
 
@@ -1133,6 +1156,8 @@ class Server:
         raw = self._send_rds_command("DBFUNCS", [connection_name, "SQLMETADATA", sql])
         offset = [0]
         cnt = _parse_number(raw, offset)
+        if cnt < 0:
+            raise CFRDSError(f"Invalid SQLMETADATA count: {cnt}")
         meta: List[Dict[str, Optional[str]]] = []
         for _ in range(cnt):
             item = _parse_string(raw, offset)
@@ -1142,27 +1167,34 @@ class Server:
                 "type": fields[1] if len(fields) > 1 else "",
                 "jtype": fields[2] if len(fields) > 2 else "",
             })
+        if offset[0] != len(raw):
+            raise CFRDSError(f"Response size mismatch: expected {cnt} metadata items, leftover bytes in response")
         return meta
 
     def sql_getsupportedcommands(self) -> List[str]:
         raw = self._send_rds_command("DBFUNCS", ["", "SUPPORTEDCOMMANDS"])
         offset = [0]
-        cnt = _parse_number(raw, offset)
-        cmds: List[str] = []
-        for _ in range(cnt):
-            cmd_str = _parse_string(raw, offset)
-            cmds.extend(_parse_string_list_item(cmd_str))
-        return cmds
+        rows = _parse_number(raw, offset)
+        if rows != 1:
+            raise CFRDSError(f"Invalid SUPPORTEDCOMMANDS row count: {rows}")
+        commands_str = _parse_string(raw, offset)
+        if offset[0] != len(raw):
+            raise CFRDSError("Leftover bytes in SUPPORTEDCOMMANDS response")
+        return _parse_string_list_item(commands_str)
 
     def sql_dbdescription(self, connection_name: str) -> Optional[str]:
         if connection_name is None:
             raise CFRDSError("connection_name is required")
         raw = self._send_rds_command("DBFUNCS", [connection_name, "DBDESCRIPTION"])
         offset = [0]
-        _parse_number(raw, offset)
-        item = _parse_string(raw, offset)
-        fields = _parse_string_list_item(item)
-        return fields[0] if fields else item
+        rows = _parse_number(raw, offset)
+        if rows != 1:
+            raise CFRDSError(f"Invalid DBDESCRIPTION row count: {rows}")
+        row = _parse_string(raw, offset)
+        if offset[0] != len(raw):
+            raise CFRDSError("Leftover bytes in DBDESCRIPTION response")
+        fields = _parse_string_list_item(row)
+        return fields[0] if fields else row
 
     # Debugger Operations
     def debugger_start(self) -> str:

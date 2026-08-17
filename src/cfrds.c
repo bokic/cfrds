@@ -923,12 +923,6 @@ cfrds_status cfrds_command_adminapi_debugging_getlogproperty(cfrds_server *serve
             return CFRDS_STATUS_RESPONSE_ERROR;
         }
 
-        if (count != 1)
-        {
-            server->error_code = -1;
-            return CFRDS_STATUS_RESPONSE_ERROR;
-        }
-
         if (!cfrds_buffer_parse_string(&response_data, &response_size, &xml))
         {
             server->error_code = -1;
@@ -986,12 +980,6 @@ cfrds_status cfrds_command_adminapi_extensions_getcustomtagpaths(cfrds_server *s
             return CFRDS_STATUS_RESPONSE_ERROR;
         }
 
-        if (count != 1)
-        {
-            server->error_code = -1;
-            return CFRDS_STATUS_RESPONSE_ERROR;
-        }
-
         if (!cfrds_buffer_parse_string(&response_data, &response_size, &xml))
         {
             server->error_code = -1;
@@ -1037,10 +1025,11 @@ int cfrds_adminapi_customtagpaths_count(const cfrds_adminapi_customtagpaths *buf
     if (buf == NULL)
         return 0;
 
-    if (wddx_node_type(buf) != WDDX_ARRAY)
+    const WDDX_NODE *data = wddx_data(buf);
+    if (wddx_node_type(data) != WDDX_ARRAY)
         return 0;
 
-    return wddx_node_array_size(buf);
+    return wddx_node_array_size(data);
 }
 
 const char *cfrds_adminapi_customtagpaths_at(const cfrds_adminapi_customtagpaths *buf, size_t ndx)
@@ -1048,7 +1037,11 @@ const char *cfrds_adminapi_customtagpaths_at(const cfrds_adminapi_customtagpaths
     if (buf == NULL)
         return NULL;
 
-    const WDDX_NODE *item = wddx_node_array_at(buf, ndx);
+    const WDDX_NODE *data = wddx_data(buf);
+    if (wddx_node_type(data) != WDDX_ARRAY)
+        return NULL;
+
+    const WDDX_NODE *item = wddx_node_array_at(data, ndx);
 
     if (wddx_node_type(item) != WDDX_STRING)
         return NULL;
@@ -1094,22 +1087,19 @@ cfrds_status cfrds_command_adminapi_extensions_setmapping(cfrds_server *server, 
             return CFRDS_STATUS_RESPONSE_ERROR;
         }
 
-        if (count != 1)
+        if (response_size > 0)
         {
-            server->error_code = -1;
-            return CFRDS_STATUS_RESPONSE_ERROR;
-        }
+            if (!cfrds_buffer_parse_string(&response_data, &response_size, &xml))
+            {
+                server->error_code = -1;
+                return CFRDS_STATUS_RESPONSE_ERROR;
+            }
 
-        if (!cfrds_buffer_parse_string(&response_data, &response_size, &xml))
-        {
-            server->error_code = -1;
-            return CFRDS_STATUS_RESPONSE_ERROR;
-        }
-
-        if (strlen(xml) > 0)
-        {
-            cfrds_server_set_error(server, CFRDS_STATUS_RESPONSE_ERROR, xml);
-            return CFRDS_STATUS_RESPONSE_ERROR;
+            if (strlen(xml) > 0)
+            {
+                cfrds_server_set_error(server, CFRDS_STATUS_RESPONSE_ERROR, xml);
+                return CFRDS_STATUS_RESPONSE_ERROR;
+            }
         }
     }
 
@@ -1143,22 +1133,19 @@ cfrds_status cfrds_command_adminapi_extensions_deletemapping(cfrds_server *serve
             return CFRDS_STATUS_RESPONSE_ERROR;
         }
 
-        if (count != 1)
+        if (response_size > 0)
         {
-            server->error_code = -1;
-            return CFRDS_STATUS_RESPONSE_ERROR;
-        }
+            if (!cfrds_buffer_parse_string(&response_data, &response_size, &xml))
+            {
+                server->error_code = -1;
+                return CFRDS_STATUS_RESPONSE_ERROR;
+            }
 
-        if (!cfrds_buffer_parse_string(&response_data, &response_size, &xml))
-        {
-            server->error_code = -1;
-            return CFRDS_STATUS_RESPONSE_ERROR;
-        }
-
-        if (strlen(xml) > 0)
-        {
-            cfrds_server_set_error(server, CFRDS_STATUS_RESPONSE_ERROR, xml);
-            return CFRDS_STATUS_RESPONSE_ERROR;
+            if (strlen(xml) > 0)
+            {
+                cfrds_server_set_error(server, CFRDS_STATUS_RESPONSE_ERROR, xml);
+                return CFRDS_STATUS_RESPONSE_ERROR;
+            }
         }
     }
 
@@ -1186,12 +1173,6 @@ cfrds_status cfrds_command_adminapi_extensions_getmappings(cfrds_server *server,
 
         int64_t count = 0;
         if (!cfrds_buffer_parse_number(&response_data, &response_size, &count))
-        {
-            server->error_code = -1;
-            return CFRDS_STATUS_RESPONSE_ERROR;
-        }
-
-        if (count != 1)
         {
             server->error_code = -1;
             return CFRDS_STATUS_RESPONSE_ERROR;
@@ -1237,10 +1218,11 @@ int cfrds_adminapi_mappings_count(const cfrds_adminapi_mappings *buf)
     if (buf == NULL)
         return 0;
 
-    if (wddx_node_type(buf) != WDDX_STRUCT)
+    const WDDX_NODE *data = wddx_data(buf);
+    if (wddx_node_type(data) != WDDX_STRUCT)
         return 0;
 
-    return wddx_node_struct_size(buf);
+    return wddx_node_struct_size(data);
 }
 
 const char *cfrds_adminapi_mappings_key(const cfrds_adminapi_mappings *buf, size_t ndx)
@@ -1250,10 +1232,11 @@ const char *cfrds_adminapi_mappings_key(const cfrds_adminapi_mappings *buf, size
     if (buf == NULL)
         return NULL;
 
-    if (wddx_node_type(buf) != WDDX_STRUCT)
+    const WDDX_NODE *data = wddx_data(buf);
+    if (wddx_node_type(data) != WDDX_STRUCT)
         return NULL;
 
-    wddx_node_struct_at(buf, ndx, &ret);
+    wddx_node_struct_at(data, ndx, &ret);
 
     return ret;
 }
@@ -1263,10 +1246,11 @@ const char *cfrds_adminapi_mappings_value(const cfrds_adminapi_mappings *buf, si
     if (buf == NULL)
         return NULL;
 
-    if (wddx_node_type(buf) != WDDX_STRUCT)
+    const WDDX_NODE *data = wddx_data(buf);
+    if (wddx_node_type(data) != WDDX_STRUCT)
         return NULL;
 
-    const WDDX_NODE *val = wddx_node_struct_at(buf, ndx, NULL);
+    const WDDX_NODE *val = wddx_node_struct_at(data, ndx, NULL);
 
     if (wddx_node_type(val) != WDDX_STRING)
         return NULL;

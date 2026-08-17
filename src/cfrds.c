@@ -1007,7 +1007,7 @@ void cfrds_adminapi_customtagpaths_free(cfrds_adminapi_customtagpaths *buf)
 {
     if (buf)
     {
-        wddx_cleanup(buf);
+        wddx_cleanup(&buf);
     }
 }
 
@@ -1200,7 +1200,7 @@ void cfrds_adminapi_mappings_free(cfrds_adminapi_mappings *buf)
 {
     if (buf)
     {
-        wddx_cleanup(buf);
+        wddx_cleanup(&buf);
     }
 }
 

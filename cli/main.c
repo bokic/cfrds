@@ -394,7 +394,7 @@ int main(int argc, char *argv[])
             }
 
             const char *logdirectory = argv[4];
-            char *logproperty = NULL;
+            cfrds_str_defer(logproperty);
             res = cfrds_command_adminapi_debugging_getlogproperty(server, logdirectory, &logproperty);
             if (res != CFRDS_STATUS_OK)
             {

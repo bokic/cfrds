@@ -11,3 +11,5 @@ out
 CMakeLists.txt.user
 compile_commands.json
 /fuzz/fuzz_rds_string
+/rust/target
+/rust/Cargo.lock

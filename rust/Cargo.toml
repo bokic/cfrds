@@ -1,0 +1,31 @@
+[package]
+name = "cfrds"
+version = "1.1.5"
+edition = "2021"
+description = "ColdFusion RDS protocol library (Rust port of libcfrds)"
+license = "MIT"
+keywords = ["coldfusion", "rds", "cfml", "ide"]
+categories = ["network-programming"]
+readme = "README.md"
+repository = "https://github.com/bokic/cfrds"
+homepage = "https://github.com/bokic/cfrds"
+
+[lib]
+name = "cfrds"
+path = "src/lib.rs"
+crate-type = ["rlib", "cdylib"]
+
+[dependencies]
+roxmltree = "0.20"
+serde_json = "1"
+libc = "0.2"
+
+[build-dependencies]
+
+[profile.release]
+opt-level = "z"
+debug = false
+lto = true
+codegen-units = 1
+panic = "abort"
+strip = true

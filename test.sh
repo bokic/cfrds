@@ -6,7 +6,7 @@ echo "Running C CLI (cfrds) tests..."
 
 USER="${RDS_USERNAME:-admin}"
 PASS="${RDS_PASSWORD:-admin}"
-HOST="${RDS_HOST:-192.168.100.10}"
+HOST="${RDS_HOST:-127.0.0.1}"
 PORT="${RDS_PORT:-8500}"
 
 TARGET="rds://${USER}:${PASS}@${HOST}:${PORT}"

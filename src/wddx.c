@@ -564,12 +564,6 @@ static struct WDDX_NODE *wddx_from_xml_element(xmlNodePtr xml_node)
     return ret;
 }
 
-static void silentErrorHandler(void *ctx, const char *msg, ...) {
-    (void)ctx;
-    (void)msg;
-    // Do nothing - silencing output
-}
-
 WDDX *wddx_from_xml(const char *xml)
 {
     xmlDoc_defer(doc);
@@ -581,12 +575,11 @@ WDDX *wddx_from_xml(const char *xml)
 
     if (xml_len == 0) return NULL;
 
-    xmlSetGenericErrorFunc(NULL, silentErrorHandler);
-
     if (xml_len > INT_MAX)
         return NULL;
 
-    doc = xmlParseMemory(xml, (int)xml_len);
+    doc = xmlReadMemory(xml, (int)xml_len, NULL, NULL,
+                        XML_PARSE_NOERROR | XML_PARSE_NOWARNING);
 
     xmlNodePtr rootEl = xmlDocGetRootElement(doc);
     if (rootEl == NULL) return NULL;

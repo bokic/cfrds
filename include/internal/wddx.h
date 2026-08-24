@@ -130,8 +130,9 @@ const char *wddx_to_xml(WDDX *src);
 /**
  * @brief Parses an XML string into a WDDX packet.
  * 
- * Uses libxml2's `xmlParseMemory` to parse the string. Silences error output in non-NDEBUG builds
- * via a custom generic error handler. Traverses the document structure to verify the root 
+ * Uses libxml2's `xmlReadMemory` to parse the string with `XML_PARSE_NOERROR | XML_PARSE_NOWARNING`,
+ * which silences error/warning output without mutating libxml2's global error handler
+ * (thread-safe and isolated to this parse). Traverses the document structure to verify the root 
  * `<wddxPacket>` and its `<header>` and `<data>` children. Parses all nodes recursively mapping
  * elements to their respective internal types (`null`, `boolean`, `number`, `string`, `array`, `struct`).
  * - Arrays read their `length` property and parse child items up to that length.

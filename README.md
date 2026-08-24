@@ -27,9 +27,6 @@ Some of the features RDS protocol supports:
 * Remote ColdFusion server graph (chart) rendering.
 * Structured JSON output support for all CLI commands via `--json` trailing argument.
 
-## TODO
-* Code cleanup.
-
 ## CLI test script usage ex:
 > `RDS_HOST=<rds://[username[:password]@]host[:port]> RDS_DSN=<dsn_name> RDS_DSN_TABLE=<table_name> ./test.sh`
 

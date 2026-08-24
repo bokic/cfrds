@@ -580,6 +580,7 @@ WDDX *wddx_from_xml(const char *xml)
 
     doc = xmlReadMemory(xml, (int)xml_len, NULL, NULL,
                         XML_PARSE_NOERROR | XML_PARSE_NOWARNING);
+    if (doc == NULL) return NULL;
 
     xmlNodePtr rootEl = xmlDocGetRootElement(doc);
     if (rootEl == NULL) return NULL;

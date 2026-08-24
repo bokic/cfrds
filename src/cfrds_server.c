@@ -10,6 +10,8 @@
 #include <stdbool.h>
 #include <stdint.h>
 
+#define CFRDS_MAX_COMMAND_LIST_ENTRIES 1024
+
 void cfrds_server_cleanup(cfrds_server **server)
 {
     if (server && *server) {
@@ -196,17 +198,16 @@ cfrds_status cfrds_send_command(cfrds_server *server, cfrds_buffer **response, c
 
     server->_errno = 0;
 
-    for(size_t c = 0; c < 1024; c++)
-    {
-        if (list[c] == NULL)
-        {
-            list_cnt = c;
-            break;
-        }
-    }
+    while (list_cnt < CFRDS_MAX_COMMAND_LIST_ENTRIES && list[list_cnt] != NULL)
+        list_cnt++;
 
-    if (list[list_cnt] != NULL)
+    if (list_cnt == CFRDS_MAX_COMMAND_LIST_ENTRIES)
+    {
+        cfrds_server_set_error(server, CFRDS_STATUS_INVALID_INPUT_PARAMETER,
+                               "command argument list too long "
+                               "(more than 1024 entries)");
         return CFRDS_STATUS_INVALID_INPUT_PARAMETER;
+    }
 
     total_cnt = list_cnt;
 

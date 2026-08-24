@@ -4,5 +4,5 @@ set -e
 
 rm -rf build
 
-cmake -B build -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_FLAGS="-Wall -Wextra -Wpedantic -Wconversion"
+cmake -B build -DCMAKE_BUILD_TYPE=Release
 cmake --build build --config Release

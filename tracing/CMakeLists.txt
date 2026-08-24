@@ -103,6 +103,7 @@ add_library(tracing SHARED
     tracing.c
     perfetto_backend.cpp
 )
+cfrds_enable_strict_warnings(tracing)
 target_link_libraries(tracing PUBLIC perfetto)
 target_compile_definitions(tracing PUBLIC ENABLE_PERFETTO)
 

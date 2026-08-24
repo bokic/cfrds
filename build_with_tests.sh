@@ -4,7 +4,7 @@ set -e
 
 rm -rf build
 
-cmake -B build -DBUILD_TESTING=ON -DCMAKE_C_FLAGS="-Wall -Wextra -Wpedantic"
+cmake -B build -DBUILD_TESTING=ON
 cmake --build build
 
 ./bin/test_buffer

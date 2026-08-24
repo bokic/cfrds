@@ -55,6 +55,34 @@ set(CMAKE_C_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+# --- Compiler warnings & sanitizers (strict warnings are ON by default) ---
+option(CFRDS_ENABLE_WARNINGS "Enable strict compiler warnings (-Wall -Wextra -Wpedantic -Wconversion)" ON)
+option(CFRDS_WARNINGS_AS_ERRORS "Treat compiler warnings as errors (-Werror)" OFF)
+option(CFRDS_SANITIZE "Enable AddressSanitizer and UndefinedBehaviorSanitizer" OFF)
+
+# Apply strict warnings to a target. Uses a per-target function (rather than
+# add_compile_options) so third-party code pulled in via FetchContent, such as
+# the Perfetto amalgamation, is not flooded with warnings.
+function(cfrds_enable_strict_warnings target)
+    if(MSVC OR NOT CMAKE_C_COMPILER_ID MATCHES "GNU|Clang")
+        return()
+    endif()
+    if(CFRDS_ENABLE_WARNINGS)
+        target_compile_options(${target} PRIVATE -Wall -Wextra -Wpedantic -Wconversion)
+    endif()
+    if(CFRDS_WARNINGS_AS_ERRORS)
+        target_compile_options(${target} PRIVATE -Werror)
+    endif()
+endfunction()
+
+if(CFRDS_SANITIZE)
+    if(NOT CMAKE_C_COMPILER_ID MATCHES "GNU|Clang")
+        message(FATAL_ERROR "CFRDS_SANITIZE requires GCC or Clang")
+    endif()
+    add_compile_options(-fsanitize=address,undefined -fno-omit-frame-pointer)
+    add_link_options(-fsanitize=address,undefined)
+endif()
+
 if(NOT WIN32)
     add_subdirectory(tracing)
 endif()
@@ -135,6 +163,7 @@ endif()
 set_target_properties(cfrds_cli
     PROPERTIES OUTPUT_NAME "cfrds"
 )
+cfrds_enable_strict_warnings(cfrds_cli)
 target_sources(cfrds_cli PRIVATE ${RC_EXE_OUT_FILE})
 
 target_link_libraries(cfrds_cli PRIVATE
@@ -177,6 +206,8 @@ add_library(libcfrds SHARED
     src/cfrds_buffer.c include/internal/cfrds_buffer.h
     src/cfrds_http.c   include/internal/cfrds_http.h
 )
+
+cfrds_enable_strict_warnings(libcfrds)
 
 configure_file(
     "${CMAKE_CURRENT_SOURCE_DIR}/pkgconfig/cfrds.pc.in"

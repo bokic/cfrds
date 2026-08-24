@@ -188,7 +188,7 @@ static bool init_server_from_uri(const char *uri, char **hostname, uint16_t *por
         uri = login_start + 1;
     }
 
-    const char *port_start = strchr(uri, ':');
+    const char *port_start = memchr(uri, ':', (size_t)(path_start - uri));
     if (port_start) {
         size_t host_strlen = (size_t)(port_start - uri);
         size_t port_strlen = (size_t)(path_start - port_start - 1);

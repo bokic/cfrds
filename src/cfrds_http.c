@@ -22,6 +22,7 @@
 #include <stddef.h>
 #include <stdio.h>
 #include <errno.h>
+#include <limits.h>
 
 
 #include <time.h>
@@ -32,11 +33,17 @@
 #ifdef _WIN32
 typedef SOCKET cfrds_socket;
 #define CFRDS_INVALID_SOCKET INVALID_SOCKET
+#define CFRDS_SEND_FLAGS 0
 #define GET_SOCKET_ERRNO() WSAGetLastError()
 #define IS_SOCKET_EINTR(err) ((err) == WSAEINTR)
 #else
 typedef int cfrds_socket;
 #define CFRDS_INVALID_SOCKET (-1)
+#ifdef MSG_NOSIGNAL
+#define CFRDS_SEND_FLAGS MSG_NOSIGNAL
+#else
+#define CFRDS_SEND_FLAGS 0
+#endif
 #define GET_SOCKET_ERRNO() errno
 #ifdef EINTR
 #define IS_SOCKET_EINTR(err) ((err) == EINTR)
@@ -47,6 +54,22 @@ typedef int cfrds_socket;
 
 static void cfrds_sock_cleanup(cfrds_socket* sock);
 #define cfrds_sock_defer(var) cfrds_socket var __attribute__((cleanup(cfrds_sock_cleanup))) = CFRDS_INVALID_SOCKET
+
+/*
+ * Linux suppresses SIGPIPE per send() call with MSG_NOSIGNAL. macOS and the
+ * BSDs instead provide the per-socket SO_NOSIGPIPE option. Winsock never
+ * raises the POSIX SIGPIPE signal, so no configuration is needed there.
+ */
+static bool cfrds_sock_configure_no_sigpipe(cfrds_socket sockfd)
+{
+#if !defined(_WIN32) && defined(SO_NOSIGPIPE)
+    int enabled = 1;
+    return setsockopt(sockfd, SOL_SOCKET, SO_NOSIGPIPE, &enabled, sizeof(enabled)) == 0;
+#else
+    (void)sockfd;
+    return true;
+#endif
+}
 
 static bool cfrds_buffer_skip_httpheader(const char **data, size_t *remaining)
 {
@@ -157,6 +180,12 @@ static cfrds_status http_connect(cfrds_server *server, cfrds_socket *out_sockfd)
         if (fd == CFRDS_INVALID_SOCKET)
             continue;
 
+        if (!cfrds_sock_configure_no_sigpipe(fd)) {
+            saved_errno = GET_SOCKET_ERRNO();
+            cfrds_sock_cleanup(&fd);
+            continue;
+        }
+
         trace_net_start("connect");
         int res = connect(fd, rp->ai_addr, rp->ai_addrlen);
         trace_net_end();
@@ -208,16 +237,30 @@ static cfrds_status http_send_all(cfrds_server *server, cfrds_socket sockfd, cfr
 
     while (send_remaining > 0)
     {
+        size_t send_size = send_remaining;
+#ifdef _WIN32
+        /* Winsock's send() length parameter is an int. */
+        if (send_size > INT_MAX)
+            send_size = INT_MAX;
+#endif
+
         trace_net_start("send");
-        ssize_t sock_written = send(sockfd, send_ptr, send_remaining, 0);
+#ifdef _WIN32
+        ssize_t sock_written = send(sockfd, send_ptr, (int)send_size, CFRDS_SEND_FLAGS);
+#else
+        ssize_t sock_written = send(sockfd, send_ptr, send_size, CFRDS_SEND_FLAGS);
+#endif
         trace_net_end();
-        if (sock_written < 0)
+        if (sock_written <= 0)
         {
-            int err = GET_SOCKET_ERRNO();
-            if (IS_SOCKET_EINTR(err))
+            int err = sock_written < 0 ? GET_SOCKET_ERRNO() : 0;
+            if (sock_written < 0 && IS_SOCKET_EINTR(err))
                 continue;
             server->_errno = err;
-            cfrds_server_set_error(server, CFRDS_STATUS_WRITING_TO_SOCKET_FAILED, "failed to write to socket...");
+            cfrds_server_set_error(server, CFRDS_STATUS_WRITING_TO_SOCKET_FAILED,
+                                   sock_written == 0
+                                       ? "socket closed while writing..."
+                                       : "failed to write to socket...");
             return CFRDS_STATUS_WRITING_TO_SOCKET_FAILED;
         }
         send_ptr += sock_written;

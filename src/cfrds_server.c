@@ -198,6 +198,13 @@ cfrds_status cfrds_send_command(cfrds_server *server, cfrds_buffer **response, c
 
     server->_errno = 0;
 
+    if (command == NULL || list == NULL)
+    {
+        cfrds_server_set_error(server, CFRDS_STATUS_INVALID_INPUT_PARAMETER,
+                               "command and argument list must not be NULL");
+        return CFRDS_STATUS_INVALID_INPUT_PARAMETER;
+    }
+
     while (list_cnt < CFRDS_MAX_COMMAND_LIST_ENTRIES && list[list_cnt] != NULL)
         list_cnt++;
 

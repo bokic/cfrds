@@ -25,9 +25,13 @@ EXPORT_CFRDS char *cfrds_server_encode_password(const char *password);
 
 /**
  * @brief Sends an RDS command with list of arguments.
+ * @param server Server instance. Must not be NULL.
+ * @param response Optional output buffer receiving the response.
+ * @param command Command name. Must not be NULL.
+ * @param list NULL-terminated argument array. The array itself must not be NULL.
+ * @return CFRDS_STATUS_INVALID_INPUT_PARAMETER when command or list is NULL.
  */
 EXPORT_CFRDS cfrds_status cfrds_send_command(cfrds_server *server, cfrds_buffer **response, const char *command, const char *list[]);
 
 typedef void *(*cfrds_sql_parser_fn)(cfrds_buffer *buffer);
 EXPORT_CFRDS cfrds_status cfrds_execute_sql_cmd(cfrds_server *server, const char *params[], cfrds_sql_parser_fn parser, void **out_result);
-

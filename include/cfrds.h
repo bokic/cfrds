@@ -149,7 +149,7 @@ extern "C"
 
 /**
  * @brief Automatically deallocates and nullifies a cfrds_buffer pointer.
- * @param buf Double pointer to the buffer instance. Cleared to NULL after freeing.
+ * @param buf Double pointer to the buffer instance. Cleared to NULL after freeing. May be NULL.
  */
 EXPORT_CFRDS void cfrds_buffer_cleanup(cfrds_buffer **buf);
 
@@ -175,7 +175,7 @@ EXPORT_CFRDS void cfrds_file_content_cleanup(cfrds_file_content **buf);
 
 /**
  * @brief Automatically deallocates and nullifies a cfrds_str pointer.
- * @param str Double pointer to the string. Cleared to NULL after freeing.
+ * @param str Double pointer to the string. Cleared to NULL after freeing. May be NULL.
  */
 EXPORT_CFRDS void cfrds_str_cleanup(cfrds_str *str);
 

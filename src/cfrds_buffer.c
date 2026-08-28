@@ -33,14 +33,14 @@ struct cfrds_buffer {
 
 
 void cfrds_str_cleanup(cfrds_str *str) {
-    if (*str) {
+    if (str && *str) {
         free(*str);
         *str = NULL;
     }
 }
 
 void cfrds_buffer_cleanup(cfrds_buffer **buf) {
-    if (*buf) {
+    if (buf && *buf) {
         cfrds_buffer_free(*buf);
         *buf = NULL;
     }

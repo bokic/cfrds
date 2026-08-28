@@ -7,6 +7,7 @@
  */
 
 #include "../src/cfrds_buffer.c"
+#include <internal/cfrds_int.h>
 
 #include <stdio.h>
 #include <string.h>
@@ -61,6 +62,44 @@ static int test_free_null(void)
 {
     /* Must not crash */
     cfrds_buffer_free(NULL);
+    return PASS;
+}
+
+static int test_cleanup_null(void)
+{
+    /* Both a NULL outer pointer and a NULL managed pointer are valid. */
+    cfrds_str_cleanup(NULL);
+    cfrds_buffer_cleanup(NULL);
+
+    cfrds_str str = NULL;
+    cfrds_buffer *buf = NULL;
+    cfrds_str_cleanup(&str);
+    cfrds_buffer_cleanup(&buf);
+
+    str = strdup("value");
+    CHECK(str != NULL);
+    CHECK(cfrds_buffer_create(&buf));
+    cfrds_str_cleanup(&str);
+    cfrds_buffer_cleanup(&buf);
+    CHECK(str == NULL);
+    CHECK(buf == NULL);
+    return PASS;
+}
+
+static int test_send_command_null_inputs(void)
+{
+    cfrds_server *server = NULL;
+    CHECK(cfrds_server_init(&server, "127.0.0.1", 8500, "", ""));
+
+    const char *empty_list[] = { NULL };
+    CHECK(cfrds_send_command(server, NULL, NULL, empty_list) ==
+          CFRDS_STATUS_INVALID_INPUT_PARAMETER);
+    CHECK(server->error_code == CFRDS_STATUS_INVALID_INPUT_PARAMETER);
+    CHECK(cfrds_send_command(server, NULL, "TEST", NULL) ==
+          CFRDS_STATUS_INVALID_INPUT_PARAMETER);
+    CHECK(server->error_code == CFRDS_STATUS_INVALID_INPUT_PARAMETER);
+
+    cfrds_server_free(server);
     return PASS;
 }
 
@@ -768,6 +807,8 @@ int main(void)
     RUN(test_create_null_out);
     RUN(test_create_and_free);
     RUN(test_free_null);
+    RUN(test_cleanup_null);
+    RUN(test_send_command_null_inputs);
     RUN(test_data_null_buffer);
 
     /* append string */

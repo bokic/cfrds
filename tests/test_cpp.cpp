@@ -14,6 +14,16 @@ static void dummy_free(cfrds_server *s) {
 }
 
 int main() {
+    // 0. Test version functions
+    {
+        assert(cfrds_version() != nullptr);
+        assert(std::string(cfrds_version()) == CFRDS_VERSION);
+        assert(cfrds_version_major() == CFRDS_VERSION_MAJOR);
+        assert(cfrds_version_minor() == CFRDS_VERSION_MINOR);
+        assert(cfrds_version_patch() == CFRDS_VERSION_PATCH);
+        assert(cfrds_version_int() == CFRDS_VERSION_INT);
+    }
+
     // 1. Test server factory and basics
     {
         try {

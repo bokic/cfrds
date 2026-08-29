@@ -24,25 +24,11 @@ typedef struct WDDX_NODE WDDX_NODE;
  * @def CFRDS_VERSION_PATCH   Patch version number (integer)
  * @def CFRDS_VERSION_INT     Combined integer: MAJOR*10000 + MINOR*100 + PATCH
  */
-#if __has_include("version.h")
-#include "version.h"
-#endif
-
-#ifndef CFRDS_VERSION
-#define CFRDS_VERSION "unknown"
-#endif
-#ifndef CFRDS_VERSION_MAJOR
-#define CFRDS_VERSION_MAJOR 0
-#endif
-#ifndef CFRDS_VERSION_MINOR
-#define CFRDS_VERSION_MINOR 0
-#endif
-#ifndef CFRDS_VERSION_PATCH
-#define CFRDS_VERSION_PATCH 0
-#endif
-#ifndef CFRDS_VERSION_INT
-#define CFRDS_VERSION_INT 0
-#endif
+#define CFRDS_VERSION_MAJOR 1
+#define CFRDS_VERSION_MINOR 1
+#define CFRDS_VERSION_PATCH 7
+#define CFRDS_VERSION_INT 10107
+#define CFRDS_VERSION "1.1.7"
 
 #ifdef libcfrds_EXPORTS
  #if defined(_WIN32) || defined(__CYGWIN__)
@@ -146,6 +132,36 @@ typedef enum {
 extern "C"
 {
 #endif
+
+/**
+ * @brief Returns the full library version string (e.g. "1.1.7").
+ * @return Null-terminated version string.
+ */
+EXPORT_CFRDS const char *cfrds_version(void);
+
+/**
+ * @brief Returns the major version number.
+ * @return Major version integer.
+ */
+EXPORT_CFRDS int cfrds_version_major(void);
+
+/**
+ * @brief Returns the minor version number.
+ * @return Minor version integer.
+ */
+EXPORT_CFRDS int cfrds_version_minor(void);
+
+/**
+ * @brief Returns the patch version number.
+ * @return Patch version integer.
+ */
+EXPORT_CFRDS int cfrds_version_patch(void);
+
+/**
+ * @brief Returns the combined integer version (MAJOR*10000 + MINOR*100 + PATCH).
+ * @return Combined version integer.
+ */
+EXPORT_CFRDS int cfrds_version_int(void);
 
 /**
  * @brief Deallocates all resources associated with a cfrds_buffer instance.

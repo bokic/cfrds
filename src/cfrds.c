@@ -15,7 +15,30 @@
 #include <stdbool.h>
 #include <stdint.h>
 
+const char *cfrds_version(void)
+{
+    return CFRDS_VERSION;
+}
 
+int cfrds_version_major(void)
+{
+    return CFRDS_VERSION_MAJOR;
+}
+
+int cfrds_version_minor(void)
+{
+    return CFRDS_VERSION_MINOR;
+}
+
+int cfrds_version_patch(void)
+{
+    return CFRDS_VERSION_PATCH;
+}
+
+int cfrds_version_int(void)
+{
+    return CFRDS_VERSION_INT;
+}
 
 void cfrds_file_content_free(cfrds_file_content *value)
 {

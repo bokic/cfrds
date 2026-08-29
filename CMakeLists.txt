@@ -50,6 +50,24 @@ endif()
 
 project(cfrds VERSION ${CFRDS_GIT_TAG} DESCRIPTION "ColdFusion RDS Library" LANGUAGES C CXX)
 
+find_program(BASH_EXECUTABLE bash)
+if(BASH_EXECUTABLE)
+    execute_process(
+        COMMAND "${BASH_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/scripts/update_version.sh" "${CFRDS_GIT_TAG}"
+        WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
+        RESULT_VARIABLE UPDATE_VERSION_RESULT
+    )
+else()
+    execute_process(
+        COMMAND "${CMAKE_CURRENT_SOURCE_DIR}/scripts/update_version.sh" "${CFRDS_GIT_TAG}"
+        WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
+        RESULT_VARIABLE UPDATE_VERSION_RESULT
+    )
+endif()
+if(NOT UPDATE_VERSION_RESULT EQUAL 0)
+    message(WARNING "Failed to update version in include/cfrds.h (exit code: ${UPDATE_VERSION_RESULT})")
+endif()
+
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_C_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_STANDARD 23)
@@ -90,12 +108,7 @@ endif()
 if(MSVC)
     message(FATAL_ERROR "Unsupported compiler")
 endif()
-math(EXPR CFRDS_VERSION_INT "${PROJECT_VERSION_MAJOR}*10000 + ${PROJECT_VERSION_MINOR}*100 + ${PROJECT_VERSION_PATCH}")
-configure_file(
-    "${CMAKE_CURRENT_SOURCE_DIR}/include/version.h.in"
-    "${CMAKE_CURRENT_BINARY_DIR}/include/version.h"
-    @ONLY
-)
+
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
@@ -217,7 +230,6 @@ configure_file(
 
 target_include_directories(libcfrds PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-    $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/include>
     $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
 )
 
@@ -248,7 +260,6 @@ endif()
 set(LIBCFRDS_PUBLIC_HEADERS
     "include/cfrds.h"
     "include/cfrds.hpp"
-    "${CMAKE_CURRENT_BINARY_DIR}/include/version.h"
 )
 
 
@@ -271,7 +282,7 @@ install(TARGETS libcfrds
     RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
     LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
     ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
-    PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/cfrds
+    PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
 )
 
 if(NOT WIN32)

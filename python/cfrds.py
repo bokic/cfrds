@@ -1532,6 +1532,11 @@ class Server:
             raise CFRDSError("session_name is required")
         self._send_rds_command("DBGREQUEST", ["DBG_STOP", session_name])
 
+    def debugger_server_stop(self, session_name: str) -> None:
+        if session_name is None:
+            raise CFRDSError("session_name is required")
+        self._send_rds_command("DBGREQUEST", ["DBG_SERVER_STOP", session_name])
+
     def debugger_get_server_info(self, session_name: str) -> int:
         if session_name is None:
             raise CFRDSError("session_name is required")
@@ -1554,6 +1559,15 @@ class Server:
             raise CFRDSError("enable is required")
         val = "true" if enable else "false"
         wddx = f"<wddxPacket version='1.0'><header/><data><array length='1'><struct type='java.util.HashMap'><var name='COMMAND'><string>SESSION_BREAK_ON_EXCEPTION</string></var><var name='BREAK_ON_EXCEPTION'><boolean value='{val}'/></var></struct></array></data></wddxPacket>"
+        self._send_rds_command("DBGREQUEST", ["DBG_REQUEST", session_name, wddx])
+
+    def debugger_global_breakpoint_on_exception(self, session_name: str, enable: bool) -> None:
+        if session_name is None:
+            raise CFRDSError("session_name is required")
+        if enable is None:
+            raise CFRDSError("enable is required")
+        val = "true" if enable else "false"
+        wddx = f"<wddxPacket version='1.0'><header/><data><array length='1'><struct type='java.util.HashMap'><var name='COMMAND'><string>GLOBAL_BREAK_ON_EXCEPTION</string></var><var name='BREAK_ON_EXCEPTION'><boolean value='{val}'/></var></struct></array></data></wddxPacket>"
         self._send_rds_command("DBGREQUEST", ["DBG_REQUEST", session_name, wddx])
 
     def debugger_breakpoint(self, session_name: str, filepath: str, line: int, enable: bool) -> None:
@@ -1690,6 +1704,33 @@ class Server:
         wddx = f"<wddxPacket version='1.0'><header/><data><array length='1'><struct type='java.util.HashMap'><var name='COMMAND'><string>STEP_OUT</string></var><var name='THREAD'><string>{_escape_xml(thread_name)}</string></var></struct></array></data></wddxPacket>"
         self._send_rds_command("DBGREQUEST", ["DBG_REQUEST", session_name, wddx])
 
+    def debugger_sync_step_in(self, session_name: str, thread_name: str) -> Optional[DebuggerEvent]:
+        if session_name is None:
+            raise CFRDSError("session_name is required")
+        if thread_name is None:
+            raise CFRDSError("thread_name is required")
+        wddx = f"<wddxPacket version='1.0'><header/><data><array length='1'><struct type='java.util.HashMap'><var name='COMMAND'><string>SYNC_STEP_IN</string></var><var name='THREAD'><string>{_escape_xml(thread_name)}</string></var></struct></array></data></wddxPacket>"
+        raw = self._send_rds_command("DBGREQUEST", ["DBG_REQUEST", session_name, wddx])
+        return self._parse_debugger_event(raw)
+
+    def debugger_sync_step_over(self, session_name: str, thread_name: str) -> Optional[DebuggerEvent]:
+        if session_name is None:
+            raise CFRDSError("session_name is required")
+        if thread_name is None:
+            raise CFRDSError("thread_name is required")
+        wddx = f"<wddxPacket version='1.0'><header/><data><array length='1'><struct type='java.util.HashMap'><var name='COMMAND'><string>SYNC_STEP_OVER</string></var><var name='THREAD'><string>{_escape_xml(thread_name)}</string></var></struct></array></data></wddxPacket>"
+        raw = self._send_rds_command("DBGREQUEST", ["DBG_REQUEST", session_name, wddx])
+        return self._parse_debugger_event(raw)
+
+    def debugger_sync_step_out(self, session_name: str, thread_name: str) -> Optional[DebuggerEvent]:
+        if session_name is None:
+            raise CFRDSError("session_name is required")
+        if thread_name is None:
+            raise CFRDSError("thread_name is required")
+        wddx = f"<wddxPacket version='1.0'><header/><data><array length='1'><struct type='java.util.HashMap'><var name='COMMAND'><string>SYNC_STEP_OUT</string></var><var name='THREAD'><string>{_escape_xml(thread_name)}</string></var></struct></array></data></wddxPacket>"
+        raw = self._send_rds_command("DBGREQUEST", ["DBG_REQUEST", session_name, wddx])
+        return self._parse_debugger_event(raw)
+
     def debugger_continue(self, session_name: str, thread_name: str) -> None:
         if session_name is None:
             raise CFRDSError("session_name is required")
@@ -1697,6 +1738,15 @@ class Server:
             raise CFRDSError("thread_name is required")
         wddx = f"<wddxPacket version='1.0'><header/><data><array length='1'><struct type='java.util.HashMap'><var name='COMMAND'><string>CONTINUE</string></var><var name='THREAD'><string>{_escape_xml(thread_name)}</string></var></struct></array></data></wddxPacket>"
         self._send_rds_command("DBGREQUEST", ["DBG_REQUEST", session_name, wddx])
+
+    def debugger_get_cf_variables(self, session_name: str, thread_name: str) -> Optional[DebuggerEvent]:
+        if session_name is None:
+            raise CFRDSError("session_name is required")
+        if thread_name is None:
+            raise CFRDSError("thread_name is required")
+        wddx = f"<wddxPacket version='1.0'><header/><data><array length='1'><struct type='java.util.HashMap'><var name='COMMAND'><string>GET_CF_VARIABLES</string></var><var name='THREAD'><string>{_escape_xml(thread_name)}</string></var></struct></array></data></wddxPacket>"
+        raw = self._send_rds_command("DBGREQUEST", ["DBG_REQUEST", session_name, wddx])
+        return self._parse_debugger_event(raw)
 
     def debugger_watch_expression(self, session_name: str, thread_name: str, expression: str) -> None:
         if session_name is None:

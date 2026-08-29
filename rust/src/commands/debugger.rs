@@ -161,6 +161,18 @@ impl Server {
         Ok(())
     }
 
+    /// Stops ColdFusion debugger server and disconnects from JVM.
+    pub fn debugger_server_stop(&self, session_id: &str) -> Result<()> {
+        if session_id.is_empty() {
+            return Err(Status::ParamIsNull.into());
+        }
+        let response = self.send_command("DBGREQUEST", &["DBG_SERVER_STOP", session_id])?;
+        if !parser::buffer_to_debugger_stop(&response) {
+            return Err(self.set_error(Status::ResponseError, "DBG_SERVER_STOP failed"));
+        }
+        Ok(())
+    }
+
     /// Retrieves the debugger server host connection port.
     pub fn debugger_get_server_info(&self, session_id: &str) -> Result<u16> {
         if session_id.is_empty() {
@@ -180,7 +192,7 @@ impl Server {
         Ok(port as u16)
     }
 
-    /// Configures whether breakpoint traps trigger on unhandled exceptions.
+    /// Configures whether breakpoint traps trigger on unhandled exceptions (session level).
     pub fn debugger_breakpoint_on_exception(&self, session_id: &str, value: bool) -> Result<()> {
         if session_id.is_empty() {
             return Err(Status::ParamIsNull.into());
@@ -193,6 +205,27 @@ impl Server {
             self.send_command("DBGREQUEST", &["DBG_REQUEST", session_id, &wddx.to_xml()])?;
         if parser::buffer_to_debugger_info(&response).is_none() {
             return Err(self.set_error(Status::ResponseError, "SESSION_BREAK_ON_EXCEPTION failed"));
+        }
+        Ok(())
+    }
+
+    /// Configures whether breakpoint traps trigger on unhandled exceptions globally.
+    pub fn debugger_global_breakpoint_on_exception(
+        &self,
+        session_id: &str,
+        value: bool,
+    ) -> Result<()> {
+        if session_id.is_empty() {
+            return Err(Status::ParamIsNull.into());
+        }
+        let mut wddx = Wddx::new();
+        wddx.put_bool("0,BREAK_ON_EXCEPTION", value);
+        wddx.put_string("0,COMMAND", "GLOBAL_BREAK_ON_EXCEPTION");
+
+        let response =
+            self.send_command("DBGREQUEST", &["DBG_REQUEST", session_id, &wddx.to_xml()])?;
+        if parser::buffer_to_debugger_info(&response).is_none() {
+            return Err(self.set_error(Status::ResponseError, "GLOBAL_BREAK_ON_EXCEPTION failed"));
         }
         Ok(())
     }
@@ -294,9 +327,54 @@ impl Server {
         self.debugger_thread_action(session_id, thread_name, "STEP_OUT")
     }
 
+    /// Synchronously steps into the given execution thread, returning the resulting debug event.
+    pub fn debugger_sync_step_in(
+        &self,
+        session_id: &str,
+        thread_name: &str,
+    ) -> Result<DebuggerEvent> {
+        self.debugger_sync_thread_action(session_id, thread_name, "SYNC_STEP_IN")
+    }
+
+    /// Synchronously steps over the given execution thread, returning the resulting debug event.
+    pub fn debugger_sync_step_over(
+        &self,
+        session_id: &str,
+        thread_name: &str,
+    ) -> Result<DebuggerEvent> {
+        self.debugger_sync_thread_action(session_id, thread_name, "SYNC_STEP_OVER")
+    }
+
+    /// Synchronously steps out of the given execution thread, returning the resulting debug event.
+    pub fn debugger_sync_step_out(
+        &self,
+        session_id: &str,
+        thread_name: &str,
+    ) -> Result<DebuggerEvent> {
+        self.debugger_sync_thread_action(session_id, thread_name, "SYNC_STEP_OUT")
+    }
+
     /// Resumes the given execution thread.
     pub fn debugger_continue(&self, session_id: &str, thread_name: &str) -> Result<()> {
         self.debugger_thread_action(session_id, thread_name, "CONTINUE")
+    }
+
+    /// Retrieves all ColdFusion variable scopes and values for a thread.
+    pub fn debugger_get_cf_variables(
+        &self,
+        session_id: &str,
+        thread_name: &str,
+    ) -> Result<DebuggerEvent> {
+        if session_id.is_empty() || thread_name.is_empty() {
+            return Err(Status::ParamIsNull.into());
+        }
+        let mut wddx = Wddx::new();
+        wddx.put_string("0,COMMAND", "GET_CF_VARIABLES");
+        wddx.put_string("0,THREAD", thread_name);
+
+        let response =
+            self.send_command("DBGREQUEST", &["DBG_REQUEST", session_id, &wddx.to_xml()])?;
+        parse_debugger_event(self, &response)
     }
 
     /// Configures watch expression evaluation for a thread.
@@ -433,6 +511,25 @@ impl Server {
             return Err(self.set_error(Status::ResponseError, "debugger thread action failed"));
         }
         Ok(())
+    }
+
+    /// Sends a synchronous thread action command and parses the returned debug event.
+    fn debugger_sync_thread_action(
+        &self,
+        session_id: &str,
+        thread_name: &str,
+        action: &str,
+    ) -> Result<DebuggerEvent> {
+        if session_id.is_empty() || thread_name.is_empty() {
+            return Err(Status::ParamIsNull.into());
+        }
+        let mut wddx = Wddx::new();
+        wddx.put_string("0,COMMAND", action);
+        wddx.put_string("0,THREAD", thread_name);
+
+        let response =
+            self.send_command("DBGREQUEST", &["DBG_REQUEST", session_id, &wddx.to_xml()])?;
+        parse_debugger_event(self, &response)
     }
 }
 

@@ -298,6 +298,35 @@ cfrds_status cfrds_command_debugger_stop(cfrds_server *server, const char *sessi
     return ret;
 }
 
+cfrds_status cfrds_command_debugger_server_stop(cfrds_server *server, const char *session_id)
+{
+    cfrds_status ret;
+
+    cfrds_buffer_defer(response);
+
+    if (server == NULL)
+    {
+        return CFRDS_STATUS_SERVER_IS_NULL;
+    }
+
+    if (session_id == NULL)
+    {
+        return CFRDS_STATUS_PARAM_IS_NULL;
+    }
+
+    ret = cfrds_send_command(server, &response, "DBGREQUEST", (const char *[]){ "DBG_SERVER_STOP", session_id, NULL});
+    if (ret == CFRDS_STATUS_OK)
+    {
+        if (cfrds_buffer_to_debugger_stop(response) == false)
+        {
+            server->error_code = -1;
+            return CFRDS_STATUS_RESPONSE_ERROR;
+        }
+    }
+
+    return ret;
+}
+
 cfrds_status cfrds_command_debugger_get_server_info(cfrds_server *server, const char *session_id, uint16_t *port)
 {
     cfrds_status ret;
@@ -350,6 +379,41 @@ cfrds_status cfrds_command_debugger_breakpoint_on_exception(cfrds_server *server
     wddx = wddx_create();
     wddx_put_bool(wddx, "0,BREAK_ON_EXCEPTION", value);
     wddx_put_string(wddx, "0,COMMAND", "SESSION_BREAK_ON_EXCEPTION");
+
+    ret = cfrds_send_command(server, &response, "DBGREQUEST", (const char *[]){ "DBG_REQUEST", session_id, wddx_to_xml(wddx), NULL});
+    if (ret == CFRDS_STATUS_OK)
+    {
+        int val = cfrds_buffer_to_debugger_info(response);
+        if (val == -1)
+        {
+            server->error_code = -1;
+            return CFRDS_STATUS_RESPONSE_ERROR;
+        }
+    }
+
+    return ret;
+}
+
+cfrds_status cfrds_command_debugger_global_breakpoint_on_exception(cfrds_server *server, const char *session_id, bool value)
+{
+    cfrds_status ret;
+
+    cfrds_buffer_defer(response);
+
+    if (server == NULL)
+    {
+        return CFRDS_STATUS_SERVER_IS_NULL;
+    }
+
+    if (session_id == NULL)
+    {
+        return CFRDS_STATUS_PARAM_IS_NULL;
+    }
+
+    WDDX_defer(wddx);
+    wddx = wddx_create();
+    wddx_put_bool(wddx, "0,BREAK_ON_EXCEPTION", value);
+    wddx_put_string(wddx, "0,COMMAND", "GLOBAL_BREAK_ON_EXCEPTION");
 
     ret = cfrds_send_command(server, &response, "DBGREQUEST", (const char *[]){ "DBG_REQUEST", session_id, wddx_to_xml(wddx), NULL});
     if (ret == CFRDS_STATUS_OK)
@@ -577,9 +641,79 @@ cfrds_status cfrds_command_debugger_step_out(cfrds_server *server, const char *s
     return cfrds_command_debugger_thread_action(server, session_id, thread_name, "STEP_OUT");
 }
 
+static cfrds_status cfrds_command_debugger_sync_thread_action(cfrds_server *server, const char *session_id, const char *thread_name, const char *action, cfrds_debugger_event **event)
+{
+    cfrds_status ret;
+    cfrds_buffer_defer(response);
+
+    if (server == NULL)
+        return CFRDS_STATUS_SERVER_IS_NULL;
+
+    if (session_id == NULL || thread_name == NULL || event == NULL)
+        return CFRDS_STATUS_PARAM_IS_NULL;
+
+    WDDX_defer(wddx);
+    wddx = wddx_create();
+    wddx_put_string(wddx, "0,COMMAND", action);
+    wddx_put_string(wddx, "0,THREAD", thread_name);
+
+    ret = cfrds_send_command(server, &response, "DBGREQUEST", (const char *[]){ "DBG_REQUEST", session_id, wddx_to_xml(wddx), NULL});
+    if (ret == CFRDS_STATUS_OK)
+    {
+        *event = cfrds_buffer_to_debugger_event(response);
+    }
+
+    return ret;
+}
+
+cfrds_status cfrds_command_debugger_sync_step_in(cfrds_server *server, const char *session_id, const char *thread_name, cfrds_debugger_event **event)
+{
+    return cfrds_command_debugger_sync_thread_action(server, session_id, thread_name, "SYNC_STEP_IN", event);
+}
+
+cfrds_status cfrds_command_debugger_sync_step_over(cfrds_server *server, const char *session_id, const char *thread_name, cfrds_debugger_event **event)
+{
+    return cfrds_command_debugger_sync_thread_action(server, session_id, thread_name, "SYNC_STEP_OVER", event);
+}
+
+cfrds_status cfrds_command_debugger_sync_step_out(cfrds_server *server, const char *session_id, const char *thread_name, cfrds_debugger_event **event)
+{
+    return cfrds_command_debugger_sync_thread_action(server, session_id, thread_name, "SYNC_STEP_OUT", event);
+}
+
 cfrds_status cfrds_command_debugger_continue(cfrds_server *server, const char *session_id, const char *thread_name)
 {
     return cfrds_command_debugger_thread_action(server, session_id, thread_name, "CONTINUE");
+}
+
+cfrds_status cfrds_command_debugger_get_cf_variables(cfrds_server *server, const char *session_id, const char *thread_name, cfrds_debugger_event **variables)
+{
+    cfrds_status ret;
+
+    cfrds_buffer_defer(response);
+
+    if (server == NULL)
+    {
+        return CFRDS_STATUS_SERVER_IS_NULL;
+    }
+
+    if ((session_id == NULL) || (thread_name == NULL) || (variables == NULL))
+    {
+        return CFRDS_STATUS_PARAM_IS_NULL;
+    }
+
+    WDDX_defer(wddx);
+    wddx = wddx_create();
+    wddx_put_string(wddx, "0,COMMAND", "GET_CF_VARIABLES");
+    wddx_put_string(wddx, "0,THREAD", thread_name);
+
+    ret = cfrds_send_command(server, &response, "DBGREQUEST", (const char *[]){ "DBG_REQUEST", session_id, wddx_to_xml(wddx), NULL});
+    if (ret == CFRDS_STATUS_OK)
+    {
+        *variables = cfrds_buffer_to_debugger_event(response);
+    }
+
+    return ret;
 }
 
 cfrds_status cfrds_command_debugger_watch_expression(cfrds_server *server, const char *session_id, const char *thread_name, const char *variable)

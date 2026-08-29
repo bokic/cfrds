@@ -488,6 +488,13 @@ export class Server {
     await sendRdsCommand(this.ctx, "DBGREQUEST", ["DBG_STOP", sessionName]);
   }
 
+  async debuggerServerStop(sessionName: string): Promise<void> {
+    if (sessionName === null || sessionName === undefined) {
+      throw new CFRDSError("sessionName is required");
+    }
+    await sendRdsCommand(this.ctx, "DBGREQUEST", ["DBG_SERVER_STOP", sessionName]);
+  }
+
   async debuggerGetServerInfo(sessionName: string): Promise<number> {
     if (sessionName === null || sessionName === undefined) {
       throw new CFRDSError("sessionName is required");
@@ -508,6 +515,18 @@ export class Server {
     }
     const val = enable ? "true" : "false";
     const wddx = `<wddxPacket version='1.0'><header/><data><array length='1'><struct type='java.util.HashMap'><var name='COMMAND'><string>SESSION_BREAK_ON_EXCEPTION</string></var><var name='BREAK_ON_EXCEPTION'><boolean value='${val}'/></var></struct></array></data></wddxPacket>`;
+    await sendRdsCommand(this.ctx, "DBGREQUEST", ["DBG_REQUEST", sessionName, wddx]);
+  }
+
+  async debuggerGlobalBreakpointOnException(sessionName: string, enable: boolean): Promise<void> {
+    if (sessionName === null || sessionName === undefined) {
+      throw new CFRDSError("sessionName is required");
+    }
+    if (enable === null || enable === undefined) {
+      throw new CFRDSError("enable is required");
+    }
+    const val = enable ? "true" : "false";
+    const wddx = `<wddxPacket version='1.0'><header/><data><array length='1'><struct type='java.util.HashMap'><var name='COMMAND'><string>GLOBAL_BREAK_ON_EXCEPTION</string></var><var name='BREAK_ON_EXCEPTION'><boolean value='${val}'/></var></struct></array></data></wddxPacket>`;
     await sendRdsCommand(this.ctx, "DBGREQUEST", ["DBG_REQUEST", sessionName, wddx]);
   }
 
@@ -678,6 +697,42 @@ export class Server {
     await sendRdsCommand(this.ctx, "DBGREQUEST", ["DBG_REQUEST", sessionName, wddx]);
   }
 
+  async debuggerSyncStepIn(sessionName: string, threadName: string): Promise<DebuggerEvent | null> {
+    if (sessionName === null || sessionName === undefined) {
+      throw new CFRDSError("sessionName is required");
+    }
+    if (threadName === null || threadName === undefined) {
+      throw new CFRDSError("threadName is required");
+    }
+    const wddx = `<wddxPacket version='1.0'><header/><data><array length='1'><struct type='java.util.HashMap'><var name='COMMAND'><string>SYNC_STEP_IN</string></var><var name='THREAD'><string>${escapeXml(threadName)}</string></var></struct></array></data></wddxPacket>`;
+    const raw = await sendRdsCommand(this.ctx, "DBGREQUEST", ["DBG_REQUEST", sessionName, wddx]);
+    return this.parseDebuggerEvent(raw);
+  }
+
+  async debuggerSyncStepOver(sessionName: string, threadName: string): Promise<DebuggerEvent | null> {
+    if (sessionName === null || sessionName === undefined) {
+      throw new CFRDSError("sessionName is required");
+    }
+    if (threadName === null || threadName === undefined) {
+      throw new CFRDSError("threadName is required");
+    }
+    const wddx = `<wddxPacket version='1.0'><header/><data><array length='1'><struct type='java.util.HashMap'><var name='COMMAND'><string>SYNC_STEP_OVER</string></var><var name='THREAD'><string>${escapeXml(threadName)}</string></var></struct></array></data></wddxPacket>`;
+    const raw = await sendRdsCommand(this.ctx, "DBGREQUEST", ["DBG_REQUEST", sessionName, wddx]);
+    return this.parseDebuggerEvent(raw);
+  }
+
+  async debuggerSyncStepOut(sessionName: string, threadName: string): Promise<DebuggerEvent | null> {
+    if (sessionName === null || sessionName === undefined) {
+      throw new CFRDSError("sessionName is required");
+    }
+    if (threadName === null || threadName === undefined) {
+      throw new CFRDSError("threadName is required");
+    }
+    const wddx = `<wddxPacket version='1.0'><header/><data><array length='1'><struct type='java.util.HashMap'><var name='COMMAND'><string>SYNC_STEP_OUT</string></var><var name='THREAD'><string>${escapeXml(threadName)}</string></var></struct></array></data></wddxPacket>`;
+    const raw = await sendRdsCommand(this.ctx, "DBGREQUEST", ["DBG_REQUEST", sessionName, wddx]);
+    return this.parseDebuggerEvent(raw);
+  }
+
   async debuggerContinue(sessionName: string, threadName: string): Promise<void> {
     if (sessionName === null || sessionName === undefined) {
       throw new CFRDSError("sessionName is required");
@@ -687,6 +742,18 @@ export class Server {
     }
     const wddx = `<wddxPacket version='1.0'><header/><data><array length='1'><struct type='java.util.HashMap'><var name='COMMAND'><string>CONTINUE</string></var><var name='THREAD'><string>${escapeXml(threadName)}</string></var></struct></array></data></wddxPacket>`;
     await sendRdsCommand(this.ctx, "DBGREQUEST", ["DBG_REQUEST", sessionName, wddx]);
+  }
+
+  async debuggerGetCfVariables(sessionName: string, threadName: string): Promise<DebuggerEvent | null> {
+    if (sessionName === null || sessionName === undefined) {
+      throw new CFRDSError("sessionName is required");
+    }
+    if (threadName === null || threadName === undefined) {
+      throw new CFRDSError("threadName is required");
+    }
+    const wddx = `<wddxPacket version='1.0'><header/><data><array length='1'><struct type='java.util.HashMap'><var name='COMMAND'><string>GET_CF_VARIABLES</string></var><var name='THREAD'><string>${escapeXml(threadName)}</string></var></struct></array></data></wddxPacket>`;
+    const raw = await sendRdsCommand(this.ctx, "DBGREQUEST", ["DBG_REQUEST", sessionName, wddx]);
+    return this.parseDebuggerEvent(raw);
   }
 
   async debuggerWatchExpression(sessionName: string, threadName: string, expression: string): Promise<void> {

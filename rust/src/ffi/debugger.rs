@@ -351,6 +351,24 @@ pub unsafe extern "C" fn cfrds_command_debugger_stop(
     }
 }
 
+/// Stops ColdFusion debugger server and disconnects from JVM.
+#[no_mangle]
+pub unsafe extern "C" fn cfrds_command_debugger_server_stop(
+    server: *mut FfiServer,
+    session_id: *const c_char,
+) -> cfrds_status {
+    if server.is_null() {
+        return Status::ServerIsNull as cfrds_status;
+    }
+    if session_id.is_null() {
+        return Status::ParamIsNull as cfrds_status;
+    }
+    match (*server).server.debugger_server_stop(&cstr_to_str(session_id)) {
+        Ok(()) => Status::Ok as cfrds_status,
+        Err(e) => e.status() as cfrds_status,
+    }
+}
+
 /// Retrieves the debugger server host connection port.
 #[no_mangle]
 pub unsafe extern "C" fn cfrds_command_debugger_get_server_info(
@@ -376,7 +394,7 @@ pub unsafe extern "C" fn cfrds_command_debugger_get_server_info(
     }
 }
 
-/// Configures whether breakpoint traps trigger on unhandled exceptions.
+/// Configures whether breakpoint traps trigger on unhandled exceptions (session level).
 #[no_mangle]
 pub unsafe extern "C" fn cfrds_command_debugger_breakpoint_on_exception(
     server: *mut FfiServer,
@@ -392,6 +410,28 @@ pub unsafe extern "C" fn cfrds_command_debugger_breakpoint_on_exception(
     match (*server)
         .server
         .debugger_breakpoint_on_exception(&cstr_to_str(session_id), value)
+    {
+        Ok(()) => Status::Ok as cfrds_status,
+        Err(e) => e.status() as cfrds_status,
+    }
+}
+
+/// Configures whether breakpoint traps trigger on unhandled exceptions globally.
+#[no_mangle]
+pub unsafe extern "C" fn cfrds_command_debugger_global_breakpoint_on_exception(
+    server: *mut FfiServer,
+    session_id: *const c_char,
+    value: bool,
+) -> cfrds_status {
+    if server.is_null() {
+        return Status::ServerIsNull as cfrds_status;
+    }
+    if session_id.is_null() {
+        return Status::ParamIsNull as cfrds_status;
+    }
+    match (*server)
+        .server
+        .debugger_global_breakpoint_on_exception(&cstr_to_str(session_id), value)
     {
         Ok(()) => Status::Ok as cfrds_status,
         Err(e) => e.status() as cfrds_status,
@@ -560,6 +600,84 @@ pub unsafe extern "C" fn cfrds_command_debugger_step_out(
     thread_action(server, session_id, thread_name, "STEP_OUT")
 }
 
+/// Executes synchronous step-into debugger command on a target execution thread.
+#[no_mangle]
+pub unsafe extern "C" fn cfrds_command_debugger_sync_step_in(
+    server: *mut FfiServer,
+    session_id: *const c_char,
+    thread_name: *const c_char,
+    event: *mut *mut FfiWddx,
+) -> cfrds_status {
+    if server.is_null() {
+        return Status::ServerIsNull as cfrds_status;
+    }
+    if session_id.is_null() || thread_name.is_null() || event.is_null() {
+        return Status::ParamIsNull as cfrds_status;
+    }
+    match (*server)
+        .server
+        .debugger_sync_step_in(&cstr_to_str(session_id), &cstr_to_str(thread_name))
+    {
+        Ok(ev) => {
+            *event = Box::into_raw(Box::new(FfiWddx::from_rust(ev.wddx)));
+            Status::Ok as cfrds_status
+        }
+        Err(e) => e.status() as cfrds_status,
+    }
+}
+
+/// Executes synchronous step-over debugger command on a target execution thread.
+#[no_mangle]
+pub unsafe extern "C" fn cfrds_command_debugger_sync_step_over(
+    server: *mut FfiServer,
+    session_id: *const c_char,
+    thread_name: *const c_char,
+    event: *mut *mut FfiWddx,
+) -> cfrds_status {
+    if server.is_null() {
+        return Status::ServerIsNull as cfrds_status;
+    }
+    if session_id.is_null() || thread_name.is_null() || event.is_null() {
+        return Status::ParamIsNull as cfrds_status;
+    }
+    match (*server)
+        .server
+        .debugger_sync_step_over(&cstr_to_str(session_id), &cstr_to_str(thread_name))
+    {
+        Ok(ev) => {
+            *event = Box::into_raw(Box::new(FfiWddx::from_rust(ev.wddx)));
+            Status::Ok as cfrds_status
+        }
+        Err(e) => e.status() as cfrds_status,
+    }
+}
+
+/// Executes synchronous step-out debugger command on a target execution thread.
+#[no_mangle]
+pub unsafe extern "C" fn cfrds_command_debugger_sync_step_out(
+    server: *mut FfiServer,
+    session_id: *const c_char,
+    thread_name: *const c_char,
+    event: *mut *mut FfiWddx,
+) -> cfrds_status {
+    if server.is_null() {
+        return Status::ServerIsNull as cfrds_status;
+    }
+    if session_id.is_null() || thread_name.is_null() || event.is_null() {
+        return Status::ParamIsNull as cfrds_status;
+    }
+    match (*server)
+        .server
+        .debugger_sync_step_out(&cstr_to_str(session_id), &cstr_to_str(thread_name))
+    {
+        Ok(ev) => {
+            *event = Box::into_raw(Box::new(FfiWddx::from_rust(ev.wddx)));
+            Status::Ok as cfrds_status
+        }
+        Err(e) => e.status() as cfrds_status,
+    }
+}
+
 /// Resumes the given execution thread.
 #[no_mangle]
 pub unsafe extern "C" fn cfrds_command_debugger_continue(
@@ -568,6 +686,32 @@ pub unsafe extern "C" fn cfrds_command_debugger_continue(
     thread_name: *const c_char,
 ) -> cfrds_status {
     thread_action(server, session_id, thread_name, "CONTINUE")
+}
+
+/// Retrieves all ColdFusion variable scopes and values for a thread.
+#[no_mangle]
+pub unsafe extern "C" fn cfrds_command_debugger_get_cf_variables(
+    server: *mut FfiServer,
+    session_id: *const c_char,
+    thread_name: *const c_char,
+    variables: *mut *mut FfiWddx,
+) -> cfrds_status {
+    if server.is_null() {
+        return Status::ServerIsNull as cfrds_status;
+    }
+    if session_id.is_null() || thread_name.is_null() || variables.is_null() {
+        return Status::ParamIsNull as cfrds_status;
+    }
+    match (*server)
+        .server
+        .debugger_get_cf_variables(&cstr_to_str(session_id), &cstr_to_str(thread_name))
+    {
+        Ok(ev) => {
+            *variables = Box::into_raw(Box::new(FfiWddx::from_rust(ev.wddx)));
+            Status::Ok as cfrds_status
+        }
+        Err(e) => e.status() as cfrds_status,
+    }
 }
 
 /// Configures watch expression evaluation for a thread.

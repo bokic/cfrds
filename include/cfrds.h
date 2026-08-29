@@ -1219,6 +1219,14 @@ EXPORT_CFRDS cfrds_status cfrds_command_debugger_start(cfrds_server *server, cfr
 EXPORT_CFRDS cfrds_status cfrds_command_debugger_stop(cfrds_server *server, const char *session_id);
 
 /**
+ * @brief Stops ColdFusion debugger server and disconnects from JVM.
+ * @param server Initialized server connection.
+ * @param session_id Active session ID string to stop.
+ * @return Status code.
+ */
+EXPORT_CFRDS cfrds_status cfrds_command_debugger_server_stop(cfrds_server *server, const char *session_id);
+
+/**
  * @brief Retrieves debugger server host connection port configuration.
  * @param server Initialized server connection.
  * @param session_id Active session ID string.
@@ -1228,13 +1236,22 @@ EXPORT_CFRDS cfrds_status cfrds_command_debugger_stop(cfrds_server *server, cons
 EXPORT_CFRDS cfrds_status cfrds_command_debugger_get_server_info(cfrds_server *server, const char *session_id, uint16_t *port);
 
 /**
- * @brief Configures whether to trigger breakpoint traps on unhandled exception errors.
+ * @brief Configures whether to trigger breakpoint traps on unhandled exception errors (session level).
  * @param server Initialized server connection.
  * @param session_id Active session ID string.
  * @param value True to enable exception trapping, false to disable.
  * @return Status code.
  */
 EXPORT_CFRDS cfrds_status cfrds_command_debugger_breakpoint_on_exception(cfrds_server *server, const char *session_id, bool value);
+
+/**
+ * @brief Configures whether to trigger breakpoint traps on unhandled exception errors globally.
+ * @param server Initialized server connection.
+ * @param session_id Active session ID string.
+ * @param value True to enable exception trapping, false to disable.
+ * @return Status code.
+ */
+EXPORT_CFRDS cfrds_status cfrds_command_debugger_global_breakpoint_on_exception(cfrds_server *server, const char *session_id, bool value);
 
 /**
  * @brief Configures a breakpoint at a remote file path line location.
@@ -1467,6 +1484,36 @@ EXPORT_CFRDS cfrds_status cfrds_command_debugger_step_over(cfrds_server *server,
 EXPORT_CFRDS cfrds_status cfrds_command_debugger_step_out(cfrds_server *server, const char *session_id, const char *thread_name);
 
 /**
+ * @brief Executes synchronous step-into debugger command on a target execution thread.
+ * @param server Initialized server connection.
+ * @param session_id Active session ID string.
+ * @param thread_name Execution thread name identifier.
+ * @param event Output pointer to the allocated debugger event structure. Must be freed with cfrds_debugger_event_free.
+ * @return Status code.
+ */
+EXPORT_CFRDS cfrds_status cfrds_command_debugger_sync_step_in(cfrds_server *server, const char *session_id, const char *thread_name, cfrds_debugger_event **event);
+
+/**
+ * @brief Executes synchronous step-over debugger command on a target execution thread.
+ * @param server Initialized server connection.
+ * @param session_id Active session ID string.
+ * @param thread_name Execution thread name identifier.
+ * @param event Output pointer to the allocated debugger event structure. Must be freed with cfrds_debugger_event_free.
+ * @return Status code.
+ */
+EXPORT_CFRDS cfrds_status cfrds_command_debugger_sync_step_over(cfrds_server *server, const char *session_id, const char *thread_name, cfrds_debugger_event **event);
+
+/**
+ * @brief Executes synchronous step-out debugger command on a target execution thread.
+ * @param server Initialized server connection.
+ * @param session_id Active session ID string.
+ * @param thread_name Execution thread name identifier.
+ * @param event Output pointer to the allocated debugger event structure. Must be freed with cfrds_debugger_event_free.
+ * @return Status code.
+ */
+EXPORT_CFRDS cfrds_status cfrds_command_debugger_sync_step_out(cfrds_server *server, const char *session_id, const char *thread_name, cfrds_debugger_event **event);
+
+/**
  * @brief Resumes thread execution in a paused debugger session.
  * @param server Initialized server connection.
  * @param session_id Active session ID string.
@@ -1474,6 +1521,16 @@ EXPORT_CFRDS cfrds_status cfrds_command_debugger_step_out(cfrds_server *server, 
  * @return Status code.
  */
 EXPORT_CFRDS cfrds_status cfrds_command_debugger_continue(cfrds_server *server, const char *session_id, const char *thread_name);
+
+/**
+ * @brief Retrieves all CF variable scopes and their values for a thread.
+ * @param server Initialized server connection.
+ * @param session_id Active session ID.
+ * @param thread_name Thread context name.
+ * @param variables Output pointer to allocated WDDX structure. Must be freed with cfrds_debugger_event_free.
+ * @return Status code.
+ */
+EXPORT_CFRDS cfrds_status cfrds_command_debugger_get_cf_variables(cfrds_server *server, const char *session_id, const char *thread_name, cfrds_debugger_event **variables);
 
 /**
  * @brief Configures watch expression evaluation for a debugger execution context.

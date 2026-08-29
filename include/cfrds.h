@@ -148,6 +148,12 @@ extern "C"
 #endif
 
 /**
+ * @brief Deallocates all resources associated with a cfrds_buffer instance.
+ * @param buf Buffer instance to free. Safe to call if NULL.
+ */
+EXPORT_CFRDS void cfrds_buffer_free(cfrds_buffer *buf);
+
+/**
  * @brief Automatically deallocates and nullifies a cfrds_buffer pointer.
  * @param buf Double pointer to the buffer instance. Cleared to NULL after freeing. May be NULL.
  */

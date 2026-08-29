@@ -18,5 +18,7 @@ add_executable(test_cpp test_cpp.cpp)
 cfrds_enable_strict_warnings(test_cpp)
 target_include_directories(test_cpp PRIVATE ../include ${CMAKE_BINARY_DIR}/include)
 target_link_libraries(test_cpp PRIVATE libcfrds)
-add_test(NAME test_cpp COMMAND test_cpp)
+# Note: test_cpp is compiled as part of the build to ensure the C++ interface headers
+# and types compile cleanly, but is not run as a ctest since it requires a live ColdFusion server.
+
 

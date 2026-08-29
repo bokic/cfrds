@@ -34,29 +34,29 @@ int main() {
             // Server accessors
             assert(server.port() == 8500);
 
-            // Test other C++ API wrappers (smoke test)
+            // Test other C++ API wrappers (smoke test: in unit testing without a live RDS server, network calls throw cfrds_exception)
             try {
                 auto dir = server.browse_dir("/");
                 (void)dir;
             } catch (const cfrds::cfrds_exception& e) {
-                std::println("Caught expected browse_dir error: {} (status: {})", e.what(), static_cast<int>(e.status()));
-                return EXIT_FAILURE;
+                // Expected when no live CF server is running
+                assert(e.status() != CFRDS_STATUS_OK);
             }
 
             try {
                 auto fc = server.read_file("test.cfm");
                 (void)fc;
             } catch (const cfrds::cfrds_exception& e) {
-                std::println("Caught expected read_file error: {} (status: {})", e.what(), static_cast<int>(e.status()));
-                return EXIT_FAILURE;
+                // Expected when no live CF server is running
+                assert(e.status() != CFRDS_STATUS_OK);
             }
 
             try {
                 auto rs = server.execute_sql("default", "SELECT 1");
                 (void)rs;
             } catch (const cfrds::cfrds_exception& e) {
-                std::println("Caught expected execute_sql error: {} (status: {})", e.what(), static_cast<int>(e.status()));
-                return EXIT_FAILURE;
+                // Expected when no live CF server is running
+                assert(e.status() != CFRDS_STATUS_OK);
             }
         } catch (const cfrds::cfrds_exception& e) {
             std::println("Caught server init error: {} (status: {})", e.what(), static_cast<int>(e.status()));

@@ -1,5 +1,7 @@
 .vscode
 .cache
+/windows/cfrds_*.exe
+/windows/cfrds-*.zip
 /python/*.egg-info
 /python/build
 /python/*.so

@@ -64,8 +64,14 @@ namespace cfrds {
             Iterator& operator--() noexcept { --_index; return *this; }
             Iterator operator--(int) noexcept { Iterator tmp = *this; --_index; return tmp; }
 
-            Iterator& operator+=(difference_type n) noexcept { _index += n; return *this; }
-            Iterator& operator-=(difference_type n) noexcept { _index -= n; return *this; }
+            Iterator& operator+=(difference_type n) noexcept {
+                _index = static_cast<size_t>(static_cast<difference_type>(_index) + n);
+                return *this;
+            }
+            Iterator& operator-=(difference_type n) noexcept {
+                _index = static_cast<size_t>(static_cast<difference_type>(_index) - n);
+                return *this;
+            }
             friend Iterator operator+(Iterator it, difference_type n) noexcept { it += n; return it; }
             friend Iterator operator+(difference_type n, Iterator it) noexcept { it += n; return it; }
             friend Iterator operator-(Iterator it, difference_type n) noexcept { it -= n; return it; }
@@ -105,24 +111,24 @@ namespace cfrds {
         bool empty() const noexcept { return count() == 0; }
 
         char item_kind(size_t index) const noexcept {
-            return ::cfrds_browse_dir_item_get_kind(_ptr, static_cast<int>(index));
+            return ::cfrds_browse_dir_item_get_kind(_ptr, index);
         }
 
         std::string_view item_name(size_t index) const noexcept {
-            const char* name = ::cfrds_browse_dir_item_get_name(_ptr, static_cast<int>(index));
+            const char* name = ::cfrds_browse_dir_item_get_name(_ptr, index);
             return name ? std::string_view(name) : std::string_view{};
         }
 
         uint8_t item_permissions(size_t index) const noexcept {
-            return ::cfrds_browse_dir_item_get_permissions(_ptr, static_cast<int>(index));
+            return ::cfrds_browse_dir_item_get_permissions(_ptr, index);
         }
 
         size_t item_size(size_t index) const noexcept {
-            return ::cfrds_browse_dir_item_get_size(_ptr, static_cast<int>(index));
+            return ::cfrds_browse_dir_item_get_size(_ptr, index);
         }
 
         uint64_t item_modified(size_t index) const noexcept {
-            return ::cfrds_browse_dir_item_get_modified(_ptr, static_cast<int>(index));
+            return ::cfrds_browse_dir_item_get_modified(_ptr, index);
         }
 
         Item item(size_t index) const noexcept {
@@ -227,8 +233,14 @@ namespace cfrds {
             Iterator& operator--() noexcept { --_row; return *this; }
             Iterator operator--(int) noexcept { Iterator tmp = *this; --_row; return tmp; }
 
-            Iterator& operator+=(difference_type n) noexcept { _row += n; return *this; }
-            Iterator& operator-=(difference_type n) noexcept { _row -= n; return *this; }
+            Iterator& operator+=(difference_type n) noexcept {
+                _row = static_cast<size_t>(static_cast<difference_type>(_row) + n);
+                return *this;
+            }
+            Iterator& operator-=(difference_type n) noexcept {
+                _row = static_cast<size_t>(static_cast<difference_type>(_row) - n);
+                return *this;
+            }
             friend Iterator operator+(Iterator it, difference_type n) noexcept { it += n; return it; }
             friend Iterator operator+(difference_type n, Iterator it) noexcept { it += n; return it; }
             friend Iterator operator-(Iterator it, difference_type n) noexcept { it -= n; return it; }
@@ -274,7 +286,7 @@ namespace cfrds {
         }
 
         std::string_view get_value(size_t row, size_t col) const noexcept {
-            const char* val = ::cfrds_sql_resultset_value(_ptr, static_cast<int>(row), static_cast<int>(col));
+            const char* val = ::cfrds_sql_resultset_value(_ptr, row, col);
             return val ? std::string_view(val) : std::string_view{};
         }
 

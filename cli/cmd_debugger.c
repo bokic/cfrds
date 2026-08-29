@@ -15,7 +15,7 @@ static void print_debugger_event(const cfrds_debugger_event *event, bool json_ou
     {
         struct json_object *obj = json_object_new_object();
         json_object_object_add(obj, "status", json_object_new_string("success"));
-        json_object_object_add(obj, "event_type", json_object_new_int(cfrds_debugger_event_get_type(event)));
+        json_object_object_add(obj, "event_type", json_object_new_int((int)cfrds_debugger_event_get_type(event)));
 
         const char *source = cfrds_debugger_event_breakpoint_get_source(event);
         if (source) json_object_object_add(obj, "source", json_object_new_string(source));

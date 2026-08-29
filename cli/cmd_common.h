@@ -33,10 +33,10 @@ extern bool json_output;
 void print_json_error(cfrds_status res, const char *err_msg);
 char *base64_encode(const unsigned char *data, size_t input_length);
 
-#define HANDLE_ERROR(status_code, format_str, ...) \
+#define HANDLE_ERROR(status_code, ...) \
     do { \
         char err_buf[1024]; \
-        snprintf(err_buf, sizeof(err_buf), format_str, ##__VA_ARGS__); \
+        snprintf(err_buf, sizeof(err_buf), __VA_ARGS__); \
         if (json_output) { \
             print_json_error((status_code), err_buf); \
         } else { \

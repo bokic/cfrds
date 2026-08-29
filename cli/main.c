@@ -7,7 +7,7 @@ void print_json_error(cfrds_status res, const char *err_msg)
     struct json_object *obj = json_object_new_object();
     json_object_object_add(obj, "status", json_object_new_string("error"));
     json_object_object_add(obj, "error", json_object_new_string(err_msg ? err_msg : ""));
-    json_object_object_add(obj, "code", json_object_new_int(res));
+    json_object_object_add(obj, "code", json_object_new_int((int)res));
     printf("%s\n", json_object_to_json_string_ext(obj, JSON_C_TO_STRING_PRETTY));
     json_object_put(obj);
 }

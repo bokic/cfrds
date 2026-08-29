@@ -1,6 +1,6 @@
 [package]
 name = "cfrds"
-version = "1.1.6"
+version = "1.1.7"
 edition = "2021"
 description = "ColdFusion RDS protocol library (Rust port of libcfrds)"
 license = "MIT"

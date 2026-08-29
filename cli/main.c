@@ -120,8 +120,32 @@ static void usage(void)
     printf("  - 'graphing' - Generate ColdFusion server graph/chart.\n");
     printf("         example: `cfrds graphing <rds://[username[:password]@]host[:port]> <chart_attributes> [out_file.png] [series1] ...`\n");
     printf("\n");
-    printf("  - 'step_in', 'step_over', 'step_out', 'continue' - Debugger execution control.\n");
+    printf("  - 'dbg_start', 'dbg_stop', 'dbg_server_stop', 'dbg_info' - Debugger session management.\n");
+    printf("         examples:\n");
+    printf("           `cfrds dbg_start <rds://[username[:password]@]host[:port]>`\n");
+    printf("           `cfrds dbg_stop <rds://[username[:password]@]host[:port]> <session_id>`\n");
+    printf("           `cfrds dbg_server_stop <rds://[username[:password]@]host[:port]> <session_id>`\n");
+    printf("           `cfrds dbg_info <rds://[username[:password]@]host[:port]> <session_id>`\n");
+    printf("\n");
+    printf("  - 'dbg_breakpoint', 'dbg_clear_breakpoints' - Breakpoint control.\n");
+    printf("         examples:\n");
+    printf("           `cfrds dbg_breakpoint <rds://[username[:password]@]host[:port]> <session_id> <filepath> <line> [1|0]`\n");
+    printf("           `cfrds dbg_clear_breakpoints <rds://[username[:password]@]host[:port]> <session_id>`\n");
+    printf("           `cfrds dbg_break_on_exception <rds://[username[:password]@]host[:port]> <session_id> [1|0]`\n");
+    printf("           `cfrds dbg_global_break_on_exception <rds://[username[:password]@]host[:port]> <session_id> [1|0]`\n");
+    printf("\n");
+    printf("  - 'step_in', 'step_over', 'step_out', 'continue', 'dbg_sync_step_in', 'dbg_sync_step_over', 'dbg_sync_step_out' - Execution stepping.\n");
     printf("         example: `cfrds step_in <rds://[username[:password]@]host[:port]> <session_id> <thread_name>`\n");
+    printf("\n");
+    printf("  - 'dbg_events', 'dbg_get_cf_variables', 'dbg_watch_expression', 'dbg_set_variable', 'dbg_watch_variables', 'dbg_get_output', 'dbg_set_scope_filter' - State inspection & manipulation.\n");
+    printf("         examples:\n");
+    printf("           `cfrds dbg_events <rds://[username[:password]@]host[:port]> <session_id> [threads] [watch] [scopes] [cf_trace] [java_trace]`\n");
+    printf("           `cfrds dbg_get_cf_variables <rds://[username[:password]@]host[:port]> <session_id> <thread_name>`\n");
+    printf("           `cfrds dbg_watch_expression <rds://[username[:password]@]host[:port]> <session_id> <thread_name> <expression>`\n");
+    printf("           `cfrds dbg_set_variable <rds://[username[:password]@]host[:port]> <session_id> <thread_name> <var> <val>`\n");
+    printf("           `cfrds dbg_watch_variables <rds://[username[:password]@]host[:port]> <session_id> <vars>`\n");
+    printf("           `cfrds dbg_get_output <rds://[username[:password]@]host[:port]> <session_id> <thread_name>`\n");
+    printf("           `cfrds dbg_set_scope_filter <rds://[username[:password]@]host[:port]> <session_id> <filter>`\n");
 }
 
 static bool init_server_from_uri(const char *uri, char **hostname, uint16_t *port, char **username, char **password, char **path)

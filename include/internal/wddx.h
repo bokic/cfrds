@@ -159,7 +159,7 @@ EXPORT_CFRDS const WDDX_NODE *wddx_data(const void *src);
  * @param value Pointer to WDDX_NODE (cast internally).
  * @return Node type enum value (e.g. WDDX_NULL, WDDX_BOOLEAN, etc.). Returns WDDX_NULL if value is NULL.
  */
-EXPORT_CFRDS int wddx_node_type(const void *value);
+EXPORT_CFRDS enum wddx_type wddx_node_type(const void *value);
 
 
 

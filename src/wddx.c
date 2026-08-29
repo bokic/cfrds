@@ -17,7 +17,7 @@
 #define xmlDoc_defer(var) xmlDoc* var __attribute__((cleanup(xmlDoc_cleanup))) = NULL
 
 struct WDDX_NODE {
-    int type;
+    enum wddx_type type;
     int cnt;
     union {
         bool boolean;
@@ -686,7 +686,7 @@ const WDDX_NODE *wddx_data(const void *src_ptr)
     return src->data;
 }
 
-int wddx_node_type(const void *value_ptr)
+enum wddx_type wddx_node_type(const void *value_ptr)
 {
     const struct WDDX_NODE *value = value_ptr;
     if (value == NULL)

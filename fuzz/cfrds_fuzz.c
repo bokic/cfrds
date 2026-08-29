@@ -175,7 +175,7 @@ int LLVMFuzzerTestOneInput_wddx_xml(const uint8_t *Data, size_t Size) {
     if (wddx) {
         const WDDX_NODE *data = wddx_data(wddx);
         if (data) {
-            int type = wddx_node_type(data);
+            enum wddx_type type = wddx_node_type(data);
             if (type == WDDX_STRING) {
                 const char *s = wddx_node_string(data);
                 (void)s; // use to avoid warning

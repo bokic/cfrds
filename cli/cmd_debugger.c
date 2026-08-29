@@ -1,5 +1,4 @@
 #include "cmd_common.h"
-#include <strings.h>
 
 static bool parse_bool_arg(const char *arg, bool default_val)
 {

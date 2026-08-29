@@ -7,11 +7,14 @@
 #include <Windows.h>
 #include <WinSock2.h>
 #include <WS2tcpip.h>
+#define strcasecmp _stricmp
+#define strncasecmp _strnicmp
 #else
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <sys/mman.h>
 #include <unistd.h>
+#include <strings.h>
 #endif
 #include <string.h>
 #include <stddef.h>

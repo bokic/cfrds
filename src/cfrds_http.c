@@ -187,7 +187,11 @@ static cfrds_status http_connect(cfrds_server *server, cfrds_socket *out_sockfd)
         }
 
         trace_net_start("connect");
+#ifdef _WIN32
+        int res = connect(fd, rp->ai_addr, (int)rp->ai_addrlen);
+#else
         int res = connect(fd, rp->ai_addr, rp->ai_addrlen);
+#endif
         trace_net_end();
         if (res == 0) {
             sockfd = fd;

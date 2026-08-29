@@ -20,7 +20,7 @@ ssize_t os_write(file_hnd_fd hnd_fd, const void *buffer, size_t len)
     ssize_t ret = 0;
     DWORD written = 0;
 
-    if (WriteFile(hnd_fd, buffer, len, &written, NULL))
+    if (WriteFile(hnd_fd, buffer, (DWORD)len, &written, NULL))
         ret = written;
 
     return ret;
@@ -61,6 +61,7 @@ void* os_map(const char *pathname, size_t* size)
 
 void os_unmap(void* addr, size_t size)
 {
+    (void)size;
 	UnmapViewOfFile(addr);
 }
 

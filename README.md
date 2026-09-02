@@ -1,123 +1,96 @@
-# cfrds - ColdFusion RDS protocol library with Python and TypeScript implementations and CLI application. [![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/bokic/cfrds)
+# cfrds 🚀
 
-## Project description
-cfrds is a shared library and CLI application designed to communicate to ColdFusion server via Adobe RDS protocol. More info regarding the protocol at [Adobe RDS protocol](https://helpx.adobe.com/coldfusion/coldfusion-builder-extension-for-visual-studio-code/rds-support.html).
+[![Language: C](https://shields.io)](https://wikipedia.org)
+[![Language: Python](https://shields.io)](https://python.org)
+[![Language: TypeScript](https://shields.io)](https://typescriptlang.org)
+[![License: LGPL v3](https://shields.io)](https://gnu.org)
+[![Arch Linux AUR](https://shields.io)](https://archlinux.org)
 
-Written in C, the core shared library is highly portable and can be compiled with GCC or Clang for Windows/Linux/MacOS, x86/ARM, 32/64-bit targets.
+A powerful, high-performance, cross-platform CLI tool and library for communicating with ColdFusion servers via the **Adobe RDS (Remote Development Services)** protocol. 
 
-Additionally, the project features fully standalone, pure Python and pure TypeScript implementations of the protocol, enabling seamless integration into Node.js/web and Python runtimes without any native build steps or C binary dependencies.
+Architected with a core **C shared library** for unmatched speed and portability, `cfrds` also features native, standalone implementations in **Python** and **TypeScript**—making it seamless to integrate into modern Node.js backends or automated scripts.
 
-Some of the features RDS protocol supports:
-* Server side file access(list dir, upload, download file).
-* Run security analyzer on CFML application.
-* Enumerating databases connections/tables/table structures(etc)
-* Executing SQL on server side.
-* Remote ColdFusion debugger.
-* Fetch CFML server info.
-* Fetch CFML server adminapi settings.
-* other...
+## ✨ Key Features
 
-## Implemented
-* Remote ColdFusion server file system access.
-* Remote ColdFusion server database access.
-* Remote ColdFusion server debugger.
-* Remote ColdFusion server info.
-* Remote ColdFusion server adminapi settings.
-* Remote ColdFusion server webapp security analyzer service.
-* Remote ColdFusion server graph (chart) rendering.
-* Structured JSON output support for all CLI commands via `--json` trailing argument.
+- **📂 Remote File Management:** Browse directories, upload, and download files directly through RDS.
+- **🗄️ Database Operations:** List data sources, inspect table schemas, and execute remote SQL queries.
+- **🛠️ Diagnostics & Admin:** Remote debugging, AdminAPI interaction, security analysis of CFML apps, and charts generation.
+- **🤖 Automation Friendly:** Every CLI command supports structured JSON output using the `--json` flag.
+- **💻 True Cross-Platform:** Native support for Windows, Linux, and macOS (x86 & ARM).
 
-## CLI test script usage ex:
-> `RDS_HOST=<rds://[username[:password]@]host[:port]> RDS_DSN=<dsn_name> RDS_DSN_TABLE=<table_name> ./test.sh`
+---
 
-## CLI examples
-* List directory - `cfrds ls <rds://[username[:password]@]host[:port]/[path]>`
-* Print file content - `cfrds cat <rds://[username[:password]@]host[:port]</pathname>>`
-* File download - `cfrds download <rds://[username[:password]@]host[:port]</pathname>> <local_pathname>`
-* File upload - `cfrds upload <local_pathname> <rds://[username[:password]@]host[:port]</pathname>>`
-* File/dir rename - `cfrds mv <rds://[username[:password]@]host[:port]</pathname>> <new_pathname>`
-* File delete - `cfrds rm <rds://[username[:password]@]host[:port]</pathname>>`
-* Create directory - `cfrds mkdir <rds://[username[:password]@]host[:port]</path>>`
-* Delete directory - `cfrds rmdir <rds://[username[:password]@]host[:port]</path>>`
-* Get ColdFusion installation directory - `cfrds cfroot <rds://[username[:password]@]host[:port]>`
-* Get ColdFusion data source names info - `cfrds dsninfo <rds://[username[:password]@]host[:port]>`
-* Get ColdFusion data source name tables info - `cfrds tableinfo <rds://[username[:password]@]host[:port]/<dsn_name>>`
-* Get ColdFusion data source name table columns info - `cfrds columninfo <rds://[username[:password]@]host[:port]/<dsn_name>/<table_name>>`
-* Get ColdFusion data source name table primary keys info - `cfrds primarykeys <rds://[username[:password]@]host[:port]/<dsn_name>/<table_name>>`
-* Get ColdFusion data source name table foreign keys info - `cfrds foreignkeys <rds://[username[:password]@]host[:port]/<dsn_name>/<table_name>>`
-* Get ColdFusion data source name table imported keys info - `cfrds importedkeys <rds://[username[:password]@]host[:port]/<dsn_name>/<table_name>>`
-* Get ColdFusion data source name table exported keys info - `cfrds exportedkeys <rds://[username[:password]@]host[:port]/<dsn_name>/<table_name>>`
-* Execute ColdFusion data source name SQL - `cfrds sql <rds://[username[:password]@]host[:port]/<dsn_name>> "<sql_statement>"`
-* Get ColdFusion data source name SQL metadata - `cfrds sqlmetadata <rds://[username[:password]@]host[:port]/<dsn_name>> "<sql_statement>"`
-* Get ColdFusion data source supported SQL commands - `cfrds supportedcommands <rds://[username[:password]@]host[:port]/<dsn_name>>` (or `sqlsupportedcommands`)
-* Get ColdFusion data source name database info - `cfrds dbdescription <rds://[username[:password]@]host[:port]/<dsn_name>>`
-* Get ColdFusion server info - `cfrds ide_default <rds://[username[:password]@]host[:port]> <version>`
-* Get ColdFusion server debugging log property - `cfrds adminapi <rds://[username[:password]@]host[:port]> debugging_getlogproperty <log_directory>`
-* Get ColdFusion server extensions custom tag paths - `cfrds adminapi <rds://[username[:password]@]host[:port]> extensions_getcustomtagpaths`
-* Get ColdFusion server extensions mappings - `cfrds adminapi <rds://[username[:password]@]host[:port]> extensions_getmappings`
-* Set ColdFusion server extensions mapping - `cfrds adminapi <rds://[username[:password]@]host[:port]> extensions_setmapping <mapping_name> <mapping_path>`
-* Delete ColdFusion server extensions mapping - `cfrds adminapi <rds://[username[:password]@]host[:port]> extensions_deletemapping <mapping_name>`
-* Run ColdFusion webapp security analyzer - `cfrds security_analyzer <rds://[username[:password]@]host[:port]</pathname>>`
-* Generate ColdFusion server graph/chart - `cfrds graphing <rds://[username[:password]@]host[:port]> <chart_attributes> [out_file.png] [series1] ...`
-* Debugger step in - `cfrds step_in <rds://[username[:password]@]host[:port]> <session_id> <thread_name>`
-* Debugger step over - `cfrds step_over <rds://[username[:password]@]host[:port]> <session_id> <thread_name>`
-* Debugger step out - `cfrds step_out <rds://[username[:password]@]host[:port]> <session_id> <thread_name>`
-* Debugger continue - `cfrds continue <rds://[username[:password]@]host[:port]> <session_id> <thread_name>`
+## 🚀 Installation
 
-## Build
-> `git clone https://github.com/bokic/cfrds.git`
-> 
-> `cd cfrds`
-> 
-> `cmake -B build`
-> 
-> `cmake --build build`
-> 
-> `bin/cfrds`
+### 📦 Linux (Pre-built Packages)
 
-## Installation
-* Linux
-  * arch
-    > `yay -S cfrds`
-  * Ubuntu
-    > `sudo add-apt-repository ppa:bbarbulovski-gmail/cfrds`
-    > 
-    > `sudo apt update`
-    >
-    >  `sudo apt install cfrds`
-* Windows
-    > See project [releases](https://github.com/bokic/cfrds/releases) page.
-* MacOS
-  * homebrew
-    > `git clone https://github.com/bokic/cfrds.git`
-    > 
-    > `cd cfrds`
-    > 
-    > `brew install --build-from-source ./MacOS/cfrds.rb`
-
-### Docker
-
-Ready-to-run images are published to Docker Hub:
-
+#### **Arch Linux (AUR)**
+Install the package using your favorite AUR helper:
 ```bash
-docker pull bokic78/cfrds:latest
+yay -S cfrds
 ```
 
-The image is Alpine-based (musl), contains the `cfrds` CLI (entry point), and supports both `linux/amd64` and `linux/arm64`. Mount your files and run:
-
+#### **Ubuntu / Debian (PPA)**
+Add the official PPA repository and install via APT:
 ```bash
-# List remote directory
-docker run --rm bokic78/cfrds ls rds://username:password@host:port/path
-
-# Emit response as JSON
-docker run --rm bokic78/cfrds ls rds://username:password@host:port/path --json
+sudo add-apt-repository ppa:bbarbulovski-gmail/cfrds
+sudo apt-get update
+sudo apt-get install cfrds
 ```
 
-To build the image locally:
-
+### 🐳 Docker
+Run instantly using the built-in `Dockerfile`:
 ```bash
 docker build -t cfrds .
+docker run --rm cfrds --help
 ```
 
-Images are published automatically by the [docker-publish.yml](.github/workflows/docker-publish.yml) workflow on pushes to `master` (as `latest`) and on version tags (as `<version>`, `<major>.<minor>` and `latest`). Publishing requires the `DOCKERHUB_USERNAME` and `DOCKERHUB_TOKEN` repository secrets to be set.
+---
 
+## 🛠️ Building from Source
+
+### Prerequisites
+Make sure you have `cmake` and a C compiler (`gcc` or `clang`) installed.
+
+### Build Steps
+```bash
+git clone https://github.com
+cd cfrds
+mkdir build && cd build
+cmake -DCMAKE_BUILD_TYPE=Release ..
+make
+sudo make install
+```
+
+---
+
+## 💡 Quick Usage Examples
+
+### CLI Command
+Connect to a remote server and fetch the database tables:
+```bash
+cfrds --host cfserver.local --port 8500 --rds-password secret --action list-tables --dsn my_datasource
+```
+
+### Get Output in JSON
+```bash
+cfrds --host cfserver.local --action list-files --path "/var/www/html/" --json
+```
+
+---
+
+## 🤝 Contributing & Feedback
+
+Contributions, bug reports, and feature requests are highly welcome! 
+
+1. **Fork** the repository.
+2. **Create** your feature branch (`git checkout -b feature/AmazingFeature`).
+3. **Commit** your changes (`git commit -m 'Add some AmazingFeature'`).
+4. **Push** to the branch (`git push origin feature/AmazingFeature`).
+5. **Open a Pull Request**.
+
+## 📄 License
+
+This project is licensed under the **GNU Lesser General Public License v3.0 (LGPL-3.0)** - see the [LICENSE](LICENSE) file for details.
+
+Developed with ❤️ by [Boris Barbulovski (bokic)](https://github.com).

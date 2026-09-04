@@ -4,6 +4,10 @@ import {
   CFRDS_STATUS_COMMAND_FAILED,
   CFRDS_DEBUGGER_EVENT_TYPE,
   CFRDSError,
+  CFRDSNetworkError,
+  CFRDSResponseError,
+  CFRDSCommandError,
+  CFRDSValidationError,
   Server,
   VERSION,
   cfrds_debugger_event_get_type,
@@ -116,8 +120,6 @@ async function main(): Promise<void> {
     "getPort",
     "getUsername",
     "getPassword",
-    "getError",
-    "clearError",
     "close",
     "browseDir",
     "fileRead",
@@ -240,10 +242,6 @@ async function main(): Promise<void> {
   assert(srv.getPort() === 8501, "getPort should return constructor value");
   assert(srv.getUsername() === "testuser", "getUsername should return constructor value");
   assert(srv.getPassword() === "testpass", "getPassword should return constructor value");
-  assert(srv.getError() === null, "getError should be null initially");
-
-  srv.clearError();
-  assert(srv.getError() === null, "clearError should reset error");
 
   await srv.close();
 
@@ -285,19 +283,42 @@ async function main(): Promise<void> {
       const items0 = await srvMock.browseDir("/");
       assert(items0.length === 0, "browseDir with total = 0 should return empty list");
 
-      // Test 2: total = 3 (not divisible by 5) -> should throw CFRDSError with RESPONSE_ERROR
+      // Test 1b: validation error -> should throw CFRDSValidationError with PARAM_IS_NULL
+      let threwValidation = false;
+      try {
+        await srvMock.browseDir(null as any);
+      } catch (e: any) {
+        if (
+          e instanceof CFRDSValidationError &&
+          e instanceof CFRDSError &&
+          e.status === CFRDS_STATUS.PARAM_IS_NULL &&
+          e.message.includes("path is required")
+        ) {
+          threwValidation = true;
+        } else {
+          throw new Error(`Unexpected error thrown for browseDir(null): ${e}`);
+        }
+      }
+      assert(threwValidation, "browseDir(null) should throw CFRDSValidationError with status PARAM_IS_NULL");
+
+      // Test 2: total = 3 (not divisible by 5) -> should throw CFRDSResponseError with RESPONSE_ERROR
       mockResponseBody = Buffer.from("3:", "utf-8");
       let threw = false;
       try {
         await srvMock.browseDir("/");
       } catch (e: any) {
-        if (e instanceof CFRDSError && e.message.includes("Invalid total items count")) {
+        if (
+          e instanceof CFRDSResponseError &&
+          e instanceof CFRDSError &&
+          e.status === CFRDS_STATUS.RESPONSE_ERROR &&
+          e.message.includes("Invalid total items count")
+        ) {
           threw = true;
         } else {
           throw new Error(`Unexpected error thrown: ${e}`);
         }
       }
-      assert(threw, "browseDir should throw CFRDSError containing Invalid total items count when total is 3");
+      assert(threw, "browseDir should throw CFRDSResponseError containing Invalid total items count with status RESPONSE_ERROR when total is 3");
 
       log("Offline browseDir validation tests passed!");
 
@@ -453,33 +474,49 @@ async function main(): Promise<void> {
           return mockReq;
         };
 
-        const testErrorMapping = async (code: string | undefined, expectedMsgSubstr: string) => {
+        const testErrorMapping = async (
+          code: string | undefined,
+          expectedMsgSubstr: string,
+          expectedStatus: number
+        ) => {
           mockErrorCode = code;
           let threw = false;
           try {
             await srvMock.browseDir("/");
           } catch (e: any) {
-            if (e instanceof CFRDSError && e.message.includes(expectedMsgSubstr)) {
+            if (
+              e instanceof CFRDSNetworkError &&
+              e instanceof CFRDSError &&
+              e.status === expectedStatus &&
+              e.message.includes(expectedMsgSubstr) &&
+              (code === undefined || e.code === code) &&
+              e.cause !== undefined
+            ) {
               threw = true;
             } else {
-              throw new Error(`Unexpected error thrown for code ${code}: ${e}`);
+              throw new Error(
+                `Unexpected error thrown for code ${code}: ${e} (status: ${e?.status}, code: ${e?.code}, cause: ${e?.cause})`
+              );
             }
           }
-          assert(threw, `Should throw CFRDSError containing "${expectedMsgSubstr}" for network error code ${code}`);
+          assert(
+            threw,
+            `Should throw CFRDSNetworkError containing "${expectedMsgSubstr}" with code "${code}" and status ${expectedStatus}`
+          );
         };
 
-        await testErrorMapping("ENOTFOUND", "Socket host not found");
-        await testErrorMapping("EAI_AGAIN", "Socket host not found");
+        await testErrorMapping("ENOTFOUND", "Socket host not found", CFRDS_STATUS.SOCKET_HOST_NOT_FOUND);
+        await testErrorMapping("EAI_AGAIN", "Socket host not found", CFRDS_STATUS.SOCKET_HOST_NOT_FOUND);
         
-        await testErrorMapping("EADDRNOTAVAIL", "Socket creation failed");
-        await testErrorMapping("EACCES", "Socket creation failed");
-        await testErrorMapping("EPERM", "Socket creation failed");
-        await testErrorMapping("EMFILE", "Socket creation failed");
-        await testErrorMapping("ENFILE", "Socket creation failed");
+        await testErrorMapping("EADDRNOTAVAIL", "Socket creation failed", CFRDS_STATUS.SOCKET_CREATION_FAILED);
+        await testErrorMapping("EACCES", "Socket creation failed", CFRDS_STATUS.SOCKET_CREATION_FAILED);
+        await testErrorMapping("EPERM", "Socket creation failed", CFRDS_STATUS.SOCKET_CREATION_FAILED);
+        await testErrorMapping("EMFILE", "Socket creation failed", CFRDS_STATUS.SOCKET_CREATION_FAILED);
+        await testErrorMapping("ENFILE", "Socket creation failed", CFRDS_STATUS.SOCKET_CREATION_FAILED);
 
-        await testErrorMapping("ECONNREFUSED", "Connection to server failed");
-        await testErrorMapping("ETIMEDOUT", "Connection to server failed");
-        await testErrorMapping(undefined, "Connection to server failed");
+        await testErrorMapping("ECONNREFUSED", "Connection to server failed", CFRDS_STATUS.CONNECTION_TO_SERVER_FAILED);
+        await testErrorMapping("ETIMEDOUT", "Connection to server failed", CFRDS_STATUS.CONNECTION_TO_SERVER_FAILED);
+        await testErrorMapping(undefined, "Connection to server failed", CFRDS_STATUS.CONNECTION_TO_SERVER_FAILED);
 
         log("Offline transport error mapping tests passed!");
       }

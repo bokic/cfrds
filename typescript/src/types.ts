@@ -148,13 +148,37 @@ export interface SecurityAnalyzerStatus {
   lastupdated: number;
 }
 
+export interface CFRDSErrorOptions extends ErrorOptions {
+  status?: CFRDS_STATUS | number;
+  code?: string;
+}
+
 export class CFRDSError extends Error {
-  constructor(message: string = "") {
-    super(message);
+  private _status?: CFRDS_STATUS | number;
+  readonly code?: string;
+
+  constructor(message: string = "", optionsOrStatus?: CFRDSErrorOptions | CFRDS_STATUS | number) {
+    let options: CFRDSErrorOptions | undefined;
+    let explicitStatus: CFRDS_STATUS | number | undefined;
+
+    if (typeof optionsOrStatus === "number") {
+      explicitStatus = optionsOrStatus;
+    } else if (optionsOrStatus && typeof optionsOrStatus === "object") {
+      options = optionsOrStatus;
+      explicitStatus = options.status;
+    }
+
+    super(message, options);
     this.name = "CFRDSError";
+    this._status = explicitStatus;
+    this.code = options?.code;
+    Object.setPrototypeOf(this, new.target.prototype);
   }
 
-  get status(): number {
+  get status(): CFRDS_STATUS | number {
+    if (this._status !== undefined) {
+      return this._status;
+    }
     const msg = this.message || "";
     if (msg.includes("is required") || msg.includes("PARAM_IS_NULL")) {
       return CFRDS_STATUS.PARAM_IS_NULL;
@@ -184,6 +208,78 @@ export class CFRDSError extends Error {
   }
 }
 
+export class CFRDSNetworkError extends CFRDSError {
+  constructor(
+    message: string = "Network error",
+    optionsOrStatus?: CFRDSErrorOptions | CFRDS_STATUS | number
+  ) {
+    const defaultStatus = CFRDS_STATUS.CONNECTION_TO_SERVER_FAILED;
+    let options: CFRDSErrorOptions;
+    if (typeof optionsOrStatus === "number") {
+      options = { status: optionsOrStatus };
+    } else {
+      options = { status: defaultStatus, ...optionsOrStatus };
+    }
+    super(message, options);
+    this.name = "CFRDSNetworkError";
+    Object.setPrototypeOf(this, new.target.prototype);
+  }
+}
+
+export class CFRDSResponseError extends CFRDSError {
+  constructor(
+    message: string = "Response error",
+    optionsOrStatus?: CFRDSErrorOptions | CFRDS_STATUS | number
+  ) {
+    const defaultStatus = CFRDS_STATUS.RESPONSE_ERROR;
+    let options: CFRDSErrorOptions;
+    if (typeof optionsOrStatus === "number") {
+      options = { status: optionsOrStatus };
+    } else {
+      options = { status: defaultStatus, ...optionsOrStatus };
+    }
+    super(message, options);
+    this.name = "CFRDSResponseError";
+    Object.setPrototypeOf(this, new.target.prototype);
+  }
+}
+
+export class CFRDSCommandError extends CFRDSError {
+  constructor(
+    message: string = "Command failed",
+    optionsOrStatus?: CFRDSErrorOptions | CFRDS_STATUS | number
+  ) {
+    const defaultStatus = CFRDS_STATUS.COMMAND_FAILED;
+    let options: CFRDSErrorOptions;
+    if (typeof optionsOrStatus === "number") {
+      options = { status: optionsOrStatus };
+    } else {
+      options = { status: defaultStatus, ...optionsOrStatus };
+    }
+    super(message, options);
+    this.name = "CFRDSCommandError";
+    Object.setPrototypeOf(this, new.target.prototype);
+  }
+}
+
+export class CFRDSValidationError extends CFRDSError {
+  constructor(
+    message: string = "Validation failed",
+    optionsOrStatus?: CFRDSErrorOptions | CFRDS_STATUS | number
+  ) {
+    const defaultStatus = CFRDS_STATUS.PARAM_IS_NULL;
+    let options: CFRDSErrorOptions;
+    if (typeof optionsOrStatus === "number") {
+      options = { status: optionsOrStatus };
+    } else {
+      options = { status: defaultStatus, ...optionsOrStatus };
+    }
+    super(message, options);
+    this.name = "CFRDSValidationError";
+    Object.setPrototypeOf(this, new.target.prototype);
+  }
+}
+
 import * as http from "http";
 
 export interface ServerConfig {
@@ -196,7 +292,6 @@ export interface ServerConfig {
 export interface ServerContext {
   config: ServerConfig;
   encodedPassword: string;
-  error: string | null;
   agent?: http.Agent;
 }
 

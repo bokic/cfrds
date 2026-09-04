@@ -1,5 +1,12 @@
 import * as http from "http";
-import { CFRDSError, ServerContext } from "./types";
+import {
+  CFRDS_STATUS,
+  CFRDSError,
+  CFRDSNetworkError,
+  CFRDSResponseError,
+  CFRDSCommandError,
+  ServerContext,
+} from "./types";
 import { buildPayload, parseNumber } from "./parser";
 
 const MAX_RESPONSE_SIZE = 100 * 1024 * 1024;
@@ -9,8 +16,6 @@ export function sendRdsCommand(
   command: string,
   args: (string | Buffer)[]
 ): Promise<Buffer> {
-  ctx.error = null;
-
   const allItems = [...args];
   if (ctx.config.username !== undefined && ctx.config.username.length > 0) {
     allItems.push(ctx.config.username);
@@ -50,8 +55,10 @@ export function sendRdsCommand(
           totalSize += chunk.length;
           if (totalSize > MAX_RESPONSE_SIZE) {
             res.destroy();
-            const err = new CFRDSError(`Response too large: ${totalSize} bytes`);
-            ctx.error = err.message;
+            const err = new CFRDSResponseError(
+              `Response too large: ${totalSize} bytes`,
+              CFRDS_STATUS.RESPONSE_TOO_LARGE
+            );
             reject(err);
             return;
           }
@@ -60,9 +67,13 @@ export function sendRdsCommand(
 
         res.on("end", () => {
           if (res.statusCode !== 200) {
-            const msg = `HTTP ${res.statusCode} ${res.statusMessage || ""}`;
-            ctx.error = msg;
-            reject(new CFRDSError(`HTTP_RESPONSE_NOT_FOUND: ${msg}`));
+            const msg = `HTTP ${res.statusCode} ${res.statusMessage || ""}`.trim();
+            reject(
+              new CFRDSResponseError(
+                `HTTP_RESPONSE_NOT_FOUND: ${msg}`,
+                CFRDS_STATUS.HTTP_RESPONSE_NOT_FOUND
+              )
+            );
             return;
           }
 
@@ -73,36 +84,63 @@ export function sendRdsCommand(
 
             if (errCode < 0) {
               const errMsg = body.toString("utf-8", offset);
-              ctx.error = errMsg;
-              reject(new CFRDSError(`COMMAND_FAILED: ${errMsg}`));
+              reject(
+                new CFRDSCommandError(
+                  `COMMAND_FAILED: ${errMsg}`,
+                  CFRDS_STATUS.COMMAND_FAILED
+                )
+              );
               return;
             }
 
             resolve(body);
           } catch (e) {
             const msg = e instanceof Error ? e.message : String(e);
-            ctx.error = msg;
-            reject(e instanceof CFRDSError ? e : new CFRDSError(`RESPONSE_ERROR: ${msg}`));
+            if (e instanceof CFRDSError) {
+              reject(e);
+            } else {
+              reject(
+                new CFRDSResponseError(`RESPONSE_ERROR: ${msg}`, {
+                  status: CFRDS_STATUS.RESPONSE_ERROR,
+                  cause: e,
+                })
+              );
+            }
           }
         });
 
-        res.on("error", (err) => {
-          ctx.error = err.message;
-          reject(new CFRDSError(`Reading from socket failed: ${err.message}`));
+        res.on("error", (err: Error) => {
+          reject(
+            new CFRDSNetworkError(
+              `Reading from socket failed: ${err.message}`,
+              {
+                status: CFRDS_STATUS.READING_FROM_SOCKET_FAILED,
+                cause: err,
+              }
+            )
+          );
         });
       }
     );
 
     req.on("timeout", () => {
       req.destroy();
-      ctx.error = "Connection timed out";
-      reject(new CFRDSError("Connection timed out"));
+      const msg = "Connection timed out";
+      reject(
+        new CFRDSNetworkError(msg, {
+          status: CFRDS_STATUS.CONNECTION_TO_SERVER_FAILED,
+          code: "ETIMEDOUT",
+        })
+      );
     });
 
     req.on("error", (err: any) => {
       let desc = "Connection to server failed";
+      let status = CFRDS_STATUS.CONNECTION_TO_SERVER_FAILED;
+
       if (err && (err.code === "ENOTFOUND" || err.code === "EAI_AGAIN")) {
         desc = "Socket host not found";
+        status = CFRDS_STATUS.SOCKET_HOST_NOT_FOUND;
       } else if (
         err &&
         (err.code === "EADDRNOTAVAIL" ||
@@ -112,9 +150,17 @@ export function sendRdsCommand(
           err.code === "ENFILE")
       ) {
         desc = "Socket creation failed";
+        status = CFRDS_STATUS.SOCKET_CREATION_FAILED;
       }
-      ctx.error = `${desc}: ${err.message}`;
-      reject(new CFRDSError(`${desc}: ${err.message}`));
+
+      const msg = `${desc}: ${err.message}`;
+      reject(
+        new CFRDSNetworkError(msg, {
+          status,
+          code: err?.code,
+          cause: err,
+        })
+      );
     });
 
     req.write(payload);

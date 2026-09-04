@@ -139,6 +139,39 @@ await server.debuggerContinue(sessionId, "main");
 await server.debuggerStop(sessionId);
 ```
 
+### Error Handling
+
+All asynchronous methods reject with specific `CFRDSError` subclasses, providing type-safe error catching with status codes and native cause chains:
+
+```typescript
+import {
+  Server,
+  CFRDSError,
+  CFRDSNetworkError,
+  CFRDSResponseError,
+  CFRDSCommandError,
+  CFRDSValidationError,
+  CFRDS_STATUS,
+} from "@bokic/cfrds";
+
+try {
+  const server = new Server("cfserver.local", 8500, "admin", "secret");
+  const files = await server.browseDir("/nonexistent/dir");
+} catch (err) {
+  if (err instanceof CFRDSNetworkError) {
+    console.error(`Network error: ${err.message}, code: ${err.code}, status: ${err.status}`);
+  } else if (err instanceof CFRDSCommandError) {
+    console.error(`RDS command rejected by server: ${err.message}`);
+  } else if (err instanceof CFRDSResponseError) {
+    console.error(`Protocol or response format error: ${err.message}`);
+  } else if (err instanceof CFRDSValidationError) {
+    console.error(`Input parameter validation failed: ${err.message}`);
+  } else if (err instanceof CFRDSError) {
+    console.error(`Generic CFRDS error (${err.status}): ${err.message}`);
+  }
+}
+```
+
 ---
 
 ## API Summary

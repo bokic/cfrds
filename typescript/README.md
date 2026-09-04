@@ -37,7 +37,7 @@ async function main() {
 
   try {
     // 1. Get ColdFusion installation directory
-    const cfRoot = await server.getCFRoot();
+    const cfRoot = await server.cfRootDir();
     console.log(`ColdFusion Root: ${cfRoot}`);
 
     // 2. Browse directory contents
@@ -45,12 +45,12 @@ async function main() {
     console.log("Directory listing:", items);
 
     // 3. Read a remote file
-    const fileContent = await server.cat("/index.cfm");
+    const fileContent = await server.fileRead("/index.cfm");
     console.log("File size:", fileContent.size, "bytes");
-    console.log("Content:\n", fileContent.content.toString("utf-8"));
+    console.log("Content:\n", fileContent.data.toString("utf-8"));
 
     // 4. Query Data Sources
-    const dsns = await server.getDsnInfo();
+    const dsns = await server.sqlDsninfo();
     console.log("Available DSNs:", dsns);
   } catch (err) {
     console.error("RDS Error:", err);
@@ -71,56 +71,72 @@ main();
 const files = await server.browseDir("/var/www/html");
 
 // Read remote file as Buffer
-const file = await server.cat("/var/www/html/app.cfm");
+const file = await server.fileRead("/var/www/html/app.cfm");
 
-// Upload local file to remote server
+// Upload / write file to remote server
 const localBuffer = Buffer.from("<cfoutput>Hello World</cfoutput>");
-await server.uploadFile("/var/www/html/hello.cfm", localBuffer);
-
-// Download remote file
-const content = await server.downloadFile("/var/www/html/hello.cfm");
+await server.fileWrite("/var/www/html/hello.cfm", localBuffer);
 
 // Move / Rename
-await server.renameFile("/var/www/html/hello.cfm", "/var/www/html/index.cfm");
+await server.fileRename("/var/www/html/hello.cfm", "/var/www/html/index.cfm");
 
 // Create / Delete directory
-await server.mkdir("/var/www/html/uploads");
-await server.rmdir("/var/www/html/uploads");
+await server.dirCreate("/var/www/html/uploads");
+await server.dirRemove("/var/www/html/uploads");
 
 // Delete file
-await server.removeFile("/var/www/html/index.cfm");
+await server.fileRemove("/var/www/html/index.cfm");
+
+// Check if file exists
+const exists = await server.fileExists("/var/www/html/index.cfm");
 ```
 
 ### Database Operations
 
 ```typescript
 // List data sources
-const dsns = await server.getDsnInfo();
+const dsns = await server.sqlDsninfo();
 
 // Get tables in DSN
-const tables = await server.getTableInfo("my_dsn");
+const tables = await server.sqlTableinfo("my_dsn");
 
 // Get columns in table
-const columns = await server.getColumnInfo("my_dsn", "users");
+const columns = await server.sqlColumninfo("my_dsn", "users");
+
+// Inspect primary and foreign keys
+const pks = await server.sqlPrimarykeys("my_dsn", "users");
+const fks = await server.sqlForeignkeys("my_dsn", "users");
 
 // Execute SQL query
-const resultSet = await server.execSql("my_dsn", "SELECT * FROM users WHERE active = 1");
+const resultSet = await server.sqlSqlstmnt("my_dsn", "SELECT * FROM users WHERE active = 1");
 console.log("Columns:", resultSet.columns);
-console.log("Rows:", resultSet.data);
+console.log("Names:", resultSet.names);
+console.log("Values:", resultSet.values);
 ```
 
 ### Remote Debugger
 
 ```typescript
 // Start debugging session
-const session = await server.debuggerStart();
-console.log("Debug session ID:", session.sessionId);
+const sessionId = await server.debuggerStart();
+console.log("Debug session ID:", sessionId);
 
 // Set breakpoint
-await server.debuggerSetBreakpoint(session.sessionId, "/var/www/html/index.cfm", 15);
+await server.debuggerBreakpoint(sessionId, "/var/www/html/index.cfm", 15, true);
+
+// Synchronous step operations
+const stepInEvt = await server.debuggerSyncStepIn(sessionId, "main");
+const stepOverEvt = await server.debuggerSyncStepOver(sessionId, "main");
+const stepOutEvt = await server.debuggerSyncStepOut(sessionId, "main");
+
+// Inspect variables
+const vars = await server.debuggerGetCfVariables(sessionId, "main");
+
+// Resume execution
+await server.debuggerContinue(sessionId, "main");
 
 // Stop debugging session
-await server.debuggerStop(session.sessionId);
+await server.debuggerStop(sessionId);
 ```
 
 ---
@@ -129,22 +145,38 @@ await server.debuggerStop(session.sessionId);
 
 | Category | Method | Description |
 |---|---|---|
-| **System** | `getCFRoot()` | Get ColdFusion root installation folder |
+| **System** | `cfRootDir()` | Get ColdFusion root installation folder |
 | **System** | `ideDefault(version)` | Get CF server info |
 | **Files** | `browseDir(path)` | List directory items |
-| **Files** | `cat(path)` | Read file content |
-| **Files** | `uploadFile(path, content)` | Upload file content |
-| **Files** | `downloadFile(path)` | Download file content |
-| **Files** | `renameFile(oldPath, newPath)` | Move or rename file |
-| **Files** | `removeFile(path)` | Delete remote file |
-| **Files** | `mkdir(path)` | Create remote directory |
-| **Files** | `rmdir(path)` | Delete remote directory |
-| **Database** | `getDsnInfo()` | Enumerate data sources |
-| **Database** | `getTableInfo(dsn)` | Enumerate tables |
-| **Database** | `getColumnInfo(dsn, table)` | Enumerate table columns |
-| **Database** | `execSql(dsn, sql)` | Execute SQL query |
-| **Admin API** | `getCustomTagPaths()` | Fetch custom tag paths |
-| **Admin API** | `getMappings()` | Fetch server mappings |
+| **Files** | `fileRead(filepath)` | Read file content |
+| **Files** | `fileWrite(filepath, content)` | Write file content |
+| **Files** | `fileRename(from, to)` | Move or rename file |
+| **Files** | `fileRemove(filepath)` | Delete remote file |
+| **Files** | `dirCreate(dirpath)` | Create remote directory |
+| **Files** | `dirRemove(dirpath)` | Delete remote directory |
+| **Files** | `fileExists(filepath)` | Check if file exists |
+| **Database** | `sqlDsninfo()` | Enumerate data sources |
+| **Database** | `sqlTableinfo(dsn)` | Enumerate tables |
+| **Database** | `sqlColumninfo(dsn, table)` | Enumerate table columns |
+| **Database** | `sqlPrimarykeys(dsn, table)` | Enumerate primary keys |
+| **Database** | `sqlForeignkeys(dsn, table)` | Enumerate foreign keys |
+| **Database** | `sqlImportedkeys(dsn, table)` | Enumerate imported keys |
+| **Database** | `sqlExportedkeys(dsn, table)` | Enumerate exported keys |
+| **Database** | `sqlSqlstmnt(dsn, sql)` | Execute SQL query |
+| **Database** | `sqlMetadata(dsn, sql)` | Query SQL metadata |
+| **Database** | `sqlGetsupportedcommands()` | Enumerate supported SQL commands |
+| **Database** | `sqlDbdescription(dsn)` | Query database description |
+| **Debugger** | `debuggerStart()` / `debuggerStop()` | Start/stop debugging session |
+| **Debugger** | `debuggerServerStop()` | Stop debugger server |
+| **Debugger** | `debuggerBreakpoint(session, file, line, enable)` | Set/clear breakpoint |
+| **Debugger** | `debuggerSyncStepIn()` / `StepOver()` / `StepOut()` | Synchronous stepping |
+| **Debugger** | `debuggerGetCfVariables(session, thread)` | Get CF variable scopes and values |
+| **Admin API** | `adminapiExtensionsGetcustomtagpaths()` | Fetch custom tag paths |
+| **Admin API** | `adminapiExtensionsGetmappings()` | Fetch server mappings |
+| **Admin API** | `adminapiExtensionsSetmapping(name, path)` | Set server mapping |
+| **Admin API** | `adminapiExtensionsDeletemapping(name)` | Delete server mapping |
+| **Admin API** | `adminapiDebuggingGetlogproperty(dir)` | Fetch log directory property |
+| **Security** | `securityAnalyzerScan()` / `Status()` / `Result()` | Security analyzer scans |
 
 ---
 

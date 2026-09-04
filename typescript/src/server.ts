@@ -19,6 +19,7 @@ import {
 } from "./types";
 import { encodePassword, parseNumber, parseString, parseBytearray, parseStringListItem, wddxDeserialize, parseXml, parseWddxNode, XmlNode, safeInt } from "./parser";
 import { sendRdsCommand } from "./transport";
+import { VERSION } from "./version";
 import * as http from "http";
 
 function escapeXml(str: string): string {
@@ -28,6 +29,36 @@ function escapeXml(str: string): string {
     .replace(/>/g, "&gt;")
     .replace(/"/g, "&quot;")
     .replace(/'/g, "&apos;");
+}
+
+export function cfrds_version(): string {
+  return VERSION;
+}
+
+export function cfrds_version_major(): number {
+  const parts = VERSION.split(".");
+  return parseInt(parts[0], 10) || 0;
+}
+
+export function cfrds_version_minor(): number {
+  const parts = VERSION.split(".");
+  return parseInt(parts[1], 10) || 0;
+}
+
+export function cfrds_version_patch(): number {
+  const parts = VERSION.split(".");
+  if (parts.length >= 3) {
+    const patchStr = parts[2].split(/[-+]/)[0];
+    return parseInt(patchStr, 10) || 0;
+  }
+  return 0;
+}
+
+export function cfrds_version_int(): number {
+  const major = cfrds_version_major();
+  const minor = cfrds_version_minor();
+  const patch = cfrds_version_patch();
+  return major * 10000 + minor * 100 + patch;
 }
 
 export class Server {

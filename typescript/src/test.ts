@@ -1,4 +1,7 @@
 import {
+  CFRDS_STATUS,
+  CFRDS_STATUS_OK,
+  CFRDS_STATUS_COMMAND_FAILED,
   CFRDS_DEBUGGER_EVENT_TYPE,
   CFRDSError,
   Server,
@@ -25,6 +28,11 @@ import {
   cfrds_debugger_event_get_cf_trace_item,
   cfrds_debugger_event_get_java_trace_count,
   cfrds_debugger_event_get_java_trace_item,
+  cfrds_version,
+  cfrds_version_major,
+  cfrds_version_minor,
+  cfrds_version_patch,
+  cfrds_version_int,
 } from "./index";
 import { encodePassword, parseStringListItem, wddxDeserialize } from "./parser";
 import * as http from "http";
@@ -66,6 +74,21 @@ async function main(): Promise<void> {
   log(`Module version: ${VERSION}`);
 
   // Verify status enums and constants
+  assert(CFRDS_STATUS_OK === 0, "CFRDS_STATUS_OK should be 0");
+  assert(CFRDS_STATUS.OK === 0, "CFRDS_STATUS.OK should be 0");
+  assert(CFRDS_STATUS_COMMAND_FAILED === 6, "CFRDS_STATUS_COMMAND_FAILED should be 6");
+  assert(CFRDS_STATUS.COMMAND_FAILED === 6, "CFRDS_STATUS.COMMAND_FAILED should be 6");
+
+  // Verify version functions
+  assert(cfrds_version() === VERSION, "cfrds_version() should match VERSION");
+  assert(typeof cfrds_version_major() === "number", "cfrds_version_major() should return a number");
+  assert(typeof cfrds_version_minor() === "number", "cfrds_version_minor() should return a number");
+  assert(typeof cfrds_version_patch() === "number", "cfrds_version_patch() should return a number");
+  assert(
+    cfrds_version_int() === cfrds_version_major() * 10000 + cfrds_version_minor() * 100 + cfrds_version_patch(),
+    "cfrds_version_int() calculation mismatch"
+  );
+
   assert(
     CFRDS_DEBUGGER_EVENT_TYPE.BREAKPOINT === 1,
     "CFRDS_DEBUGGER_EVENT_TYPE.BREAKPOINT should be 1"
@@ -75,10 +98,17 @@ async function main(): Promise<void> {
     "CFRDS_DEBUGGER_EVENT_TYPE.BREAKPOINT_SET should be 0"
   );
 
-  // Verify CFRDSError works
+  // Verify CFRDSError works and maps status correctly
   const err = new CFRDSError("test error");
   assert(err.message === "test error", "CFRDSError message should match");
   assert(err.name === "CFRDSError", "CFRDSError.name should be 'CFRDSError'");
+  assert(err.status === CFRDS_STATUS_COMMAND_FAILED, "CFRDSError status default mismatch");
+
+  const nullParamErr = new CFRDSError("filepath is required");
+  assert(nullParamErr.status === CFRDS_STATUS.PARAM_IS_NULL, "CFRDSError status for required param mismatch");
+
+  const connErr = new CFRDSError("Connection to server failed: ECONNREFUSED");
+  assert(connErr.status === CFRDS_STATUS.CONNECTION_TO_SERVER_FAILED, "CFRDSError status for connection failure mismatch");
 
   // Verify Server class exists and has all expected methods on its prototype
   const serverMethods = [

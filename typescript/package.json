@@ -10,7 +10,7 @@
     "build": "tsc",
     "prebuild:test": "npm run version",
     "build:test": "tsc",
-    "test": "npm run build:test && node dist/test.js",
+    "test": "npm run build:test && node --test dist/test.js",
     "clean": "rm -rf dist",
     "publish:npm": "node scripts/publish.js"
   },

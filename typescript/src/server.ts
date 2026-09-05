@@ -91,10 +91,6 @@ export class Server {
       this.ctx.agent.destroy();
       this.ctx.agent = undefined;
     }
-    this.ctx.config.password = "";
-    this.ctx.encodedPassword = "";
-    this.ctx.config.username = "";
-    this.ctx.config.host = "";
   }
 
   // Browse Directory

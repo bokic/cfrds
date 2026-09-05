@@ -1,3 +1,4 @@
+import { XMLParser } from "fast-xml-parser";
 import { CFRDS_STATUS, CFRDSError, CFRDSResponseError, ServerContext } from "./types";
 
 const FILLUP_KEY = Buffer.from("4p0L@r1$", "utf-8");
@@ -107,89 +108,67 @@ export interface XmlNode {
   text: string;
 }
 
-function unescapeXml(val: string): string {
-  return val
-    .replace(/&lt;/g, "<")
-    .replace(/&gt;/g, ">")
-    .replace(/&amp;/g, "&")
-    .replace(/&quot;/g, '"')
-    .replace(/&apos;/g, "'");
-}
+const xmlParser = new XMLParser({
+  ignoreAttributes: false,
+  attributeNamePrefix: "@_",
+  preserveOrder: true,
+  cdataPropName: "__cdata",
+  trimValues: false,
+  processEntities: true,
+  htmlEntities: true,
+});
 
 export function parseXml(xml: string): XmlNode {
-  xml = xml.replace(/<!--[\s\S]*?-->/g, "");
-  xml = xml.replace(/<\?[\s\S]*?\?>/g, "");
-
-  const tokenRegex = /<!\[CDATA\[([\s\S]*?)\]\]>|<(\/)?([a-zA-Z0-9_\-:]+)((?:\s+[a-zA-Z0-9_\-:]+=(?:'[^']*'|"[^"]*"|[^\s>]+))*)\s*(\/)?>/g;
-
-  let lastIndex = 0;
   const root: XmlNode = { tag: "?root?", attrs: {}, children: [], text: "" };
-  const stack: XmlNode[] = [root];
+  if (!xml || !xml.trim()) {
+    return root;
+  }
 
-  let match;
-  while ((match = tokenRegex.exec(xml)) !== null) {
-    const textBetween = xml.slice(lastIndex, match.index);
-    if (textBetween) {
-      const parent = stack[stack.length - 1];
-      if (parent) {
-        parent.text += unescapeXml(textBetween);
-      }
-    }
+  const ordered = xmlParser.parse(xml);
+  if (!Array.isArray(ordered)) {
+    return root;
+  }
 
-    const [full, cdataText, isClose, tagName, attrStr, isSelfClose] = match;
-
-    if (cdataText !== undefined) {
-      const parent = stack[stack.length - 1];
-      if (parent) {
-        parent.text += cdataText;
-      }
-    } else {
-      let tagLower = tagName.toLowerCase();
-      if (tagLower.includes(":")) {
-        tagLower = tagLower.split(":")[1];
-      }
-      if (isClose) {
-        if (stack.length > 1 && stack[stack.length - 1].tag === tagLower) {
-          stack.pop();
-        }
-      } else {
-        const attrs: Record<string, string> = {};
-        if (attrStr) {
-          const attrRegex = /([a-zA-Z0-9_\-:]+)=(?:'([^']*)'|"([^"]*)"|([^\s>]+))/g;
-          let attrMatch;
-          while ((attrMatch = attrRegex.exec(attrStr)) !== null) {
-            attrs[attrMatch[1].toLowerCase()] = attrMatch[2] !== undefined ? attrMatch[2] : (attrMatch[3] !== undefined ? attrMatch[3] : attrMatch[4]);
+  function processList(items: any[], parent: XmlNode) {
+    for (const item of items) {
+      if (!item || typeof item !== "object") continue;
+      const keys = Object.keys(item);
+      for (const k of keys) {
+        if (k === ":@") continue;
+        if (k === "#text") {
+          parent.text += String(item[k]);
+        } else if (k === "__cdata") {
+          const cdataArr = item[k];
+          if (Array.isArray(cdataArr)) {
+            for (const c of cdataArr) {
+              if (c && c["#text"] !== undefined) {
+                parent.text += String(c["#text"]);
+              }
+            }
+          }
+        } else {
+          let tagName = k.toLowerCase();
+          if (tagName.includes(":")) {
+            tagName = tagName.split(":")[1];
+          }
+          const attrs: Record<string, string> = {};
+          if (item[":@"]) {
+            for (const [ak, av] of Object.entries(item[":@"])) {
+              const cleanKey = ak.startsWith("@_") ? ak.slice(2).toLowerCase() : ak.toLowerCase();
+              attrs[cleanKey] = String(av);
+            }
+          }
+          const node: XmlNode = { tag: tagName, attrs, children: [], text: "" };
+          parent.children.push(node);
+          if (Array.isArray(item[k])) {
+            processList(item[k], node);
           }
         }
-
-        const node: XmlNode = {
-          tag: tagLower,
-          attrs,
-          children: [],
-          text: ""
-        };
-
-        const parent = stack[stack.length - 1];
-        if (parent) {
-          parent.children.push(node);
-        }
-
-        if (!isSelfClose) {
-          stack.push(node);
-        }
       }
     }
-    lastIndex = tokenRegex.lastIndex;
   }
 
-  const textEnd = xml.slice(lastIndex);
-  if (textEnd) {
-    const parent = stack[stack.length - 1];
-    if (parent) {
-      parent.text += unescapeXml(textEnd);
-    }
-  }
-
+  processList(ordered, root);
   return root;
 }
 

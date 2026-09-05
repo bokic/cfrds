@@ -14,7 +14,7 @@
 - **Remote Debugger**: Connect to ColdFusion remote debugger, control execution (step into, step over, resume), set breakpoints, and listen to events.
 - **Admin API & Server Info**: Fetch ColdFusion installation directory (`cfroot`), inspect server info, retrieve custom tag paths, and manage CF mappings.
 - **Security Analyzer**: Run remote CFML security analyzer scans.
-- **Zero External Dependencies**: Pure TypeScript, built on native Node.js HTTP/HTTPS primitives.
+- **Robust & Lightweight**: Pure TypeScript, built on native Node.js HTTP/HTTPS primitives with fast, secure WDDX XML parsing via `fast-xml-parser`.
 
 ---
 

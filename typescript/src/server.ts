@@ -21,7 +21,7 @@ import {
   IdeDefaultResult,
   SecurityAnalyzerStatus,
 } from "./types";
-import { encodePassword, parseNumber, parseString, parseBytearray, parseStringListItem, wddxDeserialize, parseXml, parseWddxNode, XmlNode, safeInt } from "./parser";
+import { encodePassword, parseNumber, parseString, parseBytearray, parseTimestamp, parseStringListItem, wddxDeserialize, parseXml, parseWddxNode, XmlNode, safeInt } from "./parser";
 import { sendRdsCommand } from "./transport";
 import { VERSION } from "./version";
 import * as http from "http";
@@ -121,13 +121,7 @@ export class Server {
       const permsNum = strPerms ? parseInt(strPerms, 10) : 0;
       const size = strSize ? parseInt(strSize, 10) : 0;
 
-      let modified = 0;
-      if (strTs && strTs.includes(",")) {
-        const parts = strTs.split(",");
-        const num1 = parseInt(parts[0], 10);
-        const num2 = parseInt(parts[1], 10);
-        modified = Math.floor((num1 + (num2 * 0x100000000)) / 10000) - 11644473600000;
-      }
+      const modified = parseTimestamp(strTs);
 
       // Map permission flags from C source's cfrds_browse_dir_item_get_permissions semantics:
       // - 0x01: Read-only (R) -> maps to FILE_ATTRIBUTE_READONLY (1)
@@ -162,9 +156,9 @@ export class Server {
     const raw = await sendRdsCommand(this.ctx, "FILEIO", [filepath, "READ", ""]);
     const [, offset] = parseNumber(raw, 0);
     const [dataBytes, o1] = parseBytearray(raw, offset);
-    const [modified, o2] = parseString(raw, o1);
+    const [modifiedStr, o2] = parseString(raw, o1);
     const [permission] = parseString(raw, o2);
-    return { data: dataBytes, size: dataBytes.length, modified, permission };
+    return { data: dataBytes, modified: parseTimestamp(modifiedStr), permission };
   }
 
   async fileWrite(filepath: string, content: string | Buffer): Promise<void> {

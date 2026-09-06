@@ -43,7 +43,7 @@ import {
   cfrds_version_patch,
   cfrds_version_int,
 } from "./index";
-import { encodePassword, parseStringListItem, wddxDeserialize } from "./parser";
+import { encodePassword, parseStringListItem, parseTimestamp, wddxDeserialize } from "./parser";
 
 describe("cfrds TypeScript module", () => {
   describe("Version and Status Constants", () => {
@@ -219,6 +219,32 @@ describe("cfrds TypeScript module", () => {
 
       const items3 = parseStringListItem('"quoted with spaces",simple');
       assert.deepEqual(items3, ["quoted with spaces", "simple"]);
+    });
+
+    test("parseTimestamp parses various ColdFusion date formats to milliseconds timestamp", () => {
+      assert.equal(typeof parseTimestamp, "function");
+
+      // Ticks format "num1,num2"
+      const ticksTs = parseTimestamp("1336987654321,30800000");
+      assert.equal(typeof ticksTs, "number");
+      assert.ok(ticksTs > 0);
+
+      // CF SimpleDateFormat "hh:mm:ssa MM/dd/yyyy"
+      const cfTs = parseTimestamp("02:15:30PM 09/05/2026");
+      assert.equal(typeof cfTs, "number");
+      assert.ok(cfTs > 0);
+      const d = new Date(cfTs);
+      assert.equal(d.getFullYear(), 2026);
+      assert.equal(d.getMonth(), 8); // September (0-indexed)
+      assert.equal(d.getDate(), 5);
+
+      // ISO / standard date string format
+      const isoTs = parseTimestamp("2026-07-22 05:00:00");
+      assert.equal(typeof isoTs, "number");
+      assert.ok(isoTs > 0);
+
+      // Empty / invalid
+      assert.equal(parseTimestamp(""), 0);
     });
   });
 

@@ -57,6 +57,38 @@ export function parseBytearray(data: Buffer, offset: number): [Buffer, number] {
   return [data.subarray(newOffset, newOffset + size), newOffset + size];
 }
 
+export function parseTimestamp(str: string): number {
+  if (!str) return 0;
+  // Format 1: ColdFusion Windows ticks format "num1,num2"
+  if (str.includes(",")) {
+    const parts = str.split(",");
+    const num1 = parseInt(parts[0], 10);
+    const num2 = parseInt(parts[1], 10);
+    if (!isNaN(num1) && !isNaN(num2)) {
+      return Math.floor((num1 + (num2 * 0x100000000)) / 10000) - 11644473600000;
+    }
+  }
+  // Format 2: CF SimpleDateFormat format "hh:mm:ssa MM/dd/yyyy"
+  const m = str.trim().match(/^(\d{1,2}):(\d{2}):(\d{2})([AaPp][Mm])\s+(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+  if (m) {
+    const [, h, min, s, ampm, month, day, year] = m;
+    let hour = parseInt(h, 10);
+    if (ampm.toUpperCase() === "PM" && hour < 12) hour += 12;
+    if (ampm.toUpperCase() === "AM" && hour === 12) hour = 0;
+    const d = new Date(parseInt(year, 10), parseInt(month, 10) - 1, parseInt(day, 10), hour, parseInt(min, 10), parseInt(s, 10));
+    const t = d.getTime();
+    if (!isNaN(t)) return t;
+  }
+  // Format 3: ISO 8601 or standard Date string format (e.g. "2026-07-22 05:00:00")
+  const parsed = Date.parse(str.replace(" ", "T"));
+  if (!isNaN(parsed)) return parsed;
+  const direct = Date.parse(str);
+  if (!isNaN(direct)) return direct;
+
+  const num = parseInt(str, 10);
+  return isNaN(num) ? 0 : num;
+}
+
 export function parseStringListItem(s: string): string[] {
   const items: string[] = [];
   let i = 0;

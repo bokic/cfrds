@@ -46,7 +46,7 @@ async function main() {
 
     // 3. Read a remote file
     const fileContent = await server.fileRead("/index.cfm");
-    console.log("File size:", fileContent.size, "bytes");
+    console.log("File size:", fileContent.data.length, "bytes");
     console.log("Content:\n", fileContent.data.toString("utf-8"));
 
     // 4. Query Data Sources

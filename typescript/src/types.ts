@@ -53,8 +53,7 @@ export interface BrowseDirItem {
 
 export interface FileContent {
   data: Buffer;
-  size: number;
-  modified: string;
+  modified: number;
   permission: string;
 }
 

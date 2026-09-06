@@ -118,12 +118,12 @@ jobs:
         sudo apt-get install -y libjson-c-dev libxml2-dev clang
 
     - name: Build fuzz target
-      working-directory: fuzz
-      run: make
+      run: |
+        cmake -B build-fuzz -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++ -DCFRDS_BUILD_FUZZ=ON
+        cmake --build build-fuzz --target fuzz_rds_string
 
     - name: Run fuzz target (30 seconds)
-      working-directory: fuzz
       # Run with a time limit. -max_total_time limits the total fuzzing duration.
       # -max_len caps input size to prevent excessive memory use.
       # Exit code 0 means no crash was found within the time limit.
-      run: ./fuzz_rds_string -max_total_time=30 -max_len=4096
+      run: ./bin/fuzz_rds_string -max_total_time=30 -max_len=4096

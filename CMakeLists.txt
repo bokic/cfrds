@@ -77,6 +77,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 option(CFRDS_ENABLE_WARNINGS "Enable strict compiler warnings (-Wall -Wextra -Wpedantic -Wconversion)" ON)
 option(CFRDS_WARNINGS_AS_ERRORS "Treat compiler warnings as errors (-Werror)" OFF)
 option(CFRDS_SANITIZE "Enable AddressSanitizer and UndefinedBehaviorSanitizer" OFF)
+option(CFRDS_BUILD_FUZZ "Build fuzz targets (requires Clang)" OFF)
 
 # Apply strict warnings to a target. Uses a per-target function (rather than
 # add_compile_options) so third-party code pulled in via FetchContent, such as
@@ -333,5 +334,9 @@ install(FILES
 if(BUILD_TESTING)
     enable_testing()
     add_subdirectory(tests)
+endif()
+
+if(CFRDS_BUILD_FUZZ)
+    add_subdirectory(fuzz)
 endif()
 

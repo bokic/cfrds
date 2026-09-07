@@ -6,8 +6,11 @@
 /python/build
 /python/*.so
 /build
+/build-*
 /deps
 /bin
+/windows/deps-build-*
+/windows/build-*
 out
 .vs
 CMakeLists.txt.user

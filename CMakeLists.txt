@@ -113,9 +113,30 @@ endif()
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
-set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/bin")
-set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/bin")
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/bin")
+# --- Windows architecture flavor (x64 / arm / arm64) ---
+# CFRDS_ARCH can be set manually (-DCFRDS_ARCH=arm64) or auto-detected from
+# CMAKE_SYSTEM_PROCESSOR.  Used to pick per-arch output and dependency dirs.
+if(WIN32)
+    if(NOT CFRDS_ARCH)
+        if(CMAKE_SYSTEM_PROCESSOR MATCHES "ARM64|aarch64|AARCH64")
+            set(CFRDS_ARCH "arm64")
+        elseif(CMAKE_SYSTEM_PROCESSOR MATCHES "^(ARM|arm|armv7)$")
+            set(CFRDS_ARCH "arm")
+        else()
+            set(CFRDS_ARCH "x64")
+        endif()
+    endif()
+    message(STATUS "cfrds arch: ${CFRDS_ARCH}")
+endif()
+
+if(WIN32)
+    set(CFRDS_BIN_DIR "${CMAKE_SOURCE_DIR}/bin/${CFRDS_ARCH}")
+else()
+    set(CFRDS_BIN_DIR "${CMAKE_SOURCE_DIR}/bin")
+endif()
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${CFRDS_BIN_DIR}")
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CFRDS_BIN_DIR}")
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CFRDS_BIN_DIR}")
 
 set(PROJECT_LIB_NAME cfrds)
 
@@ -191,10 +212,10 @@ if(WIN32)
         json-c
     )
     target_include_directories(cfrds_cli PRIVATE
-        ${CMAKE_CURRENT_SOURCE_DIR}/deps/json-c/include
+        ${CMAKE_CURRENT_SOURCE_DIR}/deps/${CFRDS_ARCH}/json-c/include
     )
     target_link_directories(cfrds_cli PRIVATE
-        ${CMAKE_CURRENT_SOURCE_DIR}/deps/json-c
+        ${CMAKE_CURRENT_SOURCE_DIR}/deps/${CFRDS_ARCH}/json-c
     )
 else()
     target_link_libraries(cfrds_cli PRIVATE json-c::json-c)
@@ -241,12 +262,12 @@ if(WIN32)
     )
     target_sources(libcfrds PRIVATE ${RC_DLL_OUT_FILE})
     target_include_directories(libcfrds PRIVATE
-        ${CMAKE_CURRENT_SOURCE_DIR}/deps/libxml2/include
-        ${CMAKE_CURRENT_SOURCE_DIR}/deps/json-c/include
+        ${CMAKE_CURRENT_SOURCE_DIR}/deps/${CFRDS_ARCH}/libxml2/include
+        ${CMAKE_CURRENT_SOURCE_DIR}/deps/${CFRDS_ARCH}/json-c/include
     )
     target_link_directories(libcfrds PRIVATE
-        ${CMAKE_CURRENT_SOURCE_DIR}/deps/libxml2
-        ${CMAKE_CURRENT_SOURCE_DIR}/deps/json-c
+        ${CMAKE_CURRENT_SOURCE_DIR}/deps/${CFRDS_ARCH}/libxml2
+        ${CMAKE_CURRENT_SOURCE_DIR}/deps/${CFRDS_ARCH}/json-c
     )
     target_link_libraries(libcfrds PRIVATE
         wsock32

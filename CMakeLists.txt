@@ -52,20 +52,17 @@ project(cfrds VERSION ${CFRDS_GIT_TAG} DESCRIPTION "ColdFusion RDS Library" LANG
 
 find_program(BASH_EXECUTABLE bash)
 if(BASH_EXECUTABLE)
+    file(TO_CMAKE_PATH "${CMAKE_CURRENT_SOURCE_DIR}" _src_dir_fwd)
     execute_process(
-        COMMAND "${BASH_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/scripts/update_version.sh" "${CFRDS_GIT_TAG}"
-        WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
+        COMMAND "${BASH_EXECUTABLE}" "${_src_dir_fwd}/scripts/update_version.sh" "${CFRDS_GIT_TAG}"
+        WORKING_DIRECTORY "${_src_dir_fwd}"
         RESULT_VARIABLE UPDATE_VERSION_RESULT
     )
+    if(NOT UPDATE_VERSION_RESULT EQUAL 0)
+        message(WARNING "Failed to update version in include/cfrds.h (exit code: ${UPDATE_VERSION_RESULT})")
+    endif()
 else()
-    execute_process(
-        COMMAND "${CMAKE_CURRENT_SOURCE_DIR}/scripts/update_version.sh" "${CFRDS_GIT_TAG}"
-        WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
-        RESULT_VARIABLE UPDATE_VERSION_RESULT
-    )
-endif()
-if(NOT UPDATE_VERSION_RESULT EQUAL 0)
-    message(WARNING "Failed to update version in include/cfrds.h (exit code: ${UPDATE_VERSION_RESULT})")
+    message(STATUS "bash not found; skipping version update in include/cfrds.h")
 endif()
 
 set(CMAKE_C_STANDARD 11)
@@ -285,9 +282,18 @@ set(LIBCFRDS_PUBLIC_HEADERS
 )
 
 
+include(CheckIPOSupported)
+check_ipo_supported(RESULT ipo_supported)
+if(ipo_supported)
+    set(ipo_property TRUE)
+else()
+    set(ipo_property FALSE)
+    message(STATUS "IPO/LTO not supported by this toolchain; skipping")
+endif()
+
 set_target_properties(libcfrds PROPERTIES
     PUBLIC_HEADER "${LIBCFRDS_PUBLIC_HEADERS}"
-    INTERPROCEDURAL_OPTIMIZATION TRUE
+    INTERPROCEDURAL_OPTIMIZATION ${ipo_property}
     C_VISIBILITY_PRESET hidden
     OUTPUT_NAME "cfrds"
     VERSION ${CFRDS_GIT_TAG}

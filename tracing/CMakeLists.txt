@@ -20,6 +20,8 @@ if (NOT ENABLE_PERFETTO)
     return()
 endif()
 
+include(GNUInstallDirs)
+
 set(PERFETTO_CACHE_DIR "${CMAKE_SOURCE_DIR}/.cache/perfetto" CACHE PATH "Directory for cached Perfetto SDK")
 set(PERFETTO_SRC_DIR "${PERFETTO_CACHE_DIR}/src")
 set(PERFETTO_LIB_DIR "${PERFETTO_CACHE_DIR}/lib")

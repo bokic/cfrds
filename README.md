@@ -5,6 +5,7 @@
 [![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?logo=typescript&logoColor=white)](https://typescriptlang.org)
 [![License: LGPL v3](https://img.shields.io/badge/License-LGPL_v3-blue?logo=gnu&logoColor=white)](https://www.gnu.org/licenses/lgpl-3.0)
 [![AUR version](https://img.shields.io/aur/version/cfrds?logo=arch-linux)](https://aur.archlinux.org/packages/cfrds)
+[![Windows Installer / ZIP](https://img.shields.io/badge/Windows-Installer%20%2F%20ZIP-0078D6?logo=data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA4OCA4OCI+PHBhdGggZmlsbD0iI2ZmZmZmZiIgZD0iTTAgMTIuNDAybDM1LjY4Ny00Ljg2LjAxNiAzNC40MjMtMzUuNjcuMjAzem0zNS42NyAzMy41MjlSLjAyOCAzNC40NTNMLjAyOCA3NS40OC4wMDEgNDUuNzI4em00LjMyNi0zOS4wMjdMODcuOTE0IDB2NDEuNTI3bC00Ny45MTguMzc2em00Ny45MjkgNDUuMDM0Vjg4TDM5Ljk5NiA3Ni4wNDdsLjAyNC0zNC42MnoiLz48L3N2Zz4=)](https://github.com/bokic/cfrds/releases/latest)
 
 A powerful, high-performance, cross-platform CLI tool and library for communicating with ColdFusion servers via the **Adobe RDS (Remote Development Services)** protocol. 
 
@@ -37,6 +38,9 @@ sudo add-apt-repository ppa:bbarbulovski-gmail/cfrds
 sudo apt-get update
 sudo apt-get install cfrds
 ```
+
+### 🪟 Windows (Installer & Portable ZIP)
+Download the installer (`.exe`) or portable archive (`.zip`) from the [Releases](https://github.com/bokic/cfrds/releases/latest) page.
 
 ### 🐳 Docker
 Run instantly using the built-in `Dockerfile`:

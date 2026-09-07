@@ -1,10 +1,10 @@
 # cfrds 🚀
 
-[![Language: C](https://shields.io)](https://wikipedia.org)
-[![Language: Python](https://shields.io)](https://python.org)
-[![Language: TypeScript](https://shields.io)](https://typescriptlang.org)
-[![License: LGPL v3](https://shields.io)](https://gnu.org)
-[![Arch Linux AUR](https://shields.io)](https://archlinux.org)
+[![C](https://img.shields.io/badge/C-00599C?logo=c&logoColor=white)](https://en.wikipedia.org/wiki/C_(programming_language))
+[![Python](https://img.shields.io/badge/Python-3776AB?logo=python&logoColor=white)](https://python.org)
+[![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?logo=typescript&logoColor=white)](https://typescriptlang.org)
+[![License: LGPL v3](https://img.shields.io/badge/License-LGPL_v3-blue?logo=gnu&logoColor=white)](https://www.gnu.org/licenses/lgpl-3.0)
+[![AUR version](https://img.shields.io/aur/version/cfrds?logo=arch-linux)](https://aur.archlinux.org/packages/cfrds)
 
 A powerful, high-performance, cross-platform CLI tool and library for communicating with ColdFusion servers via the **Adobe RDS (Remote Development Services)** protocol. 
 

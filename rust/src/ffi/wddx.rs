@@ -7,7 +7,7 @@
 //! the packet.
 
 use std::cell::RefCell;
-use std::ffi::{c_char, c_int, c_void, CStr, CString};
+use std::ffi::{c_char, c_int, c_void, CStr};
 use std::mem::size_of;
 use std::ptr;
 
@@ -51,7 +51,6 @@ struct Ctree {
     arena: Vec<Box<[u8]>>,
     header: *mut WNode,
     data: *mut WNode,
-    xml: Option<CString>,
 }
 
 impl Ctree {
@@ -60,15 +59,14 @@ impl Ctree {
             arena: Vec::new(),
             header: ptr::null_mut(),
             data: ptr::null_mut(),
-            xml: None,
         }
     }
 
+    #[allow(dead_code)]
     fn invalidate(&mut self) {
         self.arena.clear();
         self.header = ptr::null_mut();
         self.data = ptr::null_mut();
-        self.xml = None;
     }
 }
 
@@ -102,6 +100,7 @@ impl FfiWddx {
     }
 
     /// Invalidates the cached C tree (called before mutating the Rust tree).
+    #[allow(dead_code)]
     fn invalidate(&self) {
         self.ctree.borrow_mut().invalidate();
     }
@@ -336,12 +335,13 @@ fn c_recursively_get(node: *const WNode, path: &str) -> *const WNode {
 }
 
 // ---------------------------------------------------------------------------
-// Exported WDDX functions
+// Internal WDDX functions. These mirror the C implementation but are not
+// part of the public shared-library ABI.
 // ---------------------------------------------------------------------------
 
 /// Inserts a boolean value into the WDDX data at the given path.
-#[no_mangle]
-pub unsafe extern "C" fn wddx_put_bool(
+#[allow(dead_code)]
+pub(crate) unsafe extern "C" fn wddx_put_bool(
     dest: *mut FfiWddx,
     path: *const c_char,
     value: bool,
@@ -355,8 +355,8 @@ pub unsafe extern "C" fn wddx_put_bool(
 }
 
 /// Inserts a numeric value into the WDDX data at the given path.
-#[no_mangle]
-pub unsafe extern "C" fn wddx_put_number(
+#[allow(dead_code)]
+pub(crate) unsafe extern "C" fn wddx_put_number(
     dest: *mut FfiWddx,
     path: *const c_char,
     value: f64,
@@ -370,8 +370,8 @@ pub unsafe extern "C" fn wddx_put_number(
 }
 
 /// Parses WDDX XML into a packet, or NULL on failure.
-#[no_mangle]
-pub unsafe extern "C" fn wddx_from_xml(xml: *const c_char) -> *mut FfiWddx {
+#[allow(dead_code)]
+pub(crate) unsafe extern "C" fn wddx_from_xml(xml: *const c_char) -> *mut FfiWddx {
     if xml.is_null() {
         return ptr::null_mut();
     }
@@ -382,8 +382,7 @@ pub unsafe extern "C" fn wddx_from_xml(xml: *const c_char) -> *mut FfiWddx {
 }
 
 /// Retrieves the data root node of a WDDX packet.
-#[no_mangle]
-pub unsafe extern "C" fn wddx_data(src: *const c_void) -> *const WNode {
+pub(crate) unsafe extern "C" fn wddx_data(src: *const c_void) -> *const WNode {
     if src.is_null() {
         return ptr::null();
     }
@@ -393,8 +392,7 @@ pub unsafe extern "C" fn wddx_data(src: *const c_void) -> *const WNode {
 }
 
 /// Returns the type of a WDDX node.
-#[no_mangle]
-pub unsafe extern "C" fn wddx_node_type(value: *const c_void) -> c_int {
+pub(crate) unsafe extern "C" fn wddx_node_type(value: *const c_void) -> c_int {
     if value.is_null() {
         return WDDX_NULL;
     }
@@ -402,8 +400,7 @@ pub unsafe extern "C" fn wddx_node_type(value: *const c_void) -> c_int {
 }
 
 /// Extracts the string pointer from a WDDX_STRING node.
-#[no_mangle]
-pub unsafe extern "C" fn wddx_node_string(value: *const WNode) -> *const c_char {
+pub(crate) unsafe extern "C" fn wddx_node_string(value: *const WNode) -> *const c_char {
     if value.is_null() {
         return ptr::null();
     }
@@ -414,8 +411,7 @@ pub unsafe extern "C" fn wddx_node_string(value: *const WNode) -> *const c_char 
 ///
 /// Mirrors the C implementation, which returns the node's `cnt` field without
 /// a type check (callers pass array nodes).
-#[no_mangle]
-pub unsafe extern "C" fn wddx_node_array_size(value: *const c_void) -> c_int {
+pub(crate) unsafe extern "C" fn wddx_node_array_size(value: *const c_void) -> c_int {
     if value.is_null() {
         return 0;
     }
@@ -426,8 +422,7 @@ pub unsafe extern "C" fn wddx_node_array_size(value: *const c_void) -> c_int {
 ///
 /// Mirrors the C implementation, which bounds-checks `cnt` without a type
 /// check (callers pass array nodes).
-#[no_mangle]
-pub unsafe extern "C" fn wddx_node_array_at(value: *const c_void, cnt: usize) -> *const WNode {
+pub(crate) unsafe extern "C" fn wddx_node_array_at(value: *const c_void, cnt: usize) -> *const WNode {
     if value.is_null() {
         return ptr::null();
     }
@@ -442,8 +437,7 @@ pub unsafe extern "C" fn wddx_node_array_at(value: *const c_void, cnt: usize) ->
 ///
 /// Mirrors the C implementation, which returns the node's `cnt` field without
 /// a type check (callers pass struct nodes).
-#[no_mangle]
-pub unsafe extern "C" fn wddx_node_struct_size(value: *const c_void) -> c_int {
+pub(crate) unsafe extern "C" fn wddx_node_struct_size(value: *const c_void) -> c_int {
     if value.is_null() {
         return 0;
     }
@@ -454,8 +448,7 @@ pub unsafe extern "C" fn wddx_node_struct_size(value: *const c_void) -> c_int {
 ///
 /// Mirrors the C implementation, which bounds-checks `cnt` without a type
 /// check (callers pass struct nodes).
-#[no_mangle]
-pub unsafe extern "C" fn wddx_node_struct_at(
+pub(crate) unsafe extern "C" fn wddx_node_struct_at(
     value: *const c_void,
     cnt: usize,
     name: *mut *const c_char,
@@ -475,8 +468,7 @@ pub unsafe extern "C" fn wddx_node_struct_at(
 }
 
 /// Query helper to retrieve a number at a path.
-#[no_mangle]
-pub unsafe extern "C" fn wddx_get_number(
+pub(crate) unsafe extern "C" fn wddx_get_number(
     src: *const c_void,
     path: *const c_char,
     ok: *mut bool,
@@ -503,8 +495,7 @@ pub unsafe extern "C" fn wddx_get_number(
 }
 
 /// Query helper to retrieve a string at a path.
-#[no_mangle]
-pub unsafe extern "C" fn wddx_get_string(src: *const c_void, path: *const c_char) -> *const c_char {
+pub(crate) unsafe extern "C" fn wddx_get_string(src: *const c_void, path: *const c_char) -> *const c_char {
     if src.is_null() {
         return ptr::null();
     }
@@ -518,8 +509,7 @@ pub unsafe extern "C" fn wddx_get_string(src: *const c_void, path: *const c_char
 }
 
 /// Query helper to retrieve a node at a path.
-#[no_mangle]
-pub unsafe extern "C" fn wddx_get_var(src: *const c_void, path: *const c_char) -> *const WNode {
+pub(crate) unsafe extern "C" fn wddx_get_var(src: *const c_void, path: *const c_char) -> *const WNode {
     if src.is_null() {
         return ptr::null();
     }
@@ -529,8 +519,8 @@ pub unsafe extern "C" fn wddx_get_var(src: *const c_void, path: *const c_char) -
 }
 
 /// Recursively frees a WDDX packet and nullifies the caller's pointer.
-#[no_mangle]
-pub unsafe extern "C" fn wddx_cleanup(value: *mut c_void) {
+#[allow(dead_code)]
+pub(crate) unsafe extern "C" fn wddx_cleanup(value: *mut c_void) {
     if value.is_null() {
         return;
     }
@@ -542,7 +532,7 @@ pub unsafe extern "C" fn wddx_cleanup(value: *mut c_void) {
 }
 
 // ---------------------------------------------------------------------------
-// Safe wrappers over the exported functions, for use by sibling FFI modules.
+// Safe wrappers over the internal functions, for use by sibling FFI modules.
 // ---------------------------------------------------------------------------
 
 pub(crate) fn wddx_data_safe(src: *const c_void) -> *const WNode {

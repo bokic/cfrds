@@ -26,9 +26,9 @@ typedef struct WDDX_NODE WDDX_NODE;
  */
 #define CFRDS_VERSION_MAJOR 1
 #define CFRDS_VERSION_MINOR 1
-#define CFRDS_VERSION_PATCH 7
-#define CFRDS_VERSION_INT 10107
-#define CFRDS_VERSION "1.1.7"
+#define CFRDS_VERSION_PATCH 8
+#define CFRDS_VERSION_INT 10108
+#define CFRDS_VERSION "1.1.8"
 
 #ifdef libcfrds_EXPORTS
  #if defined(_WIN32) || defined(__CYGWIN__)

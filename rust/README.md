@@ -84,8 +84,9 @@ RUSTFLAGS="-C force-unwind-tables=no" cargo build --release
 ```
 
 The crate builds both an `rlib` (for Rust consumers) and a `cdylib`
-(`libcfrds.so`) that exports the exact same 254-symbol C ABI as the C
-library, so it can be dropped in place of the C-built shared library.
+(`libcfrds.so`) that exports every C ABI symbol the C library exports
+(plus the internal helpers), so it can be dropped in place of the C-built
+shared library for existing consumers.
 
 ## Versioning
 

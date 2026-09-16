@@ -1,9 +1,9 @@
 //! C-ABI layer producing a drop-in `libcfrds.so`.
 //!
-//! Exports the exact same symbol set as the C library (`include/cfrds.h`,
-//! `include/internal/cfrds_int.h`, `include/internal/wddx.h`,
-//! `include/internal/cfrds_buffer.h`) so that existing C consumers can link
-//! against a Rust-built shared library unchanged.
+//! Exports every symbol from the C library's public API (`include/cfrds.h`),
+//! along with the internal helpers (`include/internal/cfrds_int.h`,
+//! `include/internal/wddx.h`, `include/internal/cfrds_buffer.h`), so that
+//! existing C consumers can link against a Rust-built shared library unchanged.
 //!
 //! All handle types (`cfrds_server`, `cfrds_buffer`, `cfrds_browse_dir`, …) are
 //! opaque to the C consumer; the exported functions are the only way to
@@ -39,6 +39,46 @@ use crate::server::Server;
 pub(crate) type cfrds_status = c_int;
 /// `cfrds_str` (a caller-owned heap string).
 pub(crate) type cfrds_str = *mut c_char;
+
+// ---------------------------------------------------------------------------
+// Version
+// ---------------------------------------------------------------------------
+
+/// NUL-terminated `CFRDS_VERSION` string, compiled from the crate version.
+static CFRDS_VERSION_CSTR: &[u8] = concat!(env!("CARGO_PKG_VERSION"), "\0").as_bytes();
+
+/// Returns the full library version string (e.g. `"1.1.8"`).
+///
+/// Mirrors `cfrds_version()`: returns a pointer to a static, NUL-terminated
+/// string that must not be freed by the caller.
+#[no_mangle]
+pub unsafe extern "C" fn cfrds_version() -> *const c_char {
+    CFRDS_VERSION_CSTR.as_ptr() as *const c_char
+}
+
+/// Returns the major version number.
+#[no_mangle]
+pub unsafe extern "C" fn cfrds_version_major() -> c_int {
+    env!("CARGO_PKG_VERSION_MAJOR").parse().unwrap_or(0)
+}
+
+/// Returns the minor version number.
+#[no_mangle]
+pub unsafe extern "C" fn cfrds_version_minor() -> c_int {
+    env!("CARGO_PKG_VERSION_MINOR").parse().unwrap_or(0)
+}
+
+/// Returns the patch version number.
+#[no_mangle]
+pub unsafe extern "C" fn cfrds_version_patch() -> c_int {
+    env!("CARGO_PKG_VERSION_PATCH").parse().unwrap_or(0)
+}
+
+/// Returns the combined integer version (`MAJOR*10000 + MINOR*100 + PATCH`).
+#[no_mangle]
+pub unsafe extern "C" fn cfrds_version_int() -> c_int {
+    cfrds_version_major() * 10000 + cfrds_version_minor() * 100 + cfrds_version_patch()
+}
 
 /// Opaque `cfrds_server` handle.
 pub(crate) struct FfiServer {
@@ -252,6 +292,14 @@ pub unsafe extern "C" fn cfrds_server_encode_password(password: *const c_char) -
 // Buffer
 // ---------------------------------------------------------------------------
 
+/// Deallocates all resources associated with a `cfrds_buffer` instance.
+#[no_mangle]
+pub unsafe extern "C" fn cfrds_buffer_free(buffer: *mut FfiBuffer) {
+    if !buffer.is_null() {
+        drop(Box::from_raw(buffer));
+    }
+}
+
 /// Automatically deallocates and nullifies a `cfrds_buffer` pointer.
 #[no_mangle]
 pub unsafe extern "C" fn cfrds_buffer_cleanup(buffer: *mut *mut FfiBuffer) {
@@ -436,5 +484,36 @@ pub unsafe extern "C" fn cfrds_buffer_to_debugger_event(buffer: *mut FfiBuffer) 
     match parser::buffer_to_debugger_event(data) {
         Some(wddx) => Box::into_raw(Box::new(FfiWddx::from_rust(wddx))),
         None => ptr::null_mut(),
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn version_functions_match_crate_version() {
+        let major: c_int = env!("CARGO_PKG_VERSION_MAJOR").parse().unwrap();
+        let minor: c_int = env!("CARGO_PKG_VERSION_MINOR").parse().unwrap();
+        let patch: c_int = env!("CARGO_PKG_VERSION_PATCH").parse().unwrap();
+
+        unsafe {
+            let v = CStr::from_ptr(cfrds_version()).to_str().unwrap();
+            assert_eq!(v, env!("CARGO_PKG_VERSION"));
+            assert_eq!(cfrds_version_major(), major);
+            assert_eq!(cfrds_version_minor(), minor);
+            assert_eq!(cfrds_version_patch(), patch);
+            assert_eq!(cfrds_version_int(), major * 10000 + minor * 100 + patch);
+        }
+    }
+
+    #[test]
+    fn buffer_free_is_null_safe_and_frees() {
+        unsafe {
+            cfrds_buffer_free(ptr::null_mut());
+            let buffer = Box::into_raw(Box::new(FfiBuffer::from_body(b"hi")));
+            assert_eq!((*buffer).size, 2);
+            cfrds_buffer_free(buffer);
+        }
     }
 }

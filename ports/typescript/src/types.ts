@@ -118,9 +118,7 @@ export interface DebuggerEvent {
   data: Record<string, unknown>;
 }
 
-export interface SecurityAnalyzerResult {
-  data: Record<string, unknown>;
-}
+export type SecurityAnalyzerResult = Record<string, unknown>;
 
 export interface AdminApiCustomTagPaths {
   paths: string[];

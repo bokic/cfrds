@@ -67,11 +67,12 @@ export function sendRdsCommand(
 
         res.on("end", () => {
           if (res.statusCode !== 200) {
-            const msg = `HTTP ${res.statusCode} ${res.statusMessage || ""}`.trim();
+            // C maps non-200 responses to RESPONSE_ERROR ("Invalid server response...").
+            const msg = `Invalid server response - HTTP ${res.statusCode} ${res.statusMessage || ""}`.trim();
             reject(
               new CFRDSResponseError(
-                `HTTP_RESPONSE_NOT_FOUND: ${msg}`,
-                CFRDS_STATUS.HTTP_RESPONSE_NOT_FOUND
+                msg,
+                CFRDS_STATUS.RESPONSE_ERROR
               )
             );
             return;

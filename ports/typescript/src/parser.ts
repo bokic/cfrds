@@ -265,3 +265,54 @@ export function safeInt(s: string | null | undefined): number {
   if (!s) return 0;
   return /^-?\d+$/.test(s) ? parseInt(s, 10) : 0;
 }
+
+/**
+ * Resolves a WDDX value by a comma-separated path, mirroring the C library's
+ * `wddx_get_*`/`wddx_recursively_get` semantics: numeric path segments index
+ * arrays, non-numeric segments select struct keys.
+ */
+export function wddxGet(value: any, path: string): any {
+  if (value === null || value === undefined || !path) {
+    return value;
+  }
+
+  let current: any = value;
+  for (const seg of path.split(",")) {
+    if (current === null || current === undefined) {
+      return null;
+    }
+    if (/^\d+$/.test(seg)) {
+      if (!Array.isArray(current)) {
+        return null;
+      }
+      const idx = parseInt(seg, 10);
+      if (idx >= current.length) {
+        return null;
+      }
+      current = current[idx];
+    } else {
+      if (typeof current !== "object" || Array.isArray(current)) {
+        return null;
+      }
+      current = current[seg];
+    }
+  }
+
+  return current ?? null;
+}
+
+export function wddxGetString(value: any, path: string): string | null {
+  const resolved = wddxGet(value, path);
+  return typeof resolved === "string" ? resolved : null;
+}
+
+export function wddxGetNumber(value: any, path: string): number | null {
+  const resolved = wddxGet(value, path);
+  if (typeof resolved === "number" && !isNaN(resolved)) {
+    return resolved;
+  }
+  if (typeof resolved === "string" && resolved.trim() !== "" && !isNaN(Number(resolved))) {
+    return Number(resolved);
+  }
+  return null;
+}

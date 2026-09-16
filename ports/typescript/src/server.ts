@@ -21,7 +21,7 @@ import {
   IdeDefaultResult,
   SecurityAnalyzerStatus,
 } from "./types";
-import { encodePassword, parseNumber, parseString, parseBytearray, parseTimestamp, parseStringListItem, wddxDeserialize, parseXml, parseWddxNode, XmlNode, safeInt } from "./parser";
+import { encodePassword, parseNumber, parseString, parseBytearray, parseTimestamp, parseStringListItem, wddxDeserialize, wddxGet, wddxGetString, wddxGetNumber, parseXml, parseWddxNode, XmlNode, safeInt } from "./parser";
 import { sendRdsCommand } from "./transport";
 import { VERSION } from "./version";
 import * as http from "http";
@@ -34,6 +34,23 @@ function escapeXml(str: string): string {
     .replace(/"/g, "&quot;")
     .replace(/'/g, "&apos;");
 }
+
+/**
+ * Mirrors the C library's `cfrds_buffer_append_escaped`: backslash-escapes the
+ * `:` and `;` delimiters used by the admin API mapping argument syntax.
+ */
+function escapeMappingValue(str: string): string {
+  let out = "";
+  for (const ch of str) {
+    if (ch === ":" || ch === ";") {
+      out += "\\";
+    }
+    out += ch;
+  }
+  return out;
+}
+
+const FILE_NOT_FOUND_PREFIX = "The system cannot find the path specified: ";
 
 export function cfrds_version(): string {
   return VERSION;
@@ -67,6 +84,7 @@ export function cfrds_version_int(): number {
 
 export class Server {
   private ctx: ServerContext;
+  private lastError: CFRDSError | null = null;
 
   constructor(
     hostname: string = "127.0.0.1",
@@ -86,6 +104,38 @@ export class Server {
   getUsername(): string { return this.ctx.config.username; }
   getPassword(): string { return this.ctx.config.password; }
 
+  /**
+   * Returns the last error raised by a command, mirroring `cfrds_server_get_error`.
+   * Unlike the C library, commands still reject with the error; this is a record
+   * of the most recent failure.
+   */
+  getError(): CFRDSError | null {
+    return this.lastError;
+  }
+
+  /** Clears the recorded last error, mirroring `cfrds_server_clear_error`. */
+  clearError(): void {
+    this.lastError = null;
+  }
+
+  /**
+   * Sends an RDS command, recording any CFRDS error as the server's last error
+   * (the C library clears the error before each command and rethrows/stores it).
+   */
+  private async send(command: string, args: (string | Buffer)[]): Promise<Buffer> {
+    this.lastError = null;
+    try {
+      return await sendRdsCommand(this.ctx, command, args);
+    } catch (e) {
+      const err =
+        e instanceof CFRDSError
+          ? e
+          : new CFRDSError(e instanceof Error ? e.message : String(e));
+      this.lastError = err;
+      throw e;
+    }
+  }
+
   async close(): Promise<void> {
     if (this.ctx.agent) {
       this.ctx.agent.destroy();
@@ -98,7 +148,7 @@ export class Server {
     if (path === null || path === undefined) {
       throw new CFRDSValidationError("path is required", CFRDS_STATUS.PARAM_IS_NULL);
     }
-    const raw = await sendRdsCommand(this.ctx, "BROWSEDIR", [path, ""]);
+    const raw = await this.send("BROWSEDIR", [path, ""]);
     const [total, offset] = parseNumber(raw, 0);
     if (total < 0 || (total !== 0 && total % 5 !== 0)) {
       throw new CFRDSResponseError(
@@ -153,7 +203,7 @@ export class Server {
     if (filepath === null || filepath === undefined) {
       throw new CFRDSValidationError("filepath is required", CFRDS_STATUS.PARAM_IS_NULL);
     }
-    const raw = await sendRdsCommand(this.ctx, "FILEIO", [filepath, "READ", ""]);
+    const raw = await this.send("FILEIO", [filepath, "READ", ""]);
     const [, offset] = parseNumber(raw, 0);
     const [dataBytes, o1] = parseBytearray(raw, offset);
     const [modifiedStr, o2] = parseString(raw, o1);
@@ -169,7 +219,7 @@ export class Server {
       throw new CFRDSValidationError("content is required", CFRDS_STATUS.PARAM_IS_NULL);
     }
     const data = typeof content === "string" ? Buffer.from(content, "utf-8") : content;
-    await sendRdsCommand(this.ctx, "FILEIO", [filepath, "WRITE", "", data]);
+    await this.send("FILEIO", [filepath, "WRITE", "", data]);
   }
 
   async fileRename(filepathFrom: string, filepathTo: string): Promise<void> {
@@ -179,21 +229,21 @@ export class Server {
     if (filepathTo === null || filepathTo === undefined) {
       throw new CFRDSValidationError("filepathTo is required", CFRDS_STATUS.PARAM_IS_NULL);
     }
-    await sendRdsCommand(this.ctx, "FILEIO", [filepathFrom, "RENAME", "", filepathTo]);
+    await this.send("FILEIO", [filepathFrom, "RENAME", "", filepathTo]);
   }
 
   async fileRemove(filepath: string): Promise<void> {
     if (filepath === null || filepath === undefined) {
       throw new CFRDSValidationError("filepath is required", CFRDS_STATUS.PARAM_IS_NULL);
     }
-    await sendRdsCommand(this.ctx, "FILEIO", [filepath, "REMOVE", "", "F"]);
+    await this.send("FILEIO", [filepath, "REMOVE", "", "F"]);
   }
 
   async dirRemove(dirpath: string): Promise<void> {
     if (dirpath === null || dirpath === undefined) {
       throw new CFRDSValidationError("dirpath is required", CFRDS_STATUS.PARAM_IS_NULL);
     }
-    await sendRdsCommand(this.ctx, "FILEIO", [dirpath, "REMOVE", "", "D"]);
+    await this.send("FILEIO", [dirpath, "REMOVE", "", "D"]);
   }
 
   async fileExists(pathname: string): Promise<boolean> {
@@ -201,11 +251,17 @@ export class Server {
       throw new CFRDSValidationError("pathname is required", CFRDS_STATUS.PARAM_IS_NULL);
     }
     try {
-      await sendRdsCommand(this.ctx, "FILEIO", [pathname, "EXISTENCE", "", ""]);
+      await this.send("FILEIO", [pathname, "EXISTENCE", "", ""]);
       return true;
     } catch (e) {
-      if (e instanceof CFRDSCommandError || (e instanceof CFRDSError && (e.status === CFRDS_STATUS.COMMAND_FAILED || e.message.includes("COMMAND_FAILED")))) {
-        return false;
+      // Only the exact "not found" command failure means the path does not
+      // exist; every other failure (permissions, connectivity, ...) must
+      // propagate just like the C implementation.
+      if (e instanceof CFRDSCommandError) {
+        const serverMessage = e.message.replace(/^COMMAND_FAILED:\s?/, "");
+        if (serverMessage.startsWith(FILE_NOT_FOUND_PREFIX)) {
+          return false;
+        }
       }
       throw e;
     }
@@ -215,11 +271,11 @@ export class Server {
     if (dirpath === null || dirpath === undefined) {
       throw new CFRDSValidationError("dirpath is required", CFRDS_STATUS.PARAM_IS_NULL);
     }
-    await sendRdsCommand(this.ctx, "FILEIO", [dirpath, "CREATE", "", ""]);
+    await this.send("FILEIO", [dirpath, "CREATE", "", ""]);
   }
 
   async cfRootDir(): Promise<string> {
-    const raw = await sendRdsCommand(this.ctx, "FILEIO", ["", "CF_DIRECTORY"]);
+    const raw = await this.send("FILEIO", ["", "CF_DIRECTORY"]);
     const [, offset] = parseNumber(raw, 0);
     const [pathStr] = parseString(raw, offset);
     return pathStr;
@@ -227,7 +283,7 @@ export class Server {
 
   // SQL Operations
   async sqlDsninfo(): Promise<string[]> {
-    const raw = await sendRdsCommand(this.ctx, "DBFUNCS", ["", "DSNINFO"]);
+    const raw = await this.send("DBFUNCS", ["", "DSNINFO"]);
     const [cnt, offset] = parseNumber(raw, 0);
     const dsns: string[] = [];
     let off = offset;
@@ -245,7 +301,7 @@ export class Server {
     if (connectionName === null || connectionName === undefined) {
       throw new CFRDSValidationError("connectionName is required", CFRDS_STATUS.PARAM_IS_NULL);
     }
-    const raw = await sendRdsCommand(this.ctx, "DBFUNCS", [connectionName, "TABLEINFO"]);
+    const raw = await this.send("DBFUNCS", [connectionName, "TABLEINFO"]);
     const [cnt, offset] = parseNumber(raw, 0);
     const tables: SqlTableInfoItem[] = [];
     let off = offset;
@@ -270,7 +326,7 @@ export class Server {
     if (tableName === null || tableName === undefined) {
       throw new CFRDSValidationError("tableName is required", CFRDS_STATUS.PARAM_IS_NULL);
     }
-    const raw = await sendRdsCommand(this.ctx, "DBFUNCS", [connectionName, "COLUMNINFO", tableName]);
+    const raw = await this.send("DBFUNCS", [connectionName, "COLUMNINFO", tableName]);
     const [cnt, offset] = parseNumber(raw, 0);
     const cols: SqlColumnInfoItem[] = [];
     let off = offset;
@@ -302,7 +358,7 @@ export class Server {
     if (tableName === null || tableName === undefined) {
       throw new CFRDSValidationError("tableName is required", CFRDS_STATUS.PARAM_IS_NULL);
     }
-    const raw = await sendRdsCommand(this.ctx, "DBFUNCS", [connectionName, "PRIMARYKEYS", tableName]);
+    const raw = await this.send("DBFUNCS", [connectionName, "PRIMARYKEYS", tableName]);
     const [cnt, offset] = parseNumber(raw, 0);
     const keys: SqlPrimaryKeyItem[] = [];
     let off = offset;
@@ -328,7 +384,7 @@ export class Server {
     if (tableName === null || tableName === undefined) {
       throw new CFRDSValidationError("tableName is required", CFRDS_STATUS.PARAM_IS_NULL);
     }
-    const raw = await sendRdsCommand(this.ctx, "DBFUNCS", [connectionName, "FOREIGNKEYS", tableName]);
+    const raw = await this.send("DBFUNCS", [connectionName, "FOREIGNKEYS", tableName]);
     const [cnt, offset] = parseNumber(raw, 0);
     const keys: SqlForeignKeyItem[] = [];
     let off = offset;
@@ -360,7 +416,7 @@ export class Server {
     if (tableName === null || tableName === undefined) {
       throw new CFRDSValidationError("tableName is required", CFRDS_STATUS.PARAM_IS_NULL);
     }
-    const raw = await sendRdsCommand(this.ctx, "DBFUNCS", [connectionName, "IMPORTEDKEYS", tableName]);
+    const raw = await this.send("DBFUNCS", [connectionName, "IMPORTEDKEYS", tableName]);
     const [cnt, offset] = parseNumber(raw, 0);
     const keys: SqlForeignKeyItem[] = [];
     let off = offset;
@@ -392,7 +448,7 @@ export class Server {
     if (tableName === null || tableName === undefined) {
       throw new CFRDSValidationError("tableName is required", CFRDS_STATUS.PARAM_IS_NULL);
     }
-    const raw = await sendRdsCommand(this.ctx, "DBFUNCS", [connectionName, "EXPORTEDKEYS", tableName]);
+    const raw = await this.send("DBFUNCS", [connectionName, "EXPORTEDKEYS", tableName]);
     const [cnt, offset] = parseNumber(raw, 0);
     const keys: SqlForeignKeyItem[] = [];
     let off = offset;
@@ -424,7 +480,7 @@ export class Server {
     if (sql === null || sql === undefined) {
       throw new CFRDSValidationError("sql is required", CFRDS_STATUS.PARAM_IS_NULL);
     }
-    const raw = await sendRdsCommand(this.ctx, "DBFUNCS", [connectionName, "SQLSTMNT", sql]);
+    const raw = await this.send("DBFUNCS", [connectionName, "SQLSTMNT", sql]);
     const [cnt, offset] = parseNumber(raw, 0);
     const rows = Math.max(0, cnt - 1);
     if (cnt <= 0) {
@@ -454,7 +510,7 @@ export class Server {
     if (sql === null || sql === undefined) {
       throw new CFRDSValidationError("sql is required", CFRDS_STATUS.PARAM_IS_NULL);
     }
-    const raw = await sendRdsCommand(this.ctx, "DBFUNCS", [connectionName, "SQLMETADATA", sql]);
+    const raw = await this.send("DBFUNCS", [connectionName, "SQLMETADATA", sql]);
     const [cnt, offset] = parseNumber(raw, 0);
     const meta: SqlMetadataItem[] = [];
     let off = offset;
@@ -472,7 +528,7 @@ export class Server {
   }
 
   async sqlGetsupportedcommands(): Promise<string[]> {
-    const raw = await sendRdsCommand(this.ctx, "DBFUNCS", ["", "SUPPORTEDCOMMANDS"]);
+    const raw = await this.send("DBFUNCS", ["", "SUPPORTEDCOMMANDS"]);
     const [cnt, offset] = parseNumber(raw, 0);
     const cmds: string[] = [];
     let off = offset;
@@ -488,7 +544,7 @@ export class Server {
     if (connectionName === null || connectionName === undefined) {
       throw new CFRDSValidationError("connectionName is required", CFRDS_STATUS.PARAM_IS_NULL);
     }
-    const raw = await sendRdsCommand(this.ctx, "DBFUNCS", [connectionName, "DBDESCRIPTION"]);
+    const raw = await this.send("DBFUNCS", [connectionName, "DBDESCRIPTION"]);
     const [, offset] = parseNumber(raw, 0);
     const [item] = parseString(raw, offset);
     const fields = parseStringListItem(item);
@@ -497,9 +553,19 @@ export class Server {
 
   // Debugger Operations
   async debuggerStart(): Promise<string> {
-    const raw = await sendRdsCommand(this.ctx, "DBGREQUEST", ["DBG_START", ""]);
-    const [, offset] = parseNumber(raw, 0);
+    // The C client sends a WDDX packet with REMOTE_SESSION=true as the second
+    // argument, not an empty string.
+    const wddx =
+      "<wddxPacket version='1.0'><header/><data><array length='1'><struct type='java.util.HashMap'><var name='REMOTE_SESSION'><boolean value='true'/></var></struct></array></data></wddxPacket>";
+    const raw = await this.send("DBGREQUEST", ["DBG_START", wddx]);
+    const [count, offset] = parseNumber(raw, 0);
+    if (count !== 2) {
+      throw new CFRDSResponseError("Invalid debuggerStart response count", CFRDS_STATUS.RESPONSE_ERROR);
+    }
     const [sessionId] = parseString(raw, offset);
+    if (!sessionId) {
+      throw new CFRDSResponseError("Empty debugger session id", CFRDS_STATUS.RESPONSE_ERROR);
+    }
     return sessionId;
   }
 
@@ -507,25 +573,37 @@ export class Server {
     if (sessionName === null || sessionName === undefined) {
       throw new CFRDSValidationError("sessionName is required", CFRDS_STATUS.PARAM_IS_NULL);
     }
-    await sendRdsCommand(this.ctx, "DBGREQUEST", ["DBG_STOP", sessionName]);
+    await this.send("DBGREQUEST", ["DBG_STOP", sessionName]);
   }
 
   async debuggerServerStop(sessionName: string): Promise<void> {
     if (sessionName === null || sessionName === undefined) {
       throw new CFRDSValidationError("sessionName is required", CFRDS_STATUS.PARAM_IS_NULL);
     }
-    await sendRdsCommand(this.ctx, "DBGREQUEST", ["DBG_SERVER_STOP", sessionName]);
+    await this.send("DBGREQUEST", ["DBG_SERVER_STOP", sessionName]);
   }
 
   async debuggerGetServerInfo(sessionName: string): Promise<number> {
     if (sessionName === null || sessionName === undefined) {
       throw new CFRDSValidationError("sessionName is required", CFRDS_STATUS.PARAM_IS_NULL);
     }
-    const raw = await sendRdsCommand(this.ctx, "DBGREQUEST", ["DBG_GET_DEBUG_SERVER_INFO", sessionName]);
-    const [, offset] = parseNumber(raw, 0);
+    const raw = await this.send("DBGREQUEST", ["DBG_GET_DEBUG_SERVER_INFO", sessionName]);
+    const [count, offset] = parseNumber(raw, 0);
+    if (count !== 1) {
+      throw new CFRDSResponseError("Invalid debuggerGetServerInfo response count", CFRDS_STATUS.RESPONSE_ERROR);
+    }
     const [wddxXml] = parseString(raw, offset);
     const parsed = wddxDeserialize(wddxXml);
-    return parsed && typeof parsed.DEBUG_SERVER_PORT === "number" ? Math.floor(parsed.DEBUG_SERVER_PORT) : 0;
+    // C reads "0,STATUS" and requires "RDS_OK", then reads "0,DEBUG_SERVER_PORT"
+    // from within that same array element.
+    if (wddxGetString(parsed, "0,STATUS") !== "RDS_OK") {
+      throw new CFRDSResponseError("Invalid debugger server info status", CFRDS_STATUS.RESPONSE_ERROR);
+    }
+    const port = wddxGetNumber(parsed, "0,DEBUG_SERVER_PORT");
+    if (port === null || port < 0 || port > 0xffff) {
+      throw new CFRDSResponseError("Invalid debugger server port", CFRDS_STATUS.RESPONSE_ERROR);
+    }
+    return Math.floor(port);
   }
 
   async debuggerBreakpointOnException(sessionName: string, enable: boolean): Promise<void> {
@@ -537,7 +615,7 @@ export class Server {
     }
     const val = enable ? "true" : "false";
     const wddx = `<wddxPacket version='1.0'><header/><data><array length='1'><struct type='java.util.HashMap'><var name='COMMAND'><string>SESSION_BREAK_ON_EXCEPTION</string></var><var name='BREAK_ON_EXCEPTION'><boolean value='${val}'/></var></struct></array></data></wddxPacket>`;
-    await sendRdsCommand(this.ctx, "DBGREQUEST", ["DBG_REQUEST", sessionName, wddx]);
+    await this.send("DBGREQUEST", ["DBG_REQUEST", sessionName, wddx]);
   }
 
   async debuggerGlobalBreakpointOnException(sessionName: string, enable: boolean): Promise<void> {
@@ -549,7 +627,7 @@ export class Server {
     }
     const val = enable ? "true" : "false";
     const wddx = `<wddxPacket version='1.0'><header/><data><array length='1'><struct type='java.util.HashMap'><var name='COMMAND'><string>GLOBAL_BREAK_ON_EXCEPTION</string></var><var name='BREAK_ON_EXCEPTION'><boolean value='${val}'/></var></struct></array></data></wddxPacket>`;
-    await sendRdsCommand(this.ctx, "DBGREQUEST", ["DBG_REQUEST", sessionName, wddx]);
+    await this.send("DBGREQUEST", ["DBG_REQUEST", sessionName, wddx]);
   }
 
   async debuggerBreakpoint(sessionName: string, filepath: string, line: number, enable: boolean): Promise<void> {
@@ -567,7 +645,7 @@ export class Server {
     }
     const cmd = enable ? "SET_BREAKPOINT" : "UNSET_BREAKPOINT";
     const wddx = `<wddxPacket version='1.0'><header/><data><array length='1'><struct type='java.util.HashMap'><var name='COMMAND'><string>${cmd}</string></var><var name='FILE'><string>${escapeXml(filepath)}</string></var><var name='Y'><number>${line}</number></var><var name='SEQ'><number>1.0</number></var></struct></array></data></wddxPacket>`;
-    await sendRdsCommand(this.ctx, "DBGREQUEST", ["DBG_REQUEST", sessionName, wddx]);
+    await this.send("DBGREQUEST", ["DBG_REQUEST", sessionName, wddx]);
   }
 
   async debuggerClearAllBreakpoints(sessionName: string): Promise<void> {
@@ -575,7 +653,7 @@ export class Server {
       throw new CFRDSValidationError("sessionName is required", CFRDS_STATUS.PARAM_IS_NULL);
     }
     const wddx = "<wddxPacket version='1.0'><header/><data><array length='1'><struct type='java.util.HashMap'><var name='COMMAND'><string>UNSET_ALL_BREAKPOINTS</string></var></struct></array></data></wddxPacket>";
-    await sendRdsCommand(this.ctx, "DBGREQUEST", ["DBG_REQUEST", sessionName, wddx]);
+    await this.send("DBGREQUEST", ["DBG_REQUEST", sessionName, wddx]);
   }
 
   /**
@@ -586,7 +664,10 @@ export class Server {
     if (!raw || raw.length === 0) {
       return null;
     }
-    const [, offset] = parseNumber(raw, 0);
+    const [count, offset] = parseNumber(raw, 0);
+    if (count !== 1) {
+      return null;
+    }
     const [wddxXml] = parseString(raw, offset);
     if (!wddxXml) {
       return null;
@@ -595,9 +676,21 @@ export class Server {
     if (!parsed) {
       return null;
     }
-    const data = Array.isArray(parsed) ? (parsed[0] || {}) : parsed;
 
-    const evtName = data.EVENT || data.COMMAND;
+    // C accesses every field through the "0,<FIELD>" path, i.e. the first
+    // element of the top-level WDDX array.
+    const first = wddxGet(parsed, "0");
+    const data: Record<string, any> =
+      first && typeof first === "object" && !Array.isArray(first)
+        ? first
+        : (parsed && typeof parsed === "object" && !Array.isArray(parsed) ? parsed : {});
+
+    const evtName =
+      typeof data.EVENT === "string"
+        ? data.EVENT
+        : typeof data.COMMAND === "string"
+          ? data.COMMAND
+          : null;
     const threadName = data.THREAD || data.THREAD_ID || data.THREAD_NAME || "main";
     data.thread_name = threadName;
     data.thread_id = threadName;
@@ -606,26 +699,36 @@ export class Server {
       return {
         type: CFRDS_DEBUGGER_EVENT_TYPE.BREAKPOINT_SET,
         data: {
-          pathname: data.CFML_PATH || data.FILE || "",
+          ...data,
+          // C: cfrds_debugger_event_breakpoint_set_get_pathname/req_line/act_line
+          pathname: data.CFML_PATH || "",
           req_line: Math.floor(data.REQ_LINE_NUM || 0),
           act_line: Math.floor(data.ACTUAL_LINE_NUM || 0),
           thread_name: threadName,
           thread_id: threadName,
-          ...data,
         },
       };
-    } else if (evtName === "CF_BREAKPOINT_HIT" || evtName === "CF_STEP" || evtName === "BREAKPOINT" || evtName === "STEP") {
-      const type = String(evtName).includes("BREAKPOINT")
-        ? CFRDS_DEBUGGER_EVENT_TYPE.BREAKPOINT
-        : CFRDS_DEBUGGER_EVENT_TYPE.STEP;
+    } else if (evtName === "BREAKPOINT" || evtName === "CF_BREAKPOINT_HIT") {
       return {
-        type,
+        type: CFRDS_DEBUGGER_EVENT_TYPE.BREAKPOINT,
         data: {
-          source: data.CFML_PATH || data.FILE || "",
-          line: Math.floor(data.REQ_LINE_NUM || data.LINE || 0),
+          ...data,
+          // C: cfrds_debugger_event_breakpoint_get_source/line
+          source: data.SOURCE || "",
+          line: Math.floor(data.LINE || 0),
           thread_name: threadName,
           thread_id: threadName,
+        },
+      };
+    } else if (evtName === "STEP" || evtName === "CF_STEP") {
+      return {
+        type: CFRDS_DEBUGGER_EVENT_TYPE.STEP,
+        data: {
           ...data,
+          source: data.SOURCE || "",
+          line: Math.floor(data.LINE || 0),
+          thread_name: threadName,
+          thread_id: threadName,
         },
       };
     }
@@ -640,7 +743,7 @@ export class Server {
     if (sessionName === null || sessionName === undefined) {
       throw new CFRDSValidationError("sessionName is required", CFRDS_STATUS.PARAM_IS_NULL);
     }
-    const raw = await sendRdsCommand(this.ctx, "DBGREQUEST", ["DBG_EVENTS", sessionName]);
+    const raw = await this.send("DBGREQUEST", ["DBG_EVENTS", sessionName]);
     return this.parseDebuggerEvent(raw);
   }
 
@@ -682,7 +785,7 @@ export class Server {
       `<var name='CF_TRACE'><boolean value='${b(cfTrace)}'/></var>` +
       `<var name='JAVA_TRACE'><boolean value='${b(javaTrace)}'/></var>` +
       `</struct></data></wddxPacket>`;
-    const raw = await sendRdsCommand(this.ctx, "DBGREQUEST", ["DBG_EVENTS", sessionName, wddx]);
+    const raw = await this.send("DBGREQUEST", ["DBG_EVENTS", sessionName, wddx]);
     return this.parseDebuggerEvent(raw);
   }
 
@@ -694,7 +797,7 @@ export class Server {
       throw new CFRDSValidationError("threadName is required", CFRDS_STATUS.PARAM_IS_NULL);
     }
     const wddx = `<wddxPacket version='1.0'><header/><data><array length='1'><struct type='java.util.HashMap'><var name='COMMAND'><string>STEP_IN</string></var><var name='THREAD'><string>${escapeXml(threadName)}</string></var></struct></array></data></wddxPacket>`;
-    await sendRdsCommand(this.ctx, "DBGREQUEST", ["DBG_REQUEST", sessionName, wddx]);
+    await this.send("DBGREQUEST", ["DBG_REQUEST", sessionName, wddx]);
   }
 
   async debuggerStepOver(sessionName: string, threadName: string): Promise<void> {
@@ -705,7 +808,7 @@ export class Server {
       throw new CFRDSValidationError("threadName is required", CFRDS_STATUS.PARAM_IS_NULL);
     }
     const wddx = `<wddxPacket version='1.0'><header/><data><array length='1'><struct type='java.util.HashMap'><var name='COMMAND'><string>STEP_OVER</string></var><var name='THREAD'><string>${escapeXml(threadName)}</string></var></struct></array></data></wddxPacket>`;
-    await sendRdsCommand(this.ctx, "DBGREQUEST", ["DBG_REQUEST", sessionName, wddx]);
+    await this.send("DBGREQUEST", ["DBG_REQUEST", sessionName, wddx]);
   }
 
   async debuggerStepOut(sessionName: string, threadName: string): Promise<void> {
@@ -716,7 +819,7 @@ export class Server {
       throw new CFRDSValidationError("threadName is required", CFRDS_STATUS.PARAM_IS_NULL);
     }
     const wddx = `<wddxPacket version='1.0'><header/><data><array length='1'><struct type='java.util.HashMap'><var name='COMMAND'><string>STEP_OUT</string></var><var name='THREAD'><string>${escapeXml(threadName)}</string></var></struct></array></data></wddxPacket>`;
-    await sendRdsCommand(this.ctx, "DBGREQUEST", ["DBG_REQUEST", sessionName, wddx]);
+    await this.send("DBGREQUEST", ["DBG_REQUEST", sessionName, wddx]);
   }
 
   async debuggerSyncStepIn(sessionName: string, threadName: string): Promise<DebuggerEvent | null> {
@@ -727,7 +830,7 @@ export class Server {
       throw new CFRDSValidationError("threadName is required", CFRDS_STATUS.PARAM_IS_NULL);
     }
     const wddx = `<wddxPacket version='1.0'><header/><data><array length='1'><struct type='java.util.HashMap'><var name='COMMAND'><string>SYNC_STEP_IN</string></var><var name='THREAD'><string>${escapeXml(threadName)}</string></var></struct></array></data></wddxPacket>`;
-    const raw = await sendRdsCommand(this.ctx, "DBGREQUEST", ["DBG_REQUEST", sessionName, wddx]);
+    const raw = await this.send("DBGREQUEST", ["DBG_REQUEST", sessionName, wddx]);
     return this.parseDebuggerEvent(raw);
   }
 
@@ -739,7 +842,7 @@ export class Server {
       throw new CFRDSValidationError("threadName is required", CFRDS_STATUS.PARAM_IS_NULL);
     }
     const wddx = `<wddxPacket version='1.0'><header/><data><array length='1'><struct type='java.util.HashMap'><var name='COMMAND'><string>SYNC_STEP_OVER</string></var><var name='THREAD'><string>${escapeXml(threadName)}</string></var></struct></array></data></wddxPacket>`;
-    const raw = await sendRdsCommand(this.ctx, "DBGREQUEST", ["DBG_REQUEST", sessionName, wddx]);
+    const raw = await this.send("DBGREQUEST", ["DBG_REQUEST", sessionName, wddx]);
     return this.parseDebuggerEvent(raw);
   }
 
@@ -751,7 +854,7 @@ export class Server {
       throw new CFRDSValidationError("threadName is required", CFRDS_STATUS.PARAM_IS_NULL);
     }
     const wddx = `<wddxPacket version='1.0'><header/><data><array length='1'><struct type='java.util.HashMap'><var name='COMMAND'><string>SYNC_STEP_OUT</string></var><var name='THREAD'><string>${escapeXml(threadName)}</string></var></struct></array></data></wddxPacket>`;
-    const raw = await sendRdsCommand(this.ctx, "DBGREQUEST", ["DBG_REQUEST", sessionName, wddx]);
+    const raw = await this.send("DBGREQUEST", ["DBG_REQUEST", sessionName, wddx]);
     return this.parseDebuggerEvent(raw);
   }
 
@@ -763,7 +866,7 @@ export class Server {
       throw new CFRDSValidationError("threadName is required", CFRDS_STATUS.PARAM_IS_NULL);
     }
     const wddx = `<wddxPacket version='1.0'><header/><data><array length='1'><struct type='java.util.HashMap'><var name='COMMAND'><string>CONTINUE</string></var><var name='THREAD'><string>${escapeXml(threadName)}</string></var></struct></array></data></wddxPacket>`;
-    await sendRdsCommand(this.ctx, "DBGREQUEST", ["DBG_REQUEST", sessionName, wddx]);
+    await this.send("DBGREQUEST", ["DBG_REQUEST", sessionName, wddx]);
   }
 
   async debuggerGetCfVariables(sessionName: string, threadName: string): Promise<DebuggerEvent | null> {
@@ -774,7 +877,7 @@ export class Server {
       throw new CFRDSValidationError("threadName is required", CFRDS_STATUS.PARAM_IS_NULL);
     }
     const wddx = `<wddxPacket version='1.0'><header/><data><array length='1'><struct type='java.util.HashMap'><var name='COMMAND'><string>GET_CF_VARIABLES</string></var><var name='THREAD'><string>${escapeXml(threadName)}</string></var></struct></array></data></wddxPacket>`;
-    const raw = await sendRdsCommand(this.ctx, "DBGREQUEST", ["DBG_REQUEST", sessionName, wddx]);
+    const raw = await this.send("DBGREQUEST", ["DBG_REQUEST", sessionName, wddx]);
     return this.parseDebuggerEvent(raw);
   }
 
@@ -789,7 +892,7 @@ export class Server {
       throw new CFRDSValidationError("expression is required", CFRDS_STATUS.PARAM_IS_NULL);
     }
     const wddx = `<wddxPacket version='1.0'><header/><data><array length='1'><struct type='java.util.HashMap'><var name='COMMAND'><string>GET_SINGLE_CF_VARIABLE</string></var><var name='VARIABLE_NAME'><string>${escapeXml(expression)}</string></var><var name='THREAD'><string>${escapeXml(threadName)}</string></var></struct></array></data></wddxPacket>`;
-    await sendRdsCommand(this.ctx, "DBGREQUEST", ["DBG_REQUEST", sessionName, wddx]);
+    await this.send("DBGREQUEST", ["DBG_REQUEST", sessionName, wddx]);
   }
 
   async debuggerSetVariable(sessionName: string, threadName: string, variable: string, value: string): Promise<void> {
@@ -806,7 +909,7 @@ export class Server {
       throw new CFRDSValidationError("value is required", CFRDS_STATUS.PARAM_IS_NULL);
     }
     const wddx = `<wddxPacket version='1.0'><header/><data><array length='1'><struct type='java.util.HashMap'><var name='COMMAND'><string>SET_VARIABLE_VALUE</string></var><var name='VARIABLE_NAME'><string>${escapeXml(variable)}</string></var><var name='VARIABLE_VALUE'><string>${escapeXml(value)}</string></var><var name='THREAD'><string>${escapeXml(threadName)}</string></var></struct></array></data></wddxPacket>`;
-    await sendRdsCommand(this.ctx, "DBGREQUEST", ["DBG_REQUEST", sessionName, wddx]);
+    await this.send("DBGREQUEST", ["DBG_REQUEST", sessionName, wddx]);
   }
 
   async debuggerWatchVariables(sessionName: string, variables: string): Promise<void> {
@@ -819,7 +922,7 @@ export class Server {
     const vars = variables.split(",").map((v) => v.trim()).filter((v) => v.length > 0);
     const varTags = vars.map((v) => `<string>${escapeXml(v)}</string>`).join("");
     const wddx = `<wddxPacket version='1.0'><header/><data><array length='1'><struct type='java.util.HashMap'><var name='COMMAND'><string>SET_WATCH_VARIABLES</string></var><var name='WATCH'><array length='${vars.length}'>${varTags}</array></var></struct></array></data></wddxPacket>`;
-    await sendRdsCommand(this.ctx, "DBGREQUEST", ["DBG_REQUEST", sessionName, wddx]);
+    await this.send("DBGREQUEST", ["DBG_REQUEST", sessionName, wddx]);
   }
 
   async debuggerGetOutput(sessionName: string, threadName: string): Promise<string> {
@@ -830,20 +933,22 @@ export class Server {
       throw new CFRDSValidationError("threadName is required", CFRDS_STATUS.PARAM_IS_NULL);
     }
     const wddx = `<wddxPacket version='1.0'><header/><data><array length='1'><struct type='java.util.HashMap'><var name='COMMAND'><string>GET_OUTPUT</string></var><var name='BODY_ONLY'><boolean value='true'/></var><var name='THREAD'><string>${escapeXml(threadName)}</string></var></struct></array></data></wddxPacket>`;
-    const raw = await sendRdsCommand(this.ctx, "DBGREQUEST", ["DBG_REQUEST", sessionName, wddx]);
+    const raw = await this.send("DBGREQUEST", ["DBG_REQUEST", sessionName, wddx]);
     if (!raw || raw.length === 0) {
       return "";
     }
-    const [, offset] = parseNumber(raw, 0);
+    const [count, offset] = parseNumber(raw, 0);
+    if (count !== 1) {
+      throw new CFRDSResponseError("Invalid debuggerGetOutput response count", CFRDS_STATUS.RESPONSE_ERROR);
+    }
     const [wddxXml] = parseString(raw, offset);
     if (!wddxXml) {
       return "";
     }
     const parsed = wddxDeserialize(wddxXml);
-    if (parsed && parsed.VALUE !== undefined) {
-      return String(parsed.VALUE);
-    }
-    return "";
+    // C reads "0,VALUE" (the first element of the top-level WDDX array).
+    const value = wddxGet(parsed, "0,VALUE");
+    return value === null || value === undefined ? "" : String(value);
   }
 
   async debuggerSetScopeFilter(sessionName: string, filterStr: string): Promise<void> {
@@ -854,71 +959,126 @@ export class Server {
       throw new CFRDSValidationError("filterStr is required", CFRDS_STATUS.PARAM_IS_NULL);
     }
     const wddx = `<wddxPacket version='1.0'><header/><data><array length='1'><struct type='java.util.HashMap'><var name='COMMAND'><string>SET_SCOPE_FILTER</string></var><var name='FILTER'><string>${escapeXml(filterStr)}</string></var></struct></array></data></wddxPacket>`;
-    await sendRdsCommand(this.ctx, "DBGREQUEST", ["DBG_REQUEST", sessionName, wddx]);
+    await this.send("DBGREQUEST", ["DBG_REQUEST", sessionName, wddx]);
   }
 
   // Security Analyzer Operations
+
+  /**
+   * Parses the single JSON string returned by SECURITYANALYZER commands,
+   * mirroring the C `parse_sa_json_response`: exactly one row, one JSON string
+   * and (optionally) no trailing bytes, and a `status == "success"` field.
+   */
+  private parseSecurityAnalyzerJson(
+    raw: Buffer,
+    options: { requireSuccess?: boolean; requireEnd?: boolean } = {}
+  ): Record<string, unknown> {
+    const { requireSuccess = true, requireEnd = true } = options;
+
+    const [count, offset] = parseNumber(raw, 0);
+    if (count !== 1) {
+      throw new CFRDSResponseError("Invalid security analyzer response count", CFRDS_STATUS.RESPONSE_ERROR);
+    }
+
+    const [jsonStr, endOffset] = parseString(raw, offset);
+    if (requireEnd && endOffset !== raw.length) {
+      throw new CFRDSResponseError(
+        "Unexpected trailing bytes in security analyzer response",
+        CFRDS_STATUS.RESPONSE_ERROR
+      );
+    }
+
+    let parsed: unknown;
+    try {
+      parsed = JSON.parse(jsonStr);
+    } catch {
+      throw new CFRDSResponseError("Invalid JSON in security analyzer response", CFRDS_STATUS.RESPONSE_ERROR);
+    }
+
+    if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
+      throw new CFRDSResponseError("Invalid security analyzer JSON object", CFRDS_STATUS.RESPONSE_ERROR);
+    }
+
+    const obj = parsed as Record<string, unknown>;
+    if (requireSuccess && obj.status !== "success") {
+      const message =
+        typeof obj.errormessage === "string" ? (obj.errormessage as string) : "security analyzer request failed";
+      throw new CFRDSResponseError(message, CFRDS_STATUS.RESPONSE_ERROR);
+    }
+
+    return obj;
+  }
+
   async securityAnalyzerScan(pathnames: string, recursively: boolean = true, cores: number = 1): Promise<number> {
     if (pathnames === null || pathnames === undefined) {
       throw new CFRDSValidationError("pathnames is required", CFRDS_STATUS.PARAM_IS_NULL);
     }
-    const raw = await sendRdsCommand(this.ctx, "SECURITYANALYZER", [
+    const raw = await this.send("SECURITYANALYZER", [
       "scan", pathnames, recursively ? "true" : "false", String(cores),
     ]);
-    const [, offset] = parseNumber(raw, 0);
-    const [resStr] = parseString(raw, offset);
-    try {
-      const parsed = JSON.parse(resStr);
-      return typeof parsed.id === "number" ? parsed.id : (parseInt(resStr, 10) || 0);
-    } catch {
-      return parseInt(resStr, 10) || 0;
+    const parsed = this.parseSecurityAnalyzerJson(raw);
+    const id = parsed.id;
+    if (typeof id !== "number" || !Number.isInteger(id)) {
+      throw new CFRDSResponseError("invalid or missing security analyzer id", CFRDS_STATUS.RESPONSE_ERROR);
     }
+    return id;
   }
 
   async securityAnalyzerCancel(commandId: number): Promise<void> {
     if (commandId === null || commandId === undefined) {
       throw new CFRDSValidationError("commandId is required", CFRDS_STATUS.PARAM_IS_NULL);
     }
-    await sendRdsCommand(this.ctx, "SECURITYANALYZER", ["cancel", String(commandId)]);
+    const raw = await this.send("SECURITYANALYZER", ["cancel", String(commandId)]);
+    this.parseSecurityAnalyzerJson(raw);
   }
 
   async securityAnalyzerStatus(commandId: number): Promise<SecurityAnalyzerStatus> {
     if (commandId === null || commandId === undefined) {
       throw new CFRDSValidationError("commandId is required", CFRDS_STATUS.PARAM_IS_NULL);
     }
-    const raw = await sendRdsCommand(this.ctx, "SECURITYANALYZER", ["status", String(commandId)]);
-    const [, offset] = parseNumber(raw, 0);
-    const [totStr, o1] = parseString(raw, offset);
-    const [visStr, o2] = parseString(raw, o1);
-    const [pctStr, o3] = parseString(raw, o2);
-    const [updStr] = parseString(raw, o3);
+    const raw = await this.send("SECURITYANALYZER", ["status", String(commandId)]);
+    const parsed = this.parseSecurityAnalyzerJson(raw);
+
+    const requireInt = (key: string): number => {
+      const value = parsed[key];
+      if (typeof value !== "number" || !Number.isInteger(value)) {
+        throw new CFRDSResponseError(`invalid ${key}`, CFRDS_STATUS.RESPONSE_ERROR);
+      }
+      return value;
+    };
+
     return {
-      totalfiles: safeInt(totStr),
-      filesvisitedcount: safeInt(visStr),
-      percentage: safeInt(pctStr),
-      lastupdated: safeInt(updStr),
+      totalfiles: requireInt("totalfiles"),
+      filesvisitedcount: requireInt("filesvisitedcount"),
+      percentage: requireInt("percentage"),
+      lastupdated: requireInt("lastupdated"),
     };
   }
 
-  async securityAnalyzerResult(commandId: number): Promise<Record<string, unknown> | null> {
+  async securityAnalyzerResult(commandId: number): Promise<SecurityAnalyzerResult> {
     if (commandId === null || commandId === undefined) {
       throw new CFRDSValidationError("commandId is required", CFRDS_STATUS.PARAM_IS_NULL);
     }
-    const raw = await sendRdsCommand(this.ctx, "SECURITYANALYZER", ["result", String(commandId)]);
-    const [, offset] = parseNumber(raw, 0);
-    const [resStr] = parseString(raw, offset);
-    try {
-      return JSON.parse(resStr);
-    } catch {
-      return { raw: resStr };
-    }
+    const raw = await this.send("SECURITYANALYZER", ["result", String(commandId)]);
+    // The C implementation parses the report JSON directly without checking
+    // `status` or trailing bytes.
+    return this.parseSecurityAnalyzerJson(raw, { requireSuccess: false, requireEnd: false });
   }
 
   async securityAnalyzerClean(commandId: number): Promise<void> {
     if (commandId === null || commandId === undefined) {
       throw new CFRDSValidationError("commandId is required", CFRDS_STATUS.PARAM_IS_NULL);
     }
-    await sendRdsCommand(this.ctx, "SECURITYANALYZER", ["clean", String(commandId)]);
+    const raw = await this.send("SECURITYANALYZER", ["clean", String(commandId)]);
+    // C only requires a single row containing a JSON string.
+    const [count, offset] = parseNumber(raw, 0);
+    if (count !== 1) {
+      throw new CFRDSResponseError("Invalid security analyzer clean response count", CFRDS_STATUS.RESPONSE_ERROR);
+    }
+    const [jsonStr] = parseString(raw, offset);
+    if (!jsonStr) {
+      throw new CFRDSResponseError("Missing security analyzer clean response", CFRDS_STATUS.RESPONSE_ERROR);
+    }
   }
 
   // IDE Default
@@ -926,13 +1086,19 @@ export class Server {
     if (version === null || version === undefined) {
       throw new CFRDSValidationError("version is required", CFRDS_STATUS.PARAM_IS_NULL);
     }
-    const raw = await sendRdsCommand(this.ctx, "IDE_DEFAULT", ["", `${version},`]);
-    const [, offset] = parseNumber(raw, 0);
+    const raw = await this.send("IDE_DEFAULT", ["", `${version},`]);
+    const [count, offset] = parseNumber(raw, 0);
+    if (count !== 5) {
+      throw new CFRDSResponseError("Invalid ideDefault response count", CFRDS_STATUS.RESPONSE_ERROR);
+    }
     const [n1, o1] = parseString(raw, offset);
     const [sVer, o2] = parseString(raw, o1);
     const [cVer, o3] = parseString(raw, o2);
     const [n2, o4] = parseString(raw, o3);
-    const [n3] = parseString(raw, o4);
+    const [n3, endOffset] = parseString(raw, o4);
+    if (endOffset !== raw.length) {
+      throw new CFRDSResponseError("Unexpected trailing bytes in ideDefault response", CFRDS_STATUS.RESPONSE_ERROR);
+    }
     return {
       num1: safeInt(n1),
       server_version: sVer,
@@ -947,14 +1113,28 @@ export class Server {
     if (logdirectory === null || logdirectory === undefined) {
       throw new CFRDSValidationError("logdirectory is required", CFRDS_STATUS.PARAM_IS_NULL);
     }
-    const raw = await sendRdsCommand(this.ctx, "ADMINAPI", ["cfide.adminapi.debugging", "getlogproperty", logdirectory]);
-    const [, offset] = parseNumber(raw, 0);
-    const [propStr] = parseString(raw, offset);
-    return propStr;
+    const raw = await this.send("ADMINAPI", ["cfide.adminapi.debugging", "getlogproperty", logdirectory]);
+    const [count, offset] = parseNumber(raw, 0);
+    if (count !== 1) {
+      throw new CFRDSResponseError("Invalid getlogproperty response count", CFRDS_STATUS.RESPONSE_ERROR);
+    }
+    const [xml, endOffset] = parseString(raw, offset);
+    if (endOffset !== raw.length) {
+      throw new CFRDSResponseError("Unexpected trailing bytes in getlogproperty response", CFRDS_STATUS.RESPONSE_ERROR);
+    }
+    if (!xml) {
+      return "";
+    }
+    // C deserializes the WDDX packet and requires the data node to be a string.
+    const data = wddxDeserialize(xml);
+    if (typeof data !== "string") {
+      throw new CFRDSResponseError("Invalid getlogproperty WDDX data", CFRDS_STATUS.RESPONSE_ERROR);
+    }
+    return data;
   }
 
   async adminapiExtensionsGetcustomtagpaths(): Promise<string[]> {
-    const raw = await sendRdsCommand(this.ctx, "ADMINAPI", ["cfide.adminapi.extensions", "getcustomtagpaths"]);
+    const raw = await this.send("ADMINAPI", ["cfide.adminapi.extensions", "getcustomtagpaths"]);
     const [, offset] = parseNumber(raw, 0);
     const [xml] = parseString(raw, offset);
     const paths: string[] = [];
@@ -980,8 +1160,8 @@ export class Server {
     if (path === null || path === undefined) {
       throw new CFRDSValidationError("path is required", CFRDS_STATUS.PARAM_IS_NULL);
     }
-    const argStr = `name:${name};path:${path}`;
-    await sendRdsCommand(this.ctx, "ADMINAPI", ["cfide.adminapi.extensions", "setmappings", argStr]);
+    const argStr = `name:${escapeMappingValue(name)};path:${escapeMappingValue(path)}`;
+    await this.send("ADMINAPI", ["cfide.adminapi.extensions", "setmappings", argStr]);
   }
 
   async adminapiExtensionsDeletemapping(mapping: string): Promise<void> {
@@ -989,11 +1169,11 @@ export class Server {
       throw new CFRDSValidationError("mapping is required", CFRDS_STATUS.PARAM_IS_NULL);
     }
     // NOTE: "deleltemappings" (with the extra 'l') is a required typo hardcoded in the Adobe ColdFusion RDS backend.
-    await sendRdsCommand(this.ctx, "ADMINAPI", ["cfide.adminapi.extensions", "deleltemappings", mapping]);
+    await this.send("ADMINAPI", ["cfide.adminapi.extensions", "deleltemappings", mapping]);
   }
 
   async adminapiExtensionsGetmappings(): Promise<AdminApiMappings> {
-    const raw = await sendRdsCommand(this.ctx, "ADMINAPI", ["cfide.adminapi.extensions", "getmappings"]);
+    const raw = await this.send("ADMINAPI", ["cfide.adminapi.extensions", "getmappings"]);
     const [, offset] = parseNumber(raw, 0);
     const [xml] = parseString(raw, offset);
     const keys: string[] = [];
@@ -1045,7 +1225,7 @@ export class Server {
       throw new CFRDSValidationError("seriesData is required", CFRDS_STATUS.PARAM_IS_NULL);
     }
     const args: (string | Buffer)[] = ["GRAPH", chartAttributes, String(seriesData.length), ...seriesData];
-    return sendRdsCommand(this.ctx, "GRAPHING", args);
+    return this.send("GRAPHING", args);
   }
 }
 
@@ -1250,6 +1430,201 @@ export function cfrds_debugger_event_get_java_trace_item(evt: DebuggerEvent | nu
     return typeof item === "string" ? item : null;
   }
   return null;
+}
+
+/*
+ * Typed Security Analyzer result accessors.
+ *
+ * These mirror the C `cfrds_security_analyzer_result_*` functions operating on
+ * the raw JSON report object returned by securityAnalyzerResult(). Return
+ * values follow the C semantics: missing/invalid fields yield -1 / null, and
+ * cfrds_security_analyzer_result_status() yields "" when status is absent.
+ */
+
+function saResultObj(value: SecurityAnalyzerResult | null): Record<string, unknown> | null {
+  return value && typeof value === "object" && !Array.isArray(value) ? value : null;
+}
+
+function saInt(value: SecurityAnalyzerResult | null, key: string): number {
+  const obj = saResultObj(value);
+  if (!obj) return -1;
+  const field = obj[key];
+  return typeof field === "number" && Number.isInteger(field) ? field : -1;
+}
+
+function saString(value: SecurityAnalyzerResult | null, key: string): string | null {
+  const obj = saResultObj(value);
+  if (!obj) return null;
+  const field = obj[key];
+  return typeof field === "string" ? field : null;
+}
+
+function saArrayLength(value: SecurityAnalyzerResult | null, key: string): number {
+  const obj = saResultObj(value);
+  if (!obj) return -1;
+  const field = obj[key];
+  return Array.isArray(field) ? field.length : -1;
+}
+
+function saArrayItem(
+  value: SecurityAnalyzerResult | null,
+  arrayKey: string,
+  ndx: number
+): Record<string, unknown> | null {
+  const obj = saResultObj(value);
+  if (!obj) return null;
+  const field = obj[arrayKey];
+  if (!Array.isArray(field)) return null;
+  const item = field[ndx];
+  return item && typeof item === "object" && !Array.isArray(item) ? (item as Record<string, unknown>) : null;
+}
+
+function saArrayItemString(value: SecurityAnalyzerResult | null, arrayKey: string, ndx: number, fieldKey: string): string | null {
+  const item = saArrayItem(value, arrayKey, ndx);
+  if (!item) return null;
+  const field = item[fieldKey];
+  return typeof field === "string" ? field : null;
+}
+
+function saArrayItemInt(value: SecurityAnalyzerResult | null, arrayKey: string, ndx: number, fieldKey: string): number {
+  const item = saArrayItem(value, arrayKey, ndx);
+  if (!item) return -1;
+  const field = item[fieldKey];
+  return typeof field === "number" && Number.isInteger(field) ? field : -1;
+}
+
+export function cfrds_security_analyzer_result_totalfiles(value: SecurityAnalyzerResult | null): number {
+  return saInt(value, "totalfiles");
+}
+
+export function cfrds_security_analyzer_result_filesvisitedcount(value: SecurityAnalyzerResult | null): number {
+  return saInt(value, "filesvisitedcount");
+}
+
+export function cfrds_security_analyzer_result_errorsdescription_count(value: SecurityAnalyzerResult | null): number {
+  return saArrayLength(value, "errorsdescription");
+}
+
+export function cfrds_security_analyzer_result_filesscanned_count(value: SecurityAnalyzerResult | null): number {
+  return saArrayLength(value, "filesscanned");
+}
+
+export function cfrds_security_analyzer_result_filesscanned_item_result(value: SecurityAnalyzerResult | null, ndx: number): string | null {
+  return saArrayItemString(value, "filesscanned", ndx, "result");
+}
+
+export function cfrds_security_analyzer_result_filesscanned_item_filename(value: SecurityAnalyzerResult | null, ndx: number): string | null {
+  return saArrayItemString(value, "filesscanned", ndx, "filename");
+}
+
+export function cfrds_security_analyzer_result_filesnotscanned_count(value: SecurityAnalyzerResult | null): number {
+  return saArrayLength(value, "filesnotscanned");
+}
+
+export function cfrds_security_analyzer_result_filesnotscanned_item_reason(value: SecurityAnalyzerResult | null, ndx: number): string | null {
+  return saArrayItemString(value, "filesnotscanned", ndx, "reason");
+}
+
+export function cfrds_security_analyzer_result_filesnotscanned_item_filename(value: SecurityAnalyzerResult | null, ndx: number): string | null {
+  return saArrayItemString(value, "filesnotscanned", ndx, "filename");
+}
+
+export function cfrds_security_analyzer_result_executorservice(value: SecurityAnalyzerResult | null): string | null {
+  return saString(value, "executorservice");
+}
+
+export function cfrds_security_analyzer_result_percentage(value: SecurityAnalyzerResult | null): number {
+  return saInt(value, "percentage");
+}
+
+export function cfrds_security_analyzer_result_files_count(value: SecurityAnalyzerResult | null): number {
+  return saArrayLength(value, "files");
+}
+
+export function cfrds_security_analyzer_result_files_value(value: SecurityAnalyzerResult | null, ndx: number): string | null {
+  const obj = saResultObj(value);
+  if (!obj) return null;
+  const field = obj["files"];
+  if (!Array.isArray(field)) return null;
+  const item = field[ndx];
+  return typeof item === "string" ? item : null;
+}
+
+export function cfrds_security_analyzer_result_lastupdated(value: SecurityAnalyzerResult | null): number {
+  return saInt(value, "lastupdated");
+}
+
+export function cfrds_security_analyzer_result_filesvisited_count(value: SecurityAnalyzerResult | null): number {
+  return saArrayLength(value, "filesvisited");
+}
+
+export function cfrds_security_analyzer_result_filesnotscannedcount(value: SecurityAnalyzerResult | null): number {
+  return saInt(value, "filesnotscannedcount");
+}
+
+export function cfrds_security_analyzer_result_filesscannedcount(value: SecurityAnalyzerResult | null): number {
+  return saInt(value, "filesscannedcount");
+}
+
+export function cfrds_security_analyzer_result_id(value: SecurityAnalyzerResult | null): number {
+  return saInt(value, "id");
+}
+
+export function cfrds_security_analyzer_result_errors_count(value: SecurityAnalyzerResult | null): number {
+  return saArrayLength(value, "errors");
+}
+
+export function cfrds_security_analyzer_result_errors_item_errormessage(value: SecurityAnalyzerResult | null, ndx: number): string | null {
+  return saArrayItemString(value, "errors", ndx, "errormessage");
+}
+
+export function cfrds_security_analyzer_result_errors_item_endline(value: SecurityAnalyzerResult | null, ndx: number): number {
+  return saArrayItemInt(value, "errors", ndx, "endline");
+}
+
+export function cfrds_security_analyzer_result_errors_item_path(value: SecurityAnalyzerResult | null, ndx: number): string | null {
+  return saArrayItemString(value, "errors", ndx, "path");
+}
+
+export function cfrds_security_analyzer_result_errors_item_vulnerablecode(value: SecurityAnalyzerResult | null, ndx: number): string | null {
+  return saArrayItemString(value, "errors", ndx, "vulnerablecode");
+}
+
+export function cfrds_security_analyzer_result_errors_item_filename(value: SecurityAnalyzerResult | null, ndx: number): string | null {
+  return saArrayItemString(value, "errors", ndx, "filename");
+}
+
+export function cfrds_security_analyzer_result_errors_item_beginline(value: SecurityAnalyzerResult | null, ndx: number): number {
+  return saArrayItemInt(value, "errors", ndx, "beginline");
+}
+
+export function cfrds_security_analyzer_result_errors_item_column(value: SecurityAnalyzerResult | null, ndx: number): number {
+  return saArrayItemInt(value, "errors", ndx, "column");
+}
+
+export function cfrds_security_analyzer_result_errors_item_error(value: SecurityAnalyzerResult | null, ndx: number): string | null {
+  return saArrayItemString(value, "errors", ndx, "Error");
+}
+
+export function cfrds_security_analyzer_result_errors_item_begincolumn(value: SecurityAnalyzerResult | null, ndx: number): number {
+  return saArrayItemInt(value, "errors", ndx, "begincolumn");
+}
+
+export function cfrds_security_analyzer_result_errors_item_type(value: SecurityAnalyzerResult | null, ndx: number): string | null {
+  return saArrayItemString(value, "errors", ndx, "type");
+}
+
+export function cfrds_security_analyzer_result_errors_item_endcolumn(value: SecurityAnalyzerResult | null, ndx: number): number {
+  return saArrayItemInt(value, "errors", ndx, "endcolumn");
+}
+
+export function cfrds_security_analyzer_result_errors_item_referencetype(value: SecurityAnalyzerResult | null, ndx: number): string | null {
+  return saArrayItemString(value, "errors", ndx, "referencetype");
+}
+
+export function cfrds_security_analyzer_result_status(value: SecurityAnalyzerResult | null): string {
+  const status = saString(value, "status");
+  return status === null ? "" : status;
 }
 
 export { Server as ServerType };

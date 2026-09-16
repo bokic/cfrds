@@ -37,6 +37,14 @@ import {
   cfrds_debugger_event_get_cf_trace_item,
   cfrds_debugger_event_get_java_trace_count,
   cfrds_debugger_event_get_java_trace_item,
+  cfrds_security_analyzer_result_totalfiles,
+  cfrds_security_analyzer_result_filesscanned_count,
+  cfrds_security_analyzer_result_filesscanned_item_result,
+  cfrds_security_analyzer_result_errors_count,
+  cfrds_security_analyzer_result_errors_item_errormessage,
+  cfrds_security_analyzer_result_errors_item_type,
+  cfrds_security_analyzer_result_errors_item_endline,
+  cfrds_security_analyzer_result_status,
   cfrds_version,
   cfrds_version_major,
   cfrds_version_minor,
@@ -102,6 +110,8 @@ describe("cfrds TypeScript module", () => {
       "getPort",
       "getUsername",
       "getPassword",
+      "getError",
+      "clearError",
       "close",
       "browseDir",
       "fileRead",
@@ -161,7 +171,7 @@ describe("cfrds TypeScript module", () => {
     ];
 
     test("Server prototype includes all expected public methods", () => {
-      const privateMethods = ["parseDebuggerEvent"];
+      const privateMethods = ["parseDebuggerEvent", "send", "parseSecurityAnalyzerJson"];
       const actualMethods = Object.getOwnPropertyNames(Server.prototype).filter(
         (name) => name !== "constructor" && !privateMethods.includes(name)
       );
@@ -475,6 +485,212 @@ describe("cfrds TypeScript module", () => {
       assert.deepEqual(res.values, ["v1", "v2", "v3"]);
       assert.equal(res.mappings.k1, "v3");
       assert.equal(res.mappings.k2, "v2");
+    });
+
+    test("adminapiExtensionsSetmapping escapes : and ; delimiters (cfrds_buffer_append_escaped)", async () => {
+      mockNetworkErrorCode = undefined;
+      lastRequestBody = "";
+      mockResponseBody = Buffer.from("0:", "utf-8");
+      const srv = new Server("127.0.0.1", 8500, "admin", "admin");
+      await srv.adminapiExtensionsSetmapping("a:b;c", "x;y:z");
+      assert.match(lastRequestBody, /name:a\\:b\\;c;path:x\\;y\\:z/);
+    });
+
+    test("debuggerStart sends WDDX REMOTE_SESSION=true and requires a 2-row response", async () => {
+      mockNetworkErrorCode = undefined;
+      lastRequestBody = "";
+      mockResponseBody = Buffer.from("2:3:abc0:", "utf-8");
+      const srv = new Server("127.0.0.1", 8500, "admin", "admin");
+      const sessionId = await srv.debuggerStart();
+      assert.equal(sessionId, "abc");
+      const expectedWddx =
+        "<wddxPacket version='1.0'><header/><data><array length='1'><struct type='java.util.HashMap'><var name='REMOTE_SESSION'><boolean value='true'/></var></struct></array></data></wddxPacket>";
+      assert.match(lastRequestBody, /DBG_START/);
+      assert.ok(lastRequestBody.includes(expectedWddx), "payload should contain the REMOTE_SESSION=true WDDX packet");
+
+      mockResponseBody = Buffer.from("1:3:abc", "utf-8");
+      const srv2 = new Server("127.0.0.1", 8500, "admin", "admin");
+      await assert.rejects(
+        async () => { await srv2.debuggerStart(); },
+        (err: any) => {
+          assert.ok(err instanceof CFRDSResponseError);
+          assert.match(err.message, /response count/);
+          return true;
+        }
+      );
+    });
+
+    test("debuggerGetServerInfo reads 0,STATUS == RDS_OK and 0,DEBUG_SERVER_PORT", async () => {
+      mockNetworkErrorCode = undefined;
+      const xml =
+        "<wddxPacket version='1.0'><header/><data><array length='1'><struct><var name='STATUS'><string>RDS_OK</string></var><var name='DEBUG_SERVER_PORT'><number>8301</number></var></struct></array></data></wddxPacket>";
+      mockResponseBody = Buffer.from(`1:${xml.length}:${xml}`, "utf-8");
+      const srv = new Server("127.0.0.1", 8500, "admin", "admin");
+      assert.equal(await srv.debuggerGetServerInfo("s1"), 8301);
+    });
+
+    test("debuggerGetServerInfo throws when STATUS is not RDS_OK", async () => {
+      mockNetworkErrorCode = undefined;
+      const xml =
+        "<wddxPacket version='1.0'><header/><data><array length='1'><struct><var name='STATUS'><string>FAILED</string></var></struct></array></data></wddxPacket>";
+      mockResponseBody = Buffer.from(`1:${xml.length}:${xml}`, "utf-8");
+      const srv = new Server("127.0.0.1", 8500, "admin", "admin");
+      await assert.rejects(
+        async () => { await srv.debuggerGetServerInfo("s1"); },
+        (err: any) => {
+          assert.ok(err instanceof CFRDSResponseError);
+          assert.match(err.message, /debugger server info status/);
+          return true;
+        }
+      );
+    });
+
+    test("debuggerGetOutput reads 0,VALUE from the first WDDX array element", async () => {
+      mockNetworkErrorCode = undefined;
+      const xml =
+        "<wddxPacket version='1.0'><header/><data><array length='1'><struct><var name='VALUE'><string>hello output</string></var></struct></array></data></wddxPacket>";
+      mockResponseBody = Buffer.from(`1:${xml.length}:${xml}`, "utf-8");
+      const srv = new Server("127.0.0.1", 8500, "admin", "admin");
+      assert.equal(await srv.debuggerGetOutput("s1", "main"), "hello output");
+    });
+
+    test("adminapiDebuggingGetlogproperty WDDX-decodes a string data node", async () => {
+      mockNetworkErrorCode = undefined;
+      const xml =
+        "<wddxPacket version='1.0'><header/><data><string>/tmp/logs</string></data></wddxPacket>";
+      mockResponseBody = Buffer.from(`1:${xml.length}:${xml}`, "utf-8");
+      const srv = new Server("127.0.0.1", 8500, "admin", "admin");
+      assert.equal(await srv.adminapiDebuggingGetlogproperty("/tmp/logs"), "/tmp/logs");
+    });
+
+    test("securityAnalyzerStatus parses a single JSON string and returns typed fields", async () => {
+      mockNetworkErrorCode = undefined;
+      const json = JSON.stringify({
+        status: "success",
+        totalfiles: 10,
+        filesvisitedcount: 4,
+        percentage: 40,
+        lastupdated: 123456789,
+      });
+      mockResponseBody = Buffer.from(`1:${json.length}:${json}`, "utf-8");
+      const srv = new Server("127.0.0.1", 8500, "admin", "admin");
+      const status = await srv.securityAnalyzerStatus(1);
+      assert.deepEqual(status, {
+        totalfiles: 10,
+        filesvisitedcount: 4,
+        percentage: 40,
+        lastupdated: 123456789,
+      });
+    });
+
+    test("securityAnalyzerStatus throws with server errormessage when status is not success", async () => {
+      mockNetworkErrorCode = undefined;
+      const json = JSON.stringify({ status: "error", errormessage: "invalid command id" });
+      mockResponseBody = Buffer.from(`1:${json.length}:${json}`, "utf-8");
+      const srv = new Server("127.0.0.1", 8500, "admin", "admin");
+      await assert.rejects(
+        async () => { await srv.securityAnalyzerStatus(1); },
+        (err: any) => {
+          assert.ok(err instanceof CFRDSResponseError);
+          assert.match(err.message, /invalid command id/);
+          return true;
+        }
+      );
+    });
+
+    test("securityAnalyzerScan returns the numeric id from the JSON response", async () => {
+      mockNetworkErrorCode = undefined;
+      const json = JSON.stringify({ status: "success", id: 42 });
+      mockResponseBody = Buffer.from(`1:${json.length}:${json}`, "utf-8");
+      const srv = new Server("127.0.0.1", 8500, "admin", "admin");
+      assert.equal(await srv.securityAnalyzerScan("/tmp", true, 2), 42);
+    });
+
+    test("securityAnalyzerResult returns the raw JSON report usable by typed accessors", async () => {
+      mockNetworkErrorCode = undefined;
+      const report = {
+        status: "success",
+        id: 7,
+        totalfiles: 10,
+        filesscanned: [
+          { result: "clean", filename: "a.cfm" },
+        ],
+        errorsdescription: ["desc"],
+        errors: [
+          { errormessage: "xss", type: "x", path: "p.cfm", filename: "f", beginline: 1, endline: 2, column: 3, begincolumn: 4, endcolumn: 5, vulnerablecode: "vc", Error: "e", referencetype: "rt" },
+        ],
+      };
+      const json = JSON.stringify(report);
+      mockResponseBody = Buffer.from(`1:${json.length}:${json}`, "utf-8");
+      const srv = new Server("127.0.0.1", 8500, "admin", "admin");
+      const result = await srv.securityAnalyzerResult(7);
+      assert.equal(cfrds_security_analyzer_result_status(result), "success");
+      assert.equal(cfrds_security_analyzer_result_totalfiles(result), 10);
+      assert.equal(cfrds_security_analyzer_result_filesscanned_count(result), 1);
+      assert.equal(cfrds_security_analyzer_result_filesscanned_item_result(result, 0), "clean");
+      assert.equal(cfrds_security_analyzer_result_errors_count(result), 1);
+      assert.equal(cfrds_security_analyzer_result_errors_item_errormessage(result, 0), "xss");
+      assert.equal(cfrds_security_analyzer_result_errors_item_type(result, 0), "x");
+      assert.equal(cfrds_security_analyzer_result_errors_item_endline(result, 0), 2);
+      assert.equal(cfrds_security_analyzer_result_totalfiles(null), -1);
+      assert.equal(cfrds_security_analyzer_result_status(null), "");
+    });
+
+    test("fileExists returns false only for the exact not-found command error", async () => {
+      mockNetworkErrorCode = undefined;
+      mockResponseBody = Buffer.from("-1:The system cannot find the path specified: /tmp/missing", "utf-8");
+      const srv = new Server("127.0.0.1", 8500, "admin", "admin");
+      assert.equal(await srv.fileExists("/tmp/missing"), false);
+    });
+
+    test("fileExists propagates non-not-found command failures", async () => {
+      mockNetworkErrorCode = undefined;
+      mockResponseBody = Buffer.from("-1:Permission denied", "utf-8");
+      const srv = new Server("127.0.0.1", 8500, "admin", "admin");
+      await assert.rejects(
+        async () => { await srv.fileExists("/tmp/x"); },
+        (err: any) => {
+          assert.ok(err instanceof CFRDSCommandError);
+          assert.match(err.message, /Permission denied/);
+          return true;
+        }
+      );
+    });
+
+    test("getError/clearError record the last command failure", async () => {
+      mockNetworkErrorCode = undefined;
+      mockResponseBody = Buffer.from("-1:boom", "utf-8");
+      const srv = new Server("127.0.0.1", 8500, "admin", "admin");
+      assert.equal(srv.getError(), null);
+      await assert.rejects(async () => { await srv.fileExists("/tmp/x"); });
+      assert.ok(srv.getError() instanceof CFRDSCommandError);
+      srv.clearError();
+      assert.equal(srv.getError(), null);
+
+      // A successful command clears the recorded error.
+      mockResponseBody = Buffer.from("0:", "utf-8");
+      const ok = await srv.browseDir("/");
+      assert.deepEqual(ok, []);
+      assert.equal(srv.getError(), null);
+    });
+
+    test("ideDefault requires exactly 5 response rows and no trailing bytes", async () => {
+      mockNetworkErrorCode = undefined;
+      mockResponseBody = Buffer.from("5:1:a1:b1:c1:d1:e", "utf-8");
+      const srv = new Server("127.0.0.1", 8500, "admin", "admin");
+      const res = await srv.ideDefault(1);
+      assert.equal(res.server_version, "b");
+      assert.equal(res.client_version, "c");
+
+      mockResponseBody = Buffer.from("4:1:a1:b1:c1:d", "utf-8");
+      await assert.rejects(
+        async () => { await srv.ideDefault(1); },
+        (err: any) => {
+          assert.ok(err instanceof CFRDSResponseError);
+          assert.match(err.message, /response count/);
+          return true;
+        }
+      );
     });
 
     describe("Transport Network Error Code Mapping", () => {

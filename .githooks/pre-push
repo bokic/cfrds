@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# pre-push hook: reject the push when the version in rust/Cargo.toml does not
+# pre-push hook: reject the push when the version in ports/rust/Cargo.toml does not
 # match the most recent git tag (X.Y.Z), mirroring the C build's
 # `git describe --tags --abbrev=0` versioning.
 #
@@ -20,16 +20,16 @@ if ! printf '%s' "$TAG" | grep -qE '^[0-9]+\.[0-9]+\.[0-9]+$'; then
     exit 1
 fi
 
-CARGO_VERSION="$(sed -n 's/^version = "\([0-9.]*\)"/\1/p' rust/Cargo.toml | head -1)"
+CARGO_VERSION="$(sed -n 's/^version = "\([0-9.]*\)"/\1/p' ports/rust/Cargo.toml | head -1)"
 
 if [ -z "$CARGO_VERSION" ]; then
-    echo "pre-push: could not read version from rust/Cargo.toml" >&2
+    echo "pre-push: could not read version from ports/rust/Cargo.toml" >&2
     exit 1
 fi
 
 if [ "$TAG" != "$CARGO_VERSION" ]; then
-    echo "pre-push: version mismatch: git tag is '$TAG' but rust/Cargo.toml has '$CARGO_VERSION'" >&2
-    echo "pre-push: run ./rust/build.sh to sync, or fix rust/Cargo.toml, and try again" >&2
+    echo "pre-push: version mismatch: git tag is '$TAG' but ports/rust/Cargo.toml has '$CARGO_VERSION'" >&2
+    echo "pre-push: run ./ports/rust/build.sh to sync, or fix ports/rust/Cargo.toml, and try again" >&2
     exit 1
 fi
 

@@ -2,9 +2,9 @@
 .cache
 /windows/cfrds_*.exe
 /windows/cfrds-*.zip
-/python/*.egg-info
-/python/build
-/python/*.so
+/ports/python/*.egg-info
+/ports/python/build
+/ports/python/*.so
 /build
 /build-*
 /deps
@@ -16,5 +16,5 @@ out
 CMakeLists.txt.user
 compile_commands.json
 /fuzz/fuzz_rds_string
-/rust/target
-/rust/Cargo.lock
+/ports/rust/target
+/ports/rust/Cargo.lock

@@ -78,6 +78,12 @@ def _escape_xml(val: str) -> str:
     )
 
 
+def _escape_adminapi_arg(val: str) -> str:
+    # C's cfrds_buffer_append_escaped escapes ':' and ';' with a preceding
+    # backslash so the "name:<v>;path:<v>" framing is unambiguous.
+    return val.replace(":", "\\:").replace(";", "\\;")
+
+
 def _parse_wddx_node(elem: Any) -> Any:
     tag = elem.tag
     if "}" in tag:
@@ -145,6 +151,23 @@ def _wddx_deserialize(xml_str: str) -> Any:
         return _parse_wddx_node(root)
     except Exception:
         return None
+
+
+def _wddx_extract(parsed: Any, key: str) -> Any:
+    """Extract a named value from a deserialized WDDX structure.
+
+    ColdFusion RDS commonly wraps struct values in ``<array length='1'>``,
+    which the deserializer returns as a list containing the dict. This
+    unwraps that case so callers can read the key regardless of response
+    shape (mirrors the ``0,KEY`` paths used throughout the C port).
+    """
+    if isinstance(parsed, dict):
+        return parsed.get(key)
+    if isinstance(parsed, list):
+        for item in parsed:
+            if isinstance(item, dict) and key in item:
+                return item[key]
+    return None
 
 # Password Obfuscation (XOR with "4p0L@r1$")
 _FILLUP_KEY = "4p0L@r1$".encode("utf-8")
@@ -1274,12 +1297,19 @@ class Server:
     def file_exists(self, pathname: str) -> bool:
         if pathname is None:
             raise CFRDSError("pathname is required")
+        # Mirrors cfrds_file.c: only the specific server "path not found"
+        # response is treated as a clean "does not exist" result. Any other
+        # failure (permissions, connection, HTTP, ...) propagates.
+        not_found_prefix = "The system cannot find the path specified: "
         try:
             self._send_rds_command("FILEIO", [pathname, "EXISTENCE", "", ""])
             return True
         except CFRDSError as e:
-            if "COMMAND_FAILED" in str(e):
-                return False
+            msg = str(e)
+            failed_prefix = "COMMAND_FAILED:"
+            if msg.startswith(failed_prefix):
+                if msg[len(failed_prefix):].lstrip().startswith(not_found_prefix):
+                    return False
             raise
 
     def dir_create(self, dirpath: str) -> None:
@@ -1521,7 +1551,12 @@ class Server:
 
     # Debugger Operations
     def debugger_start(self) -> str:
-        raw = self._send_rds_command("DBGREQUEST", ["DBG_START", ""])
+        # Mirrors cfrds_debugger.c: DBG_START takes a WDDX payload selecting a
+        # remote (non-embedded) debug session: REMOTE_SESSION = true.
+        wddx = ("<wddxPacket version='1.0'><header/><data><array length='1'>"
+                "<struct type='java.util.HashMap'><var name='REMOTE_SESSION'>"
+                "<boolean value='true'/></var></struct></array></data></wddxPacket>")
+        raw = self._send_rds_command("DBGREQUEST", ["DBG_START", wddx])
         offset = [0]
         _parse_number(raw, offset)
         session_id = _parse_string(raw, offset)
@@ -1544,10 +1579,11 @@ class Server:
         offset = [0]
         _parse_number(raw, offset)
         wddx_xml = _parse_string(raw, offset)
-        parsed = _wddx_deserialize(wddx_xml)
-        if parsed and isinstance(parsed, dict) and "DEBUG_SERVER_PORT" in parsed:
+        # Response is array-wrapped (C reads path "0,DEBUG_SERVER_PORT").
+        port_val = _wddx_extract(_wddx_deserialize(wddx_xml), "DEBUG_SERVER_PORT")
+        if port_val is not None:
             try:
-                return int(float(parsed["DEBUG_SERVER_PORT"]))
+                return int(float(port_val))
             except (ValueError, TypeError):
                 pass
         return 0
@@ -1794,11 +1830,9 @@ class Server:
         wddx_xml = _parse_string(raw, offset)
         if not wddx_xml:
             return ""
-        parsed = _wddx_deserialize(wddx_xml)
-        if parsed and isinstance(parsed, dict) and "VALUE" in parsed:
-            val = parsed["VALUE"]
-            return str(val) if val is not None else ""
-        return ""
+        # Response is array-wrapped (C reads path "0,VALUE").
+        val = _wddx_extract(_wddx_deserialize(wddx_xml), "VALUE")
+        return str(val) if val is not None else ""
 
     def debugger_set_scope_filter(self, session_name: str, filter_str: str) -> None:
         if session_name is None:
@@ -1898,7 +1932,14 @@ class Server:
         offset = [0]
         _parse_number(raw, offset)
         prop_str = _parse_string(raw, offset)
-        return prop_str
+        if not prop_str:
+            return None
+        # C deserializes the WDDX and requires the data node to be a plain
+        # string (cfrds_command_adminapi_debugging_getlogproperty).
+        parsed = _wddx_deserialize(prop_str)
+        if isinstance(parsed, str):
+            return parsed
+        raise CFRDSError("RESPONSE_ERROR: wddx_node_type(data) != WDDX_STRING")
 
     def adminapi_extensions_getcustomtagpaths(self) -> List[str]:
         raw = self._send_rds_command("ADMINAPI", ["cfide.adminapi.extensions", "getcustomtagpaths"])
@@ -1921,7 +1962,8 @@ class Server:
             raise CFRDSError("name is required")
         if path is None:
             raise CFRDSError("path is required")
-        arg_str = f"name:{name};path:{path}"
+        # Escape embedded ':' and ';' exactly like cfrds_buffer_append_escaped.
+        arg_str = f"name:{_escape_adminapi_arg(name)};path:{_escape_adminapi_arg(path)}"
         self._send_rds_command("ADMINAPI", ["cfide.adminapi.extensions", "setmappings", arg_str])
 
     def adminapi_extensions_deletemapping(self, mapping: str) -> None:
@@ -1984,7 +2026,4 @@ class Server:
         args = ["GRAPH", chart_attributes, str(len(series_data))] + series_data
         raw = self._send_rds_command("GRAPHING", args)
         return raw
-
-
-# Class Alias
 

@@ -399,6 +399,84 @@ with patch("http.client.HTTPConnection", return_value=mock_conn):
 
     print("Offline transport error mapping tests passed!")
 
+    # Test 9: debugger_start sends the REMOTE_SESSION=true WDDX payload (parity with cfrds_debugger.c)
+    mock_conn.request.reset_mock()
+    mock_resp.read.return_value = b"0:3:abc"
+    session_id = srv_mock.debugger_start()
+    assert session_id == "abc", "debugger_start should return the parsed session id"
+    call_body = mock_conn.request.call_args[1].get("body", b"")
+    if isinstance(call_body, bytes):
+        call_body = call_body.decode("utf-8")
+    assert "<var name='REMOTE_SESSION'><boolean value='true'/></var>" in call_body, \
+        "debugger_start should send REMOTE_SESSION=true WDDX payload"
+
+    # Test 10: debugger_get_server_info unwraps the array-wrapped WDDX response (C reads path "0,DEBUG_SERVER_PORT")
+    mock_conn.request.reset_mock()
+    xml_data = "<wddxPacket version='1.0'><header/><data><array length='1'><struct type='java.util.HashMap'><var name='DEBUG_SERVER_PORT'><number>54230</number></var></struct></array></data></wddxPacket>"
+    mock_resp.read.return_value = f"0:{len(xml_data)}:{xml_data}".encode("utf-8")
+    port = srv_mock.debugger_get_server_info("mysession")
+    assert port == 54230, f"debugger_get_server_info should unwrap array-wrapped response, got {port}"
+
+    # Test 10b: also works when the response is not array-wrapped
+    xml_data = "<wddxPacket version='1.0'><header/><data><struct type='java.util.HashMap'><var name='DEBUG_SERVER_PORT'><number>54231</number></var></struct></data></wddxPacket>"
+    mock_resp.read.return_value = f"0:{len(xml_data)}:{xml_data}".encode("utf-8")
+    port = srv_mock.debugger_get_server_info("mysession")
+    assert port == 54231, f"debugger_get_server_info should handle plain struct responses, got {port}"
+
+    # Test 11: debugger_get_output unwraps the array-wrapped WDDX response (C reads path "0,VALUE")
+    mock_conn.request.reset_mock()
+    xml_data = "<wddxPacket version='1.0'><header/><data><array length='1'><struct type='java.util.HashMap'><var name='VALUE'><string>Hello &lt;Output&gt;</string></var></struct></array></data></wddxPacket>"
+    mock_resp.read.return_value = f"0:{len(xml_data)}:{xml_data}".encode("utf-8")
+    out = srv_mock.debugger_get_output("mysession", "myt")
+    assert out == "Hello <Output>", f"debugger_get_output should unwrap array-wrapped response, got {out!r}"
+
+    # Test 12: adminapi_extensions_setmapping escapes embedded ':' and ';' (parity with cfrds_buffer_append_escaped)
+    mock_conn.request.reset_mock()
+    mock_resp.read.return_value = b"0:"
+    srv_mock.adminapi_extensions_setmapping("a:b;c", "d:e;f")
+    call_body = mock_conn.request.call_args[1].get("body", b"")
+    if isinstance(call_body, bytes):
+        call_body = call_body.decode("utf-8")
+    assert "name:a\\:b\\;c;path:d\\:e\\;f" in call_body, \
+        f"adminapi_extensions_setmapping should escape ':' and ';', got payload {call_body!r}"
+
+    # Test 13: adminapi_debugging_getlogproperty deserializes the WDDX string and rejects non-string responses
+    mock_conn.request.reset_mock()
+    xml_data = "<wddxPacket version='1.0'><header/><data><string>2026-01-01 12:00:00</string></data></wddxPacket>"
+    mock_resp.read.return_value = f"0:{len(xml_data)}:{xml_data}".encode("utf-8")
+    prop_val = srv_mock.adminapi_debugging_getlogproperty("/mylogs")
+    assert prop_val == "2026-01-01 12:00:00", f"getlogproperty should return deserialized string, got {prop_val!r}"
+
+    mock_conn.request.reset_mock()
+    xml_data = "<wddxPacket version='1.0'><header/><data><number>42</number></data></wddxPacket>"
+    mock_resp.read.return_value = f"0:{len(xml_data)}:{xml_data}".encode("utf-8")
+    raised = False
+    try:
+        srv_mock.adminapi_debugging_getlogproperty("/mylogs")
+    except cfrds.CFRDSError as e:
+        raised = "RESPONSE_ERROR" in str(e)
+    assert raised, "non-string getlogproperty response should raise RESPONSE_ERROR"
+
+    # Test 14: file_exists only treats the specific server "path not found" response as False
+    mock_conn.request.reset_mock()
+    mock_resp.read.return_value = b"-1:The system cannot find the path specified: /nope/x"
+    assert srv_mock.file_exists("/nope/x") is False, "file_exists should return False for path-not-found"
+
+    mock_conn.request.reset_mock()
+    mock_resp.read.return_value = b"0:"
+    assert srv_mock.file_exists("/ok") is True, "file_exists should return True for existing path"
+
+    mock_conn.request.reset_mock()
+    mock_resp.read.return_value = b"-1:Access is denied: /secret"
+    raised = False
+    try:
+        srv_mock.file_exists("/secret")
+    except cfrds.CFRDSError as e:
+        raised = "COMMAND_FAILED: Access is denied" in str(e)
+    assert raised, "file_exists should propagate non-not-found COMMAND_FAILED errors"
+
+    print("Offline parity fix tests passed!")
+
     print("Offline WDDX escaping validation tests passed!")
 
 # Live server integration test if env vars present

@@ -7,6 +7,9 @@
  */
 
 #include "../src/cfrds_buffer.c"
+#include "../src/wddx.c"
+#include "../src/cfrds_server.c"
+#include "../src/cfrds_http.c"
 #include <internal/cfrds_int.h>
 
 #include <stdio.h>

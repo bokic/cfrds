@@ -11,24 +11,25 @@ import sys
 from typing import Optional, List, Dict, Any, Union, Tuple, Iterator
 
 
-# Status codes (internal use — errors raise CFRDSError)
-CFRDS_STATUS_OK = 0
-CFRDS_STATUS_MEMORY_ERROR = 1
-CFRDS_STATUS_PARAM_IS_NULL = 2
-CFRDS_STATUS_SERVER_IS_NULL = 3
-CFRDS_STATUS_INVALID_INPUT_PARAMETER = 4
-CFRDS_STATUS_INDEX_OUT_OF_BOUNDS = 5
-CFRDS_STATUS_COMMAND_FAILED = 6
-CFRDS_STATUS_RESPONSE_ERROR = 7
-CFRDS_STATUS_HTTP_RESPONSE_NOT_FOUND = 8
-CFRDS_STATUS_DIR_ALREADY_EXISTS = 9
-CFRDS_STATUS_SOCKET_HOST_NOT_FOUND = 10
-CFRDS_STATUS_SOCKET_CREATION_FAILED = 11
-CFRDS_STATUS_CONNECTION_TO_SERVER_FAILED = 12
-CFRDS_STATUS_WRITING_TO_SOCKET_FAILED = 13
-CFRDS_STATUS_PARTIALLY_WRITE_TO_SOCKET = 14
-CFRDS_STATUS_READING_FROM_SOCKET_FAILED = 15
-CFRDS_STATUS_RESPONSE_TOO_LARGE = 16
+class CFRDSErrorType(IntEnum):
+    """Typed status categories accepted by :class:`CFRDSError`."""
+    OK = 0
+    MEMORY_ERROR = 1
+    PARAM_IS_NULL = 2
+    SERVER_IS_NULL = 3
+    INVALID_INPUT_PARAMETER = 4
+    INDEX_OUT_OF_BOUNDS = 5
+    COMMAND_FAILED = 6
+    RESPONSE_ERROR = 7
+    HTTP_RESPONSE_NOT_FOUND = 8
+    DIR_ALREADY_EXISTS = 9
+    SOCKET_HOST_NOT_FOUND = 10
+    SOCKET_CREATION_FAILED = 11
+    CONNECTION_TO_SERVER_FAILED = 12
+    WRITING_TO_SOCKET_FAILED = 13
+    PARTIALLY_WRITE_TO_SOCKET = 14
+    READING_FROM_SOCKET_FAILED = 15
+    RESPONSE_TOO_LARGE = 16
 
 
 # Debugger event types
@@ -47,25 +48,21 @@ CFRDS_DEBUGGER_EVENT_UNKNOWN = DebuggerType.CFRDS_DEBUGGER_EVENT_UNKNOWN
 
 class CFRDSError(Exception):
     """Exception raised for ColdFusion RDS protocol errors."""
-    def __init__(self, message: str = ""):
+    def __init__(self, error_type: Union[CFRDSErrorType, str] = "", text: Optional[str] = None):
+        self.error_type: Optional[CFRDSErrorType]
+        if isinstance(error_type, CFRDSErrorType):
+            self.error_type = error_type
+            self.text = text or ""
+            message = error_type.name
+            if self.text:
+                message = f"{message}: {self.text}"
+        else:
+            # Keep the original message-only constructor working for existing
+            # callers while allowing new callers to pass (error_type, text).
+            self.error_type = None
+            self.text = error_type if text is None else text
+            message = error_type if text is None else f"{error_type}: {text}"
         super().__init__(message)
-
-    @property
-    def status(self) -> int:
-        msg = str(self)
-        if "is required" in msg or "PARAM_IS_NULL" in msg:
-            return 2  # CFRDS_STATUS_PARAM_IS_NULL
-        if "Invalid total items count" in msg or "RESPONSE_ERROR" in msg:
-            return 7  # CFRDS_STATUS_RESPONSE_ERROR
-        if "Socket host not found" in msg:
-            return 10  # CFRDS_STATUS_SOCKET_HOST_NOT_FOUND
-        if "Socket creation failed" in msg:
-            return 11  # CFRDS_STATUS_SOCKET_CREATION_FAILED
-        if "Connection to server failed" in msg or "Connection timed out" in msg:
-            return 12  # CFRDS_STATUS_CONNECTION_TO_SERVER_FAILED
-        if "COMMAND_FAILED" in msg:
-            return 6  # CFRDS_STATUS_COMMAND_FAILED
-        return 6  # CFRDS_STATUS_COMMAND_FAILED (default)
 
 
 def _escape_xml(val: str) -> str:
@@ -189,11 +186,11 @@ def _encode_password(password: str) -> str:
 def _parse_number(data: bytes, offset: List[int]) -> int:
     colon_pos = data.find(b":", offset[0])
     if colon_pos == -1:
-        raise CFRDSError("Failed to parse number: missing ':' delimiter")
+        raise CFRDSError(CFRDSErrorType.RESPONSE_ERROR, "Failed to parse number: missing ':' delimiter")
     try:
         val = int(data[offset[0]:colon_pos].decode("utf-8"))
     except ValueError:
-        raise CFRDSError("Failed to parse number: non-integer value")
+        raise CFRDSError(CFRDSErrorType.RESPONSE_ERROR, "Failed to parse number: non-integer value")
     offset[0] = colon_pos + 1
     return val
 
@@ -201,7 +198,7 @@ def _parse_number(data: bytes, offset: List[int]) -> int:
 def _parse_string(data: bytes, offset: List[int]) -> str:
     size = _parse_number(data, offset)
     if size < 0 or offset[0] + size > len(data):
-        raise CFRDSError("Failed to parse string: bounds error")
+        raise CFRDSError(CFRDSErrorType.RESPONSE_ERROR, "Failed to parse string: bounds error")
     raw_str = data[offset[0]:offset[0] + size].decode("utf-8", errors="replace")
     offset[0] += size
     return raw_str
@@ -210,7 +207,7 @@ def _parse_string(data: bytes, offset: List[int]) -> str:
 def _parse_bytearray(data: bytes, offset: List[int]) -> bytes:
     size = _parse_number(data, offset)
     if size < 0 or offset[0] + size > len(data):
-        raise CFRDSError("Failed to parse bytearray: bounds error")
+        raise CFRDSError(CFRDSErrorType.RESPONSE_ERROR, "Failed to parse bytearray: bounds error")
     raw_bytes = data[offset[0]:offset[0] + size]
     offset[0] += size
     return raw_bytes
@@ -1156,7 +1153,7 @@ class Server:
             conn.request("POST", path, body=payload, headers=headers)
             resp = conn.getresponse()
             if resp.status != 200:
-                raise CFRDSError(f"HTTP_RESPONSE_NOT_FOUND: HTTP {resp.status} {resp.reason}")
+                raise CFRDSError(CFRDSErrorType.HTTP_RESPONSE_NOT_FOUND, f"HTTP {resp.status} {resp.reason}")
             body = resp.read()
         except Exception as e:
             if self._conn is not None:
@@ -1173,36 +1170,54 @@ class Server:
                 raise
             import socket
             import errno
+            error_type = CFRDSErrorType.CONNECTION_TO_SERVER_FAILED
             desc = "Connection to server failed"
             if isinstance(e, (socket.gaierror, socket.herror)):
+                error_type = CFRDSErrorType.SOCKET_HOST_NOT_FOUND
                 desc = "Socket host not found"
             elif isinstance(e, OSError) and e.errno in (errno.EACCES, errno.EPERM, errno.EADDRNOTAVAIL, errno.EMFILE, errno.ENFILE):
+                error_type = CFRDSErrorType.SOCKET_CREATION_FAILED
                 desc = "Socket creation failed"
             msg = f"{desc}: {e}"
-            raise CFRDSError(msg)
+            raise CFRDSError(error_type, msg)
 
         try:
             offset = [0]
             err_code = _parse_number(body, offset)
+        except CFRDSError:
+            raise
         except Exception as e:
-            raise CFRDSError(f"RESPONSE_ERROR: {str(e)}")
+            raise CFRDSError(CFRDSErrorType.RESPONSE_ERROR, str(e))
 
         if err_code < 0:
             err_msg = body[offset[0]:].decode("utf-8", errors="replace")
-            raise CFRDSError(f"COMMAND_FAILED: {err_msg}")
+            raise CFRDSError(CFRDSErrorType.RESPONSE_ERROR, f"{err_msg}")
 
         return body
     # Browse Directory
     def browse_dir(self, path: str) -> List[Dict[str, Any]]:
         if path is None:
-            raise CFRDSError("path is required")
+            raise CFRDSError(CFRDSErrorType.PARAM_IS_NULL, "path is required")
         raw = self._send_rds_command("BROWSEDIR", [path, ""])
         offset = [0]
         total_elements = _parse_number(raw, offset)
-        if total_elements < 0 or total_elements % 5 != 0:
-            raise CFRDSError(f"Invalid total items count: {total_elements}")
+        if total_elements < 0 or total_elements % 5 != 0 or total_elements > 5_000_000:
+            raise CFRDSError(CFRDSErrorType.RESPONSE_ERROR, f"Invalid total items count: {total_elements}")
         item_count = total_elements // 5
         items: List[Dict[str, Any]] = []
+
+        def parse_c_integer(value: str, field: str, *, signed_bits: int = 64) -> int:
+            # Match strtol/strtoll: leading whitespace and an optional sign are
+            # accepted, but trailing characters and overflow are rejected.
+            if re.fullmatch(r"[ \t\n\r\f\v]*[+-]?\d+", value) is None:
+                raise CFRDSError(CFRDSErrorType.RESPONSE_ERROR, f"Invalid {field}: {value!r}")
+            number = int(value)
+            low = -(1 << (signed_bits - 1))
+            high = (1 << (signed_bits - 1)) - 1
+            if number < low or number > high:
+                raise CFRDSError(CFRDSErrorType.RESPONSE_ERROR, f"Invalid {field}: {value!r}")
+            return number
+
         for _ in range(item_count):
             str_kind = _parse_string(raw, offset)
             filename = _parse_string(raw, offset)
@@ -1210,18 +1225,25 @@ class Server:
             str_size = _parse_string(raw, offset)
             str_ts = _parse_string(raw, offset)
 
-            kind = 'D' if str_kind in ("D:", "D") else 'F'
+            if str_kind in ("F:", "F"):
+                kind = "F"
+            elif str_kind in ("D:", "D"):
+                kind = "D"
+            else:
+                raise CFRDSError(CFRDSErrorType.RESPONSE_ERROR, f"Invalid directory entry kind: {str_kind!r}")
 
-            perms_num = int(str_perms) if str_perms else 0
-            size = int(str_size) if str_size else 0
+            perms_num = parse_c_integer(str_perms, "permissions")
+            size = parse_c_integer(str_size, "file size")
+            if perms_num < 0 or perms_num > 0xFF or size < 0:
+                raise CFRDSError(CFRDSErrorType.RESPONSE_ERROR, "Invalid directory entry permissions or size")
 
-            modified = 0
-            if str_ts and "," in str_ts:
-                parts = str_ts.split(",")
-                num1 = int(parts[0]) & 0xFFFFFFFF
-                num2 = int(parts[1])
-                modified = num1 + (num2 << 32)
-                modified = (modified // 10000) - 11644473600000
+            timestamp_parts = str_ts.split(",")
+            if len(timestamp_parts) != 2:
+                raise CFRDSError(CFRDSErrorType.RESPONSE_ERROR, f"Invalid directory timestamp: {str_ts!r}")
+            num1 = parse_c_integer(timestamp_parts[0], "timestamp low word") & 0xFFFFFFFF
+            num2 = parse_c_integer(timestamp_parts[1], "timestamp high word") & 0xFFFFFFFFFFFFFFFF
+            filetime = (num1 + (num2 << 32)) & 0xFFFFFFFFFFFFFFFF
+            modified = ((filetime // 10000) - 11644473600000) & 0xFFFFFFFFFFFFFFFF
 
             # Map permission flags from C source's DirListing_item_get_permissions semantics:
             # - 0x01: Read-only (R) -> maps to FILE_ATTRIBUTE_READONLY (1)
@@ -1247,30 +1269,30 @@ class Server:
                 "modified": modified,
             })
         if offset[0] != len(raw):
-            raise CFRDSError(f"Response size mismatch: expected {item_count} items, leftover bytes in response")
+            raise CFRDSError(CFRDSErrorType.RESPONSE_ERROR, f"Response size mismatch: expected {item_count} items, leftover bytes in response")
         return items
 
     # File Operations
     def file_read(self, filepath: str) -> FileContent:
         if filepath is None:
-            raise CFRDSError("filepath is required")
+            raise CFRDSError(CFRDSErrorType.PARAM_IS_NULL, "filepath is required")
         raw = self._send_rds_command("FILEIO", [filepath, "READ", ""])
         offset = [0]
         total = _parse_number(raw, offset)
         if total != 3:
-            raise CFRDSError(f"Invalid FILEIO READ field count: {total}")
+            raise CFRDSError(CFRDSErrorType.RESPONSE_ERROR, f"Invalid FILEIO READ field count: {total}")
         data_bytes = _parse_bytearray(raw, offset)
         modified = _parse_string(raw, offset)
         permission = _parse_string(raw, offset)
         if offset[0] != len(raw):
-            raise CFRDSError("Leftover bytes in FILEIO READ response")
+            raise CFRDSError(CFRDSErrorType.RESPONSE_ERROR, "Leftover bytes in FILEIO READ response")
         return FileContent(data_bytes, modified, permission)
 
     def file_write(self, filepath: str, content: Union[bytes, bytearray, str]) -> None:
         if filepath is None:
-            raise CFRDSError("filepath is required")
+            raise CFRDSError(CFRDSErrorType.PARAM_IS_NULL, "filepath is required")
         if content is None:
-            raise CFRDSError("content is required")
+            raise CFRDSError(CFRDSErrorType.PARAM_IS_NULL, "content is required")
         if isinstance(content, str):
             data_bytes = content.encode("utf-8")
         else:
@@ -1279,24 +1301,24 @@ class Server:
 
     def file_rename(self, filepath_from: str, filepath_to: str) -> None:
         if filepath_from is None:
-            raise CFRDSError("filepath_from is required")
+            raise CFRDSError(CFRDSErrorType.PARAM_IS_NULL, "filepath_from is required")
         if filepath_to is None:
-            raise CFRDSError("filepath_to is required")
+            raise CFRDSError(CFRDSErrorType.PARAM_IS_NULL, "filepath_to is required")
         self._send_rds_command("FILEIO", [filepath_from, "RENAME", "", filepath_to])
 
     def file_remove(self, filepath: str) -> None:
         if filepath is None:
-            raise CFRDSError("filepath_from is required")
+            raise CFRDSError(CFRDSErrorType.PARAM_IS_NULL, "filepath_from is required")
         self._send_rds_command("FILEIO", [filepath, "REMOVE", "", "F"])
 
     def dir_remove(self, dirpath: str) -> None:
         if dirpath is None:
-            raise CFRDSError("dirpath is required")
+            raise CFRDSError(CFRDSErrorType.PARAM_IS_NULL, "dirpath is required")
         self._send_rds_command("FILEIO", [dirpath, "REMOVE", "", "D"])
 
     def file_exists(self, pathname: str) -> bool:
         if pathname is None:
-            raise CFRDSError("pathname is required")
+            raise CFRDSError(CFRDSErrorType.PARAM_IS_NULL, "pathname is required")
         # Mirrors cfrds_file.c: only the specific server "path not found"
         # response is treated as a clean "does not exist" result. Any other
         # failure (permissions, connection, HTTP, ...) propagates.
@@ -1305,16 +1327,14 @@ class Server:
             self._send_rds_command("FILEIO", [pathname, "EXISTENCE", "", ""])
             return True
         except CFRDSError as e:
-            msg = str(e)
-            failed_prefix = "COMMAND_FAILED:"
-            if msg.startswith(failed_prefix):
-                if msg[len(failed_prefix):].lstrip().startswith(not_found_prefix):
-                    return False
+            if (e.error_type == CFRDSErrorType.RESPONSE_ERROR and
+                    e.text.lstrip().startswith(not_found_prefix)):
+                return False
             raise
 
     def dir_create(self, dirpath: str) -> None:
         if dirpath is None:
-            raise CFRDSError("dirpath is required")
+            raise CFRDSError(CFRDSErrorType.PARAM_IS_NULL, "dirpath is required")
         self._send_rds_command("FILEIO", [dirpath, "CREATE", "", ""])
 
     def cf_root_dir(self) -> Optional[str]:
@@ -1330,7 +1350,7 @@ class Server:
         offset = [0]
         cnt = _parse_number(raw, offset)
         if cnt < 0:
-            raise CFRDSError(f"Invalid DSNINFO count: {cnt}")
+            raise CFRDSError(CFRDSErrorType.RESPONSE_ERROR, f"Invalid DSNINFO count: {cnt}")
         dsns: List[str] = []
         for _ in range(cnt):
             item = _parse_string(raw, offset)
@@ -1338,17 +1358,17 @@ class Server:
             name = fields[0] if fields else item
             dsns.append(name)
         if offset[0] != len(raw):
-            raise CFRDSError(f"Response size mismatch: expected {cnt} DSNs, leftover bytes in response")
+            raise CFRDSError(CFRDSErrorType.RESPONSE_ERROR, f"Response size mismatch: expected {cnt} DSNs, leftover bytes in response")
         return dsns
 
     def sql_tableinfo(self, connection_name: str) -> List[Dict[str, Optional[str]]]:
         if connection_name is None:
-            raise CFRDSError("connection_name is required")
+            raise CFRDSError(CFRDSErrorType.PARAM_IS_NULL, "connection_name is required")
         raw = self._send_rds_command("DBFUNCS", [connection_name, "TABLEINFO"])
         offset = [0]
         cnt = _parse_number(raw, offset)
         if cnt < 0:
-            raise CFRDSError(f"Invalid TABLEINFO count: {cnt}")
+            raise CFRDSError(CFRDSErrorType.RESPONSE_ERROR, f"Invalid TABLEINFO count: {cnt}")
         tables: List[Dict[str, Optional[str]]] = []
         for _ in range(cnt):
             item = _parse_string(raw, offset)
@@ -1359,19 +1379,19 @@ class Server:
             f4 = fields[3] if len(fields) > 3 else ""
             tables.append({"unknown": f1, "schema": f2, "name": f3, "type": f4})
         if offset[0] != len(raw):
-            raise CFRDSError(f"Response size mismatch: expected {cnt} tables, leftover bytes in response")
+            raise CFRDSError(CFRDSErrorType.RESPONSE_ERROR, f"Response size mismatch: expected {cnt} tables, leftover bytes in response")
         return tables
 
     def sql_columninfo(self, connection_name: str, table_name: str) -> List[Dict[str, Any]]:
         if connection_name is None:
-            raise CFRDSError("connection_name is required")
+            raise CFRDSError(CFRDSErrorType.PARAM_IS_NULL, "connection_name is required")
         if table_name is None:
-            raise CFRDSError("table_name is required")
+            raise CFRDSError(CFRDSErrorType.PARAM_IS_NULL, "table_name is required")
         raw = self._send_rds_command("DBFUNCS", [connection_name, "COLUMNINFO", table_name])
         offset = [0]
         cnt = _parse_number(raw, offset)
         if cnt < 0:
-            raise CFRDSError(f"Invalid COLUMNINFO count: {cnt}")
+            raise CFRDSError(CFRDSErrorType.RESPONSE_ERROR, f"Invalid COLUMNINFO count: {cnt}")
         cols: List[Dict[str, Any]] = []
         for _ in range(cnt):
             item = _parse_string(raw, offset)
@@ -1390,19 +1410,19 @@ class Server:
                 "nullable": _safe_int(fields[10]) if len(fields) > 10 else 0,
             })
         if offset[0] != len(raw):
-            raise CFRDSError(f"Response size mismatch: expected {cnt} columns, leftover bytes in response")
+            raise CFRDSError(CFRDSErrorType.RESPONSE_ERROR, f"Response size mismatch: expected {cnt} columns, leftover bytes in response")
         return cols
 
     def sql_primarykeys(self, connection_name: str, table_name: str) -> List[Dict[str, Any]]:
         if connection_name is None:
-            raise CFRDSError("connection_name is required")
+            raise CFRDSError(CFRDSErrorType.PARAM_IS_NULL, "connection_name is required")
         if table_name is None:
-            raise CFRDSError("table_name is required")
+            raise CFRDSError(CFRDSErrorType.PARAM_IS_NULL, "table_name is required")
         raw = self._send_rds_command("DBFUNCS", [connection_name, "PRIMARYKEYS", table_name])
         offset = [0]
         cnt = _parse_number(raw, offset)
         if cnt < 0:
-            raise CFRDSError(f"Invalid PRIMARYKEYS count: {cnt}")
+            raise CFRDSError(CFRDSErrorType.RESPONSE_ERROR, f"Invalid PRIMARYKEYS count: {cnt}")
         keys: List[Dict[str, Any]] = []
         for _ in range(cnt):
             item = _parse_string(raw, offset)
@@ -1421,14 +1441,14 @@ class Server:
                 "deleterule": _safe_int(fields[10]) if len(fields) > 10 else 0,
             })
         if offset[0] != len(raw):
-            raise CFRDSError(f"Response size mismatch: expected {cnt} keys, leftover bytes in response")
+            raise CFRDSError(CFRDSErrorType.RESPONSE_ERROR, f"Response size mismatch: expected {cnt} keys, leftover bytes in response")
         return keys
 
     def _parse_keys_response(self, raw: bytes, cmd_name: str) -> List[Dict[str, Any]]:
         offset = [0]
         cnt = _parse_number(raw, offset)
         if cnt < 0:
-            raise CFRDSError(f"Invalid {cmd_name} count: {cnt}")
+            raise CFRDSError(CFRDSErrorType.RESPONSE_ERROR, f"Invalid {cmd_name} count: {cnt}")
         keys: List[Dict[str, Any]] = []
         for _ in range(cnt):
             item = _parse_string(raw, offset)
@@ -1447,38 +1467,38 @@ class Server:
                 "deleterule": _safe_int(fields[10]) if len(fields) > 10 else 0,
             })
         if offset[0] != len(raw):
-            raise CFRDSError(f"Response size mismatch: expected {cnt} keys, leftover bytes in response")
+            raise CFRDSError(CFRDSErrorType.RESPONSE_ERROR, f"Response size mismatch: expected {cnt} keys, leftover bytes in response")
         return keys
 
     def sql_foreignkeys(self, connection_name: str, table_name: str) -> List[Dict[str, Any]]:
         if connection_name is None:
-            raise CFRDSError("connection_name is required")
+            raise CFRDSError(CFRDSErrorType.PARAM_IS_NULL, "connection_name is required")
         if table_name is None:
-            raise CFRDSError("table_name is required")
+            raise CFRDSError(CFRDSErrorType.PARAM_IS_NULL, "table_name is required")
         raw = self._send_rds_command("DBFUNCS", [connection_name, "FOREIGNKEYS", table_name])
         return self._parse_keys_response(raw, "FOREIGNKEYS")
 
     def sql_importedkeys(self, connection_name: str, table_name: str) -> List[Dict[str, Any]]:
         if connection_name is None:
-            raise CFRDSError("connection_name is required")
+            raise CFRDSError(CFRDSErrorType.PARAM_IS_NULL, "connection_name is required")
         if table_name is None:
-            raise CFRDSError("table_name is required")
+            raise CFRDSError(CFRDSErrorType.PARAM_IS_NULL, "table_name is required")
         raw = self._send_rds_command("DBFUNCS", [connection_name, "IMPORTEDKEYS", table_name])
         return self._parse_keys_response(raw, "IMPORTEDKEYS")
 
     def sql_exportedkeys(self, connection_name: str, table_name: str) -> List[Dict[str, Any]]:
         if connection_name is None:
-            raise CFRDSError("connection_name is required")
+            raise CFRDSError(CFRDSErrorType.PARAM_IS_NULL, "connection_name is required")
         if table_name is None:
-            raise CFRDSError("table_name is required")
+            raise CFRDSError(CFRDSErrorType.PARAM_IS_NULL, "table_name is required")
         raw = self._send_rds_command("DBFUNCS", [connection_name, "EXPORTEDKEYS", table_name])
         return self._parse_keys_response(raw, "EXPORTEDKEYS")
 
     def sql_sqlstmnt(self, connection_name: str, sql: str) -> Dict[str, Any]:
         if connection_name is None:
-            raise CFRDSError("connection_name is required")
+            raise CFRDSError(CFRDSErrorType.PARAM_IS_NULL, "connection_name is required")
         if sql is None:
-            raise CFRDSError("sql is required")
+            raise CFRDSError(CFRDSErrorType.PARAM_IS_NULL, "sql is required")
         raw = self._send_rds_command("DBFUNCS", [connection_name, "SQLSTMNT", sql])
         offset = [0]
         cnt = _parse_number(raw, offset)
@@ -1497,20 +1517,20 @@ class Server:
             data_rows.append(r_vals)
 
         if offset[0] != len(raw):
-            raise CFRDSError(f"Response size mismatch: expected {rows} rows, leftover bytes in response")
+            raise CFRDSError(CFRDSErrorType.RESPONSE_ERROR, f"Response size mismatch: expected {rows} rows, leftover bytes in response")
 
         return {"columns": cols, "rows": rows, "names": names, "values": data_rows}
 
     def sql_metadata(self, connection_name: str, sql: str) -> List[Dict[str, Optional[str]]]:
         if connection_name is None:
-            raise CFRDSError("connection_name is required")
+            raise CFRDSError(CFRDSErrorType.PARAM_IS_NULL, "connection_name is required")
         if sql is None:
-            raise CFRDSError("sql is required")
+            raise CFRDSError(CFRDSErrorType.PARAM_IS_NULL, "sql is required")
         raw = self._send_rds_command("DBFUNCS", [connection_name, "SQLMETADATA", sql])
         offset = [0]
         cnt = _parse_number(raw, offset)
         if cnt < 0:
-            raise CFRDSError(f"Invalid SQLMETADATA count: {cnt}")
+            raise CFRDSError(CFRDSErrorType.RESPONSE_ERROR, f"Invalid SQLMETADATA count: {cnt}")
         meta: List[Dict[str, Optional[str]]] = []
         for _ in range(cnt):
             item = _parse_string(raw, offset)
@@ -1521,7 +1541,7 @@ class Server:
                 "jtype": fields[2] if len(fields) > 2 else "",
             })
         if offset[0] != len(raw):
-            raise CFRDSError(f"Response size mismatch: expected {cnt} metadata items, leftover bytes in response")
+            raise CFRDSError(CFRDSErrorType.RESPONSE_ERROR, f"Response size mismatch: expected {cnt} metadata items, leftover bytes in response")
         return meta
 
     def sql_getsupportedcommands(self) -> List[str]:
@@ -1529,23 +1549,23 @@ class Server:
         offset = [0]
         rows = _parse_number(raw, offset)
         if rows != 1:
-            raise CFRDSError(f"Invalid SUPPORTEDCOMMANDS row count: {rows}")
+            raise CFRDSError(CFRDSErrorType.RESPONSE_ERROR, f"Invalid SUPPORTEDCOMMANDS row count: {rows}")
         commands_str = _parse_string(raw, offset)
         if offset[0] != len(raw):
-            raise CFRDSError("Leftover bytes in SUPPORTEDCOMMANDS response")
+            raise CFRDSError(CFRDSErrorType.RESPONSE_ERROR, "Leftover bytes in SUPPORTEDCOMMANDS response")
         return _parse_string_list_item(commands_str)
 
     def sql_dbdescription(self, connection_name: str) -> Optional[str]:
         if connection_name is None:
-            raise CFRDSError("connection_name is required")
+            raise CFRDSError(CFRDSErrorType.PARAM_IS_NULL, "connection_name is required")
         raw = self._send_rds_command("DBFUNCS", [connection_name, "DBDESCRIPTION"])
         offset = [0]
         rows = _parse_number(raw, offset)
         if rows != 1:
-            raise CFRDSError(f"Invalid DBDESCRIPTION row count: {rows}")
+            raise CFRDSError(CFRDSErrorType.RESPONSE_ERROR, f"Invalid DBDESCRIPTION row count: {rows}")
         row = _parse_string(raw, offset)
         if offset[0] != len(raw):
-            raise CFRDSError("Leftover bytes in DBDESCRIPTION response")
+            raise CFRDSError(CFRDSErrorType.RESPONSE_ERROR, "Leftover bytes in DBDESCRIPTION response")
         fields = _parse_string_list_item(row)
         return fields[0] if fields else row
 
@@ -1564,17 +1584,17 @@ class Server:
 
     def debugger_stop(self, session_name: str) -> None:
         if session_name is None:
-            raise CFRDSError("session_name is required")
+            raise CFRDSError(CFRDSErrorType.PARAM_IS_NULL, "session_name is required")
         self._send_rds_command("DBGREQUEST", ["DBG_STOP", session_name])
 
     def debugger_server_stop(self, session_name: str) -> None:
         if session_name is None:
-            raise CFRDSError("session_name is required")
+            raise CFRDSError(CFRDSErrorType.PARAM_IS_NULL, "session_name is required")
         self._send_rds_command("DBGREQUEST", ["DBG_SERVER_STOP", session_name])
 
     def debugger_get_server_info(self, session_name: str) -> int:
         if session_name is None:
-            raise CFRDSError("session_name is required")
+            raise CFRDSError(CFRDSErrorType.PARAM_IS_NULL, "session_name is required")
         raw = self._send_rds_command("DBGREQUEST", ["DBG_GET_DEBUG_SERVER_INFO", session_name])
         offset = [0]
         _parse_number(raw, offset)
@@ -1590,38 +1610,38 @@ class Server:
 
     def debugger_breakpoint_on_exception(self, session_name: str, enable: bool) -> None:
         if session_name is None:
-            raise CFRDSError("session_name is required")
+            raise CFRDSError(CFRDSErrorType.PARAM_IS_NULL, "session_name is required")
         if enable is None:
-            raise CFRDSError("enable is required")
+            raise CFRDSError(CFRDSErrorType.PARAM_IS_NULL, "enable is required")
         val = "true" if enable else "false"
         wddx = f"<wddxPacket version='1.0'><header/><data><array length='1'><struct type='java.util.HashMap'><var name='COMMAND'><string>SESSION_BREAK_ON_EXCEPTION</string></var><var name='BREAK_ON_EXCEPTION'><boolean value='{val}'/></var></struct></array></data></wddxPacket>"
         self._send_rds_command("DBGREQUEST", ["DBG_REQUEST", session_name, wddx])
 
     def debugger_global_breakpoint_on_exception(self, session_name: str, enable: bool) -> None:
         if session_name is None:
-            raise CFRDSError("session_name is required")
+            raise CFRDSError(CFRDSErrorType.PARAM_IS_NULL, "session_name is required")
         if enable is None:
-            raise CFRDSError("enable is required")
+            raise CFRDSError(CFRDSErrorType.PARAM_IS_NULL, "enable is required")
         val = "true" if enable else "false"
         wddx = f"<wddxPacket version='1.0'><header/><data><array length='1'><struct type='java.util.HashMap'><var name='COMMAND'><string>GLOBAL_BREAK_ON_EXCEPTION</string></var><var name='BREAK_ON_EXCEPTION'><boolean value='{val}'/></var></struct></array></data></wddxPacket>"
         self._send_rds_command("DBGREQUEST", ["DBG_REQUEST", session_name, wddx])
 
     def debugger_breakpoint(self, session_name: str, filepath: str, line: int, enable: bool) -> None:
         if session_name is None:
-            raise CFRDSError("session_name is required")
+            raise CFRDSError(CFRDSErrorType.PARAM_IS_NULL, "session_name is required")
         if filepath is None:
-            raise CFRDSError("filepath is required")
+            raise CFRDSError(CFRDSErrorType.PARAM_IS_NULL, "filepath is required")
         if line is None:
-            raise CFRDSError("line is required")
+            raise CFRDSError(CFRDSErrorType.PARAM_IS_NULL, "line is required")
         if enable is None:
-            raise CFRDSError("enable is required")
+            raise CFRDSError(CFRDSErrorType.PARAM_IS_NULL, "enable is required")
         cmd = "SET_BREAKPOINT" if enable else "UNSET_BREAKPOINT"
         wddx = f"<wddxPacket version='1.0'><header/><data><array length='1'><struct type='java.util.HashMap'><var name='COMMAND'><string>{cmd}</string></var><var name='FILE'><string>{_escape_xml(filepath)}</string></var><var name='Y'><number>{line}</number></var><var name='SEQ'><number>1.0</number></var></struct></array></data></wddxPacket>"
         self._send_rds_command("DBGREQUEST", ["DBG_REQUEST", session_name, wddx])
 
     def debugger_clear_all_breakpoints(self, session_name: str) -> None:
         if session_name is None:
-            raise CFRDSError("session_name is required")
+            raise CFRDSError(CFRDSErrorType.PARAM_IS_NULL, "session_name is required")
         wddx = "<wddxPacket version='1.0'><header/><data><array length='1'><struct type='java.util.HashMap'><var name='COMMAND'><string>UNSET_ALL_BREAKPOINTS</string></var></struct></array></data></wddxPacket>"
         self._send_rds_command("DBGREQUEST", ["DBG_REQUEST", session_name, wddx])
 
@@ -1681,7 +1701,7 @@ class Server:
         NOTE: This is a long-polling request on the ColdFusion server that blocks until a debugger event occurs or times out.
         """
         if session_name is None:
-            raise CFRDSError("session_name is required")
+            raise CFRDSError(CFRDSErrorType.PARAM_IS_NULL, "session_name is required")
         raw = self._send_rds_command("DBGREQUEST", ["DBG_EVENTS", session_name])
         return self._parse_debugger_event(raw)
 
@@ -1693,17 +1713,17 @@ class Server:
         NOTE: This is a long-polling request on the ColdFusion server that blocks until a debugger event occurs or times out.
         """
         if session_name is None:
-            raise CFRDSError("session_name is required")
+            raise CFRDSError(CFRDSErrorType.PARAM_IS_NULL, "session_name is required")
         if threads is None:
-            raise CFRDSError("threads is required")
+            raise CFRDSError(CFRDSErrorType.PARAM_IS_NULL, "threads is required")
         if watch is None:
-            raise CFRDSError("watch is required")
+            raise CFRDSError(CFRDSErrorType.PARAM_IS_NULL, "watch is required")
         if scopes is None:
-            raise CFRDSError("scopes is required")
+            raise CFRDSError(CFRDSErrorType.PARAM_IS_NULL, "scopes is required")
         if cf_trace is None:
-            raise CFRDSError("cf_trace is required")
+            raise CFRDSError(CFRDSErrorType.PARAM_IS_NULL, "cf_trace is required")
         if java_trace is None:
-            raise CFRDSError("java_trace is required")
+            raise CFRDSError(CFRDSErrorType.PARAM_IS_NULL, "java_trace is required")
         def b(v: bool) -> str:
             return "true" if v else "false"
         wddx = (f"<wddxPacket version='1.0'><header/><data><struct type='java.util.HashMap'>"
@@ -1718,99 +1738,99 @@ class Server:
 
     def debugger_step_in(self, session_name: str, thread_name: str) -> None:
         if session_name is None:
-            raise CFRDSError("session_name is required")
+            raise CFRDSError(CFRDSErrorType.PARAM_IS_NULL, "session_name is required")
         if thread_name is None:
-            raise CFRDSError("thread_name is required")
+            raise CFRDSError(CFRDSErrorType.PARAM_IS_NULL, "thread_name is required")
         wddx = f"<wddxPacket version='1.0'><header/><data><array length='1'><struct type='java.util.HashMap'><var name='COMMAND'><string>STEP_IN</string></var><var name='THREAD'><string>{_escape_xml(thread_name)}</string></var></struct></array></data></wddxPacket>"
         self._send_rds_command("DBGREQUEST", ["DBG_REQUEST", session_name, wddx])
 
     def debugger_step_over(self, session_name: str, thread_name: str) -> None:
         if session_name is None:
-            raise CFRDSError("session_name is required")
+            raise CFRDSError(CFRDSErrorType.PARAM_IS_NULL, "session_name is required")
         if thread_name is None:
-            raise CFRDSError("thread_name is required")
+            raise CFRDSError(CFRDSErrorType.PARAM_IS_NULL, "thread_name is required")
         wddx = f"<wddxPacket version='1.0'><header/><data><array length='1'><struct type='java.util.HashMap'><var name='COMMAND'><string>STEP_OVER</string></var><var name='THREAD'><string>{_escape_xml(thread_name)}</string></var></struct></array></data></wddxPacket>"
         self._send_rds_command("DBGREQUEST", ["DBG_REQUEST", session_name, wddx])
 
     def debugger_step_out(self, session_name: str, thread_name: str) -> None:
         if session_name is None:
-            raise CFRDSError("session_name is required")
+            raise CFRDSError(CFRDSErrorType.PARAM_IS_NULL, "session_name is required")
         if thread_name is None:
-            raise CFRDSError("thread_name is required")
+            raise CFRDSError(CFRDSErrorType.PARAM_IS_NULL, "thread_name is required")
         wddx = f"<wddxPacket version='1.0'><header/><data><array length='1'><struct type='java.util.HashMap'><var name='COMMAND'><string>STEP_OUT</string></var><var name='THREAD'><string>{_escape_xml(thread_name)}</string></var></struct></array></data></wddxPacket>"
         self._send_rds_command("DBGREQUEST", ["DBG_REQUEST", session_name, wddx])
 
     def debugger_sync_step_in(self, session_name: str, thread_name: str) -> Optional[DebuggerEvent]:
         if session_name is None:
-            raise CFRDSError("session_name is required")
+            raise CFRDSError(CFRDSErrorType.PARAM_IS_NULL, "session_name is required")
         if thread_name is None:
-            raise CFRDSError("thread_name is required")
+            raise CFRDSError(CFRDSErrorType.PARAM_IS_NULL, "thread_name is required")
         wddx = f"<wddxPacket version='1.0'><header/><data><array length='1'><struct type='java.util.HashMap'><var name='COMMAND'><string>SYNC_STEP_IN</string></var><var name='THREAD'><string>{_escape_xml(thread_name)}</string></var></struct></array></data></wddxPacket>"
         raw = self._send_rds_command("DBGREQUEST", ["DBG_REQUEST", session_name, wddx])
         return self._parse_debugger_event(raw)
 
     def debugger_sync_step_over(self, session_name: str, thread_name: str) -> Optional[DebuggerEvent]:
         if session_name is None:
-            raise CFRDSError("session_name is required")
+            raise CFRDSError(CFRDSErrorType.PARAM_IS_NULL, "session_name is required")
         if thread_name is None:
-            raise CFRDSError("thread_name is required")
+            raise CFRDSError(CFRDSErrorType.PARAM_IS_NULL, "thread_name is required")
         wddx = f"<wddxPacket version='1.0'><header/><data><array length='1'><struct type='java.util.HashMap'><var name='COMMAND'><string>SYNC_STEP_OVER</string></var><var name='THREAD'><string>{_escape_xml(thread_name)}</string></var></struct></array></data></wddxPacket>"
         raw = self._send_rds_command("DBGREQUEST", ["DBG_REQUEST", session_name, wddx])
         return self._parse_debugger_event(raw)
 
     def debugger_sync_step_out(self, session_name: str, thread_name: str) -> Optional[DebuggerEvent]:
         if session_name is None:
-            raise CFRDSError("session_name is required")
+            raise CFRDSError(CFRDSErrorType.PARAM_IS_NULL, "session_name is required")
         if thread_name is None:
-            raise CFRDSError("thread_name is required")
+            raise CFRDSError(CFRDSErrorType.PARAM_IS_NULL, "thread_name is required")
         wddx = f"<wddxPacket version='1.0'><header/><data><array length='1'><struct type='java.util.HashMap'><var name='COMMAND'><string>SYNC_STEP_OUT</string></var><var name='THREAD'><string>{_escape_xml(thread_name)}</string></var></struct></array></data></wddxPacket>"
         raw = self._send_rds_command("DBGREQUEST", ["DBG_REQUEST", session_name, wddx])
         return self._parse_debugger_event(raw)
 
     def debugger_continue(self, session_name: str, thread_name: str) -> None:
         if session_name is None:
-            raise CFRDSError("session_name is required")
+            raise CFRDSError(CFRDSErrorType.PARAM_IS_NULL, "session_name is required")
         if thread_name is None:
-            raise CFRDSError("thread_name is required")
+            raise CFRDSError(CFRDSErrorType.PARAM_IS_NULL, "thread_name is required")
         wddx = f"<wddxPacket version='1.0'><header/><data><array length='1'><struct type='java.util.HashMap'><var name='COMMAND'><string>CONTINUE</string></var><var name='THREAD'><string>{_escape_xml(thread_name)}</string></var></struct></array></data></wddxPacket>"
         self._send_rds_command("DBGREQUEST", ["DBG_REQUEST", session_name, wddx])
 
     def debugger_get_cf_variables(self, session_name: str, thread_name: str) -> Optional[DebuggerEvent]:
         if session_name is None:
-            raise CFRDSError("session_name is required")
+            raise CFRDSError(CFRDSErrorType.PARAM_IS_NULL, "session_name is required")
         if thread_name is None:
-            raise CFRDSError("thread_name is required")
+            raise CFRDSError(CFRDSErrorType.PARAM_IS_NULL, "thread_name is required")
         wddx = f"<wddxPacket version='1.0'><header/><data><array length='1'><struct type='java.util.HashMap'><var name='COMMAND'><string>GET_CF_VARIABLES</string></var><var name='THREAD'><string>{_escape_xml(thread_name)}</string></var></struct></array></data></wddxPacket>"
         raw = self._send_rds_command("DBGREQUEST", ["DBG_REQUEST", session_name, wddx])
         return self._parse_debugger_event(raw)
 
     def debugger_watch_expression(self, session_name: str, thread_name: str, expression: str) -> None:
         if session_name is None:
-            raise CFRDSError("session_name is required")
+            raise CFRDSError(CFRDSErrorType.PARAM_IS_NULL, "session_name is required")
         if thread_name is None:
-            raise CFRDSError("thread_name is required")
+            raise CFRDSError(CFRDSErrorType.PARAM_IS_NULL, "thread_name is required")
         if expression is None:
-            raise CFRDSError("expression is required")
+            raise CFRDSError(CFRDSErrorType.PARAM_IS_NULL, "expression is required")
         wddx = f"<wddxPacket version='1.0'><header/><data><array length='1'><struct type='java.util.HashMap'><var name='COMMAND'><string>GET_SINGLE_CF_VARIABLE</string></var><var name='VARIABLE_NAME'><string>{_escape_xml(expression)}</string></var><var name='THREAD'><string>{_escape_xml(thread_name)}</string></var></struct></array></data></wddxPacket>"
         self._send_rds_command("DBGREQUEST", ["DBG_REQUEST", session_name, wddx])
 
     def debugger_set_variable(self, session_name: str, thread_name: str, variable: str, value: str) -> None:
         if session_name is None:
-            raise CFRDSError("session_name is required")
+            raise CFRDSError(CFRDSErrorType.PARAM_IS_NULL, "session_name is required")
         if thread_name is None:
-            raise CFRDSError("thread_name is required")
+            raise CFRDSError(CFRDSErrorType.PARAM_IS_NULL, "thread_name is required")
         if variable is None:
-            raise CFRDSError("variable is required")
+            raise CFRDSError(CFRDSErrorType.PARAM_IS_NULL, "variable is required")
         if value is None:
-            raise CFRDSError("value is required")
+            raise CFRDSError(CFRDSErrorType.PARAM_IS_NULL, "value is required")
         wddx = f"<wddxPacket version='1.0'><header/><data><array length='1'><struct type='java.util.HashMap'><var name='COMMAND'><string>SET_VARIABLE_VALUE</string></var><var name='VARIABLE_NAME'><string>{_escape_xml(variable)}</string></var><var name='VARIABLE_VALUE'><string>{_escape_xml(value)}</string></var><var name='THREAD'><string>{_escape_xml(thread_name)}</string></var></struct></array></data></wddxPacket>"
         self._send_rds_command("DBGREQUEST", ["DBG_REQUEST", session_name, wddx])
 
     def debugger_watch_variables(self, session_name: str, variables: str) -> None:
         if session_name is None:
-            raise CFRDSError("session_name is required")
+            raise CFRDSError(CFRDSErrorType.PARAM_IS_NULL, "session_name is required")
         if variables is None:
-            raise CFRDSError("variables is required")
+            raise CFRDSError(CFRDSErrorType.PARAM_IS_NULL, "variables is required")
         vars_list = [v.strip() for v in variables.split(",") if v.strip()]
         var_tags = "".join([f"<string>{_escape_xml(v)}</string>" for v in vars_list])
         wddx = f"<wddxPacket version='1.0'><header/><data><array length='1'><struct type='java.util.HashMap'><var name='COMMAND'><string>SET_WATCH_VARIABLES</string></var><var name='WATCH'><array length='{len(vars_list)}'>{var_tags}</array></var></struct></array></data></wddxPacket>"
@@ -1818,9 +1838,9 @@ class Server:
 
     def debugger_get_output(self, session_name: str, thread_name: str) -> str:
         if session_name is None:
-            raise CFRDSError("session_name is required")
+            raise CFRDSError(CFRDSErrorType.PARAM_IS_NULL, "session_name is required")
         if thread_name is None:
-            raise CFRDSError("thread_name is required")
+            raise CFRDSError(CFRDSErrorType.PARAM_IS_NULL, "thread_name is required")
         wddx = f"<wddxPacket version='1.0'><header/><data><array length='1'><struct type='java.util.HashMap'><var name='COMMAND'><string>GET_OUTPUT</string></var><var name='BODY_ONLY'><boolean value='true'/></var><var name='THREAD'><string>{_escape_xml(thread_name)}</string></var></struct></array></data></wddxPacket>"
         raw = self._send_rds_command("DBGREQUEST", ["DBG_REQUEST", session_name, wddx])
         if not raw:
@@ -1836,16 +1856,16 @@ class Server:
 
     def debugger_set_scope_filter(self, session_name: str, filter_str: str) -> None:
         if session_name is None:
-            raise CFRDSError("session_name is required")
+            raise CFRDSError(CFRDSErrorType.PARAM_IS_NULL, "session_name is required")
         if filter_str is None:
-            raise CFRDSError("filter_str is required")
+            raise CFRDSError(CFRDSErrorType.PARAM_IS_NULL, "filter_str is required")
         wddx = f"<wddxPacket version='1.0'><header/><data><array length='1'><struct type='java.util.HashMap'><var name='COMMAND'><string>SET_SCOPE_FILTER</string></var><var name='FILTER'><string>{_escape_xml(filter_str)}</string></var></struct></array></data></wddxPacket>"
         self._send_rds_command("DBGREQUEST", ["DBG_REQUEST", session_name, wddx])
 
     # Security Analyzer Operations
     def security_analyzer_scan(self, pathnames: str, recursively: bool = True, cores: int = 1) -> int:
         if pathnames is None:
-            raise CFRDSError("pathnames is required")
+            raise CFRDSError(CFRDSErrorType.PARAM_IS_NULL, "pathnames is required")
         raw = self._send_rds_command("SECURITYANALYZER", ["scan", pathnames, "true" if recursively else "false", str(cores)])
         offset = [0]
         _parse_number(raw, offset)
@@ -1859,55 +1879,52 @@ class Server:
 
     def security_analyzer_cancel(self, command_id: int) -> None:
         if command_id is None:
-            raise CFRDSError("command_id is required")
+            raise CFRDSError(CFRDSErrorType.PARAM_IS_NULL, "command_id is required")
         self._send_rds_command("SECURITYANALYZER", ["cancel", str(command_id)])
 
     def security_analyzer_status(self, command_id: int) -> Dict[str, Any]:
         if command_id is None:
-            raise CFRDSError("command_id is required")
+            raise CFRDSError(CFRDSErrorType.PARAM_IS_NULL, "command_id is required")
         raw = self._send_rds_command("SECURITYANALYZER", ["status", str(command_id)])
         offset = [0]
-        _parse_number(raw, offset)
+        count = _parse_number(raw, offset)
+        if count != 1:
+            raise CFRDSError(CFRDSErrorType.RESPONSE_ERROR, f"Invalid security analyzer status field count: {count}")
         json_str = _parse_string(raw, offset)
         import json
         try:
             data = json.loads(json_str)
-            return {
-                "totalfiles": int(data.get("totalfiles", 0)),
-                "filesvisitedcount": int(data.get("filesvisitedcount", 0)),
-                "percentage": int(data.get("percentage", 0)),
-                "lastupdated": int(data.get("lastupdated", 0)),
-            }
-        except Exception:
-            return {
-                "totalfiles": 0,
-                "filesvisitedcount": 0,
-                "percentage": 0,
-                "lastupdated": 0,
-            }
+            fields = ("totalfiles", "filesvisitedcount", "percentage", "lastupdated")
+            if not isinstance(data, dict) or any(type(data.get(field)) is not int for field in fields):
+                raise ValueError("invalid security analyzer status fields")
+            return {field: data[field] for field in fields}
+        except (ValueError, TypeError) as e:
+            raise CFRDSError(CFRDSErrorType.RESPONSE_ERROR, str(e)) from e
 
     def security_analyzer_result(self, command_id: int) -> Optional[Dict[str, Any]]:
         if command_id is None:
-            raise CFRDSError("command_id is required")
+            raise CFRDSError(CFRDSErrorType.PARAM_IS_NULL, "command_id is required")
         raw = self._send_rds_command("SECURITYANALYZER", ["result", str(command_id)])
         offset = [0]
-        _parse_number(raw, offset)
+        count = _parse_number(raw, offset)
+        if count != 1:
+            raise CFRDSError(CFRDSErrorType.RESPONSE_ERROR, f"Invalid security analyzer result field count: {count}")
         json_str = _parse_string(raw, offset)
         import json
         try:
             return json.loads(json_str)
-        except Exception:
-            return {"raw": json_str}
+        except (ValueError, TypeError) as e:
+            raise CFRDSError(CFRDSErrorType.RESPONSE_ERROR, str(e)) from e
 
     def security_analyzer_clean(self, command_id: int) -> None:
         if command_id is None:
-            raise CFRDSError("command_id is required")
+            raise CFRDSError(CFRDSErrorType.PARAM_IS_NULL, "command_id is required")
         self._send_rds_command("SECURITYANALYZER", ["clean", str(command_id)])
 
     # IDE Default
     def ide_default(self, version: int = 1) -> Dict[str, Any]:
         if version is None:
-            raise CFRDSError("version is required")
+            raise CFRDSError(CFRDSErrorType.PARAM_IS_NULL, "version is required")
         raw = self._send_rds_command("IDE_DEFAULT", ["", f"{version},"])
         offset = [0]
         _parse_number(raw, offset)
@@ -1927,7 +1944,7 @@ class Server:
     # Admin API Operations
     def adminapi_debugging_getlogproperty(self, logdirectory: str) -> Optional[str]:
         if logdirectory is None:
-            raise CFRDSError("logdirectory is required")
+            raise CFRDSError(CFRDSErrorType.PARAM_IS_NULL, "logdirectory is required")
         raw = self._send_rds_command("ADMINAPI", ["cfide.adminapi.debugging", "getlogproperty", logdirectory])
         offset = [0]
         _parse_number(raw, offset)
@@ -1939,7 +1956,7 @@ class Server:
         parsed = _wddx_deserialize(prop_str)
         if isinstance(parsed, str):
             return parsed
-        raise CFRDSError("RESPONSE_ERROR: wddx_node_type(data) != WDDX_STRING")
+        raise CFRDSError(CFRDSErrorType.RESPONSE_ERROR, "wddx_node_type(data) != WDDX_STRING")
 
     def adminapi_extensions_getcustomtagpaths(self) -> List[str]:
         raw = self._send_rds_command("ADMINAPI", ["cfide.adminapi.extensions", "getcustomtagpaths"])
@@ -1959,16 +1976,16 @@ class Server:
 
     def adminapi_extensions_setmapping(self, name: str, path: str) -> None:
         if name is None:
-            raise CFRDSError("name is required")
+            raise CFRDSError(CFRDSErrorType.PARAM_IS_NULL, "name is required")
         if path is None:
-            raise CFRDSError("path is required")
+            raise CFRDSError(CFRDSErrorType.PARAM_IS_NULL, "path is required")
         # Escape embedded ':' and ';' exactly like cfrds_buffer_append_escaped.
         arg_str = f"name:{_escape_adminapi_arg(name)};path:{_escape_adminapi_arg(path)}"
         self._send_rds_command("ADMINAPI", ["cfide.adminapi.extensions", "setmappings", arg_str])
 
     def adminapi_extensions_deletemapping(self, mapping: str) -> None:
         if mapping is None:
-            raise CFRDSError("mapping is required")
+            raise CFRDSError(CFRDSErrorType.PARAM_IS_NULL, "mapping is required")
         # NOTE: "deleltemappings" (with the extra 'l') is a required typo hardcoded in the Adobe ColdFusion RDS backend.
         self._send_rds_command("ADMINAPI", ["cfide.adminapi.extensions", "deleltemappings", mapping])
 
@@ -2020,10 +2037,9 @@ class Server:
     # Graphing Operations
     def graphing(self, chart_attributes: str, series_data: List[str]) -> bytes:
         if chart_attributes is None:
-            raise CFRDSError("chart_attributes is required")
+            raise CFRDSError(CFRDSErrorType.PARAM_IS_NULL, "chart_attributes is required")
         if series_data is None:
-            raise CFRDSError("series_data is required")
+            raise CFRDSError(CFRDSErrorType.PARAM_IS_NULL, "series_data is required")
         args = ["GRAPH", chart_attributes, str(len(series_data))] + series_data
         raw = self._send_rds_command("GRAPHING", args)
         return raw
-

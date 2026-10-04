@@ -20,8 +20,8 @@ else:
 print("Testing pure Python cfrds module exports...")
 
 # Verify status enums and constants
-assert cfrds.CFRDS_STATUS_OK == 0
-assert cfrds.CFRDS_STATUS_COMMAND_FAILED == 6
+assert cfrds.CFRDSErrorType.OK == 0
+assert cfrds.CFRDSErrorType.COMMAND_FAILED == 6
 assert cfrds.DebuggerType.CFRDS_DEBUGGER_EVENT_TYPE_BREAKPOINT == 1
 
 # Verify server class methods
@@ -365,7 +365,7 @@ with patch("http.client.HTTPConnection", return_value=mock_conn):
 
     mock_conn_err.request.side_effect = mock_request_raise
 
-    def test_error_mapping(exception_to_raise, expected_msg_substr):
+    def test_error_mapping(exception_to_raise, expected_error_type):
         global mock_exception
         mock_exception = exception_to_raise
         srv_mock._conn = None
@@ -373,21 +373,21 @@ with patch("http.client.HTTPConnection", return_value=mock_conn):
         try:
             srv_mock.browse_dir("/")
         except cfrds.CFRDSError as e:
-            if expected_msg_substr in str(e):
+            if e.error_type == expected_error_type:
                 threw = True
             else:
                 raise Exception(f"Unexpected error for exception {exception_to_raise}: {e}")
-        assert threw, f"Should throw CFRDSError containing '{expected_msg_substr}' for {exception_to_raise}"
+        assert threw, f"Should throw CFRDSError type {expected_error_type} for {exception_to_raise}"
 
     with patch("http.client.HTTPConnection", return_value=mock_conn_err):
         # Test socket.gaierror -> SOCKET_HOST_NOT_FOUND
-        test_error_mapping(socket.gaierror(8, "hostname lookup failed"), "Socket host not found")
-        test_error_mapping(socket.herror(1, "host error"), "Socket host not found")
+        test_error_mapping(socket.gaierror(8, "hostname lookup failed"), cfrds.CFRDSErrorType.SOCKET_HOST_NOT_FOUND)
+        test_error_mapping(socket.herror(1, "host error"), cfrds.CFRDSErrorType.SOCKET_HOST_NOT_FOUND)
 
         # Test specific OSErrors -> SOCKET_CREATION_FAILED
-        test_error_mapping(PermissionError(errno.EACCES, "Permission denied"), "Socket creation failed")
-        test_error_mapping(PermissionError(errno.EPERM, "Operation not permitted"), "Socket creation failed")
-        test_error_mapping(OSError(errno.EADDRNOTAVAIL, "Address not available"), "Socket creation failed")
+        test_error_mapping(PermissionError(errno.EACCES, "Permission denied"), cfrds.CFRDSErrorType.SOCKET_CREATION_FAILED)
+        test_error_mapping(PermissionError(errno.EPERM, "Operation not permitted"), cfrds.CFRDSErrorType.SOCKET_CREATION_FAILED)
+        test_error_mapping(OSError(errno.EADDRNOTAVAIL, "Address not available"), cfrds.CFRDSErrorType.SOCKET_CREATION_FAILED)
         test_error_mapping(OSError(errno.EMFILE, "Too many open files"), "Socket creation failed")
         test_error_mapping(OSError(errno.ENFILE, "Too many open files in system"), "Socket creation failed")
 
@@ -454,7 +454,7 @@ with patch("http.client.HTTPConnection", return_value=mock_conn):
     try:
         srv_mock.adminapi_debugging_getlogproperty("/mylogs")
     except cfrds.CFRDSError as e:
-        raised = "RESPONSE_ERROR" in str(e)
+        raised = e.error_type == cfrds.CFRDSErrorType.RESPONSE_ERROR
     assert raised, "non-string getlogproperty response should raise RESPONSE_ERROR"
 
     # Test 14: file_exists only treats the specific server "path not found" response as False
@@ -472,8 +472,9 @@ with patch("http.client.HTTPConnection", return_value=mock_conn):
     try:
         srv_mock.file_exists("/secret")
     except cfrds.CFRDSError as e:
-        raised = "COMMAND_FAILED: Access is denied" in str(e)
-    assert raised, "file_exists should propagate non-not-found COMMAND_FAILED errors"
+        raised = (e.error_type == cfrds.CFRDSErrorType.RESPONSE_ERROR and
+                  e.text.startswith("Access is denied"))
+    assert raised, "file_exists should propagate non-not-found RESPONSE_ERROR errors"
 
     print("Offline parity fix tests passed!")
 
